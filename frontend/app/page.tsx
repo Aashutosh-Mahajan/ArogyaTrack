@@ -28,6 +28,8 @@ export default function Home() {
         router.push('/doctor');
       } else if (user.role === 'admin' || user.role === 'authority') {
         router.push('/admin');
+      } else if (user.role === 'pharmacist') {
+        router.push('/pharmacy');
       } else {
         router.push('/dashboard');
       }

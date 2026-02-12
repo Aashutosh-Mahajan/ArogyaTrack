@@ -17,6 +17,22 @@ from patients.models import Profile
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def my_trackers(request):
+    """Get all adherence trackers for the authenticated patient."""
+    profiles = request.user.profiles.all()
+    if not profiles.exists():
+        return Response({'count': 0, 'results': []})
+    trackers = AdherenceTracker.objects.filter(patient__in=profiles).order_by('-created_at')
+    limit = int(request.query_params.get('limit', 20))
+    offset = int(request.query_params.get('offset', 0))
+    total = trackers.count()
+    trackers = trackers[offset:offset + limit]
+    serializer = AdherenceTrackerSerializer(trackers, many=True)
+    return Response({'count': total, 'results': serializer.data})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_adherence_tracker(request, tracker_id):
     """Get adherence tracker details"""
     tracker = get_object_or_404(AdherenceTracker, id=tracker_id)

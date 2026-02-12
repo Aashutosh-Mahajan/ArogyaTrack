@@ -127,3 +127,42 @@ class PatientHistoryView(APIView):
                 "medical_records": MedicalHistorySerializer(records, many=True).data,
             }
         )
+
+
+class PatientOwnRecordsView(APIView):
+    """Patient can view their own medical records."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        profiles = request.user.profiles.all()
+        if not profiles.exists():
+            return Response({"count": 0, "results": []})
+        records = MedicalRecord.objects.filter(patient__in=profiles).prefetch_related("diagnoses").order_by("-created_at")
+        limit = int(request.query_params.get("limit", 20))
+        offset = int(request.query_params.get("offset", 0))
+        total = records.count()
+        records = records[offset : offset + limit]
+        return Response({"count": total, "results": MedicalHistorySerializer(records, many=True).data})
+
+
+class PatientOwnAllergiesView(APIView):
+    """Patient can view their own allergies."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        profiles = request.user.profiles.all()
+        allergies = Allergy.objects.filter(profile__in=profiles).order_by("-created_at")
+        return Response(AllergySerializer(allergies, many=True).data)
+
+
+class PatientOwnConditionsView(APIView):
+    """Patient can view their own chronic conditions."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        profiles = request.user.profiles.all()
+        conditions = ChronicCondition.objects.filter(profile__in=profiles, is_active=True).order_by("-created_at")
+        return Response(ChronicConditionSerializer(conditions, many=True).data)

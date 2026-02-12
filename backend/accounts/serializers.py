@@ -21,7 +21,7 @@ class SendOTPSerializer(serializers.Serializer):
     def save(self, **kwargs):
         email = self.validated_data["email"].lower()
         user = self.create_user_if_needed(email)
-        OTPService.issue_otp(user)
+        OTPService.issue_otp(user, purpose="login")
         return {"email": email}
 
 
@@ -66,6 +66,12 @@ class VerifyOTPSerializer(serializers.Serializer):
         )
 
         return {
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "role": user.role,
+                "verification_status": user.verification_status,
+            },
             "access": str(refresh.access_token),
             "refresh": str(refresh),
             "expires_in": int(refresh.access_token.lifetime.total_seconds()),
@@ -83,9 +89,14 @@ class DoctorRegistrationSerializer(serializers.Serializer):
     phone = serializers.CharField(max_length=20)
 
     def validate_email(self, value):
-        if User.objects.filter(email=value.lower()).exists():
-            raise serializers.ValidationError("Email already registered")
-        return value.lower()
+        value = value.lower()
+        existing = User.objects.filter(email=value).first()
+        if existing:
+            if existing.verification_status == User.VerificationStatus.VERIFIED:
+                raise serializers.ValidationError("Email already registered")
+            # Remove unverified user so they can re-register
+            existing.delete()
+        return value
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -117,9 +128,14 @@ class PatientRegistrationSerializer(serializers.Serializer):
     address = serializers.CharField()
 
     def validate_email(self, value):
-        if User.objects.filter(email=value.lower()).exists():
-            raise serializers.ValidationError("Email already registered")
-        return value.lower()
+        value = value.lower()
+        existing = User.objects.filter(email=value).first()
+        if existing:
+            if existing.verification_status == User.VerificationStatus.VERIFIED:
+                raise serializers.ValidationError("Email already registered")
+            # Remove unverified user so they can re-register
+            existing.delete()
+        return value
 
     def create(self, validated_data):
         from patients.models import Profile
@@ -220,6 +236,44 @@ class PasswordLoginSerializer(serializers.Serializer):
         }
 
 
+class PharmacyRegistrationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(min_length=8, write_only=True)
+    first_name = serializers.CharField(max_length=100)
+    last_name = serializers.CharField(max_length=100)
+    pharmacy_name = serializers.CharField(max_length=200)
+    license_number = serializers.CharField(max_length=50)
+    phone = serializers.CharField(max_length=20)
+    address = serializers.CharField()
+
+    def validate_email(self, value):
+        value = value.lower()
+        existing = User.objects.filter(email=value).first()
+        if existing:
+            if existing.verification_status == User.VerificationStatus.VERIFIED:
+                raise serializers.ValidationError("Email already registered")
+            # Remove unverified user so they can re-register
+            existing.delete()
+        return value
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        email = validated_data['email']
+
+        user = User.objects.create(
+            email=email,
+            role=User.Role.PHARMACIST,
+            verification_status=User.VerificationStatus.PENDING,
+        )
+        user.set_password(password)
+        user.save()
+
+        # Send OTP for verification
+        OTPService.issue_otp(user, purpose="verification")
+
+        return user
+
+
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
@@ -228,7 +282,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         try:
             user = User.objects.get(email=email)
             # Send OTP for password reset
-            OTPService.issue_otp(user)
+            OTPService.issue_otp(user, purpose="password_reset")
         except User.DoesNotExist:
             # Don't reveal if email exists or not
             pass

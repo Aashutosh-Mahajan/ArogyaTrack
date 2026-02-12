@@ -143,6 +143,23 @@ class PatientPrescriptionsView(APIView):
         return Response(PrescriptionSerializer(prescriptions, many=True).data)
 
 
+class MyPrescriptionsView(APIView):
+    """Get all prescriptions for the authenticated patient."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        profiles = request.user.profiles.all()
+        if not profiles.exists():
+            return Response({"count": 0, "results": []})
+        prescriptions = Prescription.objects.filter(patient__in=profiles).order_by("-created_at")
+        limit = int(request.query_params.get("limit", 20))
+        offset = int(request.query_params.get("offset", 0))
+        total = prescriptions.count()
+        prescriptions = prescriptions[offset : offset + limit]
+        return Response({"count": total, "results": PrescriptionSerializer(prescriptions, many=True).data})
+
+
 
 class GeneratePrescriptionPDFView(APIView):
     """Generate prescription in patient's preferred language."""

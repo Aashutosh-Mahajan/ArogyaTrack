@@ -6,12 +6,14 @@ from .views import (
     CreatePrescriptionView,
     GeneratePrescriptionPDFView,
     MedicineListView,
+    MyPrescriptionsView,
     PatientPrescriptionsView,
     PrescriptionDetailView,
     PrescriptionQRImageView,
 )
 
 urlpatterns = [
+    path("my-prescriptions/", MyPrescriptionsView.as_view(), name="my-prescriptions"),
     path("medicines/", MedicineListView.as_view(), name="medicine-list"),
     path("check-interactions/", CheckDrugInteractionsView.as_view(), name="check-interactions"),
     path("check-allergies/", CheckAllergiesView.as_view(), name="check-allergies"),

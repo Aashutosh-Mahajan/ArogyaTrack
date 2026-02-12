@@ -7,6 +7,7 @@ from .serializers import (
     VerifyOTPSerializer,
     DoctorRegistrationSerializer,
     PatientRegistrationSerializer,
+    PharmacyRegistrationSerializer,
     PasswordLoginSerializer,
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
@@ -98,3 +99,16 @@ class EmailVerificationView(APIView):
         serializer.is_valid(raise_exception=True)
         result = serializer.save()
         return Response(result, status=status.HTTP_200_OK)
+
+
+class PharmacyRegistrationView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = PharmacyRegistrationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {"detail": "Registration successful. Please check your email for OTP verification."},
+            status=status.HTTP_201_CREATED
+        )

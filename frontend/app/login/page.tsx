@@ -11,66 +11,54 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import toast from 'react-hot-toast';
-import { FiMail, FiLock } from 'react-icons/fi';
+import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import Link from 'next/link';
 
-const emailSchema = z.object({
+const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required'),
 });
 
-const otpSchema = z.object({
-  otp: z.string().length(6, 'OTP must be 6 digits'),
-});
-
-type EmailFormData = z.infer<typeof emailSchema>;
-type OtpFormData = z.infer<typeof otpSchema>;
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
-  const [step, setStep] = useState<'email' | 'otp'>('email');
-  const [email, setEmail] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
-  const emailForm = useForm<EmailFormData>({
-    resolver: zodResolver(emailSchema),
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
   });
 
-  const otpForm = useForm<OtpFormData>({
-    resolver: zodResolver(otpSchema),
-  });
-
-  const onEmailSubmit = async (data: EmailFormData) => {
+  const onSubmit = async (data: LoginFormData) => {
     try {
-      await api.auth.sendOtp(data.email);
-      setEmail(data.email);
-      setStep('otp');
-      toast.success('OTP sent to your email');
-    } catch (error) {
-      toast.error('Failed to send OTP');
-    }
-  };
+      const response: any = await api.auth.login(data.email, data.password);
 
-  const onOtpSubmit = async (data: OtpFormData) => {
-    try {
-      const response: any = await api.auth.verifyOtp(email, data.otp);
       setAuth(response.user, {
         access: response.access,
         refresh: response.refresh,
       });
-      
-      toast.success('Login successful');
-      
-      // Redirect based on role
+
+      toast.success('Login successful!');
+
+      // Role-based redirect
       const role = response.user.role;
       if (role === 'doctor') {
         router.push('/doctor');
       } else if (role === 'admin' || role === 'authority') {
         router.push('/admin');
+      } else if (role === 'pharmacist') {
+        router.push('/pharmacy');
       } else {
         router.push('/dashboard');
       }
-    } catch (error) {
-      toast.error('Invalid OTP');
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.non_field_errors?.[0] ||
+        error?.response?.data?.detail ||
+        error?.response?.data?.message ||
+        'Invalid email or password';
+      toast.error(msg);
     }
   };
 
@@ -79,85 +67,88 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <Card className="shadow-xl">
           <CardHeader className="space-y-1 text-center">
+            <div className="w-14 h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+              <span className="text-2xl text-white">🏥</span>
+            </div>
             <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
             <CardDescription>
-              {step === 'email' 
-                ? 'Enter your email to receive an OTP' 
-                : 'Enter the OTP sent to your email'}
+              Sign in to access your dashboard
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {step === 'email' ? (
-              <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email</label>
-                  <div className="relative">
-                    <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <Input
-                      {...emailForm.register('email')}
-                      type="email"
-                      placeholder="your.email@example.com"
-                      className="pl-10"
-                    />
-                  </div>
-                  {emailForm.formState.errors.email && (
-                    <p className="text-sm text-red-600">
-                      {emailForm.formState.errors.email.message}
-                    </p>
-                  )}
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              {/* Email */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email</label>
+                <div className="relative">
+                  <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    {...form.register('email')}
+                    type="email"
+                    placeholder="your.email@example.com"
+                    className="pl-10"
+                    autoComplete="email"
+                  />
                 </div>
-                <Button 
-                  type="submit" 
-                  className="w-full"
-                  disabled={emailForm.formState.isSubmitting}
-                >
-                  {emailForm.formState.isSubmitting ? 'Sending...' : 'Send OTP'}
-                </Button>
+                {form.formState.errors.email && (
+                  <p className="text-sm text-red-600">
+                    {form.formState.errors.email.message}
+                  </p>
+                )}
+              </div>
 
-                <div className="text-center text-sm">
-                  <span className="text-gray-600">Don't have an account? </span>
-                  <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
-                    Sign Up
+              {/* Password */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Password</label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Forgot Password?
                   </Link>
                 </div>
-              </form>
-            ) : (
-              <form onSubmit={otpForm.handleSubmit(onOtpSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">OTP</label>
-                  <div className="relative">
-                    <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <Input
-                      {...otpForm.register('otp')}
-                      type="text"
-                      placeholder="000000"
-                      maxLength={6}
-                      className="pl-10 tracking-widest text-center text-lg"
-                    />
-                  </div>
-                  {otpForm.formState.errors.otp && (
-                    <p className="text-sm text-red-600">
-                      {otpForm.formState.errors.otp.message}
-                    </p>
-                  )}
+                <div className="relative">
+                  <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    {...form.register('password')}
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    className="pl-10 pr-10"
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                  </button>
                 </div>
-                <Button 
-                  type="submit" 
-                  className="w-full"
-                  disabled={otpForm.formState.isSubmitting}
-                >
-                  {otpForm.formState.isSubmitting ? 'Verifying...' : 'Verify OTP'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => setStep('email')}
-                >
-                  Back to Email
-                </Button>
-              </form>
-            )}
+                {form.formState.errors.password && (
+                  <p className="text-sm text-red-600">
+                    {form.formState.errors.password.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Submit */}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? 'Signing In...' : 'Sign In'}
+              </Button>
+
+              {/* Sign up link */}
+              <div className="text-center text-sm">
+                <span className="text-gray-600">Don&apos;t have an account? </span>
+                <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+                  Create Account
+                </Link>
+              </div>
+            </form>
           </CardContent>
         </Card>
 

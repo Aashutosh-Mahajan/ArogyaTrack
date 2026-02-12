@@ -15,6 +15,37 @@ from .serializers import (
 )
 
 
+class ActiveProfileView(APIView):
+    """Get or update the current user's active profile."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        profile = None
+        if user.active_profile_id:
+            profile = user.profiles.filter(id=user.active_profile_id).first()
+        if not profile:
+            profile = user.profiles.first()
+        if not profile:
+            return Response({"detail": "No profile found. Please create a profile first."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(ProfileSerializer(profile).data)
+
+    def patch(self, request):
+        user = request.user
+        profile = None
+        if user.active_profile_id:
+            profile = user.profiles.filter(id=user.active_profile_id).first()
+        if not profile:
+            profile = user.profiles.first()
+        if not profile:
+            return Response({"detail": "No profile found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ProfileSerializer(profile, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        profile = serializer.save()
+        return Response(ProfileSerializer(profile).data)
+
+
 class CreateProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 

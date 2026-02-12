@@ -5,9 +5,11 @@ from typing import Any, Dict
 
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.db import models
+from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.html import strip_tags
 
 # Import AuditLog and AuditService from audit module
 from .audit import AuditLog, AuditService
@@ -129,24 +131,56 @@ class Session(models.Model):
 
 class OTPService:
     @staticmethod
-    def send_otp_email(email: str, code: str) -> None:
-        send_mail(
-            subject="Your verification code",
-            message=f"Your OTP is {code}. It expires in 5 minutes.",
+    def send_otp_email(email: str, code: str, purpose: str = "verification") -> None:
+        """Send OTP using HTML email template."""
+        purpose_config = {
+            "verification": {
+                "subject": "Verify Your Email – Health Surveillance",
+                "heading": "Email Verification",
+                "message": "Please use the code below to verify your email address and complete your registration.",
+            },
+            "login": {
+                "subject": "Your Login Code – Health Surveillance",
+                "heading": "Login Verification",
+                "message": "Use the code below to securely sign in to your account.",
+            },
+            "password_reset": {
+                "subject": "Password Reset Code – Health Surveillance",
+                "heading": "Password Reset",
+                "message": "You requested a password reset. Use the code below to set a new password.",
+            },
+        }
+        config = purpose_config.get(purpose, purpose_config["verification"])
+
+        context = {
+            "otp_code": code,
+            "heading": config["heading"],
+            "message": config["message"],
+            "expiry_minutes": 5,
+            "year": timezone.now().year,
+        }
+
+        html_content = render_to_string("email/otp_email.html", context)
+        text_content = strip_tags(html_content)
+
+        msg = EmailMultiAlternatives(
+            subject=config["subject"],
+            body=text_content,
             from_email=None,
-            recipient_list=[email],
-            fail_silently=False,
+            to=[email],
         )
+        msg.attach_alternative(html_content, "text/html")
+        msg.send(fail_silently=False)
 
     @staticmethod
-    def issue_otp(user: User, expiry_minutes: int = 5) -> "OTP":
+    def issue_otp(user: User, expiry_minutes: int = 5, purpose: str = "verification") -> "OTP":
         code = OTP.generate_code()
         otp = OTP.objects.create(
             user=user,
             code_hash=OTP.hash_code(code),
             expires_at=timezone.now() + timedelta(minutes=expiry_minutes),
         )
-        OTPService.send_otp_email(user.email, code)
+        OTPService.send_otp_email(user.email, code, purpose=purpose)
         return otp
 
     @staticmethod

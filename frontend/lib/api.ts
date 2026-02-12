@@ -92,20 +92,34 @@ class ApiClient {
 
   private getTokens() {
     if (typeof window === 'undefined') return null;
-    const tokens = localStorage.getItem('auth_tokens');
-    return tokens ? JSON.parse(tokens) : null;
+    try {
+      const stored = localStorage.getItem('auth-storage');
+      if (!stored) return null;
+      const parsed = JSON.parse(stored);
+      return parsed?.state?.tokens || null;
+    } catch {
+      return null;
+    }
   }
 
   private setTokens(tokens: { access: string; refresh: string }) {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_tokens', JSON.stringify(tokens));
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = localStorage.getItem('auth-storage');
+      if (!stored) return;
+      const parsed = JSON.parse(stored);
+      if (parsed?.state) {
+        parsed.state.tokens = tokens;
+        localStorage.setItem('auth-storage', JSON.stringify(parsed));
+      }
+    } catch {
+      // ignore
     }
   }
 
   private clearAuth() {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_tokens');
-      localStorage.removeItem('user');
+      localStorage.removeItem('auth-storage');
     }
   }
 
@@ -175,6 +189,16 @@ export const api = {
       phone: string;
       address: string;
     }) => apiClient.post('/auth/register/patient/', data),
+    registerPharmacy: (data: {
+      email: string;
+      password: string;
+      first_name: string;
+      last_name: string;
+      pharmacy_name: string;
+      license_number: string;
+      phone: string;
+      address: string;
+    }) => apiClient.post('/auth/register/pharmacy/', data),
     verifyEmail: (email: string, otp: string) =>
       apiClient.post('/auth/verify-email/', { email, otp }),
     login: (email: string, password: string) =>
@@ -200,41 +224,43 @@ export const api = {
     addEmergencyContact: (data: any) => apiClient.post('/patients/emergency-contacts/', data),
   },
 
-  // Medical Records
+  // Medical Records (backend mounts medical app at /api/doctors/)
   medical: {
     getRecords: (params?: any): Promise<PaginatedResponse<MedicalRecord>> => 
-      apiClient.get('/medical/records/', { params }),
+      apiClient.get('/doctors/my-records/', { params }),
     getRecord: (id: number): Promise<MedicalRecord> => 
-      apiClient.get(`/medical/records/${id}/`),
+      apiClient.get(`/doctors/medical-records/${id}/`),
     getAllergies: (): Promise<Allergy[]> => 
-      apiClient.get('/medical/allergies/'),
+      apiClient.get('/doctors/my-allergies/'),
     getChronicConditions: (): Promise<ChronicCondition[]> => 
-      apiClient.get('/medical/chronic-conditions/'),
-    scanQR: (token: string) => apiClient.post('/medical/scan-qr/', { token }),
-    createRecord: (data: any) => apiClient.post('/medical/records/', data),
+      apiClient.get('/doctors/my-conditions/'),
+    scanQR: (token: string) => apiClient.post('/doctors/scan-health-card/', { token }),
+    createRecord: (data: any) => apiClient.post('/doctors/medical-records/', data),
     addDiagnosis: (recordId: number, data: any) => 
-      apiClient.post(`/medical/records/${recordId}/diagnoses/`, data),
+      apiClient.post(`/doctors/patients/${recordId}/conditions/`, data),
   },
 
   // Prescriptions
   prescriptions: {
     getAll: (params?: any): Promise<PaginatedResponse<Prescription>> => 
-      apiClient.get('/prescriptions/', { params }),
-    getById: (id: number): Promise<Prescription> => 
+      apiClient.get('/prescriptions/my-prescriptions/', { params }),
+    getById: (id: string): Promise<Prescription> => 
       apiClient.get(`/prescriptions/${id}/`),
-    create: (data: any) => apiClient.post('/prescriptions/', data),
+    create: (data: any) => apiClient.post('/prescriptions/create/', data),
     validateHash: (prescriptionNumber: string, hash: string) => 
       apiClient.post('/prescriptions/validate-hash/', { prescription_number: prescriptionNumber, hash }),
   },
 
   // Adherence
   adherence: {
-    getTrackers: (): Promise<PaginatedResponse<AdherenceTracker>> => 
-      apiClient.get('/adherence/trackers/'),
-    getSchedules: (trackerId: number) => 
-      apiClient.get(`/adherence/trackers/${trackerId}/schedules/`),
-    markDoseTaken: (scheduleId: number, data?: any) => 
-      apiClient.post(`/adherence/schedules/${scheduleId}/mark-taken/`, data),
+    getTrackers: (params?: any): Promise<PaginatedResponse<AdherenceTracker>> => 
+      apiClient.get('/adherence/my-trackers/', { params }),
+    getTracker: (trackerId: string) => 
+      apiClient.get(`/adherence/tracker/${trackerId}/`),
+    getUpcomingDoses: () => apiClient.get('/adherence/upcoming-doses/'),
+    getMissedDoses: () => apiClient.get('/adherence/missed-doses/'),
+    markDoseTaken: (data: any) => 
+      apiClient.post('/adherence/record-dose/', data),
   },
 
   // Surveillance
