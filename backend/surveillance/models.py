@@ -1,4 +1,5 @@
 import uuid
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
@@ -291,11 +292,11 @@ class Alert(models.Model):
     generated_at = models.DateTimeField(auto_now_add=True)
     acknowledged_at = models.DateTimeField(null=True, blank=True)
     acknowledged_by = models.ForeignKey(
-        'auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='acknowledged_alerts'
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='acknowledged_alerts'
     )
     resolved_at = models.DateTimeField(null=True, blank=True)
     resolved_by = models.ForeignKey(
-        'auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='resolved_alerts'
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='resolved_alerts'
     )
     
     # Escalation
@@ -353,7 +354,7 @@ class Notification(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     alert = models.ForeignKey(Alert, on_delete=models.CASCADE, related_name='notifications')
-    recipient = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='notifications')
+    recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
     channel = models.CharField(max_length=20, choices=CHANNEL_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     sent_at = models.DateTimeField(null=True, blank=True)
