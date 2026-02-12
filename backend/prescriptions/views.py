@@ -4,6 +4,8 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.permissions import IsApprovedDoctor, IsDoctorVerified
+
 from .models import Medicine, Prescription
 from .serializers import (
     CheckAllergiesSerializer,
@@ -59,7 +61,7 @@ class CheckAllergiesView(APIView):
 class CreatePrescriptionView(APIView):
     """Doctor creates a prescription for a patient."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsApprovedDoctor]
 
     def post(self, request):
         serializer = CreatePrescriptionSerializer(data=request.data, context={"request": request})
@@ -83,22 +85,19 @@ class CreatePrescriptionView(APIView):
 class PrescriptionDetailView(APIView):
     """Get prescription details."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsDoctorVerified]
 
     def get(self, request, prescription_id):
         prescription = get_object_or_404(Prescription, id=prescription_id)
 
-        # Check if user is doctor, patient, or pharmacist
         user = request.user
-        if user.role == user.Role.PATIENT:
-            # Check if prescription belongs to user's profiles
+        if user.is_patient:
             if not user.profiles.filter(id=prescription.patient_id).exists():
                 return Response({"detail": "You do not have access to this prescription"}, status=status.HTTP_403_FORBIDDEN)
-        elif user.role == user.Role.DOCTOR:
-            # Check if doctor created the prescription
+        elif user.is_doctor:
             if prescription.doctor_id != user.id:
                 return Response({"detail": "You do not have access to this prescription"}, status=status.HTTP_403_FORBIDDEN)
-        # Pharmacists can view any prescription
+        # Admins can view any prescription
 
         return Response(PrescriptionSerializer(prescription).data)
 
@@ -106,17 +105,16 @@ class PrescriptionDetailView(APIView):
 class PrescriptionQRImageView(APIView):
     """Download prescription QR code image."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsDoctorVerified]
 
     def get(self, request, prescription_id):
         prescription = get_object_or_404(Prescription, id=prescription_id)
 
-        # Check access (same as detail view)
         user = request.user
-        if user.role == user.Role.PATIENT:
+        if user.is_patient:
             if not user.profiles.filter(id=prescription.patient_id).exists():
                 return Response({"detail": "You do not have access to this prescription"}, status=status.HTTP_403_FORBIDDEN)
-        elif user.role == user.Role.DOCTOR:
+        elif user.is_doctor:
             if prescription.doctor_id != user.id:
                 return Response({"detail": "You do not have access to this prescription"}, status=status.HTTP_403_FORBIDDEN)
 
@@ -129,13 +127,12 @@ class PrescriptionQRImageView(APIView):
 class PatientPrescriptionsView(APIView):
     """Get all prescriptions for a patient."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsDoctorVerified]
 
     def get(self, request, patient_id):
         user = request.user
 
-        # Check access
-        if user.role == user.Role.PATIENT:
+        if user.is_patient:
             if not user.profiles.filter(id=patient_id).exists():
                 return Response({"detail": "You do not have access to these prescriptions"}, status=status.HTTP_403_FORBIDDEN)
 
@@ -164,19 +161,18 @@ class MyPrescriptionsView(APIView):
 class GeneratePrescriptionPDFView(APIView):
     """Generate prescription in patient's preferred language."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsDoctorVerified]
 
     def get(self, request, prescription_id):
         from .translations import translate_prescription_data
 
         prescription = get_object_or_404(Prescription, id=prescription_id)
 
-        # Check access
         user = request.user
-        if user.role == user.Role.PATIENT:
+        if user.is_patient:
             if not user.profiles.filter(id=prescription.patient_id).exists():
                 return Response({"detail": "You do not have access to this prescription"}, status=status.HTTP_403_FORBIDDEN)
-        elif user.role == user.Role.DOCTOR:
+        elif user.is_doctor:
             if prescription.doctor_id != user.id:
                 return Response({"detail": "You do not have access to this prescription"}, status=status.HTTP_403_FORBIDDEN)
 
