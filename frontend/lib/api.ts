@@ -21,6 +21,9 @@ import type {
   ChronicCondition,
   Prescription,
   AdherenceTracker,
+  PatientRegistrationData,
+  DoctorRegistrationData,
+  RegistrationResponse,
 } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -88,7 +91,14 @@ class ApiClient {
                            error.message || 
                            'An error occurred';
         
-        toast.error(errorMessage);
+        // Don't show toast for registration/login/auth endpoints - they handle their own errors
+        const requestUrl = error.config?.url || '';
+        const isAuthRequest = requestUrl.includes('/auth/register/') || 
+                             requestUrl.includes('/auth/login/') ||
+                             requestUrl.includes('/auth/verify-email/');
+        if (!isAuthRequest) {
+          toast.error(errorMessage);
+        }
         return Promise.reject(error);
       }
     );
@@ -193,6 +203,52 @@ export const api = {
       phone: string;
       address: string;
     }) => apiClient.post('/auth/register/patient/', data),
+    
+    // Production-grade registration with file uploads
+    registerPatientWithDocuments: async (data: PatientRegistrationData): Promise<RegistrationResponse> => {
+      const formData = new FormData();
+      
+      // Add all fields to FormData
+      Object.entries(data).forEach(([key, value]) => {
+        if (value instanceof File) {
+          formData.append(key, value);
+        } else if (typeof value === 'boolean') {
+          formData.append(key, value ? 'true' : 'false');
+        } else if (value !== undefined && value !== null) {
+          formData.append(key, String(value));
+        }
+      });
+      
+      const response = await apiClient.post('/auth/register/patient/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response;
+    },
+    
+    registerDoctorWithDocuments: async (data: DoctorRegistrationData): Promise<RegistrationResponse> => {
+      const formData = new FormData();
+      
+      // Add all fields to FormData
+      Object.entries(data).forEach(([key, value]) => {
+        if (value instanceof File) {
+          formData.append(key, value);
+        } else if (typeof value === 'boolean') {
+          formData.append(key, value ? 'true' : 'false');
+        } else if (value !== undefined && value !== null) {
+          formData.append(key, String(value));
+        }
+      });
+      
+      const response = await apiClient.post('/auth/register/doctor/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response;
+    },
+    
     registerPharmacy: (data: {
       email: string;
       password: string;

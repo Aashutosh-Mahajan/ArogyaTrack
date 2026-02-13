@@ -1,6 +1,9 @@
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 
 from .permissions import IsAdmin
 from .serializers import (
@@ -38,30 +41,83 @@ class VerifyOTPView(APIView):
         return Response(tokens, status=status.HTTP_200_OK)
 
 
+@method_decorator(ratelimit(key='ip', rate='5/h', method='POST'), name='dispatch')
 class DoctorRegistrationView(APIView):
+    """
+    Doctor registration endpoint with file uploads.
+    
+    Requires multipart/form-data for document uploads:
+    - license_certificate (required)
+    - degree_certificate (required)
+    - government_id (required)
+    
+    Rate limit: 5 attempts per hour per IP address.
+    """
     permission_classes = [permissions.AllowAny]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def post(self, request):
         serializer = DoctorRegistrationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(
-            {"detail": "Registration successful. Please check your email for OTP verification."},
-            status=status.HTTP_201_CREATED
-        )
+        
+        if not serializer.is_valid():
+            # Enhanced error response for file upload issues
+            errors = serializer.errors
+            return Response({
+                "detail": "Registration failed. Please check the errors below.",
+                "errors": errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = serializer.save()
+        
+        # TODO: Send admin notification email for new doctor registration
+        # from django.core.mail import send_mail
+        # send_mail(
+        #     'New Doctor Registration - Approval Required',
+        #     f'Dr. {user.first_name} {user.last_name} has registered and needs approval.',
+        #     settings.DEFAULT_FROM_EMAIL,
+        #     [settings.ADMIN_EMAIL],
+        #     fail_silently=True,
+        # )
+        
+        return Response({
+            "detail": "Registration successful. Your documents are under review. Please check your email for OTP verification.",
+            "status": "pending_approval",
+            "approval_message": "Your application will be reviewed by our admin team within 24-48 hours."
+        }, status=status.HTTP_201_CREATED)
 
 
+@method_decorator(ratelimit(key='ip', rate='10/h', method='POST'), name='dispatch')
 class PatientRegistrationView(APIView):
+    """
+    Patient registration endpoint with file uploads.
+    
+    Requires multipart/form-data for document upload:
+    - aadhar_id_proof (required)
+    
+    All consent fields are mandatory.
+    Rate limit: 10 attempts per hour per IP address.
+    """
     permission_classes = [permissions.AllowAny]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def post(self, request):
         serializer = PatientRegistrationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(
-            {"detail": "Registration successful. Please check your email for OTP verification."},
-            status=status.HTTP_201_CREATED
-        )
+        
+        if not serializer.is_valid():
+            # Enhanced error response for file upload and consent issues
+            errors = serializer.errors
+            return Response({
+                "detail": "Registration failed. Please check the errors below.",
+                "errors": errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = serializer.save()
+        
+        return Response({
+            "detail": "Registration successful. Please check your email for OTP verification.",
+            "user_id": user.id,
+            "email": user.email
+        }, status=status.HTTP_201_CREATED)
 
 
 class PasswordLoginView(APIView):

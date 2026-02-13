@@ -33,7 +33,7 @@ export interface Profile {
   id: number;
   user: number;
   date_of_birth: string;
-  gender: 'M' | 'F' | 'O';
+  gender: 'male' | 'female' | 'other';
   blood_group: string;
   address: string;
   city: string;
@@ -474,4 +474,77 @@ export interface ApiError {
   detail?: string;
   message?: string;
   [key: string]: any;
+}
+
+// Production-Grade Registration Types
+export interface PatientRegistrationData {
+  // Account credentials
+  email: string;
+  password: string;
+  
+  // Personal information
+  first_name: string;
+  last_name: string;
+  date_of_birth: string; // YYYY-MM-DD format
+  gender: 'male' | 'female' | 'other';
+  phone: string;
+  blood_group: string;
+  
+  // Address details
+  address: string;
+  district: string;
+  state: string;
+  country?: string;
+  pincode: string;
+  
+  // Emergency contact
+  emergency_contact_number: string;
+  
+  // ID proof upload
+  aadhar_id_proof: File;
+  
+  // Consent agreements (all required)
+  terms_accepted: boolean;
+  consent_store_data: boolean;
+  consent_doctor_access: boolean;
+}
+
+export interface DoctorRegistrationData {
+  // Account credentials
+  email: string;
+  password: string;
+  
+  // Personal information
+  first_name: string;
+  last_name: string;
+  date_of_birth: string; // YYYY-MM-DD format
+  phone: string;
+  
+  // Professional information
+  medical_license: string;
+  degree: 'MBBS' | 'MD' | 'MS' | 'DNB' | 'BDS' | 'BAMS' | 'BHMS' | 'BUMS' | 'Other';
+  degree_other?: string; // Required if degree === 'Other'
+  specialization: string;
+  experience_years: number;
+  
+  // Clinic details
+  clinic_name?: string;
+  clinic_address?: string;
+  consultation_fee?: number;
+  
+  // Document uploads (all required)
+  license_certificate: File;
+  degree_certificate: File;
+  government_id: File;
+  
+  // Terms acceptance
+  terms_accepted: boolean;
+}
+
+export interface RegistrationResponse {
+  detail: string;
+  user_id?: number;
+  email?: string;
+  status?: string;
+  approval_message?: string;
 }

@@ -7,6 +7,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from .models import DoctorProfile, SessionService, OTPService
+from .audit import AuditService
 
 User = get_user_model()
 
@@ -88,13 +89,43 @@ class VerifyOTPSerializer(serializers.Serializer):
 
 
 class DoctorRegistrationSerializer(serializers.Serializer):
+    """Production-grade doctor registration with document verification."""
+    
+    # Personal Information
     email = serializers.EmailField()
     password = serializers.CharField(min_length=8, write_only=True)
     first_name = serializers.CharField(max_length=100)
     last_name = serializers.CharField(max_length=100)
-    medical_license = serializers.CharField(max_length=50)
-    specialization = serializers.CharField(max_length=100)
+    date_of_birth = serializers.DateField()
     phone = serializers.CharField(max_length=20)
+    
+    # Professional Information
+    medical_license = serializers.CharField(max_length=50)
+    degree = serializers.ChoiceField(
+        choices=['MBBS', 'MD', 'MS', 'DNB', 'BDS', 'BAMS', 'BHMS', 'BUMS', 'Other'],
+        default='MBBS'
+    )
+    degree_other = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    specialization = serializers.CharField(max_length=100)
+    experience_years = serializers.IntegerField(min_value=0, max_value=60)
+    
+    # Professional Details (Optional)
+    clinic_name = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    clinic_address = serializers.CharField(required=False, allow_blank=True)
+    consultation_fee = serializers.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        required=False,
+        allow_null=True
+    )
+    
+    # Documents (Required for approval)
+    license_certificate = serializers.FileField()
+    degree_certificate = serializers.FileField()
+    government_id = serializers.FileField()
+    
+    # Terms
+    terms_accepted = serializers.BooleanField()
 
     def validate_email(self, value):
         value = value.lower()
@@ -102,57 +133,217 @@ class DoctorRegistrationSerializer(serializers.Serializer):
         if existing:
             if existing.verification_status == User.VerificationStatus.VERIFIED:
                 raise serializers.ValidationError("Email already registered")
-            # Remove unverified user so they can re-register
             existing.delete()
         return value
+    
+    def validate_password(self, value):
+        """Validate password strength."""
+        from patients.validators import validate_strong_password
+        try:
+            validate_strong_password(value)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+        return value
+    
+    def validate_phone(self, value):
+        """Validate phone number format."""
+        from patients.validators import validate_phone_number
+        try:
+            validate_phone_number(value)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+        return value
+    
+    def validate_date_of_birth(self, value):
+        """Validate doctor age (minimum 23 years)."""
+        from accounts.validators import validate_doctor_age
+        try:
+            validate_doctor_age(value)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+        return value
+    
+    def validate_medical_license(self, value):
+        """Validate medical license format and uniqueness."""
+        from accounts.validators import validate_medical_registration
+        try:
+            validate_medical_registration(value)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+        
+        # Check uniqueness
+        if DoctorProfile.objects.filter(medical_license=value.upper()).exists():
+            raise serializers.ValidationError("This medical license number is already registered")
+        
+        return value.upper()
+    
+    def validate_license_certificate(self, value):
+        """Validate license certificate file."""
+        from accounts.validators import validate_medical_certificate
+        try:
+            validate_medical_certificate(value)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+        return value
+    
+    def validate_degree_certificate(self, value):
+        """Validate degree certificate file."""
+        from accounts.validators import validate_medical_certificate
+        try:
+            validate_medical_certificate(value)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+        return value
+    
+    def validate_government_id(self, value):
+        """Validate government ID file."""
+        from accounts.validators import validate_medical_certificate
+        try:
+            validate_medical_certificate(value)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+        return value
+    
+    def validate(self, attrs):
+        """Cross-field validation."""
+        # Validate terms accepted
+        if not attrs.get('terms_accepted'):
+            raise serializers.ValidationError({"terms_accepted": "You must accept the terms and conditions"})
+        
+        # Validate experience vs age
+        dob = attrs.get('date_of_birth')
+        experience = attrs.get('experience_years', 0)
+        if dob and experience:
+            from datetime import date
+            today = date.today()
+            age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+            max_experience = age - 23  # Assuming min age for practice is 23
+            
+            if experience > max_experience:
+                raise serializers.ValidationError({
+                    "experience_years": f"Experience ({experience} years) exceeds possible years based on age ({max_experience} years)"
+                })
+        
+        # If degree is 'Other', degree_other must be provided
+        if attrs.get('degree') == 'Other' and not attrs.get('degree_other'):
+            raise serializers.ValidationError({"degree_other": "Please specify your degree"})
+        
+        return attrs
 
     def create(self, validated_data):
+        """Create doctor user and profile with pending approval status."""
+        from django.db import transaction
+        
         password = validated_data.pop('password')
         email = validated_data['email']
         first_name = validated_data['first_name']
         last_name = validated_data['last_name']
+        date_of_birth = validated_data['date_of_birth']
+        phone = validated_data['phone']
+        
+        # Professional data
         medical_license = validated_data['medical_license']
+        degree = validated_data['degree']
+        degree_other = validated_data.get('degree_other', '')
         specialization = validated_data['specialization']
-        phone = validated_data.get('phone', '')
+        experience_years = validated_data['experience_years']
+        
+        # Optional fields
+        clinic_name = validated_data.get('clinic_name', '')
+        clinic_address = validated_data.get('clinic_address', '')
+        consultation_fee = validated_data.get('consultation_fee')
+        
+        # Documents
+        license_cert = validated_data['license_certificate']
+        degree_cert = validated_data['degree_certificate']
+        govt_id = validated_data['government_id']
+        
+        with transaction.atomic():
+            # Create User
+            user = User.objects.create(
+                email=email,
+                role=User.Role.DOCTOR,
+                verification_status=User.VerificationStatus.PENDING,
+            )
+            user.set_password(password)
+            user.save()
 
-        user = User.objects.create(
-            email=email,
-            role=User.Role.DOCTOR,
-            verification_status=User.VerificationStatus.PENDING,
-        )
-        user.set_password(password)
-        user.save()
+            # Assign to Doctor group
+            _assign_group(user, 'Doctor')
 
-        # Assign to Doctor group
-        _assign_group(user, 'Doctor')
-
-        # Create DoctorProfile with pending approval
-        DoctorProfile.objects.create(
-            user=user,
-            first_name=first_name,
-            last_name=last_name,
-            medical_license=medical_license,
-            specialization=specialization,
-            phone=phone,
-            approval_status=DoctorProfile.ApprovalStatus.PENDING,
-        )
-
-        # Send OTP for email verification
-        OTPService.issue_otp(user)
-
+            # Create DoctorProfile with PENDING approval
+            doctor_profile = DoctorProfile.objects.create(
+                user=user,
+                first_name=first_name,
+                last_name=last_name,
+                date_of_birth=date_of_birth,
+                phone=phone,
+                medical_license=medical_license,
+                degree=degree,
+                degree_other=degree_other,
+                specialization=specialization,
+                experience_years=experience_years,
+                clinic_name=clinic_name,
+                clinic_address=clinic_address,
+                consultation_fee=consultation_fee,
+                license_certificate=license_cert,
+                degree_certificate=degree_cert,
+                government_id=govt_id,
+                approval_status=DoctorProfile.ApprovalStatus.PENDING,
+            )
+            
+            # Log doctor registration in audit
+            AuditService.log_event(
+                event_type="doctor_registration",
+                user=user,
+                details={
+                    "medical_license": medical_license,
+                    "specialization": specialization,
+                    "status": "pending_approval"
+                }
+            )
+            
+            # Send OTP for email verification (non-blocking)
+            try:
+                OTPService.issue_otp(user)
+            except Exception:
+                import logging
+                logging.getLogger(__name__).warning(f"Failed to send OTP email to {user.email}")
+            
+            # TODO: Send notification email to admin for approval
+            # send_admin_notification_email(doctor_profile)
+        
         return user
 
 
 class PatientRegistrationSerializer(serializers.Serializer):
+    """Production-grade patient registration with comprehensive fields."""
+    
+    # Personal Information
     email = serializers.EmailField()
     password = serializers.CharField(min_length=8, write_only=True)
     first_name = serializers.CharField(max_length=100)
     last_name = serializers.CharField(max_length=100)
     date_of_birth = serializers.DateField()
     gender = serializers.ChoiceField(choices=['male', 'female', 'other'])
-    blood_group = serializers.ChoiceField(choices=['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
     phone = serializers.CharField(max_length=20)
+    
+    # Medical Information
+    blood_group = serializers.ChoiceField(choices=['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
+    emergency_contact_number = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    
+    # Geographic Information
     address = serializers.CharField()
+    district = serializers.CharField(max_length=120)
+    state = serializers.CharField(max_length=120)
+    country = serializers.CharField(max_length=120, default='India')
+    pincode = serializers.CharField(max_length=10, required=False, allow_blank=True)
+    
+    # Documents & Consent
+    aadhar_id_proof = serializers.FileField(required=False, allow_null=True)
+    terms_accepted = serializers.BooleanField()
+    consent_store_data = serializers.BooleanField()
+    consent_doctor_access = serializers.BooleanField()
 
     def validate_email(self, value):
         value = value.lower()
@@ -163,11 +354,53 @@ class PatientRegistrationSerializer(serializers.Serializer):
             # Remove unverified user so they can re-register
             existing.delete()
         return value
+    
+    def validate_password(self, value):
+        """Validate password strength."""
+        from patients.validators import validate_strong_password
+        try:
+            validate_strong_password(value)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+        return value
+    
+    def validate_phone(self, value):
+        """Validate phone number format."""
+        from patients.validators import validate_phone_number
+        try:
+            validate_phone_number(value)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+        return value
+    
+    def validate_date_of_birth(self, value):
+        """Validate patient age."""
+        from patients.validators import validate_patient_age
+        try:
+            validate_patient_age(value)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+        return value
+    
+    def validate(self, attrs):
+        """Cross-field validation."""
+        # Validate all consents are accepted
+        if not attrs.get('terms_accepted'):
+            raise serializers.ValidationError({"terms_accepted": "You must accept the terms and conditions"})
+        if not attrs.get('consent_store_data'):
+            raise serializers.ValidationError({"consent_store_data": "Consent to store medical data is required"})
+        if not attrs.get('consent_doctor_access'):
+            raise serializers.ValidationError({"consent_doctor_access": "Consent for doctor access is required"})
+        
+        return attrs
 
     def create(self, validated_data):
-        from patients.models import Profile
+        """Create user with profile and patient profile in atomic transaction."""
+        from patients.models import Profile, PatientProfile
         from datetime import date
+        from django.db import transaction
         
+        # Extract data
         password = validated_data.pop('password')
         email = validated_data['email']
         first_name = validated_data.pop('first_name')
@@ -175,37 +408,93 @@ class PatientRegistrationSerializer(serializers.Serializer):
         date_of_birth = validated_data.pop('date_of_birth')
         gender = validated_data.pop('gender')
         blood_group = validated_data.pop('blood_group')
+        phone = validated_data.pop('phone')
         
-        user = User.objects.create(
-            email=email,
-            role=User.Role.PATIENT,
-            verification_status=User.VerificationStatus.PENDING
-        )
-        user.set_password(password)
-        user.save()
+        # Geographic
+        address = validated_data.pop('address', '')
+        district = validated_data.pop('district', '')
+        state = validated_data.pop('state', '')
+        country = validated_data.pop('country', 'India')
+        pincode = validated_data.pop('pincode', '')
+        emergency_contact = validated_data.pop('emergency_contact_number', '')
         
-        # Calculate age from date_of_birth
-        today = date.today()
-        age = today.year - date_of_birth.year - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
+        # Consent
+        terms_accepted = validated_data.pop('terms_accepted')
+        consent_store_data = validated_data.pop('consent_store_data')
+        consent_doctor_access = validated_data.pop('consent_doctor_access')
+        aadhar_id_proof = validated_data.pop('aadhar_id_proof', None)
         
-        # Create patient profile
-        profile = Profile.objects.create(
-            user=user,
-            name=f"{first_name} {last_name}",
-            age=age,
-            gender=gender,
-            blood_group=blood_group,
-            relationship=Profile.Relationship.SELF
-        )
-        user.active_profile = profile
-        user.save(update_fields=['active_profile'])
-
-        # Assign to Patient group
-        _assign_group(user, 'Patient')
-
-        # Send OTP for email verification
-        OTPService.issue_otp(user)
-
+        with transaction.atomic():
+            # Create User
+            user = User.objects.create(
+                email=email,
+                role=User.Role.PATIENT,
+                verification_status=User.VerificationStatus.PENDING
+            )
+            user.set_password(password)
+            user.save()
+            
+            # Calculate age
+            today = date.today()
+            age = today.year - date_of_birth.year - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
+            
+            # Create Patient Profile (main profile)
+            profile = Profile.objects.create(
+                user=user,
+                name=f"{first_name} {last_name}",
+                age=age,
+                date_of_birth=date_of_birth,
+                gender=gender,
+                blood_group=blood_group,
+                phone=phone,
+                emergency_contact_number=emergency_contact,
+                address=address,
+                district=district,
+                state=state,
+                country=country,
+                pincode=pincode,
+                relationship=Profile.Relationship.SELF
+            )
+            user.active_profile = profile
+            user.save(update_fields=['active_profile'])
+            
+            # Create PatientProfile with consents
+            now = timezone.now()
+            patient_profile = PatientProfile.objects.create(
+                user=user,
+                aadhar_id_proof=aadhar_id_proof,
+                terms_accepted=terms_accepted,
+                terms_accepted_at=now if terms_accepted else None,
+                consent_store_data=consent_store_data,
+                consent_store_data_at=now if consent_store_data else None,
+                consent_doctor_access=consent_doctor_access,
+                consent_doctor_access_at=now if consent_doctor_access else None,
+                last_consent_update=now
+            )
+            
+            # Assign to Patient group
+            _assign_group(user, 'Patient')
+            
+            # Generate Health Card (ID card with QR code)
+            try:
+                from patients.models import HealthCardService
+                from django.conf import settings as django_settings
+                HealthCardService.create_health_card(
+                    profile=profile,
+                    media_root=str(django_settings.MEDIA_ROOT)
+                )
+            except Exception:
+                import logging
+                logging.getLogger(__name__).warning(f"Failed to generate health card for {user.email}")
+            
+            # Send OTP for email verification (non-blocking)
+            try:
+                OTPService.issue_otp(user)
+            except Exception:
+                # Don't fail registration if OTP email fails
+                import logging
+                logging.getLogger(__name__).warning(f"Failed to send OTP email to {user.email}")
+        
         return user
 
 
