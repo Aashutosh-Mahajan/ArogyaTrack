@@ -1,0 +1,13 @@
+{
+  "model": "XGBoost",
+  "threshold": 0.7000000000000002,
+  "precision": 0.9797595190380761,
+  "recall": 0.8964063072973965,
+  "f1_score": 0.9362313289927231,
+  "roc_auc": 0.9983010777049711,
+  "balanced_accuracy": 0.9473986804591612,
+  "training_samples": 325338,
+  "validation_samples": 68228,
+  "features_count": 32,
+  "best_iteration": 346
+}

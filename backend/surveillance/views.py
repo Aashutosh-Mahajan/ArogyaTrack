@@ -392,7 +392,23 @@ def heat_map_data(request):
     date = request.query_params.get('date')
     
     if not disease_code:
-        return Response({'error': 'disease_code is required'}, status=status.HTTP_400_BAD_REQUEST)
+        # Get the most common disease from recent data
+        recent_data = SurveillanceData.objects.filter(
+            date__gte=timezone.now().date() - timedelta(days=7)
+        ).values('disease_code').annotate(
+            total=Sum('case_count')
+        ).order_by('-total').first()
+        
+        if recent_data:
+            disease_code = recent_data['disease_code']
+        else:
+            # No data available, return empty response
+            return Response({
+                'disease_code': None,
+                'disease_name': '',
+                'date': timezone.now().date(),
+                'data': []
+            })
     
     if not date:
         date = timezone.now().date()

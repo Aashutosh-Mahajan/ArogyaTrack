@@ -160,6 +160,59 @@ class EmailVerificationView(APIView):
         return Response(result, status=status.HTTP_200_OK)
 
 
+class CurrentUserView(APIView):
+    """
+    Get current authenticated user's profile information.
+    Returns user data along with role-specific profile (doctor or patient).
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        
+        user_data = {
+            "id": user.id,
+            "email": user.email,
+            "role": user.role,
+            "verification_status": user.verification_status,
+            "is_active": user.is_active,
+            "is_staff": user.is_staff,
+            "date_joined": user.date_joined.isoformat(),
+            "updated_at": user.updated_at.isoformat(),
+            "active_profile": str(user.active_profile_id) if user.active_profile_id else None,
+        }
+        
+        # Add role-specific profile data
+        if user.is_doctor:
+            try:
+                doctor_profile = user.doctor_profile
+                user_data["doctor_profile"] = DoctorProfileSerializer(doctor_profile).data
+            except:
+                user_data["doctor_profile"] = None
+        
+        elif user.is_patient:
+            from patients.serializers import ProfileSerializer, PatientProfileSerializer
+            
+            # Get active profile
+            if user.active_profile_id:
+                try:
+                    from patients.models import Profile
+                    profile = Profile.objects.get(id=user.active_profile_id)
+                    user_data["profile"] = ProfileSerializer(profile).data
+                except:
+                    user_data["profile"] = None
+            
+            # Get patient profile (consent data)
+            try:
+                from patients.models import PatientProfile
+                patient_profile = PatientProfile.objects.get(user=user)
+                user_data["patient_profile"] = PatientProfileSerializer(patient_profile).data
+            except:
+                user_data["patient_profile"] = None
+        
+        return Response(user_data)
+
+
 # ─── Admin views ─────────────────────────────────────────────────────
 
 

@@ -16,6 +16,7 @@ import type {
   MLModelInfo,
   MLPipelineStatus,
   Profile,
+  PatientProfile,
   MedicalRecord,
   Allergy,
   ChronicCondition,
@@ -173,36 +174,6 @@ export const api = {
     sendOtp: (email: string) => apiClient.post('/auth/send-otp/', { email }),
     verifyOtp: (email: string, otp: string) => 
       apiClient.post('/auth/verify-otp/', { email, otp }),
-    register: (data: {
-      email: string;
-      first_name: string;
-      last_name: string;
-      phone_number: string;
-      date_of_birth: string;
-      address: string;
-    }) => apiClient.post('/auth/register/', data),
-    verifyRegistration: (email: string, otp: string) =>
-      apiClient.post('/auth/verify-registration/', { email, otp }),
-    registerDoctor: (data: {
-      email: string;
-      password: string;
-      first_name: string;
-      last_name: string;
-      medical_license: string;
-      specialization: string;
-      phone: string;
-    }) => apiClient.post('/auth/register/doctor/', data),
-    registerPatient: (data: {
-      email: string;
-      password: string;
-      first_name: string;
-      last_name: string;
-      date_of_birth: string;
-      gender: string;
-      blood_group: string;
-      phone: string;
-      address: string;
-    }) => apiClient.post('/auth/register/patient/', data),
     
     // Production-grade registration with file uploads
     registerPatientWithDocuments: async (data: PatientRegistrationData): Promise<RegistrationResponse> => {
@@ -219,7 +190,7 @@ export const api = {
         }
       });
       
-      const response = await apiClient.post('/auth/register/patient/', formData, {
+      const response = await apiClient.post<RegistrationResponse>('/auth/register/patient/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -241,7 +212,7 @@ export const api = {
         }
       });
       
-      const response = await apiClient.post('/auth/register/doctor/', formData, {
+      const response = await apiClient.post<RegistrationResponse>('/auth/register/doctor/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -249,16 +220,6 @@ export const api = {
       return response;
     },
     
-    registerPharmacy: (data: {
-      email: string;
-      password: string;
-      first_name: string;
-      last_name: string;
-      pharmacy_name: string;
-      license_number: string;
-      phone: string;
-      address: string;
-    }) => apiClient.post('/auth/register/pharmacy/', data),
     verifyEmail: (email: string, otp: string) =>
       apiClient.post('/auth/verify-email/', { email, otp }),
     login: (email: string, password: string) =>
@@ -267,8 +228,7 @@ export const api = {
       apiClient.post('/auth/password-reset/request/', { email }),
     confirmPasswordReset: (email: string, otp: string, new_password: string) =>
       apiClient.post('/auth/password-reset/confirm/', { email, otp, new_password }),
-    switchProfile: (profileType: string) => 
-      apiClient.post('/auth/switch-profile/', { profile_type: profileType }),
+    getCurrentUser: () => apiClient.get('/auth/me/'),
     logout: () => apiClient.post('/auth/logout/'),
     refreshToken: (refresh: string) => 
       apiClient.post('/auth/token/refresh/', { refresh }),
@@ -277,11 +237,16 @@ export const api = {
   // Patient
   patients: {
     getProfile: (): Promise<Profile> => apiClient.get('/patients/profile/'),
-    updateProfile: (data: any) => apiClient.patch('/patients/profile/', data),
+    updateProfile: (data: Partial<Profile>) => apiClient.patch('/patients/profile/', data),
+    getPatientProfile: (): Promise<PatientProfile> => apiClient.get('/patients/patient-profile/'),
+    updatePatientProfile: (data: Partial<PatientProfile>) => apiClient.patch('/patients/patient-profile/', data),
+    createProfile: (data: Partial<Profile>) => apiClient.post('/patients/create-profile/', data),
+    getMyProfiles: () => apiClient.get('/patients/my-profiles/'),
+    switchProfile: (profileId: string) => apiClient.put('/patients/switch-profile/', { profile_id: profileId }),
     getHealthCard: () => apiClient.get('/patients/health-card/'),
     generateHealthCard: () => apiClient.post('/patients/health-card/'),
-    getEmergencyContacts: () => apiClient.get('/patients/emergency-contacts/'),
-    addEmergencyContact: (data: any) => apiClient.post('/patients/emergency-contacts/', data),
+    getEmergencyContacts: (profileId: string) => apiClient.get(`/patients/${profileId}/emergency-contacts/`),
+    addEmergencyContact: (profileId: string, data: any) => apiClient.post(`/patients/${profileId}/emergency-contacts/`, data),
     // Secure Digital Patient Card
     getPatientCard: () => apiClient.get('/patients/my-card/'),
     downloadPatientCardPDF: () =>

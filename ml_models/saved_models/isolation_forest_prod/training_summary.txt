@@ -1,0 +1,45 @@
+
+MODEL: XGBoost Outbreak Detector (Production Grade)
+
+Configuration:
+  • Model: XGBoost Classifier
+  • Learning Rate: 0.05
+  • Max Depth: 6
+  • N Estimators: 346 (early stopped)
+  • Features: 32
+  • SMOTE: Yes
+  • Optimal Threshold: 0.700
+
+Dataset:
+  • Training: 271,961 samples (21,701 outbreaks)
+  • Validation: 68,228 samples (5,454 outbreaks)
+  • Split Date: 2024-01-01
+
+🏆 PERFORMANCE (Validation Set):
+  • Precision: 0.980 (98.0%)
+  • Recall: 0.896 (89.6%)
+  • F1-Score: 0.936 (93.6%)
+  • ROC-AUC: 0.998
+  • Balanced Accuracy: 0.947
+
+Top 5 Important Features:
+  21. deviation_28: 0.3672
+  2. severity_avg: 0.3519
+  1. case_count: 0.1368
+  19. deviation_7: 0.0127
+  15. growth_7: 0.0097
+
+Output Files:
+  • Model: D:\python\ml_models\saved_models\isolation_forest_prod\isolation_forest.pkl
+  • Scaler: D:\python\ml_models\saved_models\isolation_forest_prod\scaler.pkl
+  • Features: D:\python\ml_models\saved_models\isolation_forest_prod\features.json
+  • Metrics: D:\python\ml_models\saved_models\isolation_forest_prod\metrics.json
+  • Metadata: D:\python\ml_models\saved_models\isolation_forest_prod\metadata.json
+  • Plots: D:\python\ml_models\saved_models\isolation_forest_prod\plots/
+
+✅ Model ready for deployment!
+
+Expected Performance in Production:
+  • F1-Score: 70-85% (current: 93.6%)
+  • Suitable for: Early outbreak detection, Alert systems
+  • Deployment: Load with joblib, apply threshold 0.700

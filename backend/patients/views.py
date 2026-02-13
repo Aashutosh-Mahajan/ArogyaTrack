@@ -5,10 +5,11 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import HealthCard, HealthCardService, Profile
+from .models import HealthCard, HealthCardService, Profile, PatientProfile
 from .serializers import (
     EmergencyContactSerializer,
     HealthCardSerializer,
+    PatientProfileSerializer,
     ProfileSerializer,
     RevokeHealthCardSerializer,
     SwitchProfileSerializer,
@@ -44,6 +45,41 @@ class ActiveProfileView(APIView):
         serializer.is_valid(raise_exception=True)
         profile = serializer.save()
         return Response(ProfileSerializer(profile).data)
+
+
+class PatientProfileView(APIView):
+    """Get or update the patient-level profile data (consents, documents, etc.)."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        try:
+            patient_profile = PatientProfile.objects.get(user=user)
+            return Response(PatientProfileSerializer(patient_profile).data)
+        except PatientProfile.DoesNotExist:
+            return Response({
+                "detail": "Patient profile not found. This may be a doctor or admin account."
+            }, status=status.HTTP_404_NOT_FOUND)
+
+    def patch(self, request):
+        user = request.user
+        try:
+            patient_profile = PatientProfile.objects.get(user=user)
+        except PatientProfile.DoesNotExist:
+            return Response({
+                "detail": "Patient profile not found."
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = PatientProfileSerializer(
+            patient_profile, 
+            data=request.data, 
+            partial=True, 
+            context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        patient_profile = serializer.save()
+        return Response(PatientProfileSerializer(patient_profile).data)
 
 
 class CreateProfileView(APIView):

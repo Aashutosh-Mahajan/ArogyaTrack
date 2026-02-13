@@ -1,0 +1,27 @@
+{
+  "total_clusters": 50,
+  "noise_points": 16,
+  "silhouette_score": 0.4799879303742516,
+  "top_5_clusters_by_cases": [
+    {
+      "cluster": 1,
+      "case_count": 627573
+    },
+    {
+      "cluster": 0,
+      "case_count": 580251
+    },
+    {
+      "cluster": 6,
+      "case_count": 222280
+    },
+    {
+      "cluster": 10,
+      "case_count": 215323
+    },
+    {
+      "cluster": 3,
+      "case_count": 125335
+    }
+  ]
+}

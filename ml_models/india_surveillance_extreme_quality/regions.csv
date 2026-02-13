@@ -1,0 +1,1537 @@
+region_id,region_name,region_type,city,state,latitude,longitude,population,area_sq_km,hospital_count,sanitation_index,urban_rural
+1,Mumbai_Ward_1,ward,Mumbai,Tripura,19.080281,72.880536,1204874,3.34,25,9.5,urban
+2,Mumbai_Ward_2,ward,Mumbai,Tripura,19.069318,72.886796,1189694,24.31,19,9.5,urban
+3,Mumbai_Ward_3,ward,Mumbai,Tripura,19.065788,72.890748,855741,11.93,14,9.5,urban
+4,Mumbai_Ward_4,ward,Mumbai,Tripura,19.044131,72.894857,828878,10.43,15,9.5,urban
+5,Mumbai_Ward_5,ward,Mumbai,Tripura,19.094815,72.879223,867068,15.97,17,9.5,urban
+6,Mumbai_Ward_6,ward,Mumbai,Tripura,19.074494,72.873606,802339,12.12,17,9.5,urban
+7,Mumbai_Ward_7,ward,Mumbai,Tripura,19.072628,72.866744,762179,9.17,17,9.5,urban
+8,Mumbai_Ward_8,ward,Mumbai,Tripura,19.054517,72.924285,857664,19.83,20,9.5,urban
+9,Mumbai_Ward_9,ward,Mumbai,Tripura,19.083907,72.885181,796513,10.94,13,9.5,urban
+10,Mumbai_Ward_10,ward,Mumbai,Tripura,19.068313,72.894216,966749,14.48,17,9.5,urban
+11,Mumbai_Ward_11,ward,Mumbai,Tripura,19.077691,72.876834,787666,2.13,18,9.5,urban
+12,Mumbai_Ward_12,ward,Mumbai,Tripura,19.082005,72.891342,1202979,3.7,26,9.5,urban
+13,Delhi_Ward_1,ward,Delhi,Delhi,28.639362,77.226852,1343855,9.15,28,9.5,urban
+14,Delhi_Ward_2,ward,Delhi,Delhi,28.649165,77.249186,1194528,12.86,27,9.5,urban
+15,Delhi_Ward_3,ward,Delhi,Delhi,28.657375,77.221813,1276113,14.02,26,9.5,urban
+16,Delhi_Ward_4,ward,Delhi,Delhi,28.67542,77.22551,843850,16.64,13,9.5,urban
+17,Delhi_Ward_5,ward,Delhi,Delhi,28.653326,77.201676,1373293,7.26,24,9.5,urban
+18,Delhi_Ward_6,ward,Delhi,Delhi,28.644176,77.228308,879158,20.59,20,9.5,urban
+19,Delhi_Ward_7,ward,Delhi,Delhi,28.665681,77.236421,1304508,20.57,22,9.5,urban
+20,Delhi_Ward_8,ward,Delhi,Delhi,28.66648,77.226851,845280,11.82,15,9.5,urban
+21,Delhi_Ward_9,ward,Delhi,Delhi,28.656392,77.235406,777021,4.76,15,9.5,urban
+22,Delhi_Ward_10,ward,Delhi,Delhi,28.64564,77.238284,986402,18.17,19,9.5,urban
+23,Bengaluru_Ward_1,ward,Bengaluru,Karnataka,12.975803,77.592573,1085271,8.55,19,9.5,urban
+24,Bengaluru_Ward_2,ward,Bengaluru,Karnataka,12.971542,77.595225,850914,8.41,13,9.5,urban
+25,Bengaluru_Ward_3,ward,Bengaluru,Karnataka,12.969055,77.598213,668541,7.47,13,9.5,urban
+26,Bengaluru_Ward_4,ward,Bengaluru,Karnataka,12.983219,77.581663,916989,14.32,19,9.5,urban
+27,Bengaluru_Ward_5,ward,Bengaluru,Karnataka,12.957082,77.585196,615468,16.84,12,9.5,urban
+28,Bengaluru_Ward_6,ward,Bengaluru,Karnataka,12.972968,77.601735,791814,5.16,18,9.5,urban
+29,Bengaluru_Ward_7,ward,Bengaluru,Karnataka,12.960191,77.588859,1066027,20.8,24,9.5,urban
+30,Bengaluru_Ward_8,ward,Bengaluru,Karnataka,12.953477,77.614148,717963,22.64,12,9.5,urban
+31,Bengaluru_Ward_9,ward,Bengaluru,Karnataka,12.975838,77.605417,767497,22.4,14,9.5,urban
+32,Bengaluru_Ward_10,ward,Bengaluru,Karnataka,12.976395,77.602955,637572,22.67,11,9.5,urban
+33,Hyderabad_Ward_1,ward,Hyderabad,40,17.388446,78.445645,409709,17.0,7,9.5,urban
+34,Hyderabad_Ward_2,ward,Hyderabad,40,17.391157,78.467378,490896,19.17,9,9.0,urban
+35,Hyderabad_Ward_3,ward,Hyderabad,40,17.398501,78.462552,637882,8.1,13,9.5,urban
+36,Hyderabad_Ward_4,ward,Hyderabad,40,17.372744,78.46954,628625,13.56,14,9.5,urban
+37,Hyderabad_Ward_5,ward,Hyderabad,40,17.38008,78.497163,476208,23.63,10,8.7,urban
+38,Hyderabad_Ward_6,ward,Hyderabad,40,17.391287,78.454498,745942,21.62,17,9.5,urban
+39,Hyderabad_Ward_7,ward,Hyderabad,40,17.371348,78.433637,705550,23.53,13,9.5,urban
+40,Hyderabad_Ward_8,ward,Hyderabad,40,17.365364,78.465811,441918,24.77,9,9.5,urban
+41,Hyderabad_Ward_9,ward,Hyderabad,40,17.384923,78.439215,714724,10.27,15,9.5,urban
+42,Hyderabad_Ward_10,ward,Hyderabad,40,17.399857,78.469937,691206,23.0,15,9.5,urban
+43,Hyderabad_Ward_11,ward,Hyderabad,40,17.391776,78.514151,687073,22.47,14,9.5,urban
+44,Hyderabad_Ward_12,ward,Hyderabad,40,17.393821,78.439072,440801,2.83,9,7.9,urban
+45,Ahmedabad_Ward_1,ward,Ahmedabad,Uttar Pradesh,23.06051,72.559261,503948,4.92,10,9.5,urban
+46,Ahmedabad_Ward_2,ward,Ahmedabad,Uttar Pradesh,23.042124,72.610676,479423,3.96,10,9.5,urban
+47,Ahmedabad_Ward_3,ward,Ahmedabad,Uttar Pradesh,23.026474,72.577496,592063,20.29,12,8.9,urban
+48,Ahmedabad_Ward_4,ward,Ahmedabad,Uttar Pradesh,23.028587,72.580603,431787,24.14,6,7.6,urban
+49,Ahmedabad_Ward_5,ward,Ahmedabad,Uttar Pradesh,23.033365,72.600256,546398,14.63,9,9.5,urban
+50,Ahmedabad_Ward_6,ward,Ahmedabad,Uttar Pradesh,23.01599,72.601451,501656,18.97,11,9.5,urban
+51,Ahmedabad_Ward_7,ward,Ahmedabad,Uttar Pradesh,23.057622,72.602757,550090,2.33,9,9.5,urban
+52,Ahmedabad_Ward_8,ward,Ahmedabad,Uttar Pradesh,23.015175,72.583709,438507,12.89,8,9.5,urban
+53,Ahmedabad_Ward_9,ward,Ahmedabad,Uttar Pradesh,23.022001,72.568553,542775,10.62,11,9.5,urban
+54,Ahmedabad_Ward_10,ward,Ahmedabad,Uttar Pradesh,23.027751,72.588148,701596,5.75,14,9.5,urban
+55,Ahmedabad_Ward_11,ward,Ahmedabad,Uttar Pradesh,23.028776,72.578267,413774,10.93,8,9.3,urban
+56,Chennai_Ward_1,ward,Chennai,25,13.097772,80.269243,687029,10.88,16,9.5,urban
+57,Chennai_Ward_2,ward,Chennai,25,13.092055,80.26913,496671,4.72,9,9.4,urban
+58,Chennai_Ward_3,ward,Chennai,25,13.100584,80.29275,820181,20.48,17,9.5,urban
+59,Chennai_Ward_4,ward,Chennai,25,13.075405,80.270067,769281,10.56,17,9.5,urban
+60,Chennai_Ward_5,ward,Chennai,25,13.0896,80.268432,841561,11.87,19,9.5,urban
+61,Chennai_Ward_6,ward,Chennai,25,13.100221,80.290673,509485,9.36,11,9.5,urban
+62,Chennai_Ward_7,ward,Chennai,25,13.088155,80.274882,472456,4.1,10,9.5,urban
+63,Kolkata_Ward_1,ward,Kolkata,West Bengal,22.567492,88.361088,840507,8.74,17,9.5,urban
+64,Kolkata_Ward_2,ward,Kolkata,West Bengal,22.594016,88.381114,761813,20.16,17,9.5,urban
+65,Kolkata_Ward_3,ward,Kolkata,West Bengal,22.562446,88.349581,485988,10.07,9,9.5,urban
+66,Kolkata_Ward_4,ward,Kolkata,West Bengal,22.560424,88.372248,503282,18.12,8,9.5,urban
+67,Kolkata_Ward_5,ward,Kolkata,West Bengal,22.555564,88.366521,496817,20.69,11,8.5,urban
+68,Kolkata_Ward_6,ward,Kolkata,West Bengal,22.541518,88.353077,496286,14.84,11,9.5,urban
+69,Kolkata_Ward_7,ward,Kolkata,West Bengal,22.575495,88.360641,507281,3.29,10,9.5,urban
+70,Surat_Ward_1,ward,Surat,Uttar Pradesh,21.19161,72.849297,688700,10.62,16,9.5,urban
+71,Surat_Ward_2,ward,Surat,Uttar Pradesh,21.206292,72.824212,547117,3.7,12,9.5,urban
+72,Surat_Ward_3,ward,Surat,Uttar Pradesh,21.196129,72.837334,664981,18.0,13,9.5,urban
+73,Surat_Ward_4,ward,Surat,Uttar Pradesh,21.228238,72.81872,689072,8.38,15,9.5,urban
+74,Surat_Ward_5,ward,Surat,Uttar Pradesh,21.183816,72.827864,598180,3.79,12,9.5,urban
+75,Surat_Ward_6,ward,Surat,Uttar Pradesh,21.201066,72.858373,580934,22.95,13,9.5,urban
+76,Surat_Ward_7,ward,Surat,Uttar Pradesh,21.203319,72.841359,623717,21.92,14,9.5,urban
+77,Pune_Ward_1,ward,Pune,Tripura,18.537262,73.848312,672990,24.31,11,9.5,urban
+78,Pune_Ward_2,ward,Pune,Tripura,18.539878,73.859485,510961,8.29,9,9.5,urban
+79,Pune_Ward_3,ward,Pune,Tripura,18.519649,73.856055,604786,12.36,14,9.5,urban
+80,Pune_Ward_4,ward,Pune,Tripura,18.528913,73.834821,574390,10.24,12,9.5,urban
+81,Pune_Ward_5,ward,Pune,Tripura,18.524555,73.844123,527088,14.69,11,9.5,urban
+82,Pune_Ward_6,ward,Pune,Tripura,18.520583,73.870749,490586,2.66,8,9.5,urban
+83,Jaipur_Ward_1,ward,Jaipur,Gujarat,26.929301,75.808339,341915,11.02,6,9.5,urban
+84,Jaipur_Ward_2,ward,Jaipur,Gujarat,26.893239,75.801101,276881,20.02,5,7.6,urban
+85,Jaipur_Ward_3,ward,Jaipur,Gujarat,26.944049,75.767108,370845,12.56,8,7.0,urban
+86,Jaipur_Ward_4,ward,Jaipur,Gujarat,26.918787,75.787717,273317,7.52,5,8.1,urban
+87,Jaipur_Ward_5,ward,Jaipur,Gujarat,26.925119,75.773712,246473,17.35,4,7.4,urban
+88,Jaipur_Ward_6,ward,Jaipur,Gujarat,26.933947,75.78111,220700,8.41,3,6.7,urban
+89,Jaipur_Ward_7,ward,Jaipur,Gujarat,26.918015,75.772281,250942,2.9,4,9.5,urban
+90,Jaipur_Ward_8,ward,Jaipur,Gujarat,26.920149,75.795529,228174,23.18,5,8.5,urban
+91,Jaipur_Ward_9,ward,Jaipur,Gujarat,26.917935,75.784495,360580,10.52,7,8.1,urban
+92,Jaipur_Ward_10,ward,Jaipur,Gujarat,26.910983,75.823422,280657,19.19,5,7.5,urban
+93,Kanpur_Ward_1,ward,Kanpur,Telangana,26.473878,80.354419,473837,14.25,9,9.5,urban
+94,Kanpur_Ward_2,ward,Kanpur,Telangana,26.450897,80.337592,435895,9.41,7,8.5,urban
+95,Kanpur_Ward_3,ward,Kanpur,Telangana,26.455531,80.333527,363190,20.15,8,9.5,urban
+96,Kanpur_Ward_4,ward,Kanpur,Telangana,26.478455,80.33664,481017,19.15,9,9.5,urban
+97,Kanpur_Ward_5,ward,Kanpur,Telangana,26.449671,80.346895,409495,10.19,7,9.5,urban
+98,Kanpur_Ward_6,ward,Kanpur,Telangana,26.493871,80.350165,396353,5.52,6,9.1,urban
+99,Navi Mumbai_Ward_1,ward,Navi Mumbai,Tripura,19.02705,73.008513,211104,11.44,3,7.2,urban
+100,Navi Mumbai_Ward_2,ward,Navi Mumbai,Tripura,19.024346,73.021674,317019,7.93,7,8.1,urban
+101,Navi Mumbai_Ward_3,ward,Navi Mumbai,Tripura,19.044324,73.001157,326982,19.7,6,6.6,urban
+102,Navi Mumbai_Ward_4,ward,Navi Mumbai,Tripura,19.04496,73.007352,248368,7.58,4,6.5,urban
+103,Navi Mumbai_Ward_5,ward,Navi Mumbai,Tripura,19.040706,73.002255,227026,14.25,4,7.2,urban
+104,Navi Mumbai_Ward_6,ward,Navi Mumbai,Tripura,19.018645,73.013592,202968,24.77,3,6.6,urban
+105,Navi Mumbai_Ward_7,ward,Navi Mumbai,Tripura,19.051904,73.007167,221723,12.85,4,7.7,urban
+106,Navi Mumbai_Ward_8,ward,Navi Mumbai,Tripura,19.058434,72.989266,327006,24.2,7,7.2,urban
+107,Navi Mumbai_Ward_9,ward,Navi Mumbai,Tripura,19.042377,73.00676,328381,15.21,5,8.4,urban
+108,Navi Mumbai_Ward_10,ward,Navi Mumbai,Tripura,19.034475,73.014022,306061,5.76,5,8.2,urban
+109,Lucknow_Ward_1,ward,Lucknow,Telangana,26.845197,80.916815,301891,11.03,6,8.9,urban
+110,Lucknow_Ward_2,ward,Lucknow,Telangana,26.83439,80.919378,254387,8.93,5,8.8,urban
+111,Lucknow_Ward_3,ward,Lucknow,Telangana,26.839556,80.948277,230535,22.85,5,8.1,urban
+112,Lucknow_Ward_4,ward,Lucknow,Telangana,26.806113,80.909858,347151,9.7,7,8.8,urban
+113,Lucknow_Ward_5,ward,Lucknow,Telangana,26.844357,80.916901,294455,5.49,5,8.1,urban
+114,Lucknow_Ward_6,ward,Lucknow,Telangana,26.843003,80.906759,314869,15.11,5,7.3,urban
+115,Lucknow_Ward_7,ward,Lucknow,Telangana,26.846465,80.928135,248642,20.34,5,7.2,urban
+116,Lucknow_Ward_8,ward,Lucknow,Telangana,26.824599,80.916719,311294,16.75,6,7.6,urban
+117,Lucknow_Ward_9,ward,Lucknow,Telangana,26.845482,80.951282,233763,12.63,4,5.6,urban
+118,Nagpur_Ward_1,ward,Nagpur,Tripura,21.168751,79.087618,427756,22.06,6,9.5,urban
+119,Nagpur_Ward_2,ward,Nagpur,Tripura,21.147951,79.095796,448251,15.25,10,8.7,urban
+120,Nagpur_Ward_3,ward,Nagpur,Tripura,21.153382,79.064788,457824,23.29,10,9.5,urban
+121,Nagpur_Ward_4,ward,Nagpur,Tripura,21.131466,79.083023,517580,15.6,11,9.5,urban
+122,Nagpur_Ward_5,ward,Nagpur,Tripura,21.162723,79.076089,361297,2.11,8,8.5,urban
+123,Nagpur_Ward_6,ward,Nagpur,Tripura,21.131128,79.060087,409940,18.96,9,7.8,urban
+124,Coimbatore_Ward_1,ward,Coimbatore,25,10.986124,76.943579,345988,6.06,5,8.2,urban
+125,Coimbatore_Ward_2,ward,Coimbatore,25,10.965097,76.965306,444800,2.3,8,9.5,urban
+126,Coimbatore_Ward_3,ward,Coimbatore,25,11.022448,76.950862,454678,11.54,7,9.5,urban
+127,Coimbatore_Ward_4,ward,Coimbatore,25,11.04415,76.967008,263640,6.72,5,7.8,urban
+128,Coimbatore_Ward_5,ward,Coimbatore,25,11.003385,77.004669,263347,12.43,5,6.5,urban
+129,Coimbatore_Ward_6,ward,Coimbatore,25,10.965785,76.982493,334945,21.82,6,8.0,urban
+130,Indore_Ward_1,ward,Indore,35,22.712348,75.831052,286676,11.4,6,8.4,urban
+131,Indore_Ward_2,ward,Indore,35,22.731955,75.852373,238083,2.45,4,8.1,urban
+132,Indore_Ward_3,ward,Indore,35,22.700984,75.834781,268288,7.48,5,7.6,urban
+133,Indore_Ward_4,ward,Indore,35,22.714315,75.827678,376727,17.37,8,8.4,urban
+134,Indore_Ward_5,ward,Indore,35,22.73531,75.823442,411443,3.97,6,8.2,urban
+135,Indore_Ward_6,ward,Indore,35,22.722812,75.814533,316727,7.97,7,7.6,urban
+136,Thane_Ward_1,ward,Thane,Tripura,19.212775,72.983286,226459,11.42,4,5.5,urban
+137,Thane_Ward_2,ward,Thane,Tripura,19.165811,72.988997,230627,21.97,5,6.8,urban
+138,Thane_Ward_3,ward,Thane,Tripura,19.203027,72.978127,310398,2.52,6,8.1,urban
+139,Thane_Ward_4,ward,Thane,Tripura,19.201657,72.937897,284137,24.64,5,8.0,urban
+140,Thane_Ward_5,ward,Thane,Tripura,19.19428,72.944223,227129,23.03,3,7.4,urban
+141,Thane_Ward_6,ward,Thane,Tripura,19.199978,72.948874,227405,6.75,4,8.3,urban
+142,Thane_Ward_7,ward,Thane,Tripura,19.204129,72.987858,289118,23.03,5,9.5,urban
+143,Vadodara_Ward_1,ward,Vadodara,Uttar Pradesh,22.271797,73.188926,263271,3.9,4,8.2,urban
+144,Vadodara_Ward_2,ward,Vadodara,Uttar Pradesh,22.288524,73.186605,243026,10.18,4,8.0,urban
+145,Vadodara_Ward_3,ward,Vadodara,Uttar Pradesh,22.284772,73.223925,270688,18.85,5,8.2,urban
+146,Vadodara_Ward_4,ward,Vadodara,Uttar Pradesh,22.302183,73.217234,190254,15.73,3,5.4,urban
+147,Vadodara_Ward_5,ward,Vadodara,Uttar Pradesh,22.316649,73.197572,198871,17.83,3,7.0,urban
+148,Vadodara_Ward_6,ward,Vadodara,Uttar Pradesh,22.325972,73.184751,310157,17.98,6,7.7,urban
+149,Vadodara_Ward_7,ward,Vadodara,Uttar Pradesh,22.308737,73.184567,238602,6.26,3,7.3,urban
+150,Bhopal_Ward_1,ward,Bhopal,35,23.264,77.418859,204876,17.15,4,7.2,urban
+151,Bhopal_Ward_2,ward,Bhopal,35,23.267199,77.409778,152812,6.15,3,7.0,urban
+152,Bhopal_Ward_3,ward,Bhopal,35,23.257805,77.415167,129537,8.84,2,6.4,urban
+153,Bhopal_Ward_4,ward,Bhopal,35,23.254097,77.413113,218882,2.85,4,8.1,urban
+154,Bhopal_Ward_5,ward,Bhopal,35,23.246949,77.381813,138882,18.01,2,6.9,urban
+155,Bhopal_Ward_6,ward,Bhopal,35,23.273526,77.389471,132926,9.33,2,7.8,urban
+156,Bhopal_Ward_7,ward,Bhopal,35,23.257638,77.415906,192321,2.56,3,7.2,urban
+157,Bhopal_Ward_8,ward,Bhopal,35,23.255924,77.418872,227193,13.04,5,6.8,urban
+158,Bhopal_Ward_9,ward,Bhopal,35,23.27583,77.416687,232050,11.61,5,7.6,urban
+159,Bhopal_Ward_10,ward,Bhopal,35,23.278384,77.395047,151636,8.82,2,5.2,urban
+160,Rasapudipalem_Ward_1,ward,Rasapudipalem,Himachal Pradesh,17.7193,83.287215,191439,23.85,3,5.7,urban
+161,Rasapudipalem_Ward_2,ward,Rasapudipalem,Himachal Pradesh,17.747845,83.31301,218925,24.8,4,6.1,urban
+162,Rasapudipalem_Ward_3,ward,Rasapudipalem,Himachal Pradesh,17.738816,83.333727,174127,6.06,3,8.4,urban
+163,Rasapudipalem_Ward_4,ward,Rasapudipalem,Himachal Pradesh,17.723733,83.307888,201801,18.01,3,8.4,urban
+164,Rasapudipalem_Ward_5,ward,Rasapudipalem,Himachal Pradesh,17.724519,83.321374,144240,14.35,2,6.1,urban
+165,Rasapudipalem_Ward_6,ward,Rasapudipalem,Himachal Pradesh,17.756293,83.343158,130454,22.44,3,5.7,urban
+166,Rasapudipalem_Ward_7,ward,Rasapudipalem,Himachal Pradesh,17.727264,83.324372,178085,11.39,2,7.9,urban
+167,Rasapudipalem_Ward_8,ward,Rasapudipalem,Himachal Pradesh,17.71239,83.305256,195977,21.58,3,6.4,urban
+168,Rasapudipalem_Ward_9,ward,Rasapudipalem,Himachal Pradesh,17.736437,83.264008,182393,10.0,4,6.0,urban
+169,Rasapudipalem_Ward_10,ward,Rasapudipalem,Himachal Pradesh,17.743308,83.343921,148655,21.56,3,7.1,urban
+170,Pimpri-Chinchwad_Ward_1,ward,Pimpri-Chinchwad,Tripura,18.635301,73.809834,346173,17.64,7,9.2,urban
+171,Pimpri-Chinchwad_Ward_2,ward,Pimpri-Chinchwad,Tripura,18.639402,73.813481,228965,9.71,5,7.1,urban
+172,Pimpri-Chinchwad_Ward_3,ward,Pimpri-Chinchwad,Tripura,18.620871,73.793407,342882,13.67,7,8.9,urban
+173,Pimpri-Chinchwad_Ward_4,ward,Pimpri-Chinchwad,Tripura,18.621536,73.804447,310721,19.94,5,8.8,urban
+174,Pimpri-Chinchwad_Ward_5,ward,Pimpri-Chinchwad,Tripura,18.651119,73.807749,295077,9.86,6,7.5,urban
+175,Pimpri-Chinchwad_Ward_6,ward,Pimpri-Chinchwad,Tripura,18.627788,73.806549,219274,8.92,5,6.7,urban
+176,Patna_Ward_1,ward,Patna,Puducherry,25.596991,85.130186,176732,16.28,3,6.9,urban
+177,Patna_Ward_2,ward,Patna,Puducherry,25.585696,85.141288,194528,17.72,3,8.5,urban
+178,Patna_Ward_3,ward,Patna,Puducherry,25.593094,85.110115,218667,12.38,4,6.8,urban
+179,Patna_Ward_4,ward,Patna,Puducherry,25.60068,85.128099,188002,17.05,3,7.1,urban
+180,Patna_Ward_5,ward,Patna,Puducherry,25.585619,85.132294,213259,16.69,4,6.0,urban
+181,Patna_Ward_6,ward,Patna,Puducherry,25.571197,85.125251,217338,6.9,4,6.9,urban
+182,Patna_Ward_7,ward,Patna,Puducherry,25.599361,85.136743,155142,12.88,3,6.3,urban
+183,Patna_Ward_8,ward,Patna,Puducherry,25.599221,85.142481,195807,5.02,4,7.6,urban
+184,Patna_Ward_9,ward,Patna,Puducherry,25.614017,85.154368,166561,4.88,2,7.2,urban
+185,Patna_Ward_10,ward,Patna,Puducherry,25.583934,85.162644,138164,8.19,2,6.5,urban
+186,Kallakurichi_Ward_1,ward,Kallakurichi,25,11.723574,78.949731,233924,3.67,3,8.3,urban
+187,Kallakurichi_Ward_2,ward,Kallakurichi,25,11.727005,78.922892,254808,19.94,4,8.3,urban
+188,Kallakurichi_Ward_3,ward,Kallakurichi,25,11.740172,78.958887,183402,24.69,3,6.3,urban
+189,Kallakurichi_Ward_4,ward,Kallakurichi,25,11.733736,78.941875,257424,9.51,5,7.4,urban
+190,Kallakurichi_Ward_5,ward,Kallakurichi,25,11.734193,78.946105,218838,3.81,3,7.2,urban
+191,Kallakurichi_Ward_6,ward,Kallakurichi,25,11.718766,78.955033,250124,5.85,5,6.9,urban
+192,Kallakurichi_Ward_7,ward,Kallakurichi,25,11.742379,78.963383,270162,23.53,4,6.9,urban
+193,Ludhiana_Ward_1,ward,Ludhiana,Madhya Pradesh,30.912934,75.844086,182193,9.81,4,7.7,urban
+194,Ludhiana_Ward_2,ward,Ludhiana,Madhya Pradesh,30.921568,75.855508,192706,16.8,3,7.9,urban
+195,Ludhiana_Ward_3,ward,Ludhiana,Madhya Pradesh,30.938079,75.856759,121249,22.05,1,5.6,urban
+196,Ludhiana_Ward_4,ward,Ludhiana,Madhya Pradesh,30.904782,75.838316,190026,13.46,4,6.4,urban
+197,Ludhiana_Ward_5,ward,Ludhiana,Madhya Pradesh,30.937953,75.860335,135511,6.59,3,6.4,urban
+198,Ludhiana_Ward_6,ward,Ludhiana,Madhya Pradesh,30.91384,75.846256,116298,12.64,2,6.4,urban
+199,Ludhiana_Ward_7,ward,Ludhiana,Madhya Pradesh,30.918028,75.863498,185461,24.72,3,5.6,urban
+200,Ludhiana_Ward_8,ward,Ludhiana,Madhya Pradesh,30.890074,75.830363,183766,22.09,3,8.8,urban
+201,Ludhiana_Ward_9,ward,Ludhiana,Madhya Pradesh,30.909451,75.867045,140209,18.86,2,7.9,urban
+202,Ludhiana_Ward_10,ward,Ludhiana,Madhya Pradesh,30.932741,75.859814,201617,7.46,3,6.3,urban
+203,Nashik_Ward_1,ward,Nashik,Tripura,19.996887,73.808551,140075,10.26,3,7.2,urban
+204,Nashik_Ward_2,ward,Nashik,Tripura,19.954542,73.773626,154326,7.94,3,6.9,urban
+205,Nashik_Ward_3,ward,Nashik,Tripura,19.97785,73.808372,192210,7.43,3,6.9,urban
+206,Nashik_Ward_4,ward,Nashik,Tripura,20.004426,73.759533,197699,7.72,3,7.2,urban
+207,Nashik_Ward_5,ward,Nashik,Tripura,20.019781,73.803713,132130,21.42,2,6.0,urban
+208,Nashik_Ward_6,ward,Nashik,Tripura,20.028421,73.7964,201601,4.57,3,8.3,urban
+209,Nashik_Ward_7,ward,Nashik,Tripura,19.996196,73.790402,168204,9.27,3,7.4,urban
+210,Nashik_Ward_8,ward,Nashik,Tripura,19.996059,73.782129,130278,24.2,3,6.3,urban
+211,Nashik_Ward_9,ward,Nashik,Tripura,20.011015,73.796157,160633,5.21,3,8.7,urban
+212,Madurai_Ward_1,ward,Madurai,25,9.916906,78.105453,231162,4.16,5,8.0,urban
+213,Madurai_Ward_2,ward,Madurai,25,9.909643,78.14824,255622,23.73,4,8.4,urban
+214,Madurai_Ward_3,ward,Madurai,25,9.926435,78.119067,224179,15.12,5,9.2,urban
+215,Madurai_Ward_4,ward,Madurai,25,9.935583,78.137335,173656,4.45,3,8.4,urban
+216,Madurai_Ward_5,ward,Madurai,25,9.901805,78.134607,244849,18.98,5,7.2,urban
+217,Madurai_Ward_6,ward,Madurai,25,9.915338,78.133991,187646,20.35,4,7.5,urban
+218,Madurai_Ward_7,ward,Madurai,25,9.929518,78.138876,161663,2.13,3,6.4,urban
+219,Tirunelveli_Ward_1,ward,Tirunelveli,25,8.710976,77.662199,149599,7.46,3,5.5,urban
+220,Tirunelveli_Ward_2,ward,Tirunelveli,25,8.695119,77.664403,118683,17.37,2,5.6,urban
+221,Tirunelveli_Ward_3,ward,Tirunelveli,25,8.717098,77.717587,148030,2.59,3,4.0,urban
+222,Tirunelveli_Ward_4,ward,Tirunelveli,25,8.761784,77.666449,149853,14.27,3,5.0,urban
+223,Tirunelveli_Ward_5,ward,Tirunelveli,25,8.748184,77.692259,189497,7.6,4,7.7,urban
+224,Tirunelveli_Ward_6,ward,Tirunelveli,25,8.731638,77.680967,121384,7.91,2,6.8,urban
+225,Tirunelveli_Ward_7,ward,Tirunelveli,25,8.712591,77.667246,188544,18.47,3,7.8,urban
+226,Tirunelveli_Ward_8,ward,Tirunelveli,25,8.703862,77.67475,123343,17.67,2,4.6,urban
+227,Tirunelveli_Ward_9,ward,Tirunelveli,25,8.729001,77.66379,179548,24.15,3,5.2,urban
+228,Agra_Ward_1,ward,Agra,Telangana,27.189937,78.037631,147314,16.56,2,6.4,urban
+229,Agra_Ward_2,ward,Agra,Telangana,27.185164,78.024819,170392,16.05,3,6.0,urban
+230,Agra_Ward_3,ward,Agra,Telangana,27.173386,78.033911,177328,7.45,3,6.5,urban
+231,Agra_Ward_4,ward,Agra,Telangana,27.172554,78.030094,170686,16.35,3,6.0,urban
+232,Agra_Ward_5,ward,Agra,Telangana,27.187515,78.05001,114519,21.84,2,4.9,urban
+233,Agra_Ward_6,ward,Agra,Telangana,27.180551,78.014723,102131,7.33,2,7.0,urban
+234,Agra_Ward_7,ward,Agra,Telangana,27.216488,78.038562,142727,5.14,3,4.7,urban
+235,Agra_Ward_8,ward,Agra,Telangana,27.171275,78.041257,136844,8.31,2,6.9,urban
+236,Agra_Ward_9,ward,Agra,Telangana,27.207756,78.000158,130563,13.94,2,5.6,urban
+237,Agra_Ward_10,ward,Agra,Telangana,27.186837,77.993332,175616,9.66,3,4.8,urban
+238,Faridabad_Ward_1,ward,Faridabad,10,28.416851,77.323585,201217,3.38,3,9.0,urban
+239,Faridabad_Ward_2,ward,Faridabad,10,28.419615,77.3143,142320,4.22,3,6.6,urban
+240,Faridabad_Ward_3,ward,Faridabad,10,28.390034,77.336912,160590,20.3,3,6.3,urban
+241,Faridabad_Ward_4,ward,Faridabad,10,28.394855,77.308414,228985,13.98,5,8.5,urban
+242,Faridabad_Ward_5,ward,Faridabad,10,28.413366,77.301922,203828,21.0,3,7.3,urban
+243,Faridabad_Ward_6,ward,Faridabad,10,28.421862,77.327511,127564,4.02,2,5.5,urban
+244,Faridabad_Ward_7,ward,Faridabad,10,28.391272,77.314468,156131,12.29,2,7.3,urban
+245,Faridabad_Ward_8,ward,Faridabad,10,28.417069,77.350555,221234,10.75,4,7.3,urban
+246,Rajkot_Ward_1,ward,Rajkot,Uttar Pradesh,22.290127,70.801747,204610,11.27,3,7.6,urban
+247,Rajkot_Ward_2,ward,Rajkot,Uttar Pradesh,22.299658,70.779743,210371,5.05,5,8.2,urban
+248,Rajkot_Ward_3,ward,Rajkot,Uttar Pradesh,22.29873,70.830193,268598,13.56,4,7.4,urban
+249,Rajkot_Ward_4,ward,Rajkot,Uttar Pradesh,22.275633,70.788642,213351,24.21,3,7.2,urban
+250,Rajkot_Ward_5,ward,Rajkot,Uttar Pradesh,22.299555,70.766184,232627,4.43,4,6.7,urban
+251,Rajkot_Ward_6,ward,Rajkot,Uttar Pradesh,22.273465,70.802219,248403,3.34,5,7.3,urban
+252,Najafgarh_Ward_1,ward,Najafgarh,Delhi,28.631581,76.971365,150702,4.32,2,6.1,urban
+253,Najafgarh_Ward_2,ward,Najafgarh,Delhi,28.603397,76.982376,196102,9.04,4,7.4,urban
+254,Najafgarh_Ward_3,ward,Najafgarh,Delhi,28.62708,76.987313,186351,22.39,3,9.2,urban
+255,Najafgarh_Ward_4,ward,Najafgarh,Delhi,28.588717,76.976449,179527,19.69,3,7.3,urban
+256,Najafgarh_Ward_5,ward,Najafgarh,Delhi,28.620607,76.979372,192817,7.98,3,6.8,urban
+257,Najafgarh_Ward_6,ward,Najafgarh,Delhi,28.601026,76.985697,199131,4.52,3,7.0,urban
+258,Najafgarh_Ward_7,ward,Najafgarh,Delhi,28.617909,76.950418,235289,13.23,3,9.4,urban
+259,Jamshedpur_Ward_1,ward,Jamshedpur,38,22.796131,86.172178,170020,12.57,3,5.3,urban
+260,Jamshedpur_Ward_2,ward,Jamshedpur,38,22.778577,86.189723,189485,9.25,4,7.1,urban
+261,Jamshedpur_Ward_3,ward,Jamshedpur,38,22.793696,86.21284,126919,17.17,2,8.4,urban
+262,Jamshedpur_Ward_4,ward,Jamshedpur,38,22.793694,86.189598,158999,13.92,2,7.4,urban
+263,Jamshedpur_Ward_5,ward,Jamshedpur,38,22.80968,86.175284,149917,3.64,3,6.1,urban
+264,Jamshedpur_Ward_6,ward,Jamshedpur,38,22.80555,86.173413,130657,19.82,2,7.6,urban
+265,Jamshedpur_Ward_7,ward,Jamshedpur,38,22.787076,86.1935,119725,8.1,2,7.4,urban
+266,Jamshedpur_Ward_8,ward,Jamshedpur,38,22.813564,86.194557,138283,4.79,2,7.7,urban
+267,Jamshedpur_Ward_9,ward,Jamshedpur,38,22.822703,86.193793,161676,24.54,3,6.0,urban
+268,Gorakhpur_Ward_1,ward,Gorakhpur,10,29.461598,75.693894,190215,17.1,4,8.7,urban
+269,Gorakhpur_Ward_2,ward,Gorakhpur,10,29.442206,75.659472,208097,12.11,3,6.0,urban
+270,Gorakhpur_Ward_3,ward,Gorakhpur,10,29.418185,75.680752,139810,6.54,2,6.5,urban
+271,Gorakhpur_Ward_4,ward,Gorakhpur,10,29.452291,75.684296,144302,19.37,3,6.3,urban
+272,Gorakhpur_Ward_5,ward,Gorakhpur,10,29.451919,75.690266,188269,17.09,4,6.7,urban
+273,Gorakhpur_Ward_6,ward,Gorakhpur,10,29.450395,75.652608,213719,20.81,5,7.5,urban
+274,Gorakhpur_Ward_7,ward,Gorakhpur,10,29.43791,75.672517,199417,14.47,4,5.5,urban
+275,Gorakhpur_Ward_8,ward,Gorakhpur,10,29.451291,75.711085,145458,16.63,2,7.2,urban
+276,Pimpri_Ward_1,ward,Pimpri,Tripura,18.628637,73.797624,156871,7.67,2,7.0,urban
+277,Pimpri_Ward_2,ward,Pimpri,Tripura,18.619785,73.794202,189485,16.17,3,8.6,urban
+278,Pimpri_Ward_3,ward,Pimpri,Tripura,18.62884,73.79924,187916,2.12,3,5.8,urban
+279,Pimpri_Ward_4,ward,Pimpri,Tripura,18.611147,73.816684,204708,9.03,3,6.2,urban
+280,Pimpri_Ward_5,ward,Pimpri,Tripura,18.616358,73.794702,181970,15.64,4,4.7,urban
+281,Pimpri_Ward_6,ward,Pimpri,Tripura,18.601645,73.780548,179421,20.27,2,5.3,urban
+282,Pimpri_Ward_7,ward,Pimpri,Tripura,18.641859,73.809677,158741,3.49,3,5.8,urban
+283,Pimpri_Ward_8,ward,Pimpri,Tripura,18.646052,73.837051,166419,8.21,3,7.7,urban
+284,Kalyan_Ward_1,ward,Kalyan,Tripura,19.252588,73.135434,134562,9.69,2,7.7,urban
+285,Kalyan_Ward_2,ward,Kalyan,Tripura,19.254146,73.14987,211548,9.55,4,6.0,urban
+286,Kalyan_Ward_3,ward,Kalyan,Tripura,19.240795,73.122891,150094,18.92,3,6.4,urban
+287,Kalyan_Ward_4,ward,Kalyan,Tripura,19.228337,73.163351,195055,21.32,4,6.7,urban
+288,Kalyan_Ward_5,ward,Kalyan,Tripura,19.229308,73.15352,189818,10.33,3,5.0,urban
+289,Kalyan_Ward_6,ward,Kalyan,Tripura,19.245813,73.109013,158545,22.07,3,6.1,urban
+290,Kalyan_Ward_7,ward,Kalyan,Tripura,19.219779,73.130008,213065,13.11,4,7.5,urban
+291,Dombivali_Ward_1,ward,Dombivali,Tripura,19.216257,73.109914,171437,16.04,3,6.1,urban
+292,Dombivali_Ward_2,ward,Dombivali,Tripura,19.223702,73.08926,194969,3.59,4,6.4,urban
+293,Dombivali_Ward_3,ward,Dombivali,Tripura,19.215168,73.080275,152712,8.25,2,6.3,urban
+294,Dombivali_Ward_4,ward,Dombivali,Tripura,19.22218,73.078773,207773,13.21,3,8.6,urban
+295,Dombivali_Ward_5,ward,Dombivali,Tripura,19.180306,73.096591,161867,23.55,3,6.7,urban
+296,Dombivali_Ward_6,ward,Dombivali,Tripura,19.224409,73.081687,152546,24.57,3,5.9,urban
+297,Dombivali_Ward_7,ward,Dombivali,Tripura,19.228584,73.064516,145911,16.0,2,6.9,urban
+298,Meerut_Ward_1,ward,Meerut,Telangana,28.979485,77.694234,120903,7.77,2,5.9,urban
+299,Meerut_Ward_2,ward,Meerut,Telangana,28.983029,77.72359,155043,3.56,2,7.0,urban
+300,Meerut_Ward_3,ward,Meerut,Telangana,28.990417,77.712052,114525,13.15,2,8.0,urban
+301,Meerut_Ward_4,ward,Meerut,Telangana,28.986568,77.719919,149439,3.43,2,7.1,urban
+302,Meerut_Ward_5,ward,Meerut,Telangana,29.010882,77.727318,149158,20.08,2,6.5,urban
+303,Meerut_Ward_6,ward,Meerut,Telangana,28.970331,77.694372,122138,6.71,2,6.3,urban
+304,Meerut_Ward_7,ward,Meerut,Telangana,29.00439,77.700953,148424,19.76,3,7.0,urban
+305,Meerut_Ward_8,ward,Meerut,Telangana,28.993267,77.705192,156448,20.91,3,6.9,urban
+306,Virar_Ward_1,ward,Virar,Tripura,19.444633,72.831002,260507,14.04,4,7.0,urban
+307,Virar_Ward_2,ward,Virar,Tripura,19.469698,72.801338,213215,23.05,4,6.7,urban
+308,Virar_Ward_3,ward,Virar,Tripura,19.475125,72.793073,227677,9.29,5,7.4,urban
+309,Virar_Ward_4,ward,Virar,Tripura,19.450888,72.805305,165131,12.13,3,5.7,urban
+310,Virar_Ward_5,ward,Virar,Tripura,19.462264,72.800323,250477,13.62,5,7.7,urban
+311,Virar_Ward_6,ward,Virar,Tripura,19.454715,72.818146,262907,22.28,5,6.6,urban
+312,Nowrangapur_Ward_1,ward,Nowrangapur,Odisha,19.237565,82.530425,143983,14.13,2,6.2,urban
+313,Nowrangapur_Ward_2,ward,Nowrangapur,Odisha,19.239834,82.553147,152138,20.84,3,6.9,urban
+314,Nowrangapur_Ward_3,ward,Nowrangapur,Odisha,19.226709,82.575378,180824,20.9,3,7.2,urban
+315,Nowrangapur_Ward_4,ward,Nowrangapur,Odisha,19.199312,82.539143,202784,18.38,4,6.0,urban
+316,Nowrangapur_Ward_5,ward,Nowrangapur,Odisha,19.223568,82.539781,184925,19.22,3,6.4,urban
+317,Nowrangapur_Ward_6,ward,Nowrangapur,Odisha,19.249397,82.57108,185466,16.59,4,7.3,urban
+318,Srinagar_Ward_1,ward,Srinagar,Lakshadweep,34.085287,74.811137,119979,3.6,2,5.4,urban
+319,Srinagar_Ward_2,ward,Srinagar,Lakshadweep,34.089899,74.801666,112103,17.97,2,7.0,urban
+320,Srinagar_Ward_3,ward,Srinagar,Lakshadweep,34.06546,74.776508,110934,8.99,1,6.2,urban
+321,Srinagar_Ward_4,ward,Srinagar,Lakshadweep,34.093359,74.808244,163901,7.99,3,7.3,urban
+322,Srinagar_Ward_5,ward,Srinagar,Lakshadweep,34.102295,74.80964,138907,12.28,2,7.0,urban
+323,Srinagar_Ward_6,ward,Srinagar,Lakshadweep,34.102256,74.803744,137797,19.02,2,5.8,urban
+324,Srinagar_Ward_7,ward,Srinagar,Lakshadweep,34.084292,74.802222,162866,22.95,2,7.1,urban
+325,Srinagar_Ward_8,ward,Srinagar,Lakshadweep,34.096732,74.814781,95280,21.08,2,5.0,urban
+326,Srinagar_Ward_9,ward,Srinagar,Lakshadweep,34.10194,74.815441,102886,14.44,2,5.6,urban
+327,Ghaziabad_Ward_1,ward,Ghaziabad,Telangana,28.661998,77.43391,141392,8.84,2,7.2,urban
+328,Ghaziabad_Ward_2,ward,Ghaziabad,Telangana,28.641105,77.454902,145678,21.6,3,5.6,urban
+329,Ghaziabad_Ward_3,ward,Ghaziabad,Telangana,28.679605,77.464809,246909,20.28,4,7.4,urban
+330,Ghaziabad_Ward_4,ward,Ghaziabad,Telangana,28.662818,77.440397,259277,13.99,5,7.1,urban
+331,Ghaziabad_Ward_5,ward,Ghaziabad,Telangana,28.65144,77.442726,151160,22.22,3,7.5,urban
+332,Ghaziabad_Ward_6,ward,Ghaziabad,Telangana,28.672866,77.448949,191521,12.0,3,9.5,urban
+333,Dhanbad_Ward_1,ward,Dhanbad,38,23.805258,86.450525,184741,15.61,3,8.5,urban
+334,Dhanbad_Ward_2,ward,Dhanbad,38,23.817314,86.414704,150635,10.84,2,7.3,urban
+335,Dhanbad_Ward_3,ward,Dhanbad,38,23.830154,86.427282,189945,16.58,3,6.9,urban
+336,Dhanbad_Ward_4,ward,Dhanbad,38,23.823016,86.428337,137132,3.05,2,6.2,urban
+337,Dhanbad_Ward_5,ward,Dhanbad,38,23.79115,86.419534,191829,16.05,3,5.5,urban
+338,Dhanbad_Ward_6,ward,Dhanbad,38,23.796343,86.416505,151012,2.18,2,5.8,urban
+339,Dhanbad_Ward_7,ward,Dhanbad,38,23.792952,86.418638,176672,23.43,3,4.9,urban
+340,Dhanbad_Ward_8,ward,Dhanbad,38,23.799315,86.418233,160028,9.94,2,6.4,urban
+341,Aurangabad_Ward_1,ward,Aurangabad,Tripura,19.89371,75.34258,146320,11.7,3,5.8,urban
+342,Aurangabad_Ward_2,ward,Aurangabad,Tripura,19.854864,75.35473,165752,9.12,3,6.5,urban
+343,Aurangabad_Ward_3,ward,Aurangabad,Tripura,19.870324,75.344462,125526,4.63,2,7.9,urban
+344,Aurangabad_Ward_4,ward,Aurangabad,Tripura,19.891023,75.329776,135348,11.64,2,4.1,urban
+345,Aurangabad_Ward_5,ward,Aurangabad,Tripura,19.875601,75.343413,109888,17.61,2,6.3,urban
+346,Aurangabad_Ward_6,ward,Aurangabad,Tripura,19.884199,75.359903,103715,23.01,2,4.3,urban
+347,Aurangabad_Ward_7,ward,Aurangabad,Tripura,19.891867,75.346567,166628,2.27,2,5.5,urban
+348,Aurangabad_Ward_8,ward,Aurangabad,Tripura,19.879198,75.316804,145655,3.01,3,5.8,urban
+349,Varanasi_Ward_1,ward,Varanasi,Telangana,25.319078,82.994995,105483,17.93,2,7.0,urban
+350,Varanasi_Ward_2,ward,Varanasi,Telangana,25.323088,83.038013,100747,20.15,1,5.3,urban
+351,Varanasi_Ward_3,ward,Varanasi,Telangana,25.337567,83.006659,138965,9.33,3,6.3,urban
+352,Varanasi_Ward_4,ward,Varanasi,Telangana,25.328842,82.982875,123501,17.83,2,7.4,urban
+353,Varanasi_Ward_5,ward,Varanasi,Telangana,25.300316,83.004248,111586,5.55,1,5.8,urban
+354,Varanasi_Ward_6,ward,Varanasi,Telangana,25.328375,83.011154,126004,3.65,2,6.1,urban
+355,Varanasi_Ward_7,ward,Varanasi,Telangana,25.291428,82.998322,128814,24.72,2,5.1,urban
+356,Varanasi_Ward_8,ward,Varanasi,Telangana,25.307793,83.038781,91327,2.63,1,5.5,urban
+357,Varanasi_Ward_9,ward,Varanasi,Telangana,25.324874,83.010506,108350,5.68,1,6.0,urban
+358,Varanasi_Ward_10,ward,Varanasi,Telangana,25.31113,82.983353,144391,23.99,2,6.1,urban
+359,Amritsar_Ward_1,ward,Amritsar,Madhya Pradesh,31.632794,74.870333,153853,10.87,3,6.4,urban
+360,Amritsar_Ward_2,ward,Amritsar,Madhya Pradesh,31.629056,74.883274,114833,14.46,2,4.1,urban
+361,Amritsar_Ward_3,ward,Amritsar,Madhya Pradesh,31.631911,74.882853,139724,3.33,2,5.6,urban
+362,Amritsar_Ward_4,ward,Amritsar,Madhya Pradesh,31.613027,74.856418,185454,9.99,3,6.0,urban
+363,Amritsar_Ward_5,ward,Amritsar,Madhya Pradesh,31.606249,74.878929,140038,24.86,2,3.9,urban
+364,Amritsar_Ward_6,ward,Amritsar,Madhya Pradesh,31.61805,74.879718,150934,6.63,3,7.4,urban
+365,Amritsar_Ward_7,ward,Amritsar,Madhya Pradesh,31.61536,74.873751,142776,14.27,2,6.7,urban
+366,Amritsar_Ward_8,ward,Amritsar,Madhya Pradesh,31.629355,74.869914,170482,22.17,3,7.0,urban
+367,Vijayawada_Ward_1,ward,Vijayawada,Himachal Pradesh,16.513107,80.646161,188641,8.57,4,5.1,urban
+368,Vijayawada_Ward_2,ward,Vijayawada,Himachal Pradesh,16.526379,80.656197,177566,13.32,3,6.1,urban
+369,Vijayawada_Ward_3,ward,Vijayawada,Himachal Pradesh,16.523291,80.649949,245497,15.19,4,8.0,urban
+370,Vijayawada_Ward_4,ward,Vijayawada,Himachal Pradesh,16.517128,80.664087,235477,22.32,3,7.2,urban
+371,Vijayawada_Ward_5,ward,Vijayawada,Himachal Pradesh,16.516353,80.602494,205010,17.82,4,7.0,urban
+372,Vijayawada_Ward_6,ward,Vijayawada,Himachal Pradesh,16.501622,80.660879,148745,10.25,2,7.6,urban
+373,Ranchi_Ward_1,ward,Ranchi,38,23.333759,85.322336,102878,8.78,2,7.0,urban
+374,Ranchi_Ward_2,ward,Ranchi,38,23.350856,85.317126,97809,19.69,2,6.7,urban
+375,Ranchi_Ward_3,ward,Ranchi,38,23.360994,85.320025,150323,3.79,3,6.5,urban
+376,Ranchi_Ward_4,ward,Ranchi,38,23.329932,85.284796,92070,4.55,1,4.3,urban
+377,Ranchi_Ward_5,ward,Ranchi,38,23.314756,85.312599,92881,3.16,1,6.6,urban
+378,Ranchi_Ward_6,ward,Ranchi,38,23.357224,85.30698,109195,8.46,1,5.4,urban
+379,Ranchi_Ward_7,ward,Ranchi,38,23.355602,85.306493,111153,24.52,2,6.7,urban
+380,Ranchi_Ward_8,ward,Ranchi,38,23.324571,85.284606,135526,22.44,2,7.6,urban
+381,Ranchi_Ward_9,ward,Ranchi,38,23.297867,85.312158,130899,7.56,2,6.5,urban
+382,Jabalpur_Ward_1,ward,Jabalpur,35,23.159595,79.962711,127893,13.96,2,6.8,urban
+383,Jabalpur_Ward_2,ward,Jabalpur,35,23.172856,79.942426,93331,16.48,1,5.2,urban
+384,Jabalpur_Ward_3,ward,Jabalpur,35,23.160831,79.940667,93640,3.44,2,6.0,urban
+385,Jabalpur_Ward_4,ward,Jabalpur,35,23.179346,79.937053,96242,21.38,1,4.6,urban
+386,Jabalpur_Ward_5,ward,Jabalpur,35,23.154681,79.965471,133599,22.93,2,5.7,urban
+387,Jabalpur_Ward_6,ward,Jabalpur,35,23.172827,79.948512,81511,16.55,1,3.4,urban
+388,Jabalpur_Ward_7,ward,Jabalpur,35,23.164956,79.957894,118965,19.5,2,5.4,urban
+389,Jabalpur_Ward_8,ward,Jabalpur,35,23.1683,79.95302,95060,3.11,1,6.6,urban
+390,Jabalpur_Ward_9,ward,Jabalpur,35,23.185028,79.956179,108193,12.53,2,6.0,urban
+391,Jabalpur_Ward_10,ward,Jabalpur,35,23.158712,79.931749,99717,20.91,1,5.5,urban
+392,Prayagraj_Ward_1,ward,Prayagraj,Telangana,25.466567,81.83727,195796,22.24,3,7.4,urban
+393,Prayagraj_Ward_2,ward,Prayagraj,Telangana,25.454837,81.827142,190472,18.99,3,7.3,urban
+394,Prayagraj_Ward_3,ward,Prayagraj,Telangana,25.431249,81.859348,167648,6.58,3,5.3,urban
+395,Prayagraj_Ward_4,ward,Prayagraj,Telangana,25.439851,81.852268,164713,8.15,2,6.7,urban
+396,Prayagraj_Ward_5,ward,Prayagraj,Telangana,25.429747,81.82034,127308,11.51,2,5.1,urban
+397,Prayagraj_Ward_6,ward,Prayagraj,Telangana,25.406345,81.840355,182226,24.16,3,6.8,urban
+398,Visakhapatnam_Ward_1,ward,Visakhapatnam,Himachal Pradesh,17.676147,83.231879,104795,19.78,2,6.3,urban
+399,Visakhapatnam_Ward_2,ward,Visakhapatnam,Himachal Pradesh,17.686667,83.201904,91589,4.76,1,6.6,urban
+400,Visakhapatnam_Ward_3,ward,Visakhapatnam,Himachal Pradesh,17.688967,83.216323,119403,10.55,2,5.5,urban
+401,Visakhapatnam_Ward_4,ward,Visakhapatnam,Himachal Pradesh,17.682561,83.202373,142728,19.95,2,6.6,urban
+402,Visakhapatnam_Ward_5,ward,Visakhapatnam,Himachal Pradesh,17.683749,83.167508,104161,7.25,1,5.1,urban
+403,Visakhapatnam_Ward_6,ward,Visakhapatnam,Himachal Pradesh,17.678541,83.176962,135668,24.14,2,6.4,urban
+404,Visakhapatnam_Ward_7,ward,Visakhapatnam,Himachal Pradesh,17.683551,83.198524,98665,5.24,1,5.3,urban
+405,Visakhapatnam_Ward_8,ward,Visakhapatnam,Himachal Pradesh,17.699315,83.209975,123679,10.93,2,6.7,urban
+406,Visakhapatnam_Ward_9,ward,Visakhapatnam,Himachal Pradesh,17.697192,83.18406,107157,8.68,2,6.9,urban
+407,Jodhpur_Ward_1,ward,Jodhpur,Gujarat,26.28322,73.004801,197970,5.09,3,6.1,urban
+408,Jodhpur_Ward_2,ward,Jodhpur,Gujarat,26.299753,73.006508,148770,17.63,2,7.1,urban
+409,Jodhpur_Ward_3,ward,Jodhpur,Gujarat,26.265559,73.000578,208452,3.01,4,4.9,urban
+410,Jodhpur_Ward_4,ward,Jodhpur,Gujarat,26.291412,73.002929,145315,21.4,2,5.2,urban
+411,Jodhpur_Ward_5,ward,Jodhpur,Gujarat,26.261971,73.014768,224681,12.05,3,5.6,urban
+412,Jodhpur_Ward_6,ward,Jodhpur,Gujarat,26.275343,72.99519,188952,6.37,4,7.0,urban
+413,Gwalior_Ward_1,ward,Gwalior,35,26.236218,78.173657,121720,7.69,2,8.0,urban
+414,Gwalior_Ward_2,ward,Gwalior,35,26.226966,78.194257,84102,19.75,1,7.0,urban
+415,Gwalior_Ward_3,ward,Gwalior,35,26.225134,78.173359,74381,9.4,1,4.5,urban
+416,Gwalior_Ward_4,ward,Gwalior,35,26.238898,78.180414,79844,2.67,1,6.5,urban
+417,Gwalior_Ward_5,ward,Gwalior,35,26.261326,78.169665,81306,24.84,1,6.6,urban
+418,Gwalior_Ward_6,ward,Gwalior,35,26.227112,78.153208,121528,23.87,2,4.6,urban
+419,Gwalior_Ward_7,ward,Gwalior,35,26.201832,78.188483,123633,17.1,2,4.3,urban
+420,Gwalior_Ward_8,ward,Gwalior,35,26.243219,78.162719,131901,13.64,2,5.7,urban
+421,Gwalior_Ward_9,ward,Gwalior,35,26.223724,78.183665,133940,13.88,2,8.3,urban
+422,Gwalior_Ward_10,ward,Gwalior,35,26.206366,78.161293,96145,23.77,2,6.9,urban
+423,Teni_Ward_1,ward,Teni,25,10.008313,77.491545,151097,15.6,2,5.1,urban
+424,Teni_Ward_2,ward,Teni,25,10.010969,77.469459,156891,3.64,2,5.5,urban
+425,Teni_Ward_3,ward,Teni,25,9.972087,77.480704,153465,19.74,3,7.8,urban
+426,Teni_Ward_4,ward,Teni,25,9.995084,77.463437,158510,8.5,3,7.0,urban
+427,Teni_Ward_5,ward,Teni,25,10.003587,77.476497,100460,24.38,2,5.3,urban
+428,Teni_Ward_6,ward,Teni,25,10.011662,77.466747,114125,2.03,2,5.1,urban
+429,Teni_Ward_7,ward,Teni,25,10.021341,77.460488,148112,9.48,3,4.8,urban
+430,Teni_Ward_8,ward,Teni,25,10.000987,77.490674,104631,22.74,1,6.6,urban
+431,Howrah_Ward_1,ward,Howrah,West Bengal,22.567917,88.339906,108355,18.31,2,6.2,urban
+432,Howrah_Ward_2,ward,Howrah,West Bengal,22.564756,88.325775,107932,2.98,2,5.5,urban
+433,Howrah_Ward_3,ward,Howrah,West Bengal,22.586637,88.296024,90222,13.82,1,5.5,urban
+434,Howrah_Ward_4,ward,Howrah,West Bengal,22.580633,88.283932,129461,18.04,2,6.5,urban
+435,Howrah_Ward_5,ward,Howrah,West Bengal,22.57207,88.345498,128725,8.3,2,7.0,urban
+436,Howrah_Ward_6,ward,Howrah,West Bengal,22.583204,88.310531,93230,24.51,1,6.5,urban
+437,Howrah_Ward_7,ward,Howrah,West Bengal,22.583473,88.330254,116767,10.75,2,6.2,urban
+438,Howrah_Ward_8,ward,Howrah,West Bengal,22.586911,88.325383,117222,2.58,2,5.6,urban
+439,Howrah_Ward_9,ward,Howrah,West Bengal,22.554112,88.313215,115399,3.19,2,6.7,urban
+440,Howrah_Ward_10,ward,Howrah,West Bengal,22.577627,88.345858,125127,20.4,2,6.3,urban
+441,Raipur_Ward_1,ward,Raipur,37,21.20103,81.649787,100033,8.67,2,5.5,urban
+442,Raipur_Ward_2,ward,Raipur,37,21.220388,81.638979,151265,16.37,2,7.3,urban
+443,Raipur_Ward_3,ward,Raipur,37,21.251509,81.637249,159694,14.62,2,6.2,urban
+444,Raipur_Ward_4,ward,Raipur,37,21.235481,81.618293,117079,9.68,2,5.1,urban
+445,Raipur_Ward_5,ward,Raipur,37,21.223891,81.656336,95151,17.77,2,5.4,urban
+446,Raipur_Ward_6,ward,Raipur,37,21.20772,81.626846,118694,16.76,2,6.0,urban
+447,Raipur_Ward_7,ward,Raipur,37,21.250091,81.655057,105216,8.39,2,5.6,urban
+448,Raipur_Ward_8,ward,Raipur,37,21.237234,81.625724,165417,13.93,2,5.0,urban
+449,Tiruchirappalli_Ward_1,ward,Tiruchirappalli,25,10.812044,78.682647,116845,11.15,2,4.3,urban
+450,Tiruchirappalli_Ward_2,ward,Tiruchirappalli,25,10.801557,78.684082,101210,8.61,1,5.3,urban
+451,Tiruchirappalli_Ward_3,ward,Tiruchirappalli,25,10.818609,78.69755,108609,15.78,1,5.5,urban
+452,Tiruchirappalli_Ward_4,ward,Tiruchirappalli,25,10.811425,78.718989,87980,24.2,1,7.1,urban
+453,Tiruchirappalli_Ward_5,ward,Tiruchirappalli,25,10.827671,78.679286,114927,15.75,2,5.0,urban
+454,Tiruchirappalli_Ward_6,ward,Tiruchirappalli,25,10.801737,78.693286,107624,17.64,2,6.4,urban
+455,Tiruchirappalli_Ward_7,ward,Tiruchirappalli,25,10.812059,78.695858,107338,11.18,1,6.6,urban
+456,Tiruchirappalli_Ward_8,ward,Tiruchirappalli,25,10.814567,78.690729,112831,4.34,2,6.5,urban
+457,Tiruchirappalli_Ward_9,ward,Tiruchirappalli,25,10.815147,78.693895,77258,7.95,1,5.6,urban
+458,Tiruchirappalli_Ward_10,ward,Tiruchirappalli,25,10.827891,78.721672,72131,16.11,1,5.2,urban
+459,Kota_Ward_1,ward,Kota,Gujarat,25.163156,75.849416,161477,18.99,2,6.9,urban
+460,Kota_Ward_2,ward,Kota,Gujarat,25.179024,75.828591,121424,12.56,2,5.3,urban
+461,Kota_Ward_3,ward,Kota,Gujarat,25.192771,75.861379,157941,23.45,2,7.1,urban
+462,Kota_Ward_4,ward,Kota,Gujarat,25.18962,75.818064,153125,18.97,3,6.7,urban
+463,Kota_Ward_5,ward,Kota,Gujarat,25.171091,75.839639,132032,8.18,3,7.4,urban
+464,Kota_Ward_6,ward,Kota,Gujarat,25.217998,75.851225,157391,12.45,3,6.3,urban
+465,Kota_Ward_7,ward,Kota,Gujarat,25.162461,75.849464,160739,23.53,3,8.6,urban
+466,Shivaji Nagar_Ward_1,ward,Shivaji Nagar,Tripura,18.51867,73.845444,178286,13.56,3,5.0,urban
+467,Shivaji Nagar_Ward_2,ward,Shivaji Nagar,Tripura,18.529962,73.842284,314066,17.07,5,7.6,urban
+468,Shivaji Nagar_Ward_3,ward,Shivaji Nagar,Tripura,18.551824,73.842141,199069,6.27,3,6.5,urban
+469,Shivaji Nagar_Ward_4,ward,Shivaji Nagar,Tripura,18.542026,73.857731,297118,9.13,6,7.6,urban
+470,Sholapur_Ward_1,ward,Sholapur,Tripura,17.662336,75.911934,339518,10.14,6,6.7,urban
+471,Sholapur_Ward_2,ward,Sholapur,Tripura,17.678748,75.918649,294090,10.15,6,7.8,urban
+472,Sholapur_Ward_3,ward,Sholapur,Tripura,17.676438,75.921055,407486,11.03,6,9.1,urban
+473,Chandigarh_Ward_1,ward,Chandigarh,Uttarakhand,30.738918,76.833179,132053,21.75,3,7.2,urban
+474,Chandigarh_Ward_2,ward,Chandigarh,Uttarakhand,30.74353,76.782559,172496,17.49,2,8.3,urban
+475,Chandigarh_Ward_3,ward,Chandigarh,Uttarakhand,30.744623,76.77462,135521,13.84,2,7.3,urban
+476,Chandigarh_Ward_4,ward,Chandigarh,Uttarakhand,30.750067,76.784185,147622,7.11,2,6.9,urban
+477,Chandigarh_Ward_5,ward,Chandigarh,Uttarakhand,30.772691,76.794894,137050,7.05,2,5.0,urban
+478,Chandigarh_Ward_6,ward,Chandigarh,Uttarakhand,30.727818,76.790088,167287,11.87,3,7.1,urban
+479,Tiruppur_Ward_1,ward,Tiruppur,25,11.143474,77.360404,154284,22.02,2,3.9,urban
+480,Tiruppur_Ward_2,ward,Tiruppur,25,11.115461,77.362793,105843,4.7,2,8.3,urban
+481,Tiruppur_Ward_3,ward,Tiruppur,25,11.10198,77.348438,153453,6.7,2,7.4,urban
+482,Tiruppur_Ward_4,ward,Tiruppur,25,11.111891,77.314288,97813,3.59,2,6.2,urban
+483,Tiruppur_Ward_5,ward,Tiruppur,25,11.154722,77.33788,148198,21.23,3,6.8,urban
+484,Tiruppur_Ward_6,ward,Tiruppur,25,11.141789,77.359982,136365,20.21,2,6.7,urban
+485,Tiruppur_Ward_7,ward,Tiruppur,25,11.095621,77.351515,166901,10.92,3,5.9,urban
+486,Guwahati_Ward_1,ward,Guwahati,Punjab,26.183447,91.741664,246611,3.53,5,8.4,urban
+487,Guwahati_Ward_2,ward,Guwahati,Punjab,26.175299,91.748969,222606,7.06,4,5.3,urban
+488,Guwahati_Ward_3,ward,Guwahati,Punjab,26.193696,91.726986,178326,12.68,3,5.3,urban
+489,Guwahati_Ward_4,ward,Guwahati,Punjab,26.197856,91.764923,270718,13.13,4,8.4,urban
+490,Hubballi_Ward_1,ward,Hubballi,Karnataka,15.330695,75.137808,116381,15.43,2,7.7,urban
+491,Hubballi_Ward_2,ward,Hubballi,Karnataka,15.358328,75.145616,185894,16.27,3,7.3,urban
+492,Hubballi_Ward_3,ward,Hubballi,Karnataka,15.334844,75.12297,128510,19.25,2,6.8,urban
+493,Hubballi_Ward_4,ward,Hubballi,Karnataka,15.350719,75.13845,166467,16.55,3,6.9,urban
+494,Hubballi_Ward_5,ward,Hubballi,Karnataka,15.36188,75.132394,177721,6.65,3,5.6,urban
+495,Hubballi_Ward_6,ward,Hubballi,Karnataka,15.331416,75.122009,130391,6.32,2,6.3,urban
+496,Mysuru_Ward_1,ward,Mysuru,Karnataka,12.311444,76.642584,213953,17.17,4,6.7,urban
+497,Mysuru_Ward_2,ward,Mysuru,Karnataka,12.288042,76.652068,256698,9.46,4,7.7,urban
+498,Mysuru_Ward_3,ward,Mysuru,Karnataka,12.306209,76.626989,257013,15.69,4,7.0,urban
+499,Mysuru_Ward_4,ward,Mysuru,Karnataka,12.310633,76.620762,273624,4.03,6,7.0,urban
+500,Salem_Ward_1,ward,Salem,25,11.66249,78.141139,97796,7.97,1,7.4,urban
+501,Salem_Ward_2,ward,Salem,25,11.659005,78.131908,73737,22.43,1,6.4,urban
+502,Salem_Ward_3,ward,Salem,25,11.649229,78.165441,132279,21.43,2,6.0,urban
+503,Salem_Ward_4,ward,Salem,25,11.660799,78.132346,75467,21.73,1,6.5,urban
+504,Salem_Ward_5,ward,Salem,25,11.662947,78.15392,79309,10.29,1,5.3,urban
+505,Salem_Ward_6,ward,Salem,25,11.658768,78.176851,90483,19.53,1,6.5,urban
+506,Salem_Ward_7,ward,Salem,25,11.673694,78.171451,109555,15.5,2,8.1,urban
+507,Salem_Ward_8,ward,Salem,25,11.655933,78.155739,117635,7.26,2,5.4,urban
+508,Salem_Ward_9,ward,Salem,25,11.676746,78.165935,128180,14.14,2,6.4,urban
+509,Gurugram_Ward_1,ward,Gurugram,10,28.469483,77.039628,133723,17.58,2,8.3,urban
+510,Gurugram_Ward_2,ward,Gurugram,10,28.452514,77.034724,101368,17.89,2,5.9,urban
+511,Gurugram_Ward_3,ward,Gurugram,10,28.475272,77.046472,109569,6.13,1,7.3,urban
+512,Gurugram_Ward_4,ward,Gurugram,10,28.485375,77.020384,139392,5.9,3,8.2,urban
+513,Gurugram_Ward_5,ward,Gurugram,10,28.483412,77.03916,152340,13.24,3,6.6,urban
+514,Gurugram_Ward_6,ward,Gurugram,10,28.468472,77.009802,132162,23.19,2,6.0,urban
+515,Gurugram_Ward_7,ward,Gurugram,10,28.486432,77.049945,115621,3.95,1,6.1,urban
+516,Bhubaneswar_Ward_1,ward,Bhubaneswar,Odisha,20.265635,85.847824,108877,6.86,2,6.4,urban
+517,Bhubaneswar_Ward_2,ward,Bhubaneswar,Odisha,20.281853,85.821785,77195,24.39,1,6.0,urban
+518,Bhubaneswar_Ward_3,ward,Bhubaneswar,Odisha,20.284715,85.851737,65289,3.54,1,5.5,urban
+519,Bhubaneswar_Ward_4,ward,Bhubaneswar,Odisha,20.269322,85.822651,65748,8.18,1,5.5,urban
+520,Bhubaneswar_Ward_5,ward,Bhubaneswar,Odisha,20.249181,85.808317,104381,8.89,1,5.6,urban
+521,Bhubaneswar_Ward_6,ward,Bhubaneswar,Odisha,20.265102,85.828571,75598,6.84,1,5.3,urban
+522,Bhubaneswar_Ward_7,ward,Bhubaneswar,Odisha,20.275131,85.828159,80177,5.56,1,6.1,urban
+523,Bhubaneswar_Ward_8,ward,Bhubaneswar,Odisha,20.271938,85.821124,78040,15.36,1,5.4,urban
+524,Bhubaneswar_Ward_9,ward,Bhubaneswar,Odisha,20.276927,85.816365,95122,13.22,1,6.0,urban
+525,Bhubaneswar_Ward_10,ward,Bhubaneswar,Odisha,20.271201,85.821354,78255,12.54,1,5.7,urban
+526,Bhiwandi_Ward_1,ward,Bhiwandi,Tripura,19.290697,73.066938,120215,21.83,2,7.8,urban
+527,Bhiwandi_Ward_2,ward,Bhiwandi,Tripura,19.306137,73.029895,131548,6.49,3,6.0,urban
+528,Bhiwandi_Ward_3,ward,Bhiwandi,Tripura,19.312907,73.08435,108766,21.28,2,6.0,urban
+529,Bhiwandi_Ward_4,ward,Bhiwandi,Tripura,19.314502,73.053312,103144,4.9,1,7.6,urban
+530,Bhiwandi_Ward_5,ward,Bhiwandi,Tripura,19.29612,73.062739,114453,16.83,2,4.9,urban
+531,Bhiwandi_Ward_6,ward,Bhiwandi,Tripura,19.304664,73.03606,100874,6.26,2,6.2,urban
+532,Bhiwandi_Ward_7,ward,Bhiwandi,Tripura,19.28377,73.04518,88463,8.57,1,5.2,urban
+533,Bhiwandi_Ward_8,ward,Bhiwandi,Tripura,19.283657,73.062118,101030,14.81,2,5.3,urban
+534,Jalandhar_Ward_1,ward,Jalandhar,Madhya Pradesh,31.322102,75.585193,139909,7.07,2,6.9,urban
+535,Jalandhar_Ward_2,ward,Jalandhar,Madhya Pradesh,31.331689,75.574553,147682,19.26,2,7.0,urban
+536,Jalandhar_Ward_3,ward,Jalandhar,Madhya Pradesh,31.343995,75.577043,158271,13.18,2,5.4,urban
+537,Jalandhar_Ward_4,ward,Jalandhar,Madhya Pradesh,31.311512,75.569153,146481,19.49,3,4.2,urban
+538,Jalandhar_Ward_5,ward,Jalandhar,Madhya Pradesh,31.293749,75.578499,166484,24.99,3,5.5,urban
+539,Rohini_Ward_1,ward,Rohini,Delhi,28.735326,77.088605,128627,16.15,2,6.4,urban
+540,Rohini_Ward_2,ward,Rohini,Delhi,28.711262,77.068099,107582,2.8,1,7.0,urban
+541,Rohini_Ward_3,ward,Rohini,Delhi,28.711958,77.09365,129377,7.46,2,6.2,urban
+542,Rohini_Ward_4,ward,Rohini,Delhi,28.736856,77.071518,93377,10.73,1,5.0,urban
+543,Rohini_Ward_5,ward,Rohini,Delhi,28.73647,77.086637,123674,17.58,2,5.5,urban
+544,Rohini_Ward_6,ward,Rohini,Delhi,28.754589,77.078923,100232,2.44,1,6.1,urban
+545,Rohini_Ward_7,ward,Rohini,Delhi,28.744691,77.087218,125253,24.11,2,6.1,urban
+546,Rohini_Ward_8,ward,Rohini,Delhi,28.742257,77.075361,92374,17.61,1,6.1,urban
+547,Kanayannur_Ward_1,ward,Kanayannur,Nagaland,9.979707,76.259837,134978,8.48,3,5.5,urban
+548,Kanayannur_Ward_2,ward,Kanayannur,Nagaland,9.981,76.281539,114259,9.17,2,7.2,urban
+549,Kanayannur_Ward_3,ward,Kanayannur,Nagaland,9.95761,76.263227,102772,23.52,1,7.0,urban
+550,Kanayannur_Ward_4,ward,Kanayannur,Nagaland,9.959673,76.259643,133795,4.12,2,5.2,urban
+551,Kanayannur_Ward_5,ward,Kanayannur,Nagaland,9.971531,76.249455,84105,7.67,1,5.9,urban
+552,Kanayannur_Ward_6,ward,Kanayannur,Nagaland,9.921803,76.297805,122463,15.29,2,5.9,urban
+553,Kanayannur_Ward_7,ward,Kanayannur,Nagaland,9.952436,76.29288,100193,8.25,2,7.1,urban
+554,Kanayannur_Ward_8,ward,Kanayannur,Nagaland,9.950076,76.259136,96342,21.11,1,5.5,urban
+555,Bhayandar_Ward_1,ward,Bhayandar,Tripura,19.306858,72.842515,137441,15.71,2,4.5,urban
+556,Bhayandar_Ward_2,ward,Bhayandar,Tripura,19.30054,72.832934,103863,22.76,2,5.8,urban
+557,Bhayandar_Ward_3,ward,Bhayandar,Tripura,19.320526,72.838375,147737,17.11,3,6.7,urban
+558,Bhayandar_Ward_4,ward,Bhayandar,Tripura,19.320655,72.847819,120877,21.01,1,7.1,urban
+559,Bhayandar_Ward_5,ward,Bhayandar,Tripura,19.299729,72.852471,141116,2.75,2,7.9,urban
+560,Bhayandar_Ward_6,ward,Bhayandar,Tripura,19.310602,72.85742,102785,15.06,1,8.1,urban
+561,Narela_Ward_1,ward,Narela,Delhi,28.857683,77.090551,136141,3.16,3,4.5,urban
+562,Narela_Ward_2,ward,Narela,Delhi,28.839764,77.094823,111400,16.12,1,5.8,urban
+563,Narela_Ward_3,ward,Narela,Delhi,28.859961,77.06967,104630,10.07,2,6.0,urban
+564,Narela_Ward_4,ward,Narela,Delhi,28.872557,77.110183,102503,3.95,1,5.5,urban
+565,Narela_Ward_5,ward,Narela,Delhi,28.82988,77.050398,137661,20.94,2,7.6,urban
+566,Narela_Ward_6,ward,Narela,Delhi,28.845723,77.080997,100796,4.73,2,3.8,urban
+567,Narela_Ward_7,ward,Narela,Delhi,28.855526,77.099618,116449,5.71,1,3.7,urban
+568,Thiruvananthapuram_Ward_1,ward,Thiruvananthapuram,Nagaland,8.475626,76.951649,204420,3.57,4,7.1,urban
+569,Thiruvananthapuram_Ward_2,ward,Thiruvananthapuram,Nagaland,8.471059,76.946141,210404,10.16,4,6.5,urban
+570,Thiruvananthapuram_Ward_3,ward,Thiruvananthapuram,Nagaland,8.488863,76.916461,236517,16.07,5,8.5,urban
+571,Thiruvananthapuram_Ward_4,ward,Thiruvananthapuram,Nagaland,8.464925,76.938598,150465,17.14,2,8.2,urban
+572,Aligarh_Ward_1,ward,Aligarh,Telangana,27.868598,78.072157,50782,21.03,1,4.8,urban
+573,Aligarh_Ward_2,ward,Aligarh,Telangana,27.880049,78.0667,50271,13.56,1,4.0,urban
+574,Aligarh_Ward_3,ward,Aligarh,Telangana,27.886274,78.079943,79122,16.61,1,5.5,urban
+575,Aligarh_Ward_4,ward,Aligarh,Telangana,27.86241,78.100178,72272,18.82,1,5.0,urban
+576,Aligarh_Ward_5,ward,Aligarh,Telangana,27.908721,78.070161,75305,21.43,1,6.0,urban
+577,Aligarh_Ward_6,ward,Aligarh,Telangana,27.851944,78.057882,78398,13.82,1,5.7,urban
+578,Aligarh_Ward_7,ward,Aligarh,Telangana,27.899735,78.084734,56184,8.26,1,3.8,urban
+579,Aligarh_Ward_8,ward,Aligarh,Telangana,27.880033,78.080934,71367,23.78,1,6.8,urban
+580,Aligarh_Ward_9,ward,Aligarh,Telangana,27.890203,78.09484,53951,2.59,1,5.1,urban
+581,Aligarh_Ward_10,ward,Aligarh,Telangana,27.906192,78.090699,69848,9.07,1,4.4,urban
+582,Aligarh_Ward_11,ward,Aligarh,Telangana,27.890036,78.040918,49971,11.62,1,6.8,urban
+583,Aligarh_Ward_12,ward,Aligarh,Telangana,27.887285,78.078412,47105,5.75,1,6.5,urban
+584,Bareilly_Ward_1,ward,Bareilly,Telangana,28.391611,79.426065,182042,11.65,4,6.3,urban
+585,Bareilly_Ward_2,ward,Bareilly,Telangana,28.33814,79.451445,106923,15.53,2,6.0,urban
+586,Bareilly_Ward_3,ward,Bareilly,Telangana,28.366216,79.436836,153040,18.32,2,6.5,urban
+587,Bareilly_Ward_4,ward,Bareilly,Telangana,28.373882,79.427655,137880,21.14,2,6.3,urban
+588,Bareilly_Ward_5,ward,Bareilly,Telangana,28.357738,79.422808,124584,23.4,2,6.9,urban
+589,Moradabad_Ward_1,ward,Moradabad,Telangana,28.83727,78.76339,59164,9.69,1,2.7,urban
+590,Moradabad_Ward_2,ward,Moradabad,Telangana,28.833308,78.786937,52237,20.52,1,3.2,urban
+591,Moradabad_Ward_3,ward,Moradabad,Telangana,28.829832,78.783679,51761,17.63,1,4.4,urban
+592,Moradabad_Ward_4,ward,Moradabad,Telangana,28.812653,78.800357,53499,7.98,1,4.7,urban
+593,Moradabad_Ward_5,ward,Moradabad,Telangana,28.823897,78.765553,62069,17.48,1,6.6,urban
+594,Moradabad_Ward_6,ward,Moradabad,Telangana,28.846664,78.771208,52039,10.29,1,6.7,urban
+595,Moradabad_Ward_7,ward,Moradabad,Telangana,28.820978,78.790245,49085,21.92,1,6.4,urban
+596,Moradabad_Ward_8,ward,Moradabad,Telangana,28.866374,78.772636,70254,11.83,1,3.9,urban
+597,Moradabad_Ward_9,ward,Moradabad,Telangana,28.849621,78.748593,79347,20.94,1,6.0,urban
+598,Moradabad_Ward_10,ward,Moradabad,Telangana,28.845312,78.798884,46527,2.92,1,5.8,urban
+599,Moradabad_Ward_11,ward,Moradabad,Telangana,28.824645,78.766685,75996,9.46,1,6.7,urban
+600,Warangal_Ward_1,ward,Warangal,40,18.006768,79.596854,124695,15.23,2,7.9,urban
+601,Warangal_Ward_2,ward,Warangal,40,17.975151,79.575463,136351,16.38,2,5.3,urban
+602,Warangal_Ward_3,ward,Warangal,40,18.011362,79.571207,86423,15.94,1,6.6,urban
+603,Warangal_Ward_4,ward,Warangal,40,17.987297,79.602074,115915,2.31,2,5.7,urban
+604,Warangal_Ward_5,ward,Warangal,40,17.969613,79.580546,84161,11.81,1,5.5,urban
+605,Warangal_Ward_6,ward,Warangal,40,17.980793,79.586172,103050,14.97,2,6.2,urban
+606,Gorakhpur_Ward_1,ward,Gorakhpur,Telangana,26.780349,83.357294,101666,9.84,2,6.0,urban
+607,Gorakhpur_Ward_2,ward,Gorakhpur,Telangana,26.763688,83.380469,105987,18.05,2,6.3,urban
+608,Gorakhpur_Ward_3,ward,Gorakhpur,Telangana,26.738411,83.370559,149118,23.76,3,6.6,urban
+609,Gorakhpur_Ward_4,ward,Gorakhpur,Telangana,26.753064,83.358207,147942,18.76,3,6.2,urban
+610,Gorakhpur_Ward_5,ward,Gorakhpur,Telangana,26.76697,83.386365,139426,5.1,2,5.1,urban
+611,Guntur_Ward_1,ward,Guntur,Himachal Pradesh,16.303212,80.466987,51063,4.72,1,6.4,urban
+612,Guntur_Ward_2,ward,Guntur,Himachal Pradesh,16.310557,80.437827,47423,21.58,1,4.7,urban
+613,Guntur_Ward_3,ward,Guntur,Himachal Pradesh,16.300934,80.465601,67588,15.96,1,3.5,urban
+614,Guntur_Ward_4,ward,Guntur,Himachal Pradesh,16.312887,80.436456,50722,4.22,1,4.9,urban
+615,Guntur_Ward_5,ward,Guntur,Himachal Pradesh,16.321018,80.419973,82028,9.52,1,7.1,urban
+616,Guntur_Ward_6,ward,Guntur,Himachal Pradesh,16.30481,80.445024,73942,9.25,1,4.1,urban
+617,Guntur_Ward_7,ward,Guntur,Himachal Pradesh,16.304818,80.443221,52064,19.33,1,6.6,urban
+618,Guntur_Ward_8,ward,Guntur,Himachal Pradesh,16.315661,80.457288,76263,6.29,1,6.8,urban
+619,Guntur_Ward_9,ward,Guntur,Himachal Pradesh,16.331031,80.442069,81076,15.47,1,5.8,urban
+620,Guntur_Ward_10,ward,Guntur,Himachal Pradesh,16.285005,80.44449,49197,15.47,1,5.6,urban
+621,Puducherry_Ward_1,ward,Puducherry,Maharashtra,11.910576,79.83366,79059,17.85,1,5.8,urban
+622,Puducherry_Ward_2,ward,Puducherry,Maharashtra,11.924971,79.817224,78001,20.63,1,4.7,urban
+623,Puducherry_Ward_3,ward,Puducherry,Maharashtra,11.957658,79.838401,67100,18.14,1,4.3,urban
+624,Puducherry_Ward_4,ward,Puducherry,Maharashtra,11.931575,79.799409,91045,9.26,1,6.7,urban
+625,Puducherry_Ward_5,ward,Puducherry,Maharashtra,11.918414,79.84824,80719,11.48,1,5.5,urban
+626,Puducherry_Ward_6,ward,Puducherry,Maharashtra,11.957669,79.83306,93585,3.43,1,5.0,urban
+627,Puducherry_Ward_7,ward,Puducherry,Maharashtra,11.934989,79.797859,58210,4.65,1,4.4,urban
+628,Puducherry_Ward_8,ward,Puducherry,Maharashtra,11.9085,79.82659,68084,12.17,1,6.6,urban
+629,Puducherry_Ward_9,ward,Puducherry,Maharashtra,11.925922,79.832456,86768,5.48,2,6.3,urban
+630,Amravati_Ward_1,ward,Amravati,Tripura,20.935296,77.786669,96969,9.78,1,5.4,urban
+631,Amravati_Ward_2,ward,Amravati,Tripura,20.929133,77.735532,73726,22.05,1,7.9,urban
+632,Amravati_Ward_3,ward,Amravati,Tripura,20.951188,77.722309,109241,3.82,2,7.0,urban
+633,Amravati_Ward_4,ward,Amravati,Tripura,20.946255,77.752086,86685,11.95,1,5.8,urban
+634,Amravati_Ward_5,ward,Amravati,Tripura,20.932195,77.738655,116815,15.49,2,6.3,urban
+635,Amravati_Ward_6,ward,Amravati,Tripura,20.967402,77.743934,110663,4.86,2,6.3,urban
+636,Amravati_Ward_7,ward,Amravati,Tripura,20.931847,77.758394,66939,13.87,1,4.9,urban
+637,Bikaner_Ward_1,ward,Bikaner,Gujarat,28.027851,73.316843,64636,12.12,1,5.0,urban
+638,Bikaner_Ward_2,ward,Bikaner,Gujarat,28.011574,73.29598,42925,22.76,1,7.0,urban
+639,Bikaner_Ward_3,ward,Bikaner,Gujarat,27.998231,73.306967,56563,15.52,1,6.0,urban
+640,Bikaner_Ward_4,ward,Bikaner,Gujarat,28.023893,73.332072,60504,16.52,1,5.0,urban
+641,Bikaner_Ward_5,ward,Bikaner,Gujarat,28.024618,73.335143,55564,7.07,1,7.8,urban
+642,Bikaner_Ward_6,ward,Bikaner,Gujarat,28.030956,73.331494,47504,15.9,1,7.4,urban
+643,Bikaner_Ward_7,ward,Bikaner,Gujarat,28.019735,73.338779,48978,5.76,1,5.4,urban
+644,Bikaner_Ward_8,ward,Bikaner,Gujarat,28.005546,73.307192,54599,11.15,1,5.0,urban
+645,Bikaner_Ward_9,ward,Bikaner,Gujarat,27.973678,73.345745,54461,3.43,1,5.6,urban
+646,Bikaner_Ward_10,ward,Bikaner,Gujarat,28.000045,73.316848,60902,14.83,1,4.9,urban
+647,Bikaner_Ward_11,ward,Bikaner,Gujarat,28.020249,73.294899,63698,5.91,1,5.2,urban
+648,Kochi_Ward_1,ward,Kochi,Nagaland,9.9366,76.235656,96604,17.74,2,6.1,urban
+649,Kochi_Ward_2,ward,Kochi,Nagaland,9.954547,76.228635,78777,11.45,1,6.9,urban
+650,Kochi_Ward_3,ward,Kochi,Nagaland,9.960675,76.220607,75435,6.07,1,5.4,urban
+651,Kochi_Ward_4,ward,Kochi,Nagaland,9.962833,76.270194,93894,6.12,1,5.6,urban
+652,Kochi_Ward_5,ward,Kochi,Nagaland,9.936678,76.269531,108565,23.22,2,7.1,urban
+653,Kochi_Ward_6,ward,Kochi,Nagaland,9.937133,76.25487,96084,7.17,2,6.0,urban
+654,Bhilai_Ward_1,ward,Bhilai,37,21.209958,81.405591,100980,20.38,1,4.3,urban
+655,Bhilai_Ward_2,ward,Bhilai,37,21.227502,81.415348,74700,21.93,1,6.2,urban
+656,Bhilai_Ward_3,ward,Bhilai,37,21.216321,81.430896,61516,14.62,1,5.2,urban
+657,Bhilai_Ward_4,ward,Bhilai,37,21.216731,81.391101,101842,5.06,1,5.1,urban
+658,Bhilai_Ward_5,ward,Bhilai,37,21.233627,81.449021,77703,10.23,1,4.6,urban
+659,Bhilai_Ward_6,ward,Bhilai,37,21.231651,81.456366,62527,6.83,1,7.7,urban
+660,Bhilai_Ward_7,ward,Bhilai,37,21.233107,81.44657,81474,17.98,1,5.2,urban
+661,Bhilai_Ward_8,ward,Bhilai,37,21.229837,81.433197,89530,8.01,1,4.8,urban
+662,Cuttack_Ward_1,ward,Cuttack,Odisha,20.464433,85.906413,205068,2.15,3,5.6,urban
+663,Cuttack_Ward_2,ward,Cuttack,Odisha,20.437369,85.878786,232027,6.01,3,8.0,urban
+664,Cuttack_Ward_3,ward,Cuttack,Odisha,20.466816,85.865902,218733,11.37,4,7.1,urban
+665,Borivli_Ward_1,ward,Borivli,Tripura,19.249336,72.860535,83087,22.49,1,6.1,urban
+666,Borivli_Ward_2,ward,Borivli,Tripura,19.251075,72.878556,97314,23.0,2,6.4,urban
+667,Borivli_Ward_3,ward,Borivli,Tripura,19.215909,72.864064,87507,14.77,1,5.1,urban
+668,Borivli_Ward_4,ward,Borivli,Tripura,19.218966,72.83642,108638,4.02,1,7.9,urban
+669,Borivli_Ward_5,ward,Borivli,Tripura,19.236029,72.840357,84166,2.32,1,7.1,urban
+670,Borivli_Ward_6,ward,Borivli,Tripura,19.229017,72.879814,119808,2.46,2,7.4,urban
+671,Bhavnagar_Ward_1,ward,Bhavnagar,Uttar Pradesh,21.797425,72.131118,221714,22.23,4,6.2,urban
+672,Bhavnagar_Ward_2,ward,Bhavnagar,Uttar Pradesh,21.777977,72.14916,168109,21.76,2,7.1,urban
+673,Bhavnagar_Ward_3,ward,Bhavnagar,Uttar Pradesh,21.793617,72.15332,170341,11.45,3,5.9,urban
+674,Sangli_Ward_1,ward,Sangli,Tripura,16.87061,74.572566,66285,19.61,1,5.9,urban
+675,Sangli_Ward_2,ward,Sangli,Tripura,16.839593,74.559908,82893,13.6,1,4.5,urban
+676,Sangli_Ward_3,ward,Sangli,Tripura,16.859652,74.553862,81698,7.34,1,4.0,urban
+677,Sangli_Ward_4,ward,Sangli,Tripura,16.831238,74.554679,61562,19.28,1,5.4,urban
+678,Sangli_Ward_5,ward,Sangli,Tripura,16.865543,74.541547,55420,4.51,1,4.4,urban
+679,Sangli_Ward_6,ward,Sangli,Tripura,16.842215,74.547459,89076,21.72,2,6.7,urban
+680,Sangli_Ward_7,ward,Sangli,Tripura,16.847913,74.555695,83732,17.7,1,6.3,urban
+681,Sangli_Ward_8,ward,Sangli,Tripura,16.854488,74.532873,81721,20.46,1,5.5,urban
+682,Jamnagar_Ward_1,ward,Jamnagar,Uttar Pradesh,22.461999,70.064797,73273,20.67,1,6.1,urban
+683,Jamnagar_Ward_2,ward,Jamnagar,Uttar Pradesh,22.470788,70.07181,81133,17.59,1,6.8,urban
+684,Jamnagar_Ward_3,ward,Jamnagar,Uttar Pradesh,22.486005,70.07503,53504,18.5,1,5.2,urban
+685,Jamnagar_Ward_4,ward,Jamnagar,Uttar Pradesh,22.490796,70.065474,62099,6.35,1,5.8,urban
+686,Jamnagar_Ward_5,ward,Jamnagar,Uttar Pradesh,22.491358,70.068097,70950,21.06,1,7.5,urban
+687,Jamnagar_Ward_6,ward,Jamnagar,Uttar Pradesh,22.48092,70.079322,50962,10.35,1,6.7,urban
+688,Jamnagar_Ward_7,ward,Jamnagar,Uttar Pradesh,22.488781,70.072151,51250,22.39,1,6.1,urban
+689,Jamnagar_Ward_8,ward,Jamnagar,Uttar Pradesh,22.488898,70.088519,57579,19.84,1,5.4,urban
+690,Jamnagar_Ward_9,ward,Jamnagar,Uttar Pradesh,22.477534,70.051391,47168,24.44,1,5.2,urban
+691,Jammu_Ward_1,ward,Jammu,Lakshadweep,32.713741,74.841933,74613,13.63,1,6.8,urban
+692,Jammu_Ward_2,ward,Jammu,Lakshadweep,32.732908,74.844604,106155,3.69,1,6.1,urban
+693,Jammu_Ward_3,ward,Jammu,Lakshadweep,32.750214,74.887218,78123,20.87,1,5.2,urban
+694,Jammu_Ward_4,ward,Jammu,Lakshadweep,32.744021,74.846739,80241,19.3,1,7.6,urban
+695,Jammu_Ward_5,ward,Jammu,Lakshadweep,32.705003,74.863846,87057,9.94,2,6.7,urban
+696,Jammu_Ward_6,ward,Jammu,Lakshadweep,32.733449,74.840533,57631,21.41,1,5.2,urban
+697,Jammu_Ward_7,ward,Jammu,Lakshadweep,32.72456,74.869489,63564,11.9,1,6.0,urban
+698,Bokaro_Ward_1,ward,Bokaro,38,23.671861,86.152119,128283,16.29,2,5.2,urban
+699,Bokaro_Ward_2,ward,Bokaro,38,23.660551,86.156547,101767,9.85,2,7.3,urban
+700,Bokaro_Ward_3,ward,Bokaro,38,23.662617,86.180177,141831,21.92,3,5.8,urban
+701,Bokaro_Ward_4,ward,Bokaro,38,23.6735,86.151276,139659,14.38,3,5.6,urban
+702,Nanded_Ward_1,ward,Nanded,Tripura,19.172579,77.319296,83258,11.28,1,5.3,urban
+703,Nanded_Ward_2,ward,Nanded,Tripura,19.170201,77.306676,82804,3.57,1,5.0,urban
+704,Nanded_Ward_3,ward,Nanded,Tripura,19.148834,77.318501,80273,10.67,1,4.5,urban
+705,Nanded_Ward_4,ward,Nanded,Tripura,19.129096,77.313679,70112,8.86,1,5.6,urban
+706,Nanded_Ward_5,ward,Nanded,Tripura,19.15533,77.301161,107349,16.6,1,5.6,urban
+707,Nanded_Ward_6,ward,Nanded,Tripura,19.162946,77.334519,68518,5.88,1,6.3,urban
+708,Kozhikode_Ward_1,ward,Kozhikode,Nagaland,11.241834,75.803948,57836,20.85,1,5.6,urban
+709,Kozhikode_Ward_2,ward,Kozhikode,Nagaland,11.245555,75.783581,39930,14.52,1,4.0,urban
+710,Kozhikode_Ward_3,ward,Kozhikode,Nagaland,11.224016,75.787722,36720,13.58,1,4.5,urban
+711,Kozhikode_Ward_4,ward,Kozhikode,Nagaland,11.257845,75.792562,49875,10.68,1,4.6,urban
+712,Kozhikode_Ward_5,ward,Kozhikode,Nagaland,11.249485,75.772847,39649,23.93,1,5.3,urban
+713,Kozhikode_Ward_6,ward,Kozhikode,Nagaland,11.242278,75.778544,37038,24.57,1,5.0,urban
+714,Kozhikode_Ward_7,ward,Kozhikode,Nagaland,11.252059,75.800122,41537,6.42,1,4.8,urban
+715,Kozhikode_Ward_8,ward,Kozhikode,Nagaland,11.265748,75.787614,34009,10.19,1,6.4,urban
+716,Kozhikode_Ward_9,ward,Kozhikode,Nagaland,11.226675,75.784864,54522,5.04,1,4.5,urban
+717,Kozhikode_Ward_10,ward,Kozhikode,Nagaland,11.238805,75.769753,40362,10.34,1,7.0,urban
+718,Kozhikode_Ward_11,ward,Kozhikode,Nagaland,11.260443,75.773089,45017,6.14,1,6.0,urban
+719,Kozhikode_Ward_12,ward,Kozhikode,Nagaland,11.267461,75.763793,32806,16.03,1,5.0,urban
+720,Kolhapur_Ward_1,ward,Kolhapur,Tripura,16.693361,74.222607,51377,8.85,1,4.1,urban
+721,Kolhapur_Ward_2,ward,Kolhapur,Tripura,16.695524,74.228436,53134,22.34,1,5.9,urban
+722,Kolhapur_Ward_3,ward,Kolhapur,Tripura,16.720434,74.254849,56109,23.08,1,8.0,urban
+723,Kolhapur_Ward_4,ward,Kolhapur,Tripura,16.679169,74.209516,79356,3.14,1,6.7,urban
+724,Kolhapur_Ward_5,ward,Kolhapur,Tripura,16.699275,74.228065,57407,23.14,1,3.9,urban
+725,Kolhapur_Ward_6,ward,Kolhapur,Tripura,16.667973,74.218315,87666,22.92,1,3.7,urban
+726,Kolhapur_Ward_7,ward,Kolhapur,Tripura,16.693198,74.25437,81498,11.97,1,6.2,urban
+727,Kolhapur_Ward_8,ward,Kolhapur,Tripura,16.689734,74.246694,80761,20.52,1,7.2,urban
+728,Nellore_Ward_1,ward,Nellore,Himachal Pradesh,14.460578,79.98198,66696,17.5,1,6.8,urban
+729,Nellore_Ward_2,ward,Nellore,Himachal Pradesh,14.474142,79.98214,83438,14.55,1,6.4,urban
+730,Nellore_Ward_3,ward,Nellore,Himachal Pradesh,14.438868,79.977154,104884,6.97,2,5.1,urban
+731,Nellore_Ward_4,ward,Nellore,Himachal Pradesh,14.448608,79.995195,89906,7.8,2,7.8,urban
+732,Nellore_Ward_5,ward,Nellore,Himachal Pradesh,14.453284,79.971431,75168,2.9,1,5.6,urban
+733,Nellore_Ward_6,ward,Nellore,Himachal Pradesh,14.464325,79.993907,94044,18.82,1,6.6,urban
+734,Kalaburagi_Ward_1,ward,Kalaburagi,Karnataka,17.35875,76.809663,59152,22.64,1,6.5,urban
+735,Kalaburagi_Ward_2,ward,Kalaburagi,Karnataka,17.330588,76.825981,64603,21.65,1,5.0,urban
+736,Kalaburagi_Ward_3,ward,Kalaburagi,Karnataka,17.299975,76.850371,40891,21.49,1,5.0,urban
+737,Kalaburagi_Ward_4,ward,Kalaburagi,Karnataka,17.33163,76.818385,43413,6.52,1,7.6,urban
+738,Kalaburagi_Ward_5,ward,Kalaburagi,Karnataka,17.344388,76.847022,65978,12.01,1,3.8,urban
+739,Kalaburagi_Ward_6,ward,Kalaburagi,Karnataka,17.33657,76.849103,46457,8.96,1,4.9,urban
+740,Kalaburagi_Ward_7,ward,Kalaburagi,Karnataka,17.341277,76.874845,57591,10.73,1,6.8,urban
+741,Kalaburagi_Ward_8,ward,Kalaburagi,Karnataka,17.341043,76.83887,61732,6.42,1,6.1,urban
+742,Kalaburagi_Ward_9,ward,Kalaburagi,Karnataka,17.35754,76.854314,57653,14.16,1,7.1,urban
+743,Kalaburagi_Ward_10,ward,Kalaburagi,Karnataka,17.339473,76.806339,44457,12.07,1,7.4,urban
+744,Ajmer_Ward_1,ward,Ajmer,Gujarat,26.440481,74.645323,54725,23.22,1,3.8,urban
+745,Ajmer_Ward_2,ward,Ajmer,Gujarat,26.421124,74.639097,68830,23.17,1,3.6,urban
+746,Ajmer_Ward_3,ward,Ajmer,Gujarat,26.447296,74.639109,68957,3.96,1,5.4,urban
+747,Ajmer_Ward_4,ward,Ajmer,Gujarat,26.45237,74.645759,64385,3.72,1,2.9,urban
+748,Ajmer_Ward_5,ward,Ajmer,Gujarat,26.442652,74.627944,60434,3.42,1,5.0,urban
+749,Ajmer_Ward_6,ward,Ajmer,Gujarat,26.437325,74.64165,43498,21.41,1,5.4,urban
+750,Ajmer_Ward_7,ward,Ajmer,Gujarat,26.443413,74.630857,43623,15.29,1,3.9,urban
+751,Ajmer_Ward_8,ward,Ajmer,Gujarat,26.424322,74.650424,53587,19.63,1,4.8,urban
+752,Ajmer_Ward_9,ward,Ajmer,Gujarat,26.448203,74.642878,67519,16.51,1,6.7,urban
+753,Dehradun_Ward_1,ward,Dehradun,39,30.307163,77.991334,60282,3.29,1,6.1,urban
+754,Dehradun_Ward_2,ward,Dehradun,39,30.321107,78.047024,55665,7.74,1,5.5,urban
+755,Dehradun_Ward_3,ward,Dehradun,39,30.338417,78.027693,54062,15.87,1,5.4,urban
+756,Dehradun_Ward_4,ward,Dehradun,39,30.33033,78.03745,65758,4.9,1,5.1,urban
+757,Dehradun_Ward_5,ward,Dehradun,39,30.346363,78.04065,49276,16.34,1,6.2,urban
+758,Dehradun_Ward_6,ward,Dehradun,39,30.328619,78.027978,42866,19.49,1,4.7,urban
+759,Dehradun_Ward_7,ward,Dehradun,39,30.306592,78.04973,42310,16.18,1,3.9,urban
+760,Dehradun_Ward_8,ward,Dehradun,39,30.322256,78.032525,51223,24.65,1,5.3,urban
+761,Dehradun_Ward_9,ward,Dehradun,39,30.318605,78.029336,42921,2.48,1,7.1,urban
+762,Dehradun_Ward_10,ward,Dehradun,39,30.295755,78.033039,62127,3.99,1,5.1,urban
+763,Erode_Ward_1,ward,Erode,25,11.355694,77.728607,97362,23.58,2,4.9,urban
+764,Erode_Ward_2,ward,Erode,25,11.364108,77.71374,116953,23.38,2,5.0,urban
+765,Erode_Ward_3,ward,Erode,25,11.351732,77.718562,119317,9.0,1,4.7,urban
+766,Erode_Ward_4,ward,Erode,25,11.331117,77.745592,100277,6.16,2,5.5,urban
+767,Erode_Ward_5,ward,Erode,25,11.35999,77.715749,97724,7.25,2,7.6,urban
+768,Durgapur_Ward_1,ward,Durgapur,West Bengal,23.51024,87.305831,72981,10.16,1,5.4,urban
+769,Durgapur_Ward_2,ward,Durgapur,West Bengal,23.506715,87.30595,77829,17.29,1,6.1,urban
+770,Durgapur_Ward_3,ward,Durgapur,West Bengal,23.499397,87.333471,70153,2.17,1,5.0,urban
+771,Durgapur_Ward_4,ward,Durgapur,West Bengal,23.531885,87.327088,53594,13.54,1,5.5,urban
+772,Durgapur_Ward_5,ward,Durgapur,West Bengal,23.520899,87.311853,77774,21.88,1,6.3,urban
+773,Durgapur_Ward_6,ward,Durgapur,West Bengal,23.493046,87.268549,69056,21.85,1,5.2,urban
+774,Durgapur_Ward_7,ward,Durgapur,West Bengal,23.519483,87.296523,76335,22.19,1,5.7,urban
+775,Ulhasnagar_Ward_1,ward,Ulhasnagar,Tripura,19.224568,73.142839,106892,8.69,1,6.1,urban
+776,Ulhasnagar_Ward_2,ward,Ulhasnagar,Tripura,19.223867,73.167193,91222,4.97,1,5.8,urban
+777,Ulhasnagar_Ward_3,ward,Ulhasnagar,Tripura,19.231466,73.13932,101557,23.62,1,5.5,urban
+778,Ulhasnagar_Ward_4,ward,Ulhasnagar,Tripura,19.202176,73.130062,127562,18.32,2,6.2,urban
+779,Ulhasnagar_Ward_5,ward,Ulhasnagar,Tripura,19.220845,73.142362,89791,12.76,1,5.4,urban
+780,Loni_Ward_1,ward,Loni,Telangana,28.756822,77.270598,61608,2.24,1,7.6,urban
+781,Loni_Ward_2,ward,Loni,Telangana,28.757367,77.294183,82547,22.41,1,3.4,urban
+782,Loni_Ward_3,ward,Loni,Telangana,28.743992,77.285638,91951,24.13,2,6.7,urban
+783,Loni_Ward_4,ward,Loni,Telangana,28.706316,77.298798,74591,8.5,1,6.0,urban
+784,Loni_Ward_5,ward,Loni,Telangana,28.735077,77.280093,111754,15.31,1,4.5,urban
+785,Loni_Ward_6,ward,Loni,Telangana,28.758841,77.247411,73564,24.23,1,5.5,urban
+786,Siliguri_Ward_1,ward,Siliguri,West Bengal,26.701969,88.426115,48862,2.14,1,5.9,urban
+787,Siliguri_Ward_2,ward,Siliguri,West Bengal,26.710722,88.436885,33208,18.86,1,7.2,urban
+788,Siliguri_Ward_3,ward,Siliguri,West Bengal,26.702814,88.458335,44216,24.48,1,7.7,urban
+789,Siliguri_Ward_4,ward,Siliguri,West Bengal,26.709957,88.446188,49773,13.85,1,7.4,urban
+790,Siliguri_Ward_5,ward,Siliguri,West Bengal,26.716336,88.447809,37602,9.98,1,4.8,urban
+791,Siliguri_Ward_6,ward,Siliguri,West Bengal,26.731566,88.4233,46424,20.63,1,3.6,urban
+792,Siliguri_Ward_7,ward,Siliguri,West Bengal,26.723421,88.417117,46996,2.21,1,4.7,urban
+793,Siliguri_Ward_8,ward,Siliguri,West Bengal,26.712504,88.461453,45337,5.21,1,6.5,urban
+794,Siliguri_Ward_9,ward,Siliguri,West Bengal,26.7132,88.444365,49207,10.56,1,5.7,urban
+795,Siliguri_Ward_10,ward,Siliguri,West Bengal,26.708664,88.415193,43902,24.23,1,6.2,urban
+796,Siliguri_Ward_11,ward,Siliguri,West Bengal,26.705664,88.400197,47603,8.29,1,4.9,urban
+797,Ujjain_Ward_1,ward,Ujjain,35,23.180408,75.768574,42719,6.42,1,3.4,urban
+798,Ujjain_Ward_2,ward,Ujjain,35,23.180871,75.756616,48988,7.56,1,3.4,urban
+799,Ujjain_Ward_3,ward,Ujjain,35,23.199781,75.791027,49853,15.71,1,5.0,urban
+800,Ujjain_Ward_4,ward,Ujjain,35,23.185175,75.764066,56437,21.41,1,6.2,urban
+801,Ujjain_Ward_5,ward,Ujjain,35,23.160129,75.773303,36545,14.53,1,6.6,urban
+802,Ujjain_Ward_6,ward,Ujjain,35,23.159482,75.770697,39495,11.46,1,4.7,urban
+803,Ujjain_Ward_7,ward,Ujjain,35,23.167778,75.786981,43090,3.56,1,4.8,urban
+804,Ujjain_Ward_8,ward,Ujjain,35,23.193369,75.759372,47003,21.74,1,4.6,urban
+805,Ujjain_Ward_9,ward,Ujjain,35,23.17625,75.791519,52098,2.23,1,5.7,urban
+806,Ujjain_Ward_10,ward,Ujjain,35,23.177342,75.750612,52271,8.99,1,4.6,urban
+807,Ujjain_Ward_11,ward,Ujjain,35,23.173457,75.789938,45328,16.02,1,6.1,urban
+808,Bilimora_Ward_1,ward,Bilimora,Uttar Pradesh,20.752265,72.967672,63114,9.68,1,7.2,urban
+809,Bilimora_Ward_2,ward,Bilimora,Uttar Pradesh,20.783688,72.964218,76016,7.36,1,5.1,urban
+810,Bilimora_Ward_3,ward,Bilimora,Uttar Pradesh,20.76998,72.931851,59046,9.42,1,5.5,urban
+811,Bilimora_Ward_4,ward,Bilimora,Uttar Pradesh,20.765834,72.936247,56923,4.44,1,6.0,urban
+812,Bilimora_Ward_5,ward,Bilimora,Uttar Pradesh,20.780308,72.971081,84707,16.81,1,6.4,urban
+813,Bilimora_Ward_6,ward,Bilimora,Uttar Pradesh,20.773719,72.979272,79393,16.7,1,5.3,urban
+814,Bilimora_Ward_7,ward,Bilimora,Uttar Pradesh,20.770056,72.959465,63902,5.07,1,4.8,urban
+815,Karol Bagh_Ward_1,ward,Karol Bagh,Delhi,28.666277,77.20041,33598,4.45,1,3.0,urban
+816,Karol Bagh_Ward_2,ward,Karol Bagh,Delhi,28.681991,77.204052,50393,3.73,1,5.9,urban
+817,Karol Bagh_Ward_3,ward,Karol Bagh,Delhi,28.642248,77.184655,36041,21.2,1,5.5,urban
+818,Karol Bagh_Ward_4,ward,Karol Bagh,Delhi,28.660139,77.18137,48062,16.7,1,5.8,urban
+819,Karol Bagh_Ward_5,ward,Karol Bagh,Delhi,28.63785,77.176257,52982,21.24,1,6.6,urban
+820,Karol Bagh_Ward_6,ward,Karol Bagh,Delhi,28.665502,77.210676,32714,24.6,1,6.6,urban
+821,Karol Bagh_Ward_7,ward,Karol Bagh,Delhi,28.649482,77.203423,30481,12.56,1,5.8,urban
+822,Karol Bagh_Ward_8,ward,Karol Bagh,Delhi,28.664503,77.189156,41320,16.74,1,4.8,urban
+823,Karol Bagh_Ward_9,ward,Karol Bagh,Delhi,28.655291,77.161477,31140,10.17,1,5.0,urban
+824,Karol Bagh_Ward_10,ward,Karol Bagh,Delhi,28.618085,77.207593,47542,9.26,1,6.7,urban
+825,Karol Bagh_Ward_11,ward,Karol Bagh,Delhi,28.656616,77.178055,30477,3.77,1,3.5,urban
+826,Karol Bagh_Ward_12,ward,Karol Bagh,Delhi,28.617903,77.205657,35652,21.29,1,5.9,urban
+827,Asansol_Ward_1,ward,Asansol,West Bengal,23.678221,86.990832,57730,3.12,1,6.1,urban
+828,Asansol_Ward_2,ward,Asansol,West Bengal,23.693533,86.980142,50731,4.1,1,6.7,urban
+829,Asansol_Ward_3,ward,Asansol,West Bengal,23.690541,87.005781,45493,2.4,1,6.6,urban
+830,Asansol_Ward_4,ward,Asansol,West Bengal,23.687779,86.984766,66770,10.04,1,5.1,urban
+831,Asansol_Ward_5,ward,Asansol,West Bengal,23.660057,86.993261,40115,19.06,1,6.6,urban
+832,Asansol_Ward_6,ward,Asansol,West Bengal,23.71107,86.967469,51070,4.99,1,6.1,urban
+833,Asansol_Ward_7,ward,Asansol,West Bengal,23.696081,86.989595,71586,16.22,1,6.0,urban
+834,Asansol_Ward_8,ward,Asansol,West Bengal,23.702587,86.993938,67273,19.19,1,6.7,urban
+835,Asansol_Ward_9,ward,Asansol,West Bengal,23.676412,86.994678,60751,18.38,1,4.4,urban
+836,Mangaluru_Ward_1,ward,Mangaluru,Karnataka,12.921517,74.848022,41482,6.87,1,4.8,semi-urban
+837,Mangaluru_Ward_2,ward,Mangaluru,Karnataka,12.92354,74.847361,41638,7.36,1,5.8,semi-urban
+838,Mangaluru_Ward_3,ward,Mangaluru,Karnataka,12.902866,74.863108,43962,9.12,1,4.6,semi-urban
+839,Mangaluru_Ward_4,ward,Mangaluru,Karnataka,12.884685,74.838117,53712,14.99,1,4.6,semi-urban
+840,Mangaluru_Ward_5,ward,Mangaluru,Karnataka,12.896942,74.860744,35771,4.38,1,5.2,semi-urban
+841,Mangaluru_Ward_6,ward,Mangaluru,Karnataka,12.927587,74.860014,33350,17.57,1,6.0,semi-urban
+842,Mangaluru_Ward_7,ward,Mangaluru,Karnataka,12.916187,74.842111,36721,5.31,1,4.8,semi-urban
+843,Mangaluru_Ward_8,ward,Mangaluru,Karnataka,12.914561,74.842338,49004,6.54,1,5.8,semi-urban
+844,Mangaluru_Ward_9,ward,Mangaluru,Karnataka,12.903763,74.87623,42553,17.7,1,4.2,semi-urban
+845,Mangaluru_Ward_10,ward,Mangaluru,Karnataka,12.896412,74.867488,30110,21.14,1,5.5,semi-urban
+846,Mangaluru_Ward_11,ward,Mangaluru,Karnataka,12.931408,74.872387,53609,17.79,1,6.7,semi-urban
+847,Mangaluru_Ward_12,ward,Mangaluru,Karnataka,12.928367,74.846466,31809,16.5,1,5.1,semi-urban
+848,Belagavi_Ward_1,ward,Belagavi,Karnataka,15.863614,74.478635,48253,23.53,1,3.5,semi-urban
+849,Belagavi_Ward_2,ward,Belagavi,Karnataka,15.857673,74.513235,46374,16.56,1,5.9,semi-urban
+850,Belagavi_Ward_3,ward,Belagavi,Karnataka,15.848654,74.490085,61616,10.63,1,6.5,semi-urban
+851,Belagavi_Ward_4,ward,Belagavi,Karnataka,15.837036,74.509872,65001,15.71,1,4.6,semi-urban
+852,Belagavi_Ward_5,ward,Belagavi,Karnataka,15.877906,74.500806,64892,6.86,1,6.1,semi-urban
+853,Belagavi_Ward_6,ward,Belagavi,Karnataka,15.864907,74.486032,69654,5.12,1,7.1,semi-urban
+854,Belagavi_Ward_7,ward,Belagavi,Karnataka,15.852332,74.496871,41386,20.77,1,4.6,semi-urban
+855,Belagavi_Ward_8,ward,Belagavi,Karnataka,15.84088,74.501147,49294,5.83,1,4.3,semi-urban
+856,Belagavi_Ward_9,ward,Belagavi,Karnataka,15.879428,74.49939,39964,15.36,1,5.2,semi-urban
+857,Saharanpur_Ward_1,ward,Saharanpur,Telangana,29.967811,77.55698,73080,6.0,1,6.8,semi-urban
+858,Saharanpur_Ward_2,ward,Saharanpur,Telangana,29.981684,77.565681,44997,14.3,1,4.1,semi-urban
+859,Saharanpur_Ward_3,ward,Saharanpur,Telangana,29.967778,77.547591,72102,22.39,1,6.1,semi-urban
+860,Saharanpur_Ward_4,ward,Saharanpur,Telangana,29.987553,77.571168,65337,5.32,1,4.2,semi-urban
+861,Saharanpur_Ward_5,ward,Saharanpur,Telangana,29.962723,77.552559,50117,5.74,1,5.6,semi-urban
+862,Saharanpur_Ward_6,ward,Saharanpur,Telangana,29.937601,77.541236,70149,2.2,1,6.7,semi-urban
+863,Saharanpur_Ward_7,ward,Saharanpur,Telangana,29.968738,77.540575,58986,18.52,1,5.6,semi-urban
+864,Saharanpur_Ward_8,ward,Saharanpur,Telangana,29.966313,77.570231,50900,15.53,1,5.1,semi-urban
+865,Vellore_Ward_1,ward,Vellore,25,12.908392,79.121555,86986,21.94,1,4.3,semi-urban
+866,Vellore_Ward_2,ward,Vellore,25,12.91031,79.123587,80194,16.42,1,7.8,semi-urban
+867,Vellore_Ward_3,ward,Vellore,25,12.88814,79.090065,83972,18.53,1,5.6,semi-urban
+868,Vellore_Ward_4,ward,Vellore,25,12.939235,79.129047,65867,7.65,1,8.3,semi-urban
+869,Vellore_Ward_5,ward,Vellore,25,12.914671,79.141949,102701,4.98,2,6.7,semi-urban
+870,Vellore_Ward_6,ward,Vellore,25,12.950724,79.120556,86740,19.89,1,5.6,semi-urban
+871,Bhatpara_Ward_1,ward,Bhatpara,West Bengal,22.857946,88.39406,91194,13.9,2,5.3,semi-urban
+872,Bhatpara_Ward_2,ward,Bhatpara,West Bengal,22.89141,88.382607,101599,24.21,1,7.0,semi-urban
+873,Bhatpara_Ward_3,ward,Bhatpara,West Bengal,22.873634,88.385303,81867,16.13,1,6.5,semi-urban
+874,Bhatpara_Ward_4,ward,Bhatpara,West Bengal,22.883017,88.383519,124917,18.85,2,5.5,semi-urban
+875,Bhatpara_Ward_5,ward,Bhatpara,West Bengal,22.850874,88.411111,81493,2.45,1,4.4,semi-urban
+876,Malegaon_Ward_1,ward,Malegaon,Tripura,20.542416,74.515549,30809,20.99,1,4.1,semi-urban
+877,Malegaon_Ward_2,ward,Malegaon,Tripura,20.546797,74.531647,51362,9.11,1,5.6,semi-urban
+878,Malegaon_Ward_3,ward,Malegaon,Tripura,20.542623,74.553901,51909,23.78,1,4.9,semi-urban
+879,Malegaon_Ward_4,ward,Malegaon,Tripura,20.570764,74.527358,43324,20.52,1,4.8,semi-urban
+880,Malegaon_Ward_5,ward,Malegaon,Tripura,20.558548,74.527671,55619,5.45,1,6.3,semi-urban
+881,Malegaon_Ward_6,ward,Malegaon,Tripura,20.585486,74.552384,47558,17.32,1,6.2,semi-urban
+882,Malegaon_Ward_7,ward,Malegaon,Tripura,20.551337,74.504125,43720,17.74,1,7.5,semi-urban
+883,Malegaon_Ward_8,ward,Malegaon,Tripura,20.57355,74.53491,43361,22.07,1,4.4,semi-urban
+884,Malegaon_Ward_9,ward,Malegaon,Tripura,20.556761,74.518359,55883,3.68,1,5.9,semi-urban
+885,Malegaon_Ward_10,ward,Malegaon,Tripura,20.529185,74.545142,51719,12.46,1,5.5,semi-urban
+886,Malegaon_Ward_11,ward,Malegaon,Tripura,20.555882,74.526309,44979,4.06,1,5.8,semi-urban
+887,Gaya_Ward_1,ward,Gaya,Puducherry,24.813419,85.000006,57539,22.12,1,5.3,semi-urban
+888,Gaya_Ward_2,ward,Gaya,Puducherry,24.790757,85.009727,36063,10.19,1,4.7,semi-urban
+889,Gaya_Ward_3,ward,Gaya,Puducherry,24.786879,85.014679,51368,4.92,1,6.2,semi-urban
+890,Gaya_Ward_4,ward,Gaya,Puducherry,24.802623,85.007768,36802,5.7,1,6.4,semi-urban
+891,Gaya_Ward_5,ward,Gaya,Puducherry,24.812301,85.015801,36195,14.32,1,6.0,semi-urban
+892,Gaya_Ward_6,ward,Gaya,Puducherry,24.797151,85.020028,47209,13.28,1,5.1,semi-urban
+893,Gaya_Ward_7,ward,Gaya,Puducherry,24.801046,85.008223,44664,7.48,1,8.2,semi-urban
+894,Gaya_Ward_8,ward,Gaya,Puducherry,24.792276,85.002847,42688,7.49,1,6.9,semi-urban
+895,Gaya_Ward_9,ward,Gaya,Puducherry,24.79514,85.007814,37989,14.69,1,5.9,semi-urban
+896,Gaya_Ward_10,ward,Gaya,Puducherry,24.767619,84.992587,60650,7.94,1,3.6,semi-urban
+897,Ambattur_Ward_1,ward,Ambattur,25,13.094239,80.137582,134699,9.79,2,7.8,semi-urban
+898,Ambattur_Ward_2,ward,Ambattur,25,13.091888,80.140687,133473,21.61,2,6.6,semi-urban
+899,Ambattur_Ward_3,ward,Ambattur,25,13.10279,80.157804,106238,4.91,2,6.7,semi-urban
+900,Ambattur_Ward_4,ward,Ambattur,25,13.093987,80.161088,87315,23.71,1,4.5,semi-urban
+901,Jalgaon_Ward_1,ward,Jalgaon,Tripura,21.00198,75.569639,192370,17.15,3,7.8,semi-urban
+902,Jalgaon_Ward_2,ward,Jalgaon,Tripura,20.987161,75.560345,117846,24.99,1,6.3,semi-urban
+903,Jalgaon_Ward_3,ward,Jalgaon,Tripura,21.011738,75.575316,154304,10.65,2,6.1,semi-urban
+904,Kurnool_Ward_1,ward,Kurnool,Himachal Pradesh,15.817489,78.039737,85880,4.35,1,7.5,semi-urban
+905,Kurnool_Ward_2,ward,Kurnool,Himachal Pradesh,15.839154,78.033895,124530,4.49,2,4.1,semi-urban
+906,Kurnool_Ward_3,ward,Kurnool,Himachal Pradesh,15.820928,78.04046,92136,13.21,1,6.3,semi-urban
+907,Kurnool_Ward_4,ward,Kurnool,Himachal Pradesh,15.836835,78.038253,120552,5.13,2,7.1,semi-urban
+908,Ramgundam_Ward_1,ward,Ramgundam,40,18.815072,79.44792,79661,10.56,1,6.1,semi-urban
+909,Ramgundam_Ward_2,ward,Ramgundam,40,18.799702,79.42679,85426,3.25,2,6.0,semi-urban
+910,Ramgundam_Ward_3,ward,Ramgundam,40,18.793008,79.452729,91917,5.93,1,7.2,semi-urban
+911,Ramgundam_Ward_4,ward,Ramgundam,40,18.79172,79.436843,95526,5.12,1,5.3,semi-urban
+912,Ramgundam_Ward_5,ward,Ramgundam,40,18.815357,79.458737,98202,23.56,2,5.2,semi-urban
+913,Udaipur_Ward_1,ward,Udaipur,Gujarat,24.573054,73.72059,76332,23.16,1,5.0,semi-urban
+914,Udaipur_Ward_2,ward,Udaipur,Gujarat,24.609983,73.70306,114463,9.76,2,6.4,semi-urban
+915,Udaipur_Ward_3,ward,Udaipur,Gujarat,24.577298,73.7116,90031,19.78,1,4.2,semi-urban
+916,Udaipur_Ward_4,ward,Udaipur,Gujarat,24.569039,73.70698,82996,5.48,1,6.2,semi-urban
+917,Udaipur_Ward_5,ward,Udaipur,Gujarat,24.595508,73.727384,73459,4.79,1,6.0,semi-urban
+918,Maheshtala_Ward_1,ward,Maheshtala,West Bengal,22.496267,88.273201,62107,6.01,1,3.8,semi-urban
+919,Maheshtala_Ward_2,ward,Maheshtala,West Bengal,22.52456,88.247585,54123,19.41,1,7.2,semi-urban
+920,Maheshtala_Ward_3,ward,Maheshtala,West Bengal,22.513199,88.236149,58702,3.98,1,6.0,semi-urban
+921,Maheshtala_Ward_4,ward,Maheshtala,West Bengal,22.489262,88.251071,44955,16.25,1,6.5,semi-urban
+922,Maheshtala_Ward_5,ward,Maheshtala,West Bengal,22.475751,88.267763,41308,21.59,1,5.9,semi-urban
+923,Maheshtala_Ward_6,ward,Maheshtala,West Bengal,22.508667,88.27167,64201,10.05,1,6.6,semi-urban
+924,Maheshtala_Ward_7,ward,Maheshtala,West Bengal,22.487619,88.286303,54377,10.39,1,6.7,semi-urban
+925,Maheshtala_Ward_8,ward,Maheshtala,West Bengal,22.502835,88.259738,59582,6.77,1,6.4,semi-urban
+926,Maheshtala_Ward_9,ward,Maheshtala,West Bengal,22.523164,88.269102,47784,12.4,1,5.7,semi-urban
+927,Patiala_Ward_1,ward,Patiala,Madhya Pradesh,30.331469,76.376753,47265,18.66,1,4.8,semi-urban
+928,Patiala_Ward_2,ward,Patiala,Madhya Pradesh,30.332714,76.407707,35907,19.89,1,4.7,semi-urban
+929,Patiala_Ward_3,ward,Patiala,Madhya Pradesh,30.321123,76.360912,34424,10.32,1,6.7,semi-urban
+930,Patiala_Ward_4,ward,Patiala,Madhya Pradesh,30.337987,76.422845,32042,23.47,1,5.6,semi-urban
+931,Patiala_Ward_5,ward,Patiala,Madhya Pradesh,30.344723,76.416737,40482,14.55,1,5.6,semi-urban
+932,Patiala_Ward_6,ward,Patiala,Madhya Pradesh,30.372132,76.382169,30344,11.4,1,5.1,semi-urban
+933,Patiala_Ward_7,ward,Patiala,Madhya Pradesh,30.326389,76.391466,26869,7.59,1,6.0,semi-urban
+934,Patiala_Ward_8,ward,Patiala,Madhya Pradesh,30.382944,76.381596,30268,8.58,1,5.8,semi-urban
+935,Patiala_Ward_9,ward,Patiala,Madhya Pradesh,30.347242,76.373087,40555,8.29,1,4.7,semi-urban
+936,Patiala_Ward_10,ward,Patiala,Madhya Pradesh,30.334127,76.393057,41866,13.92,1,5.7,semi-urban
+937,Patiala_Ward_11,ward,Patiala,Madhya Pradesh,30.337399,76.384524,46575,23.74,1,3.4,semi-urban
+938,Patiala_Ward_12,ward,Patiala,Madhya Pradesh,30.366883,76.385087,36422,12.81,1,5.6,semi-urban
+939,Shyamnagar_Ward_1,ward,Shyamnagar,West Bengal,22.867486,88.348152,100993,17.27,1,7.3,semi-urban
+940,Shyamnagar_Ward_2,ward,Shyamnagar,West Bengal,22.833548,88.374297,137815,2.91,2,6.2,semi-urban
+941,Shyamnagar_Ward_3,ward,Shyamnagar,West Bengal,22.844295,88.374747,141505,2.64,3,7.1,semi-urban
+942,Shyamnagar_Ward_4,ward,Shyamnagar,West Bengal,22.869245,88.362812,119007,19.08,2,4.6,semi-urban
+943,Davangere_Ward_1,ward,Davangere,Karnataka,14.474416,75.901556,36399,24.78,1,6.2,semi-urban
+944,Davangere_Ward_2,ward,Davangere,Karnataka,14.482996,75.92672,43401,21.71,1,3.6,semi-urban
+945,Davangere_Ward_3,ward,Davangere,Karnataka,14.477866,75.932207,39746,13.78,1,4.2,semi-urban
+946,Davangere_Ward_4,ward,Davangere,Karnataka,14.450107,75.94104,45331,11.77,1,5.1,semi-urban
+947,Davangere_Ward_5,ward,Davangere,Karnataka,14.478085,75.923867,55945,3.34,1,5.5,semi-urban
+948,Davangere_Ward_6,ward,Davangere,Karnataka,14.471268,75.920382,38394,19.64,1,3.8,semi-urban
+949,Davangere_Ward_7,ward,Davangere,Karnataka,14.476073,75.903609,54770,19.82,1,5.6,semi-urban
+950,Davangere_Ward_8,ward,Davangere,Karnataka,14.482487,75.953076,37171,14.18,1,7.4,semi-urban
+951,Davangere_Ward_9,ward,Davangere,Karnataka,14.481274,75.96181,61946,21.35,1,5.7,semi-urban
+952,Akola_Ward_1,ward,Akola,Tripura,20.698866,77.007504,38822,11.33,1,5.1,semi-urban
+953,Akola_Ward_2,ward,Akola,Tripura,20.707843,76.992911,40937,23.48,1,4.6,semi-urban
+954,Akola_Ward_3,ward,Akola,Tripura,20.710591,77.008692,56910,24.29,1,6.8,semi-urban
+955,Akola_Ward_4,ward,Akola,Tripura,20.715574,77.001125,48139,15.63,1,4.4,semi-urban
+956,Akola_Ward_5,ward,Akola,Tripura,20.710786,77.033187,33642,13.3,1,5.0,semi-urban
+957,Akola_Ward_6,ward,Akola,Tripura,20.707557,77.00589,45487,11.45,1,3.9,semi-urban
+958,Akola_Ward_7,ward,Akola,Tripura,20.721823,76.993223,34093,19.95,1,4.4,semi-urban
+959,Akola_Ward_8,ward,Akola,Tripura,20.705464,76.997886,35778,21.65,1,5.5,semi-urban
+960,Akola_Ward_9,ward,Akola,Tripura,20.711037,76.993044,55736,20.38,1,5.7,semi-urban
+961,Rajpur Sonarpur_Ward_1,ward,Rajpur Sonarpur,West Bengal,22.414467,88.432803,42691,20.23,1,4.7,semi-urban
+962,Rajpur Sonarpur_Ward_2,ward,Rajpur Sonarpur,West Bengal,22.428314,88.425677,42612,22.74,1,6.5,semi-urban
+963,Rajpur Sonarpur_Ward_3,ward,Rajpur Sonarpur,West Bengal,22.436336,88.428879,38956,6.34,1,7.7,semi-urban
+964,Rajpur Sonarpur_Ward_4,ward,Rajpur Sonarpur,West Bengal,22.425417,88.431461,26582,13.56,1,3.5,semi-urban
+965,Rajpur Sonarpur_Ward_5,ward,Rajpur Sonarpur,West Bengal,22.435438,88.415097,31843,19.5,1,5.2,semi-urban
+966,Rajpur Sonarpur_Ward_6,ward,Rajpur Sonarpur,West Bengal,22.43844,88.418829,25878,23.97,1,6.7,semi-urban
+967,Rajpur Sonarpur_Ward_7,ward,Rajpur Sonarpur,West Bengal,22.426708,88.415129,28655,18.03,1,4.9,semi-urban
+968,Rajpur Sonarpur_Ward_8,ward,Rajpur Sonarpur,West Bengal,22.423272,88.401143,33671,2.13,1,6.4,semi-urban
+969,Rajpur Sonarpur_Ward_9,ward,Rajpur Sonarpur,West Bengal,22.44148,88.425355,44276,22.28,1,6.5,semi-urban
+970,Rajpur Sonarpur_Ward_10,ward,Rajpur Sonarpur,West Bengal,22.408874,88.435866,33460,3.13,1,4.7,semi-urban
+971,Rajpur Sonarpur_Ward_11,ward,Rajpur Sonarpur,West Bengal,22.44654,88.423181,34387,19.23,1,6.4,semi-urban
+972,Rajpur Sonarpur_Ward_12,ward,Rajpur Sonarpur,West Bengal,22.433147,88.423261,30101,15.38,1,5.0,semi-urban
+973,Korba_Ward_1,ward,Korba,37,22.381526,82.708739,38544,4.97,1,4.4,semi-urban
+974,Korba_Ward_2,ward,Korba,37,22.346735,82.707195,37094,19.57,1,5.4,semi-urban
+975,Korba_Ward_3,ward,Korba,37,22.350164,82.688725,34361,4.6,1,7.1,semi-urban
+976,Korba_Ward_4,ward,Korba,37,22.346002,82.69024,42940,5.95,1,2.9,semi-urban
+977,Korba_Ward_5,ward,Korba,37,22.354803,82.710699,43319,17.31,1,4.4,semi-urban
+978,Korba_Ward_6,ward,Korba,37,22.341946,82.729516,37839,15.51,1,5.8,semi-urban
+979,Korba_Ward_7,ward,Korba,37,22.34427,82.683694,48360,8.16,1,6.5,semi-urban
+980,Korba_Ward_8,ward,Korba,37,22.3456,82.70949,51879,21.76,1,5.3,semi-urban
+981,Korba_Ward_9,ward,Korba,37,22.331313,82.688251,35359,5.1,1,4.5,semi-urban
+982,Korba_Ward_10,ward,Korba,37,22.328793,82.70551,40451,19.17,1,3.7,semi-urban
+983,Jhansi_Ward_1,ward,Jhansi,Telangana,25.462956,78.586202,33754,7.67,1,6.4,semi-urban
+984,Jhansi_Ward_2,ward,Jhansi,Telangana,25.450651,78.585355,31979,14.13,1,6.3,semi-urban
+985,Jhansi_Ward_3,ward,Jhansi,Telangana,25.440874,78.590424,45745,14.5,1,4.0,semi-urban
+986,Jhansi_Ward_4,ward,Jhansi,Telangana,25.439928,78.590098,44367,19.04,1,4.4,semi-urban
+987,Jhansi_Ward_5,ward,Jhansi,Telangana,25.440617,78.600391,44494,10.72,1,7.0,semi-urban
+988,Jhansi_Ward_6,ward,Jhansi,Telangana,25.46572,78.574164,44699,14.54,1,3.6,semi-urban
+989,Jhansi_Ward_7,ward,Jhansi,Telangana,25.469315,78.584122,28496,21.71,1,6.1,semi-urban
+990,Jhansi_Ward_8,ward,Jhansi,Telangana,25.467174,78.567618,36136,8.7,1,5.2,semi-urban
+991,Jhansi_Ward_9,ward,Jhansi,Telangana,25.454784,78.598446,39701,24.12,1,4.7,semi-urban
+992,Jhansi_Ward_10,ward,Jhansi,Telangana,25.454965,78.577237,31312,9.93,1,6.7,semi-urban
+993,Jhansi_Ward_11,ward,Jhansi,Telangana,25.462219,78.561964,47533,12.97,1,6.6,semi-urban
+994,Thoothukudi_Ward_1,ward,Thoothukudi,25,8.770505,78.110107,60717,3.99,1,4.9,semi-urban
+995,Thoothukudi_Ward_2,ward,Thoothukudi,25,8.771193,78.15215,76256,5.77,1,5.0,semi-urban
+996,Thoothukudi_Ward_3,ward,Thoothukudi,25,8.759881,78.147927,72965,7.34,1,5.1,semi-urban
+997,Thoothukudi_Ward_4,ward,Thoothukudi,25,8.762142,78.145812,45048,11.89,1,4.4,semi-urban
+998,Thoothukudi_Ward_5,ward,Thoothukudi,25,8.773767,78.149246,57039,3.26,1,4.7,semi-urban
+999,Thoothukudi_Ward_6,ward,Thoothukudi,25,8.763228,78.101231,58790,23.59,1,6.2,semi-urban
+1000,Thoothukudi_Ward_7,ward,Thoothukudi,25,8.772982,78.140369,60459,8.98,1,6.0,semi-urban
+1001,Ballari_Ward_1,ward,Ballari,Karnataka,15.11757,76.910406,36582,4.26,1,5.3,semi-urban
+1002,Ballari_Ward_2,ward,Ballari,Karnataka,15.143762,76.913631,28593,12.68,1,5.3,semi-urban
+1003,Ballari_Ward_3,ward,Ballari,Karnataka,15.162498,76.919426,42674,19.8,1,4.2,semi-urban
+1004,Ballari_Ward_4,ward,Ballari,Karnataka,15.125166,76.922308,29049,23.45,1,6.7,semi-urban
+1005,Ballari_Ward_5,ward,Ballari,Karnataka,15.148524,76.935075,36915,6.54,1,6.0,semi-urban
+1006,Ballari_Ward_6,ward,Ballari,Karnataka,15.133693,76.933875,35186,4.05,1,4.3,semi-urban
+1007,Ballari_Ward_7,ward,Ballari,Karnataka,15.154684,76.924328,46360,5.67,1,6.8,semi-urban
+1008,Ballari_Ward_8,ward,Ballari,Karnataka,15.119362,76.918653,36167,3.65,1,4.1,semi-urban
+1009,Ballari_Ward_9,ward,Ballari,Karnataka,15.143593,76.92622,26553,22.92,1,3.9,semi-urban
+1010,Ballari_Ward_10,ward,Ballari,Karnataka,15.154097,76.914544,46469,3.79,1,5.7,semi-urban
+1011,Ballari_Ward_11,ward,Ballari,Karnataka,15.113659,76.928652,34913,13.57,1,5.9,semi-urban
+1012,Bhagalpur_Ward_1,ward,Bhagalpur,Puducherry,25.245826,86.974951,120595,12.0,2,5.5,semi-urban
+1013,Bhagalpur_Ward_2,ward,Bhagalpur,Puducherry,25.236562,86.963976,154890,9.4,2,5.8,semi-urban
+1014,Bhagalpur_Ward_3,ward,Bhagalpur,Puducherry,25.254129,86.982086,167933,10.24,2,6.6,semi-urban
+1015,Agartala_Ward_1,ward,Agartala,Daman and Diu,23.836559,91.261534,97635,13.31,2,5.8,semi-urban
+1016,Agartala_Ward_2,ward,Agartala,Daman and Diu,23.845888,91.25754,81975,16.8,1,5.4,semi-urban
+1017,Agartala_Ward_3,ward,Agartala,Daman and Diu,23.846369,91.270195,121090,6.61,2,6.6,semi-urban
+1018,Agartala_Ward_4,ward,Agartala,Daman and Diu,23.835149,91.268926,80366,22.95,1,4.8,semi-urban
+1019,Kakinada_Ward_1,ward,Kakinada,Himachal Pradesh,16.940113,82.264613,44028,16.16,1,5.8,semi-urban
+1020,Kakinada_Ward_2,ward,Kakinada,Himachal Pradesh,16.939256,82.236567,38050,16.68,1,4.9,semi-urban
+1021,Kakinada_Ward_3,ward,Kakinada,Himachal Pradesh,16.95093,82.233927,33397,9.3,1,5.3,semi-urban
+1022,Kakinada_Ward_4,ward,Kakinada,Himachal Pradesh,16.970255,82.237907,30944,21.94,1,6.9,semi-urban
+1023,Kakinada_Ward_5,ward,Kakinada,Himachal Pradesh,16.95546,82.239961,36314,22.3,1,5.0,semi-urban
+1024,Kakinada_Ward_6,ward,Kakinada,Himachal Pradesh,16.952857,82.198803,24596,10.28,1,4.0,semi-urban
+1025,Kakinada_Ward_7,ward,Kakinada,Himachal Pradesh,16.989758,82.244849,39171,23.94,1,3.0,semi-urban
+1026,Kakinada_Ward_8,ward,Kakinada,Himachal Pradesh,16.971537,82.217482,27097,10.33,1,6.2,semi-urban
+1027,Kakinada_Ward_9,ward,Kakinada,Himachal Pradesh,16.954679,82.26933,28616,14.57,1,5.2,semi-urban
+1028,Kakinada_Ward_10,ward,Kakinada,Himachal Pradesh,16.950585,82.261809,41796,2.89,1,5.0,semi-urban
+1029,Kakinada_Ward_11,ward,Kakinada,Himachal Pradesh,16.962841,82.21736,44036,11.88,1,5.0,semi-urban
+1030,Latur_Ward_1,ward,Latur,Tripura,18.409837,76.549552,39313,7.54,1,5.3,semi-urban
+1031,Latur_Ward_2,ward,Latur,Tripura,18.393803,76.565714,68769,9.95,1,6.3,semi-urban
+1032,Latur_Ward_3,ward,Latur,Tripura,18.401092,76.561536,44423,19.64,1,5.6,semi-urban
+1033,Latur_Ward_4,ward,Latur,Tripura,18.378617,76.545297,55806,7.76,1,4.8,semi-urban
+1034,Latur_Ward_5,ward,Latur,Tripura,18.387287,76.558523,44579,21.91,1,6.3,semi-urban
+1035,Latur_Ward_6,ward,Latur,Tripura,18.394521,76.56619,49991,24.07,1,6.8,semi-urban
+1036,Latur_Ward_7,ward,Latur,Tripura,18.400367,76.574761,54486,24.64,1,6.8,semi-urban
+1037,Panihati_Ward_1,ward,Panihati,West Bengal,22.675055,88.368735,52072,12.25,1,7.2,semi-urban
+1038,Panihati_Ward_2,ward,Panihati,West Bengal,22.715939,88.366388,45879,17.26,1,6.2,semi-urban
+1039,Panihati_Ward_3,ward,Panihati,West Bengal,22.683511,88.393961,51486,18.78,1,5.3,semi-urban
+1040,Panihati_Ward_4,ward,Panihati,West Bengal,22.70047,88.389862,48112,13.13,1,5.4,semi-urban
+1041,Panihati_Ward_5,ward,Panihati,West Bengal,22.675207,88.373646,55934,17.57,1,5.6,semi-urban
+1042,Panihati_Ward_6,ward,Panihati,West Bengal,22.701241,88.367336,50205,13.44,1,5.8,semi-urban
+1043,Panihati_Ward_7,ward,Panihati,West Bengal,22.685729,88.368422,43504,13.58,1,4.8,semi-urban
+1044,Panihati_Ward_8,ward,Panihati,West Bengal,22.693791,88.378496,51240,18.98,1,4.2,semi-urban
+1045,Rajamahendravaram_Ward_1,ward,Rajamahendravaram,Himachal Pradesh,17.022683,81.766981,90287,9.13,1,7.1,semi-urban
+1046,Rajamahendravaram_Ward_2,ward,Rajamahendravaram,Himachal Pradesh,17.028275,81.781206,73033,15.63,1,6.2,semi-urban
+1047,Rajamahendravaram_Ward_3,ward,Rajamahendravaram,Himachal Pradesh,17.011312,81.77369,66375,8.02,1,5.8,semi-urban
+1048,Rajamahendravaram_Ward_4,ward,Rajamahendravaram,Himachal Pradesh,17.012055,81.785133,89336,23.12,1,5.6,semi-urban
+1049,Dhule_Ward_1,ward,Dhule,Tripura,20.882236,74.771691,54202,22.87,1,6.2,semi-urban
+1050,Dhule_Ward_2,ward,Dhule,Tripura,20.927798,74.778788,65866,13.09,1,4.6,semi-urban
+1051,Dhule_Ward_3,ward,Dhule,Tripura,20.898774,74.77248,48001,17.44,1,5.2,semi-urban
+1052,Dhule_Ward_4,ward,Dhule,Tripura,20.874609,74.776617,61329,16.4,1,4.4,semi-urban
+1053,Dhule_Ward_5,ward,Dhule,Tripura,20.889137,74.782872,68000,23.47,1,4.9,semi-urban
+1054,Dhule_Ward_6,ward,Dhule,Tripura,20.914272,74.791671,44607,16.21,1,6.3,semi-urban
+1055,Dhule_Ward_7,ward,Dhule,Tripura,20.896204,74.780844,68534,13.92,1,6.5,semi-urban
+1056,Rohtak_Ward_1,ward,Rohtak,10,28.886077,76.560223,43608,11.45,1,5.0,semi-urban
+1057,Rohtak_Ward_2,ward,Rohtak,10,28.916187,76.60325,46856,8.04,1,5.3,semi-urban
+1058,Rohtak_Ward_3,ward,Rohtak,10,28.911394,76.587572,51240,19.24,1,3.9,semi-urban
+1059,Rohtak_Ward_4,ward,Rohtak,10,28.893648,76.575334,53856,7.37,1,5.5,semi-urban
+1060,Rohtak_Ward_5,ward,Rohtak,10,28.872292,76.609952,48355,23.21,1,5.0,semi-urban
+1061,Rohtak_Ward_6,ward,Rohtak,10,28.868516,76.609178,41636,13.61,1,4.8,semi-urban
+1062,Rohtak_Ward_7,ward,Rohtak,10,28.936835,76.595936,42630,19.62,1,5.0,semi-urban
+1063,Rohtak_Ward_8,ward,Rohtak,10,28.880202,76.584043,42047,10.81,1,4.9,semi-urban
+1064,Rohtak_Ward_9,ward,Rohtak,10,28.872059,76.586004,33372,13.71,1,6.8,semi-urban
+1065,Ahilyanagar_Ward_1,ward,Ahilyanagar,Tripura,19.099545,74.722723,76324,22.59,1,5.4,semi-urban
+1066,Ahilyanagar_Ward_2,ward,Ahilyanagar,Tripura,19.083392,74.735996,70890,14.51,1,5.7,semi-urban
+1067,Ahilyanagar_Ward_3,ward,Ahilyanagar,Tripura,19.089422,74.707143,78413,20.85,1,5.0,semi-urban
+1068,Ahilyanagar_Ward_4,ward,Ahilyanagar,Tripura,19.123051,74.71138,53472,21.84,1,5.8,semi-urban
+1069,Ahilyanagar_Ward_5,ward,Ahilyanagar,Tripura,19.100489,74.732044,88997,9.38,2,6.3,semi-urban
+1070,Kollam_Ward_1,ward,Kollam,Nagaland,8.877204,76.575278,26663,12.22,1,5.3,semi-urban
+1071,Kollam_Ward_2,ward,Kollam,Nagaland,8.869624,76.575632,40453,13.15,1,5.0,semi-urban
+1072,Kollam_Ward_3,ward,Kollam,Nagaland,8.862908,76.564169,46928,2.54,1,4.4,semi-urban
+1073,Kollam_Ward_4,ward,Kollam,Nagaland,8.896473,76.581833,32336,15.12,1,5.9,semi-urban
+1074,Kollam_Ward_5,ward,Kollam,Nagaland,8.90231,76.566004,36799,8.52,1,5.9,semi-urban
+1075,Kollam_Ward_6,ward,Kollam,Nagaland,8.875372,76.587724,28034,10.37,1,5.2,semi-urban
+1076,Kollam_Ward_7,ward,Kollam,Nagaland,8.862633,76.57115,35175,22.42,1,5.7,semi-urban
+1077,Kollam_Ward_8,ward,Kollam,Nagaland,8.87335,76.597488,43081,8.98,1,5.5,semi-urban
+1078,Kollam_Ward_9,ward,Kollam,Nagaland,8.88888,76.575892,47488,17.06,1,5.3,semi-urban
+1079,Kollam_Ward_10,ward,Kollam,Nagaland,8.890527,76.583491,31115,3.56,1,7.2,semi-urban
+1080,Bilaspur_Ward_1,ward,Bilaspur,37,22.077586,82.146808,139271,15.19,2,5.8,semi-urban
+1081,Bilaspur_Ward_2,ward,Bilaspur,37,22.086831,82.15009,154189,3.14,3,5.3,semi-urban
+1082,Bilaspur_Ward_3,ward,Bilaspur,37,22.069783,82.168167,124316,11.11,2,5.0,semi-urban
+1083,Bhilwara_Ward_1,ward,Bhilwara,Gujarat,25.345465,74.669944,51741,18.25,1,3.9,semi-urban
+1084,Bhilwara_Ward_2,ward,Bhilwara,Gujarat,25.309471,74.638235,37248,14.52,1,5.8,semi-urban
+1085,Bhilwara_Ward_3,ward,Bhilwara,Gujarat,25.354722,74.63107,66295,18.2,1,6.0,semi-urban
+1086,Bhilwara_Ward_4,ward,Bhilwara,Gujarat,25.343496,74.669501,62126,10.58,1,3.4,semi-urban
+1087,Bhilwara_Ward_5,ward,Bhilwara,Gujarat,25.387615,74.63735,41773,4.29,1,6.5,semi-urban
+1088,Bhilwara_Ward_6,ward,Bhilwara,Gujarat,25.368699,74.626622,38372,11.26,1,5.6,semi-urban
+1089,Bhilwara_Ward_7,ward,Bhilwara,Gujarat,25.334849,74.643452,49227,17.81,1,5.5,semi-urban
+1090,Brahmapur_Ward_1,ward,Brahmapur,Odisha,19.315539,84.78316,41674,11.75,1,5.1,semi-urban
+1091,Brahmapur_Ward_2,ward,Brahmapur,Odisha,19.309875,84.793416,38452,5.74,1,5.1,semi-urban
+1092,Brahmapur_Ward_3,ward,Brahmapur,Odisha,19.309716,84.797605,27553,17.88,1,5.9,semi-urban
+1093,Brahmapur_Ward_4,ward,Brahmapur,Odisha,19.28294,84.814566,29765,11.76,1,5.7,semi-urban
+1094,Brahmapur_Ward_5,ward,Brahmapur,Odisha,19.293562,84.768601,38742,14.5,1,5.0,semi-urban
+1095,Brahmapur_Ward_6,ward,Brahmapur,Odisha,19.297688,84.784419,24363,10.98,1,5.9,semi-urban
+1096,Brahmapur_Ward_7,ward,Brahmapur,Odisha,19.296831,84.779385,29844,9.12,1,2.8,semi-urban
+1097,Brahmapur_Ward_8,ward,Brahmapur,Odisha,19.330161,84.81132,28259,2.53,1,4.7,semi-urban
+1098,Brahmapur_Ward_9,ward,Brahmapur,Odisha,19.302513,84.79052,27118,4.93,1,5.5,semi-urban
+1099,Brahmapur_Ward_10,ward,Brahmapur,Odisha,19.301977,84.796025,25302,14.82,1,6.5,semi-urban
+1100,Brahmapur_Ward_11,ward,Brahmapur,Odisha,19.296809,84.80466,24954,12.05,1,4.0,semi-urban
+1101,Muzaffarpur_Ward_1,ward,Muzaffarpur,Puducherry,26.132674,85.368043,86686,7.18,2,4.4,semi-urban
+1102,Muzaffarpur_Ward_2,ward,Muzaffarpur,Puducherry,26.147674,85.388407,65246,10.47,1,4.0,semi-urban
+1103,Muzaffarpur_Ward_3,ward,Muzaffarpur,Puducherry,26.101604,85.367746,85210,20.81,1,4.3,semi-urban
+1104,Muzaffarpur_Ward_4,ward,Muzaffarpur,Puducherry,26.138813,85.353082,70771,2.29,1,6.0,semi-urban
+1105,Muzaffarpur_Ward_5,ward,Muzaffarpur,Puducherry,26.12031,85.406452,64212,11.28,1,5.5,semi-urban
+1106,Punasa_Ward_1,ward,Punasa,35,22.191577,76.381577,40626,20.57,1,7.2,semi-urban
+1107,Punasa_Ward_2,ward,Punasa,35,22.231546,76.379947,28703,14.49,1,5.9,semi-urban
+1108,Punasa_Ward_3,ward,Punasa,35,22.218584,76.395796,40339,9.52,1,4.3,semi-urban
+1109,Punasa_Ward_4,ward,Punasa,35,22.245156,76.39585,38250,8.56,1,6.6,semi-urban
+1110,Punasa_Ward_5,ward,Punasa,35,22.241119,76.404544,23348,13.63,1,4.6,semi-urban
+1111,Punasa_Ward_6,ward,Punasa,35,22.260172,76.399976,29046,16.73,1,6.5,semi-urban
+1112,Punasa_Ward_7,ward,Punasa,35,22.268542,76.388102,24549,13.5,1,5.0,semi-urban
+1113,Punasa_Ward_8,ward,Punasa,35,22.242463,76.405854,37336,6.41,1,3.7,semi-urban
+1114,Punasa_Ward_9,ward,Punasa,35,22.212649,76.395365,41157,3.07,1,4.8,semi-urban
+1115,Punasa_Ward_10,ward,Punasa,35,22.224321,76.405494,38111,17.23,1,5.3,semi-urban
+1116,Punasa_Ward_11,ward,Punasa,35,22.244109,76.426476,30855,13.68,1,4.7,semi-urban
+1117,Muzaffarnagar_Ward_1,ward,Muzaffarnagar,Telangana,29.491431,77.705209,99780,13.51,2,6.3,semi-urban
+1118,Muzaffarnagar_Ward_2,ward,Muzaffarnagar,Telangana,29.462026,77.70169,89644,19.17,1,5.5,semi-urban
+1119,Muzaffarnagar_Ward_3,ward,Muzaffarnagar,Telangana,29.49571,77.712666,109281,2.03,2,5.1,semi-urban
+1120,Muzaffarnagar_Ward_4,ward,Muzaffarnagar,Telangana,29.495259,77.704734,96612,18.81,1,4.9,semi-urban
+1121,Avadi_Ward_1,ward,Avadi,25,13.102743,80.110424,40294,4.7,1,5.9,semi-urban
+1122,Avadi_Ward_2,ward,Avadi,25,13.119296,80.123891,39839,22.79,1,4.2,semi-urban
+1123,Avadi_Ward_3,ward,Avadi,25,13.13199,80.091549,40172,9.2,1,4.3,semi-urban
+1124,Avadi_Ward_4,ward,Avadi,25,13.105236,80.08828,47897,19.12,1,4.9,semi-urban
+1125,Avadi_Ward_5,ward,Avadi,25,13.113819,80.116508,60135,13.81,1,6.1,semi-urban
+1126,Avadi_Ward_6,ward,Avadi,25,13.10178,80.121671,47661,19.27,1,5.8,semi-urban
+1127,Avadi_Ward_7,ward,Avadi,25,13.152083,80.105683,44255,9.51,1,5.1,semi-urban
+1128,Kadapa_Ward_1,ward,Kadapa,Himachal Pradesh,14.481699,78.815167,22396,9.65,1,5.4,semi-urban
+1129,Kadapa_Ward_2,ward,Kadapa,Himachal Pradesh,14.455441,78.817088,25045,9.35,1,3.8,semi-urban
+1130,Kadapa_Ward_3,ward,Kadapa,Himachal Pradesh,14.48099,78.812743,24720,20.68,1,5.4,semi-urban
+1131,Kadapa_Ward_4,ward,Kadapa,Himachal Pradesh,14.492253,78.83572,35422,2.88,1,7.6,semi-urban
+1132,Kadapa_Ward_5,ward,Kadapa,Himachal Pradesh,14.474609,78.842897,31359,8.38,1,5.9,semi-urban
+1133,Kadapa_Ward_6,ward,Kadapa,Himachal Pradesh,14.500608,78.838761,38331,22.31,1,5.7,semi-urban
+1134,Kadapa_Ward_7,ward,Kadapa,Himachal Pradesh,14.502454,78.849951,32818,24.19,1,8.1,semi-urban
+1135,Kadapa_Ward_8,ward,Kadapa,Himachal Pradesh,14.48069,78.834297,33514,19.19,1,5.5,semi-urban
+1136,Kadapa_Ward_9,ward,Kadapa,Himachal Pradesh,14.475856,78.806581,37708,22.27,1,4.3,semi-urban
+1137,Kadapa_Ward_10,ward,Kadapa,Himachal Pradesh,14.488597,78.800832,39554,9.91,1,7.1,semi-urban
+1138,Kadapa_Ward_11,ward,Kadapa,Himachal Pradesh,14.468388,78.834542,28630,2.71,1,6.6,semi-urban
+1139,Kukatpally_Ward_1,ward,Kukatpally,40,17.50809,78.418563,29113,7.45,1,5.2,semi-urban
+1140,Kukatpally_Ward_2,ward,Kukatpally,40,17.479864,78.402274,36233,23.21,1,5.3,semi-urban
+1141,Kukatpally_Ward_3,ward,Kukatpally,40,17.488824,78.413155,29398,23.47,1,5.1,semi-urban
+1142,Kukatpally_Ward_4,ward,Kukatpally,40,17.471792,78.438456,22343,20.63,1,7.8,semi-urban
+1143,Kukatpally_Ward_5,ward,Kukatpally,40,17.488356,78.402989,35558,15.89,1,4.8,semi-urban
+1144,Kukatpally_Ward_6,ward,Kukatpally,40,17.488319,78.42141,25079,15.79,1,4.5,semi-urban
+1145,Kukatpally_Ward_7,ward,Kukatpally,40,17.492873,78.402859,25103,4.95,1,5.7,semi-urban
+1146,Kukatpally_Ward_8,ward,Kukatpally,40,17.471765,78.390738,32718,22.28,1,4.9,semi-urban
+1147,Kukatpally_Ward_9,ward,Kukatpally,40,17.483143,78.415976,30420,17.17,1,6.8,semi-urban
+1148,Kukatpally_Ward_10,ward,Kukatpally,40,17.473189,78.392135,26391,18.54,1,6.1,semi-urban
+1149,Kukatpally_Ward_11,ward,Kukatpally,40,17.512889,78.414282,24185,22.64,1,6.3,semi-urban
+1150,Kukatpally_Ward_12,ward,Kukatpally,40,17.476292,78.371275,20459,2.3,1,6.4,semi-urban
+1151,Kamarhati_Ward_1,ward,Kamarhati,West Bengal,22.670861,88.38497,50230,14.63,1,5.6,semi-urban
+1152,Kamarhati_Ward_2,ward,Kamarhati,West Bengal,22.665533,88.369274,60563,2.02,1,4.2,semi-urban
+1153,Kamarhati_Ward_3,ward,Kamarhati,West Bengal,22.659515,88.361659,40105,7.91,1,6.1,semi-urban
+1154,Kamarhati_Ward_4,ward,Kamarhati,West Bengal,22.677837,88.352484,56024,23.63,1,5.2,semi-urban
+1155,Kamarhati_Ward_5,ward,Kamarhati,West Bengal,22.673261,88.387793,50646,12.39,1,7.1,semi-urban
+1156,Kamarhati_Ward_6,ward,Kamarhati,West Bengal,22.661934,88.385388,42010,11.51,1,3.5,semi-urban
+1157,Mathura_Ward_1,ward,Mathura,Telangana,27.508562,77.6682,52549,10.81,1,7.1,semi-urban
+1158,Mathura_Ward_2,ward,Mathura,Telangana,27.516651,77.675074,63702,12.69,1,6.7,semi-urban
+1159,Mathura_Ward_3,ward,Mathura,Telangana,27.509752,77.689657,79275,20.18,1,6.9,semi-urban
+1160,Mathura_Ward_4,ward,Mathura,Telangana,27.487354,77.671546,62973,7.32,1,3.7,semi-urban
+1161,Mathura_Ward_5,ward,Mathura,Telangana,27.499018,77.666776,48465,10.23,1,4.9,semi-urban
+1162,Chanda_Ward_1,ward,Chanda,Tripura,19.934303,79.296554,42116,10.9,1,6.4,semi-urban
+1163,Chanda_Ward_2,ward,Chanda,Tripura,19.944768,79.297168,30061,4.41,1,6.3,semi-urban
+1164,Chanda_Ward_3,ward,Chanda,Tripura,19.952648,79.287672,38434,11.2,1,5.9,semi-urban
+1165,Chanda_Ward_4,ward,Chanda,Tripura,19.950943,79.27728,48471,18.24,1,6.7,semi-urban
+1166,Chanda_Ward_5,ward,Chanda,Tripura,19.950276,79.26973,50522,7.09,1,5.4,semi-urban
+1167,Chanda_Ward_6,ward,Chanda,Tripura,19.9632,79.285755,29817,11.08,1,5.6,semi-urban
+1168,Chanda_Ward_7,ward,Chanda,Tripura,19.945306,79.310888,38898,3.13,1,5.4,semi-urban
+1169,Chanda_Ward_8,ward,Chanda,Tripura,19.939421,79.300637,31531,6.1,1,6.6,semi-urban
+1170,Vijayapura_Ward_1,ward,Vijayapura,Karnataka,16.838354,75.725254,79766,5.88,1,5.4,semi-urban
+1171,Vijayapura_Ward_2,ward,Vijayapura,Karnataka,16.832481,75.725005,69285,13.72,1,5.1,semi-urban
+1172,Vijayapura_Ward_3,ward,Vijayapura,Karnataka,16.819053,75.688319,64516,16.74,1,6.7,semi-urban
+1173,Vijayapura_Ward_4,ward,Vijayapura,Karnataka,16.809368,75.7104,70394,23.85,1,5.5,semi-urban
+1174,Vijayapura_Ward_5,ward,Vijayapura,Karnataka,16.829044,75.717635,48084,14.19,1,4.8,semi-urban
+1175,Shivamogga_Ward_1,ward,Shivamogga,Karnataka,13.946078,75.57532,23176,4.97,1,4.9,semi-urban
+1176,Shivamogga_Ward_2,ward,Shivamogga,Karnataka,13.942697,75.603789,21076,2.75,1,4.4,semi-urban
+1177,Shivamogga_Ward_3,ward,Shivamogga,Karnataka,13.945223,75.565157,37825,23.2,1,4.2,semi-urban
+1178,Shivamogga_Ward_4,ward,Shivamogga,Karnataka,13.932421,75.580069,33012,6.85,1,6.2,semi-urban
+1179,Shivamogga_Ward_5,ward,Shivamogga,Karnataka,13.915967,75.578392,28251,20.22,1,5.0,semi-urban
+1180,Shivamogga_Ward_6,ward,Shivamogga,Karnataka,13.953572,75.574682,24551,9.24,1,6.2,semi-urban
+1181,Shivamogga_Ward_7,ward,Shivamogga,Karnataka,13.926368,75.559123,24218,4.2,1,6.2,semi-urban
+1182,Shivamogga_Ward_8,ward,Shivamogga,Karnataka,13.948485,75.569801,26932,7.92,1,6.0,semi-urban
+1183,Shivamogga_Ward_9,ward,Shivamogga,Karnataka,13.930543,75.568342,35304,17.57,1,4.1,semi-urban
+1184,Shivamogga_Ward_10,ward,Shivamogga,Karnataka,13.940688,75.565629,31402,22.56,1,6.9,semi-urban
+1185,Shivamogga_Ward_11,ward,Shivamogga,Karnataka,13.950071,75.567795,34634,21.0,1,4.9,semi-urban
+1186,Alwar_Ward_1,ward,Alwar,Gujarat,27.541269,76.627082,34709,16.77,1,3.8,semi-urban
+1187,Alwar_Ward_2,ward,Alwar,Gujarat,27.555811,76.620671,34503,9.97,1,6.0,semi-urban
+1188,Alwar_Ward_3,ward,Alwar,Gujarat,27.555788,76.618519,22299,2.72,1,7.0,semi-urban
+1189,Alwar_Ward_4,ward,Alwar,Gujarat,27.560305,76.622524,37422,9.74,1,4.9,semi-urban
+1190,Alwar_Ward_5,ward,Alwar,Gujarat,27.581551,76.623269,30235,7.91,1,3.7,semi-urban
+1191,Alwar_Ward_6,ward,Alwar,Gujarat,27.531303,76.621471,28428,18.85,1,3.3,semi-urban
+1192,Alwar_Ward_7,ward,Alwar,Gujarat,27.539972,76.63862,24924,15.46,1,5.8,semi-urban
+1193,Alwar_Ward_8,ward,Alwar,Gujarat,27.558765,76.590478,26047,17.71,1,5.0,semi-urban
+1194,Alwar_Ward_9,ward,Alwar,Gujarat,27.559642,76.630936,33365,22.34,1,5.5,semi-urban
+1195,Alwar_Ward_10,ward,Alwar,Gujarat,27.559885,76.641477,30834,3.91,1,6.2,semi-urban
+1196,Alwar_Ward_11,ward,Alwar,Gujarat,27.563544,76.621154,30815,24.73,1,4.0,semi-urban
+1197,Shahjanpur_Ward_1,ward,Shahjanpur,Telangana,27.873922,79.907282,126112,19.07,2,6.2,semi-urban
+1198,Shahjanpur_Ward_2,ward,Shahjanpur,Telangana,27.860317,79.909147,94327,17.26,2,7.5,semi-urban
+1199,Shahjanpur_Ward_3,ward,Shahjanpur,Telangana,27.857798,79.89921,121621,8.67,2,6.3,semi-urban
+1200,Junagadh_Ward_1,ward,Junagadh,Uttar Pradesh,21.500376,70.446626,29095,2.01,1,5.6,semi-urban
+1201,Junagadh_Ward_2,ward,Junagadh,Uttar Pradesh,21.514175,70.467374,31067,17.67,1,5.2,semi-urban
+1202,Junagadh_Ward_3,ward,Junagadh,Uttar Pradesh,21.524257,70.457526,34029,8.62,1,4.7,semi-urban
+1203,Junagadh_Ward_4,ward,Junagadh,Uttar Pradesh,21.525128,70.449607,28934,9.38,1,5.8,semi-urban
+1204,Junagadh_Ward_5,ward,Junagadh,Uttar Pradesh,21.516224,70.463227,31792,23.69,1,3.7,semi-urban
+1205,Junagadh_Ward_6,ward,Junagadh,Uttar Pradesh,21.511401,70.467455,30007,24.14,1,6.7,semi-urban
+1206,Junagadh_Ward_7,ward,Junagadh,Uttar Pradesh,21.512661,70.456568,26316,10.35,1,4.2,semi-urban
+1207,Junagadh_Ward_8,ward,Junagadh,Uttar Pradesh,21.521688,70.454916,25602,13.19,1,5.8,semi-urban
+1208,Junagadh_Ward_9,ward,Junagadh,Uttar Pradesh,21.527578,70.474159,23237,18.8,1,3.8,semi-urban
+1209,Junagadh_Ward_10,ward,Junagadh,Uttar Pradesh,21.508169,70.452891,22484,22.09,1,3.0,semi-urban
+1210,Junagadh_Ward_11,ward,Junagadh,Uttar Pradesh,21.5247,70.43529,21945,9.28,1,4.2,semi-urban
+1211,Junagadh_Ward_12,ward,Junagadh,Uttar Pradesh,21.50193,70.47475,27854,23.55,1,4.9,semi-urban
+1212,New Delhi_Ward_1,ward,New Delhi,Delhi,28.602328,77.237488,33886,3.35,1,4.2,semi-urban
+1213,New Delhi_Ward_2,ward,New Delhi,Delhi,28.608624,77.207555,31954,10.73,1,5.4,semi-urban
+1214,New Delhi_Ward_3,ward,New Delhi,Delhi,28.61665,77.257717,35275,18.87,1,5.7,semi-urban
+1215,New Delhi_Ward_4,ward,New Delhi,Delhi,28.61771,77.219221,30133,10.27,1,6.0,semi-urban
+1216,New Delhi_Ward_5,ward,New Delhi,Delhi,28.590955,77.218366,40323,12.39,1,4.4,semi-urban
+1217,New Delhi_Ward_6,ward,New Delhi,Delhi,28.627404,77.234615,30116,16.47,1,6.3,semi-urban
+1218,New Delhi_Ward_7,ward,New Delhi,Delhi,28.631323,77.221888,43950,11.47,1,4.7,semi-urban
+1219,New Delhi_Ward_8,ward,New Delhi,Delhi,28.639779,77.196648,32958,7.79,1,6.4,semi-urban
+1220,Thrissur_Ward_1,ward,Thrissur,Nagaland,10.512799,76.21741,37159,6.22,1,5.6,semi-urban
+1221,Thrissur_Ward_2,ward,Thrissur,Nagaland,10.498322,76.238039,33708,3.6,1,4.6,semi-urban
+1222,Thrissur_Ward_3,ward,Thrissur,Nagaland,10.51208,76.22552,36186,11.72,1,7.9,semi-urban
+1223,Thrissur_Ward_4,ward,Thrissur,Nagaland,10.511448,76.215546,28477,15.52,1,4.9,semi-urban
+1224,Thrissur_Ward_5,ward,Thrissur,Nagaland,10.528776,76.213709,22456,13.74,1,6.4,semi-urban
+1225,Thrissur_Ward_6,ward,Thrissur,Nagaland,10.525354,76.223571,33826,18.3,1,4.7,semi-urban
+1226,Thrissur_Ward_7,ward,Thrissur,Nagaland,10.528974,76.208736,28519,13.7,1,4.8,semi-urban
+1227,Thrissur_Ward_8,ward,Thrissur,Nagaland,10.490405,76.214008,22669,21.94,1,3.6,semi-urban
+1228,Thrissur_Ward_9,ward,Thrissur,Nagaland,10.504402,76.225916,31499,18.01,1,5.7,semi-urban
+1229,Thrissur_Ward_10,ward,Thrissur,Nagaland,10.512462,76.195627,23348,19.12,1,5.1,semi-urban
+1230,Nizamabad_Ward_1,ward,Nizamabad,40,18.688222,78.117069,99473,12.64,2,6.5,semi-urban
+1231,Nizamabad_Ward_2,ward,Nizamabad,40,18.671212,78.109408,101390,6.14,2,6.2,semi-urban
+1232,Nizamabad_Ward_3,ward,Nizamabad,40,18.690873,78.106349,119460,2.75,2,6.2,semi-urban
+1233,Tumkur_Ward_1,ward,Tumkur,Karnataka,13.373505,77.095154,92054,6.54,1,6.1,semi-urban
+1234,Tumkur_Ward_2,ward,Tumkur,Karnataka,13.3587,77.084935,78261,5.65,1,4.8,semi-urban
+1235,Tumkur_Ward_3,ward,Tumkur,Karnataka,13.337041,77.105876,64547,12.29,1,7.2,semi-urban
+1236,Tumkur_Ward_4,ward,Tumkur,Karnataka,13.342913,77.109958,59001,12.05,1,6.9,semi-urban
+1237,Parbhani_Ward_1,ward,Parbhani,Tripura,19.290597,76.761476,40255,15.24,1,4.9,semi-urban
+1238,Parbhani_Ward_2,ward,Parbhani,Tripura,19.259433,76.778635,30809,21.61,1,2.6,semi-urban
+1239,Parbhani_Ward_3,ward,Parbhani,Tripura,19.267655,76.745285,49351,15.94,1,4.7,semi-urban
+1240,Parbhani_Ward_4,ward,Parbhani,Tripura,19.271367,76.78458,43098,12.35,1,6.1,semi-urban
+1241,Parbhani_Ward_5,ward,Parbhani,Tripura,19.280062,76.770784,40315,2.09,1,4.0,semi-urban
+1242,Parbhani_Ward_6,ward,Parbhani,Tripura,19.265171,76.771725,35630,24.55,1,3.7,semi-urban
+1243,Parbhani_Ward_7,ward,Parbhani,Tripura,19.258732,76.740067,29953,19.5,1,5.7,semi-urban
+1244,Parbhani_Ward_8,ward,Parbhani,Tripura,19.290382,76.774303,32720,2.27,1,4.2,semi-urban
+1245,Hisar_Ward_1,ward,Hisar,10,29.148039,75.711504,33777,6.58,1,4.6,semi-urban
+1246,Hisar_Ward_2,ward,Hisar,10,29.148036,75.71287,53397,7.68,1,5.7,semi-urban
+1247,Hisar_Ward_3,ward,Hisar,10,29.147983,75.722318,47562,17.04,1,4.6,semi-urban
+1248,Hisar_Ward_4,ward,Hisar,10,29.143898,75.704307,48836,21.75,1,5.2,semi-urban
+1249,Hisar_Ward_5,ward,Hisar,10,29.157799,75.717773,48426,23.73,1,4.9,semi-urban
+1250,Hisar_Ward_6,ward,Hisar,10,29.181191,75.728596,40754,9.59,1,4.5,semi-urban
+1251,Hisar_Ward_7,ward,Hisar,10,29.166437,75.713486,56902,8.78,1,6.4,semi-urban
+1252,Firozabad_Ward_1,ward,Firozabad,Telangana,27.110307,78.391102,40990,18.21,1,3.7,semi-urban
+1253,Firozabad_Ward_2,ward,Firozabad,Telangana,27.154533,78.387825,55776,4.1,1,6.5,semi-urban
+1254,Firozabad_Ward_3,ward,Firozabad,Telangana,27.162574,78.374206,41300,5.11,1,5.5,semi-urban
+1255,Firozabad_Ward_4,ward,Firozabad,Telangana,27.161648,78.397043,41441,5.91,1,5.4,semi-urban
+1256,Firozabad_Ward_5,ward,Firozabad,Telangana,27.15307,78.386867,45225,24.36,1,3.7,semi-urban
+1257,Firozabad_Ward_6,ward,Firozabad,Telangana,27.158017,78.387266,35760,6.27,1,5.1,semi-urban
+1258,Kulti_Ward_1,ward,Kulti,West Bengal,23.738656,86.863401,113286,7.8,2,7.1,semi-urban
+1259,Kulti_Ward_2,ward,Kulti,West Bengal,23.749526,86.841517,98888,14.36,1,5.7,semi-urban
+1260,Kulti_Ward_3,ward,Kulti,West Bengal,23.714214,86.843029,118986,16.61,2,5.8,semi-urban
+1261,Karnal_Ward_1,ward,Karnal,10,29.713485,76.988751,51604,15.47,1,6.6,semi-urban
+1262,Karnal_Ward_2,ward,Karnal,10,29.690754,76.999992,55164,13.81,1,6.1,semi-urban
+1263,Karnal_Ward_3,ward,Karnal,10,29.684483,77.002438,46975,11.33,1,4.4,semi-urban
+1264,Karnal_Ward_4,ward,Karnal,10,29.718729,76.97743,53187,21.05,1,5.7,semi-urban
+1265,Karnal_Ward_5,ward,Karnal,10,29.704146,76.989459,49911,11.04,1,3.8,semi-urban
+1266,Karnal_Ward_6,ward,Karnal,10,29.686074,76.961796,43363,3.61,1,4.6,semi-urban
+1267,Barddhaman_Ward_1,ward,Barddhaman,West Bengal,23.241401,87.864683,22797,22.36,1,6.1,semi-urban
+1268,Barddhaman_Ward_2,ward,Barddhaman,West Bengal,23.244225,87.853953,24695,19.54,1,3.7,semi-urban
+1269,Barddhaman_Ward_3,ward,Barddhaman,West Bengal,23.286683,87.859281,30383,19.03,1,6.1,semi-urban
+1270,Barddhaman_Ward_4,ward,Barddhaman,West Bengal,23.252788,87.882581,22846,17.07,1,7.7,semi-urban
+1271,Barddhaman_Ward_5,ward,Barddhaman,West Bengal,23.280479,87.847472,30592,17.81,1,3.1,semi-urban
+1272,Barddhaman_Ward_6,ward,Barddhaman,West Bengal,23.238197,87.86785,30837,22.95,1,4.0,semi-urban
+1273,Barddhaman_Ward_7,ward,Barddhaman,West Bengal,23.273749,87.857042,17907,8.52,1,5.9,semi-urban
+1274,Barddhaman_Ward_8,ward,Barddhaman,West Bengal,23.249402,87.873683,20941,11.41,1,6.4,semi-urban
+1275,Barddhaman_Ward_9,ward,Barddhaman,West Bengal,23.269071,87.847801,29674,21.02,1,6.8,semi-urban
+1276,Barddhaman_Ward_10,ward,Barddhaman,West Bengal,23.279306,87.832306,21598,12.33,1,4.7,semi-urban
+1277,Barddhaman_Ward_11,ward,Barddhaman,West Bengal,23.24276,87.855012,28440,7.24,1,4.9,semi-urban
+1278,Barddhaman_Ward_12,ward,Barddhaman,West Bengal,23.236148,87.829604,24372,6.68,1,6.4,semi-urban
+1279,Gundupalaiyam_Ward_1,ward,Gundupalaiyam,Maharashtra,11.911492,79.780723,54121,18.26,1,7.5,semi-urban
+1280,Gundupalaiyam_Ward_2,ward,Gundupalaiyam,Maharashtra,11.968468,79.794634,89013,5.13,2,5.2,semi-urban
+1281,Gundupalaiyam_Ward_3,ward,Gundupalaiyam,Maharashtra,11.918527,79.802756,55222,14.28,1,6.0,semi-urban
+1282,Gundupalaiyam_Ward_4,ward,Gundupalaiyam,Maharashtra,11.929699,79.795666,79807,15.47,1,6.3,semi-urban
+1283,Barasat_Ward_1,ward,Barasat,West Bengal,22.712868,88.47811,62141,8.07,1,7.5,semi-urban
+1284,Barasat_Ward_2,ward,Barasat,West Bengal,22.708777,88.482159,79260,15.56,1,5.5,semi-urban
+1285,Barasat_Ward_3,ward,Barasat,West Bengal,22.759489,88.467076,93666,8.04,2,4.8,semi-urban
+1286,Barasat_Ward_4,ward,Barasat,West Bengal,22.710217,88.50738,74674,18.64,1,5.8,semi-urban
+1287,Mulugu_Ward_1,ward,Mulugu,40,18.181728,79.956478,32698,22.32,1,7.3,semi-urban
+1288,Mulugu_Ward_2,ward,Mulugu,40,18.194851,79.91324,34297,10.94,1,5.3,semi-urban
+1289,Mulugu_Ward_3,ward,Mulugu,40,18.197136,79.952999,28049,6.05,1,3.9,semi-urban
+1290,Mulugu_Ward_4,ward,Mulugu,40,18.177518,79.93008,28948,24.59,1,6.1,semi-urban
+1291,Mulugu_Ward_5,ward,Mulugu,40,18.180066,79.940165,22441,11.93,1,3.7,semi-urban
+1292,Mulugu_Ward_6,ward,Mulugu,40,18.218084,79.943375,29851,4.39,1,4.6,semi-urban
+1293,Mulugu_Ward_7,ward,Mulugu,40,18.172333,79.949747,25327,6.83,1,4.5,semi-urban
+1294,Mulugu_Ward_8,ward,Mulugu,40,18.174115,79.937011,32827,22.67,1,5.3,semi-urban
+1295,Mulugu_Ward_9,ward,Mulugu,40,18.197337,79.936007,34981,7.86,1,4.2,semi-urban
+1296,Mulugu_Ward_10,ward,Mulugu,40,18.18563,79.948883,28184,4.91,1,3.6,semi-urban
+1297,Bihar Sharif_Ward_1,ward,Bihar Sharif,Puducherry,25.190542,85.541341,58401,15.03,1,6.7,semi-urban
+1298,Bihar Sharif_Ward_2,ward,Bihar Sharif,Puducherry,25.18155,85.516458,84672,17.37,1,2.5,semi-urban
+1299,Bihar Sharif_Ward_3,ward,Bihar Sharif,Puducherry,25.207325,85.513132,71520,4.91,1,5.7,semi-urban
+1300,Bihar Sharif_Ward_4,ward,Bihar Sharif,Puducherry,25.183874,85.547725,63537,24.82,1,5.5,semi-urban
+1301,Bali_Ward_1,ward,Bali,West Bengal,22.661774,88.348359,25617,21.45,1,4.8,semi-urban
+1302,Bali_Ward_2,ward,Bali,West Bengal,22.629073,88.360531,30387,10.22,1,4.0,semi-urban
+1303,Bali_Ward_3,ward,Bali,West Bengal,22.621012,88.354622,20256,16.96,1,4.8,semi-urban
+1304,Bali_Ward_4,ward,Bali,West Bengal,22.659128,88.325866,23143,11.45,1,3.6,semi-urban
+1305,Bali_Ward_5,ward,Bali,West Bengal,22.650008,88.368241,34181,23.16,1,8.0,semi-urban
+1306,Bali_Ward_6,ward,Bali,West Bengal,22.650047,88.342601,32725,22.15,1,4.7,semi-urban
+1307,Bali_Ward_7,ward,Bali,West Bengal,22.651516,88.349212,26009,2.67,1,5.2,semi-urban
+1308,Bali_Ward_8,ward,Bali,West Bengal,22.660986,88.338344,20912,3.48,1,7.2,semi-urban
+1309,Bali_Ward_9,ward,Bali,West Bengal,22.67727,88.358611,27090,2.29,1,5.6,semi-urban
+1310,Bali_Ward_10,ward,Bali,West Bengal,22.663624,88.330381,28058,10.06,1,7.0,semi-urban
+1311,Bali_Ward_11,ward,Bali,West Bengal,22.644437,88.331074,24949,2.79,1,3.8,semi-urban
+1312,Rampur_Ward_1,ward,Rampur,Telangana,28.841506,79.041919,66030,18.06,1,5.1,semi-urban
+1313,Rampur_Ward_2,ward,Rampur,Telangana,28.800677,79.022522,51189,2.22,1,5.5,semi-urban
+1314,Rampur_Ward_3,ward,Rampur,Telangana,28.816121,79.020764,62078,23.7,1,4.8,semi-urban
+1315,Rampur_Ward_4,ward,Rampur,Telangana,28.820861,79.023484,69261,16.67,1,7.3,semi-urban
+1316,Rampur_Ward_5,ward,Rampur,Telangana,28.830442,79.040047,76584,19.87,1,7.9,semi-urban
+1317,Darbhanga_Ward_1,ward,Darbhanga,Puducherry,26.147524,85.903142,44421,12.21,1,6.7,semi-urban
+1318,Darbhanga_Ward_2,ward,Darbhanga,Puducherry,26.152988,85.911774,42802,21.04,1,8.0,semi-urban
+1319,Darbhanga_Ward_3,ward,Darbhanga,Puducherry,26.156817,85.880161,62532,5.94,1,4.3,semi-urban
+1320,Darbhanga_Ward_4,ward,Darbhanga,Puducherry,26.144182,85.912764,64306,22.55,1,7.2,semi-urban
+1321,Darbhanga_Ward_5,ward,Darbhanga,Puducherry,26.128589,85.883084,57869,19.98,1,6.3,semi-urban
+1322,Panipat_Ward_1,ward,Panipat,10,29.381262,76.943804,35352,14.99,1,5.9,semi-urban
+1323,Panipat_Ward_2,ward,Panipat,10,29.368397,76.950954,32170,8.09,1,6.4,semi-urban
+1324,Panipat_Ward_3,ward,Panipat,10,29.39234,76.926469,20924,17.22,1,6.3,semi-urban
+1325,Panipat_Ward_4,ward,Panipat,10,29.410511,76.977213,30863,8.32,1,5.5,semi-urban
+1326,Panipat_Ward_5,ward,Panipat,10,29.373383,76.96627,30561,18.57,1,4.5,semi-urban
+1327,Panipat_Ward_6,ward,Panipat,10,29.366889,76.985949,34123,2.26,1,6.1,semi-urban
+1328,Panipat_Ward_7,ward,Panipat,10,29.418368,76.954238,37456,15.52,1,6.9,semi-urban
+1329,Panipat_Ward_8,ward,Panipat,10,29.375779,76.958472,26762,5.8,1,5.4,semi-urban
+1330,Panipat_Ward_9,ward,Panipat,10,29.359178,76.99479,28461,9.83,1,5.5,semi-urban
+1331,Panipat_Ward_10,ward,Panipat,10,29.397597,76.94251,29563,3.93,1,4.4,semi-urban
+1332,Tirupati_Ward_1,ward,Tirupati,Himachal Pradesh,13.614404,79.40102,32831,9.03,1,6.2,semi-urban
+1333,Tirupati_Ward_2,ward,Tirupati,Himachal Pradesh,13.599998,79.425197,27882,10.37,1,6.6,semi-urban
+1334,Tirupati_Ward_3,ward,Tirupati,Himachal Pradesh,13.621279,79.417323,30383,21.46,1,6.6,semi-urban
+1335,Tirupati_Ward_4,ward,Tirupati,Himachal Pradesh,13.622903,79.430199,21133,11.14,1,4.7,semi-urban
+1336,Tirupati_Ward_5,ward,Tirupati,Himachal Pradesh,13.634841,79.428591,27116,14.58,1,5.4,semi-urban
+1337,Tirupati_Ward_6,ward,Tirupati,Himachal Pradesh,13.634395,79.417122,28063,7.06,1,4.9,semi-urban
+1338,Tirupati_Ward_7,ward,Tirupati,Himachal Pradesh,13.643252,79.426055,25119,12.68,1,5.8,semi-urban
+1339,Tirupati_Ward_8,ward,Tirupati,Himachal Pradesh,13.636024,79.394677,19284,11.73,1,5.5,semi-urban
+1340,Tirupati_Ward_9,ward,Tirupati,Himachal Pradesh,13.642646,79.385481,30725,19.56,1,5.6,semi-urban
+1341,Tirupati_Ward_10,ward,Tirupati,Himachal Pradesh,13.62236,79.429797,24236,9.58,1,6.4,semi-urban
+1342,Tirupati_Ward_11,ward,Tirupati,Himachal Pradesh,13.623884,79.415577,34577,16.08,1,4.3,semi-urban
+1343,Greater Noida_Ward_1,ward,Greater Noida,Telangana,28.485014,77.53427,58353,8.65,1,6.7,semi-urban
+1344,Greater Noida_Ward_2,ward,Greater Noida,Telangana,28.496728,77.553807,69079,18.47,1,3.8,semi-urban
+1345,Greater Noida_Ward_3,ward,Greater Noida,Telangana,28.489931,77.525145,46250,23.7,1,6.2,semi-urban
+1346,Greater Noida_Ward_4,ward,Greater Noida,Telangana,28.482185,77.573622,57406,12.94,1,7.3,semi-urban
+1347,Greater Noida_Ward_5,ward,Greater Noida,Telangana,28.498521,77.536512,74220,17.12,1,5.7,semi-urban
+1348,Noida_Ward_1,ward,Noida,Telangana,28.594868,77.32649,53618,15.82,1,6.4,semi-urban
+1349,Noida_Ward_2,ward,Noida,Telangana,28.582095,77.330975,35552,19.86,1,3.6,semi-urban
+1350,Noida_Ward_3,ward,Noida,Telangana,28.582352,77.359701,37524,16.2,1,6.0,semi-urban
+1351,Noida_Ward_4,ward,Noida,Telangana,28.560636,77.323895,53615,10.17,1,4.9,semi-urban
+1352,Noida_Ward_5,ward,Noida,Telangana,28.603328,77.305643,43098,13.43,1,3.8,semi-urban
+1353,Noida_Ward_6,ward,Noida,Telangana,28.579819,77.313188,33650,17.17,1,5.5,semi-urban
+1354,Noida_Ward_7,ward,Noida,Telangana,28.589934,77.34213,45460,10.48,1,5.3,semi-urban
+1355,Aizawl_Ward_1,ward,Aizawl,31,23.725084,92.722073,23008,2.73,1,5.9,semi-urban
+1356,Aizawl_Ward_2,ward,Aizawl,31,23.722286,92.715088,21870,20.35,1,4.9,semi-urban
+1357,Aizawl_Ward_3,ward,Aizawl,31,23.727175,92.718135,25542,18.15,1,5.6,semi-urban
+1358,Aizawl_Ward_4,ward,Aizawl,31,23.717885,92.73243,18672,20.73,1,6.1,semi-urban
+1359,Aizawl_Ward_5,ward,Aizawl,31,23.739728,92.745207,33806,23.46,1,4.8,semi-urban
+1360,Aizawl_Ward_6,ward,Aizawl,31,23.765726,92.717942,29666,15.41,1,4.5,semi-urban
+1361,Aizawl_Ward_7,ward,Aizawl,31,23.726733,92.708061,19047,21.47,1,6.1,semi-urban
+1362,Aizawl_Ward_8,ward,Aizawl,31,23.730117,92.731004,22935,23.33,1,7.7,semi-urban
+1363,Aizawl_Ward_9,ward,Aizawl,31,23.742514,92.714523,24816,23.34,1,4.2,semi-urban
+1364,Aizawl_Ward_10,ward,Aizawl,31,23.727932,92.743209,24548,4.31,1,4.9,semi-urban
+1365,Aizawl_Ward_11,ward,Aizawl,31,23.758444,92.717323,24029,13.33,1,6.3,semi-urban
+1366,Gandhinagar_Ward_1,ward,Gandhinagar,Uttar Pradesh,23.232379,72.682993,23670,9.08,1,6.1,semi-urban
+1367,Gandhinagar_Ward_2,ward,Gandhinagar,Uttar Pradesh,23.218504,72.677046,20717,7.57,1,4.5,semi-urban
+1368,Gandhinagar_Ward_3,ward,Gandhinagar,Uttar Pradesh,23.233492,72.690762,18978,13.66,1,4.6,semi-urban
+1369,Gandhinagar_Ward_4,ward,Gandhinagar,Uttar Pradesh,23.231995,72.704876,28947,5.36,1,4.2,semi-urban
+1370,Gandhinagar_Ward_5,ward,Gandhinagar,Uttar Pradesh,23.202086,72.668213,24719,10.77,1,4.1,semi-urban
+1371,Gandhinagar_Ward_6,ward,Gandhinagar,Uttar Pradesh,23.202747,72.701981,21328,18.59,1,5.8,semi-urban
+1372,Gandhinagar_Ward_7,ward,Gandhinagar,Uttar Pradesh,23.214905,72.693864,29087,7.09,1,6.8,semi-urban
+1373,Gandhinagar_Ward_8,ward,Gandhinagar,Uttar Pradesh,23.260816,72.694197,24960,23.7,1,5.5,semi-urban
+1374,Gandhinagar_Ward_9,ward,Gandhinagar,Uttar Pradesh,23.221191,72.679259,24326,13.62,1,4.8,semi-urban
+1375,Gandhinagar_Ward_10,ward,Gandhinagar,Uttar Pradesh,23.207675,72.689509,20774,8.09,1,4.8,semi-urban
+1376,Gandhinagar_Ward_11,ward,Gandhinagar,Uttar Pradesh,23.201401,72.703197,22464,4.3,1,4.3,semi-urban
+1377,Gandhinagar_Ward_12,ward,Gandhinagar,Uttar Pradesh,23.209127,72.701013,26573,16.17,1,5.6,semi-urban
+1378,Dindigul_Ward_1,ward,Dindigul,25,10.365494,77.961186,41126,6.78,1,5.1,semi-urban
+1379,Dindigul_Ward_2,ward,Dindigul,25,10.384853,77.972031,36316,10.89,1,7.1,semi-urban
+1380,Dindigul_Ward_3,ward,Dindigul,25,10.36192,77.988794,41783,12.6,1,4.2,semi-urban
+1381,Dindigul_Ward_4,ward,Dindigul,25,10.376017,78.009945,39198,16.98,1,6.0,semi-urban
+1382,Dindigul_Ward_5,ward,Dindigul,25,10.374916,77.993048,26683,20.13,1,4.9,semi-urban
+1383,Dindigul_Ward_6,ward,Dindigul,25,10.364219,77.985075,39410,11.64,1,6.7,semi-urban
+1384,Dindigul_Ward_7,ward,Dindigul,25,10.37013,77.971065,32601,20.53,1,4.4,semi-urban
+1385,Dindigul_Ward_8,ward,Dindigul,25,10.37468,78.000843,37976,17.99,1,5.3,semi-urban
+1386,Dindigul_Ward_9,ward,Dindigul,25,10.366199,77.995119,28561,8.92,1,5.0,semi-urban
+1387,Thanjavur_Ward_1,ward,Thanjavur,25,10.757105,79.15679,49526,12.63,1,5.3,semi-urban
+1388,Thanjavur_Ward_2,ward,Thanjavur,25,10.79123,79.148586,63024,18.72,1,5.7,semi-urban
+1389,Thanjavur_Ward_3,ward,Thanjavur,25,10.784931,79.135372,48171,14.88,1,4.3,semi-urban
+1390,Thanjavur_Ward_4,ward,Thanjavur,25,10.800668,79.126115,45809,14.3,1,4.9,semi-urban
+1391,Thanjavur_Ward_5,ward,Thanjavur,25,10.785826,79.117747,38538,12.76,1,4.9,semi-urban
+1392,Thanjavur_Ward_6,ward,Thanjavur,25,10.789639,79.141478,41653,13.9,1,4.7,semi-urban
+1393,Karimnagar_Ward_1,ward,Karimnagar,40,18.440518,79.140383,27659,11.95,1,6.1,semi-urban
+1394,Karimnagar_Ward_2,ward,Karimnagar,40,18.431891,79.134572,21428,8.68,1,5.6,semi-urban
+1395,Karimnagar_Ward_3,ward,Karimnagar,40,18.42331,79.112809,29912,12.95,1,4.7,semi-urban
+1396,Karimnagar_Ward_4,ward,Karimnagar,40,18.41893,79.114057,23480,16.4,1,6.4,semi-urban
+1397,Karimnagar_Ward_5,ward,Karimnagar,40,18.434304,79.123051,32029,17.25,1,6.3,semi-urban
+1398,Karimnagar_Ward_6,ward,Karimnagar,40,18.434561,79.147893,18754,13.2,1,4.1,semi-urban
+1399,Karimnagar_Ward_7,ward,Karimnagar,40,18.405466,79.131491,25794,23.12,1,5.0,semi-urban
+1400,Karimnagar_Ward_8,ward,Karimnagar,40,18.443583,79.123156,20117,8.7,1,5.8,semi-urban
+1401,Karimnagar_Ward_9,ward,Karimnagar,40,18.457583,79.135476,32658,13.53,1,5.1,semi-urban
+1402,Karimnagar_Ward_10,ward,Karimnagar,40,18.427537,79.126705,21275,12.68,1,4.8,semi-urban
+1403,Karimnagar_Ward_11,ward,Karimnagar,40,18.397543,79.125866,33555,14.81,1,7.1,semi-urban
+1404,Dewas_Ward_1,ward,Dewas,35,22.967678,76.052486,47206,16.01,1,6.1,semi-urban
+1405,Dewas_Ward_2,ward,Dewas,35,22.953845,76.047775,49547,16.35,1,5.7,semi-urban
+1406,Dewas_Ward_3,ward,Dewas,35,22.958878,76.053248,54637,11.1,1,4.2,semi-urban
+1407,Dewas_Ward_4,ward,Dewas,35,22.980631,76.031472,60972,22.49,1,5.5,semi-urban
+1408,Dewas_Ward_5,ward,Dewas,35,22.953988,76.05247,58238,12.14,1,6.2,semi-urban
+1409,Dewas_Ward_6,ward,Dewas,35,22.984763,76.06451,34758,10.0,1,4.8,semi-urban
+1410,Sonipat_Ward_1,ward,Sonipat,10,28.978644,76.988632,31595,2.77,1,4.9,semi-urban
+1411,Sonipat_Ward_2,ward,Sonipat,10,29.003928,77.018771,31801,16.84,1,6.1,semi-urban
+1412,Sonipat_Ward_3,ward,Sonipat,10,29.015017,77.048303,43486,3.66,1,5.5,semi-urban
+1413,Sonipat_Ward_4,ward,Sonipat,10,28.999912,77.048129,38336,13.41,1,6.2,semi-urban
+1414,Sonipat_Ward_5,ward,Sonipat,10,28.998744,77.013978,31472,3.18,1,6.5,semi-urban
+1415,Sonipat_Ward_6,ward,Sonipat,10,28.97179,77.002441,46737,5.32,1,5.8,semi-urban
+1416,Sonipat_Ward_7,ward,Sonipat,10,28.968964,77.011676,39015,20.19,1,5.9,semi-urban
+1417,Ichalkaranji_Ward_1,ward,Ichalkaranji,Tripura,16.674884,74.460987,36506,13.45,1,4.6,semi-urban
+1418,Ichalkaranji_Ward_2,ward,Ichalkaranji,Tripura,16.670182,74.442339,29983,19.77,1,4.6,semi-urban
+1419,Ichalkaranji_Ward_3,ward,Ichalkaranji,Tripura,16.709008,74.470549,37939,18.09,1,6.0,semi-urban
+1420,Ichalkaranji_Ward_4,ward,Ichalkaranji,Tripura,16.678827,74.466104,24349,21.79,1,5.0,semi-urban
+1421,Ichalkaranji_Ward_5,ward,Ichalkaranji,Tripura,16.697116,74.463086,36186,10.96,1,4.6,semi-urban
+1422,Ichalkaranji_Ward_6,ward,Ichalkaranji,Tripura,16.68964,74.450431,28676,22.06,1,6.7,semi-urban
+1423,Ichalkaranji_Ward_7,ward,Ichalkaranji,Tripura,16.689237,74.452904,25380,8.58,1,5.6,semi-urban
+1424,Ichalkaranji_Ward_8,ward,Ichalkaranji,Tripura,16.680201,74.45988,22763,13.52,1,4.9,semi-urban
+1425,Ichalkaranji_Ward_9,ward,Ichalkaranji,Tripura,16.679055,74.454666,29559,15.57,1,5.5,semi-urban
+1426,Bathinda_Ward_1,ward,Bathinda,Madhya Pradesh,30.229895,74.929278,28476,7.17,1,4.4,semi-urban
+1427,Bathinda_Ward_2,ward,Bathinda,Madhya Pradesh,30.248299,74.951597,45259,14.89,1,6.6,semi-urban
+1428,Bathinda_Ward_3,ward,Bathinda,Madhya Pradesh,30.21485,74.926022,25847,19.13,1,4.4,semi-urban
+1429,Bathinda_Ward_4,ward,Bathinda,Madhya Pradesh,30.22195,74.949495,34765,11.16,1,4.3,semi-urban
+1430,Bathinda_Ward_5,ward,Bathinda,Madhya Pradesh,30.202046,74.947986,26479,9.57,1,5.4,semi-urban
+1431,Bathinda_Ward_6,ward,Bathinda,Madhya Pradesh,30.200831,74.939046,31715,8.57,1,3.4,semi-urban
+1432,Bathinda_Ward_7,ward,Bathinda,Madhya Pradesh,30.238137,74.92581,42915,12.09,1,3.9,semi-urban
+1433,Bathinda_Ward_8,ward,Bathinda,Madhya Pradesh,30.223724,74.933928,34156,14.24,1,6.1,semi-urban
+1434,Jalna_Ward_1,ward,Jalna,Tripura,19.828427,75.894925,23673,20.4,1,5.9,semi-urban
+1435,Jalna_Ward_2,ward,Jalna,Tripura,19.825575,75.8791,20034,6.32,1,6.0,semi-urban
+1436,Jalna_Ward_3,ward,Jalna,Tripura,19.810796,75.880036,23869,13.47,1,5.9,semi-urban
+1437,Jalna_Ward_4,ward,Jalna,Tripura,19.830501,75.873223,22897,18.42,1,5.0,semi-urban
+1438,Jalna_Ward_5,ward,Jalna,Tripura,19.864154,75.876743,36544,6.7,1,5.8,semi-urban
+1439,Jalna_Ward_6,ward,Jalna,Tripura,19.837512,75.883419,22360,19.16,1,6.7,semi-urban
+1440,Jalna_Ward_7,ward,Jalna,Tripura,19.838618,75.910478,20304,16.67,1,6.1,semi-urban
+1441,Jalna_Ward_8,ward,Jalna,Tripura,19.847693,75.899121,24536,2.83,1,4.6,semi-urban
+1442,Jalna_Ward_9,ward,Jalna,Tripura,19.855938,75.883428,21814,19.67,1,5.8,semi-urban
+1443,Jalna_Ward_10,ward,Jalna,Tripura,19.830118,75.873196,24148,23.28,1,5.6,semi-urban
+1444,Kirari Sulemannagar_Ward_1,ward,Kirari Sulemannagar,Delhi,28.677363,77.073458,29776,6.15,1,4.1,semi-urban
+1445,Kirari Sulemannagar_Ward_2,ward,Kirari Sulemannagar,Delhi,28.686649,77.082476,20735,14.36,1,5.0,semi-urban
+1446,Kirari Sulemannagar_Ward_3,ward,Kirari Sulemannagar,Delhi,28.718933,77.041606,24089,23.57,1,6.6,semi-urban
+1447,Kirari Sulemannagar_Ward_4,ward,Kirari Sulemannagar,Delhi,28.720501,77.068452,19400,7.82,1,4.8,semi-urban
+1448,Kirari Sulemannagar_Ward_5,ward,Kirari Sulemannagar,Delhi,28.697387,77.05963,22108,15.18,1,5.2,semi-urban
+1449,Kirari Sulemannagar_Ward_6,ward,Kirari Sulemannagar,Delhi,28.70051,77.074027,24428,5.01,1,4.6,semi-urban
+1450,Kirari Sulemannagar_Ward_7,ward,Kirari Sulemannagar,Delhi,28.706352,77.074426,30220,16.38,1,7.2,semi-urban
+1451,Kirari Sulemannagar_Ward_8,ward,Kirari Sulemannagar,Delhi,28.697688,77.069554,19769,24.01,1,6.0,semi-urban
+1452,Kirari Sulemannagar_Ward_9,ward,Kirari Sulemannagar,Delhi,28.686487,77.076754,25134,10.12,1,6.9,semi-urban
+1453,Kirari Sulemannagar_Ward_10,ward,Kirari Sulemannagar,Delhi,28.717073,77.075499,28503,12.94,1,6.8,semi-urban
+1454,Kirari Sulemannagar_Ward_11,ward,Kirari Sulemannagar,Delhi,28.696906,77.087885,28237,22.59,1,5.5,semi-urban
+1455,Satna_Ward_1,ward,Satna,35,24.572903,80.833852,32196,4.65,1,6.4,semi-urban
+1456,Satna_Ward_2,ward,Satna,35,24.561977,80.843783,26050,13.59,1,5.0,semi-urban
+1457,Satna_Ward_3,ward,Satna,35,24.580161,80.828085,20754,3.81,1,5.1,semi-urban
+1458,Satna_Ward_4,ward,Satna,35,24.594177,80.798548,22438,14.0,1,5.9,semi-urban
+1459,Satna_Ward_5,ward,Satna,35,24.557153,80.822393,35271,8.06,1,5.5,semi-urban
+1460,Satna_Ward_6,ward,Satna,35,24.549754,80.833971,21317,10.56,1,3.9,semi-urban
+1461,Satna_Ward_7,ward,Satna,35,24.583679,80.853036,26987,3.26,1,5.8,semi-urban
+1462,Satna_Ward_8,ward,Satna,35,24.57459,80.838007,33456,8.81,1,5.7,semi-urban
+1463,Satna_Ward_9,ward,Satna,35,24.57053,80.830704,33591,18.51,1,4.8,semi-urban
+1464,Satna_Ward_10,ward,Satna,35,24.581518,80.841222,20514,10.58,1,5.7,semi-urban
+1465,Purnia_Ward_1,ward,Purnia,Puducherry,25.781817,87.456974,88231,4.23,1,6.5,semi-urban
+1466,Purnia_Ward_2,ward,Purnia,Puducherry,25.774896,87.459222,89125,6.88,1,8.1,semi-urban
+1467,Purnia_Ward_3,ward,Purnia,Puducherry,25.778007,87.467502,61156,14.23,1,7.2,semi-urban
+1468,Purnia_Ward_4,ward,Purnia,Puducherry,25.800928,87.472456,91709,22.55,2,5.0,semi-urban
+1469,Imphal_Ward_1,ward,Imphal,Meghalaya,24.79829,93.9393,45444,23.59,1,5.8,semi-urban
+1470,Imphal_Ward_2,ward,Imphal,Meghalaya,24.81617,93.925242,39366,8.21,1,6.4,semi-urban
+1471,Imphal_Ward_3,ward,Imphal,Meghalaya,24.7653,93.952369,46543,5.82,1,4.0,semi-urban
+1472,Imphal_Ward_4,ward,Imphal,Meghalaya,24.798408,93.963305,53314,7.38,1,4.7,semi-urban
+1473,Imphal_Ward_5,ward,Imphal,Meghalaya,24.830952,93.972738,45762,18.46,1,8.3,semi-urban
+1474,Imphal_Ward_6,ward,Imphal,Meghalaya,24.802737,93.948659,36105,24.45,1,4.9,semi-urban
+1475,Saugor_Ward_1,ward,Saugor,35,23.818969,78.735159,45356,10.14,1,5.6,semi-urban
+1476,Saugor_Ward_2,ward,Saugor,35,23.845899,78.714555,57010,14.84,1,6.5,semi-urban
+1477,Saugor_Ward_3,ward,Saugor,35,23.820857,78.72355,32948,12.84,1,3.4,semi-urban
+1478,Saugor_Ward_4,ward,Saugor,35,23.830533,78.735919,55578,23.77,1,5.7,semi-urban
+1479,Saugor_Ward_5,ward,Saugor,35,23.818668,78.731455,42289,12.96,1,5.8,semi-urban
+1480,Saugor_Ward_6,ward,Saugor,35,23.821162,78.757567,52883,18.77,1,6.2,semi-urban
+1481,Kushinagar_Ward_1,ward,Kushinagar,Telangana,26.738159,83.895023,68732,6.07,1,5.4,semi-urban
+1482,Kushinagar_Ward_2,ward,Kushinagar,Telangana,26.734482,83.891401,75689,24.65,1,6.5,semi-urban
+1483,Kushinagar_Ward_3,ward,Kushinagar,Telangana,26.722492,83.906228,84802,23.2,1,4.9,semi-urban
+1484,Kushinagar_Ward_4,ward,Kushinagar,Telangana,26.74347,83.881125,70992,16.25,1,5.2,semi-urban
+1485,Rourkela_Ward_1,ward,Rourkela,Odisha,22.22234,84.884543,42440,12.3,1,3.2,semi-urban
+1486,Rourkela_Ward_2,ward,Rourkela,Odisha,22.261242,84.866376,30406,2.87,1,6.8,semi-urban
+1487,Rourkela_Ward_3,ward,Rourkela,Odisha,22.203301,84.870813,26951,13.58,1,6.4,semi-urban
+1488,Rourkela_Ward_4,ward,Rourkela,Odisha,22.237044,84.871775,30140,8.31,1,6.5,semi-urban
+1489,Rourkela_Ward_5,ward,Rourkela,Odisha,22.220904,84.843293,25079,17.08,1,6.6,semi-urban
+1490,Rourkela_Ward_6,ward,Rourkela,Odisha,22.256451,84.856418,36466,11.59,1,5.4,semi-urban
+1491,Rourkela_Ward_7,ward,Rourkela,Odisha,22.213258,84.875169,28450,21.04,1,6.3,semi-urban
+1492,Rourkela_Ward_8,ward,Rourkela,Odisha,22.219259,84.884222,38690,5.87,1,3.6,semi-urban
+1493,Durg_Ward_1,ward,Durg,37,21.192669,81.281004,115483,8.01,2,5.2,semi-urban
+1494,Durg_Ward_2,ward,Durg,37,21.202316,81.245996,71732,2.82,1,5.9,semi-urban
+1495,Durg_Ward_3,ward,Durg,37,21.190377,81.304529,67788,4.17,1,5.9,semi-urban
+1496,Anantapur_Ward_1,ward,Anantapur,Himachal Pradesh,14.665228,77.615018,25182,20.89,1,5.0,semi-urban
+1497,Anantapur_Ward_2,ward,Anantapur,Himachal Pradesh,14.695978,77.607766,23608,2.91,1,4.5,semi-urban
+1498,Anantapur_Ward_3,ward,Anantapur,Himachal Pradesh,14.710988,77.621157,22976,12.79,1,7.2,semi-urban
+1499,Anantapur_Ward_4,ward,Anantapur,Himachal Pradesh,14.675254,77.618851,23931,21.73,1,5.3,semi-urban
+1500,Anantapur_Ward_5,ward,Anantapur,Himachal Pradesh,14.70031,77.621503,18793,3.22,1,4.9,semi-urban
+1501,Anantapur_Ward_6,ward,Anantapur,Himachal Pradesh,14.672179,77.628303,18644,12.91,1,7.3,semi-urban
+1502,Anantapur_Ward_7,ward,Anantapur,Himachal Pradesh,14.692508,77.619459,17262,9.92,1,5.0,semi-urban
+1503,Anantapur_Ward_8,ward,Anantapur,Himachal Pradesh,14.630762,77.606075,22515,6.24,1,3.6,semi-urban
+1504,Anantapur_Ward_9,ward,Anantapur,Himachal Pradesh,14.679084,77.637014,25303,12.82,1,4.1,semi-urban
+1505,Anantapur_Ward_10,ward,Anantapur,Himachal Pradesh,14.654544,77.587077,24133,16.5,1,5.0,semi-urban
+1506,Anantapur_Ward_11,ward,Anantapur,Himachal Pradesh,14.675091,77.604224,27997,19.54,1,5.7,semi-urban
+1507,Anantapur_Ward_12,ward,Anantapur,Himachal Pradesh,14.668402,77.597529,22547,5.67,1,4.1,semi-urban
+1508,Ratlam_Ward_1,ward,Ratlam,35,23.312669,75.049522,19274,16.48,1,4.6,semi-urban
+1509,Ratlam_Ward_2,ward,Ratlam,35,23.333075,75.025447,29954,14.46,1,3.8,semi-urban
+1510,Ratlam_Ward_3,ward,Ratlam,35,23.345265,75.044379,27335,7.99,1,4.7,semi-urban
+1511,Ratlam_Ward_4,ward,Ratlam,35,23.330845,75.034883,27071,13.79,1,4.7,semi-urban
+1512,Ratlam_Ward_5,ward,Ratlam,35,23.318407,75.053266,23703,15.35,1,4.8,semi-urban
+1513,Ratlam_Ward_6,ward,Ratlam,35,23.31987,75.057392,28871,12.94,1,3.8,semi-urban
+1514,Ratlam_Ward_7,ward,Ratlam,35,23.333857,75.023175,30830,20.11,1,4.4,semi-urban
+1515,Ratlam_Ward_8,ward,Ratlam,35,23.314573,75.053012,17443,22.09,1,5.2,semi-urban
+1516,Ratlam_Ward_9,ward,Ratlam,35,23.36988,75.044053,26685,23.67,1,4.7,semi-urban
+1517,Ratlam_Ward_10,ward,Ratlam,35,23.294389,75.030135,21339,24.52,1,4.1,semi-urban
+1518,Ratlam_Ward_11,ward,Ratlam,35,23.300617,75.075169,28854,11.9,1,4.9,semi-urban
+1519,Ranipet_Ward_1,ward,Ranipet,25,12.898357,79.314275,55303,16.24,1,4.7,semi-urban
+1520,Ranipet_Ward_2,ward,Ranipet,25,12.922314,79.334401,31029,17.58,1,4.2,semi-urban
+1521,Ranipet_Ward_3,ward,Ranipet,25,12.930991,79.3331,53943,22.88,1,6.4,semi-urban
+1522,Ranipet_Ward_4,ward,Ranipet,25,12.910513,79.3375,39019,8.47,1,5.2,semi-urban
+1523,Ranipet_Ward_5,ward,Ranipet,25,12.928928,79.360798,43470,14.72,1,4.5,semi-urban
+1524,Ranipet_Ward_6,ward,Ranipet,25,12.933772,79.325897,36990,22.07,1,3.9,semi-urban
+1525,Lal Bahadur Nagar_Ward_1,ward,Lal Bahadur Nagar,40,17.357105,78.58254,16448,7.75,1,5.6,semi-urban
+1526,Lal Bahadur Nagar_Ward_2,ward,Lal Bahadur Nagar,40,17.339526,78.530396,26532,15.01,1,4.3,semi-urban
+1527,Lal Bahadur Nagar_Ward_3,ward,Lal Bahadur Nagar,40,17.354229,78.546141,27138,13.98,1,6.1,semi-urban
+1528,Lal Bahadur Nagar_Ward_4,ward,Lal Bahadur Nagar,40,17.34736,78.597778,24310,20.89,1,4.8,semi-urban
+1529,Lal Bahadur Nagar_Ward_5,ward,Lal Bahadur Nagar,40,17.336392,78.555866,25580,22.24,1,5.5,semi-urban
+1530,Lal Bahadur Nagar_Ward_6,ward,Lal Bahadur Nagar,40,17.335928,78.574988,20080,15.95,1,4.8,semi-urban
+1531,Lal Bahadur Nagar_Ward_7,ward,Lal Bahadur Nagar,40,17.359045,78.553781,21874,6.1,1,5.2,semi-urban
+1532,Lal Bahadur Nagar_Ward_8,ward,Lal Bahadur Nagar,40,17.34979,78.577994,25458,18.28,1,5.3,semi-urban
+1533,Lal Bahadur Nagar_Ward_9,ward,Lal Bahadur Nagar,40,17.356751,78.55142,26985,16.87,1,5.4,semi-urban
+1534,Lal Bahadur Nagar_Ward_10,ward,Lal Bahadur Nagar,40,17.362663,78.547992,25047,16.9,1,5.3,semi-urban
+1535,Lal Bahadur Nagar_Ward_11,ward,Lal Bahadur Nagar,40,17.29014,78.576122,17532,24.38,1,4.8,semi-urban
+1536,Lal Bahadur Nagar_Ward_12,ward,Lal Bahadur Nagar,40,17.34099,78.550473,23018,5.54,1,4.5,semi-urban

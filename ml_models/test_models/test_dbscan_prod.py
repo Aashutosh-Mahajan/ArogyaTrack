@@ -20,9 +20,9 @@ warnings.filterwarnings("ignore")
 # ==========================================================
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-DATA_DIR = os.path.join(BASE_DIR, "ml_datasets_large_scale")
+DATA_DIR = os.path.join(BASE_DIR, "india_surveillance_extreme_quality")
 MODEL_DIR = os.path.join(BASE_DIR, "saved_models", "dbscan_prod")
-OUTPUT_DIR = os.path.join(MODEL_DIR, "test_results")
+OUTPUT_DIR = os.path.join(BASE_DIR, "test_results", "dbscan_prod")
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 

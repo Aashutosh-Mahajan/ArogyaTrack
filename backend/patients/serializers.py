@@ -2,14 +2,44 @@ from django.conf import settings
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import EmergencyContact, HealthCard, HealthCardService, Profile
+from .models import EmergencyContact, HealthCard, HealthCardService, Profile, PatientProfile
+
+
+class PatientProfileSerializer(serializers.ModelSerializer):
+    """Serializer for PatientProfile (account-level patient data)."""
+    
+    class Meta:
+        model = PatientProfile
+        fields = [
+            "aadhar_id_proof",
+            "terms_accepted", "terms_accepted_at",
+            "consent_store_data", "consent_store_data_at",
+            "consent_doctor_access", "consent_doctor_access_at",
+            "data_sharing_enabled",
+            "last_consent_update",
+            "created_at", "updated_at"
+        ]
+        read_only_fields = ["created_at", "updated_at", "last_consent_update"]
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    full_address = serializers.ReadOnlyField()
+    calculated_age = serializers.SerializerMethodField()
+    
     class Meta:
         model = Profile
-        fields = ["id", "name", "age", "gender", "blood_group", "relationship", "region", "created_at"]
-        read_only_fields = ["id", "created_at"]
+        fields = [
+            "id", "name", "age", "gender", "blood_group", "relationship", "region",
+            "date_of_birth", "phone", "emergency_contact_number",
+            "district", "state", "country", "address", "pincode",
+            "full_address", "calculated_age",
+            "created_at", "updated_at"
+        ]
+        read_only_fields = ["id", "created_at", "updated_at", "full_address", "calculated_age"]
+    
+    def get_calculated_age(self, obj):
+        """Return calculated age from date_of_birth if available."""
+        return obj.calculate_age() if hasattr(obj, 'calculate_age') else obj.age
 
     def create(self, validated_data):
         user = self.context["request"].user

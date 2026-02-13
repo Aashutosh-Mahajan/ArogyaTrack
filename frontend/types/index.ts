@@ -2,12 +2,13 @@
 export interface User {
   id: number;
   email: string;
-  first_name: string;
-  last_name: string;
-  phone: string;
   role: UserRole;
-  active_profile?: number;
-  created_at: string;
+  active_profile?: string | null; // UUID
+  verification_status: 'pending' | 'verified';
+  is_active: boolean;
+  is_staff: boolean;
+  date_joined: string;
+  updated_at: string;
 }
 
 export type UserRole = 'patient' | 'doctor' | 'pharmacist' | 'authority' | 'admin';
@@ -30,28 +31,58 @@ export interface AuthState {
 
 // Patient Types
 export interface Profile {
-  id: number;
-  user: number;
-  date_of_birth: string;
+  id: string; // UUID
+  name: string;
+  age: number;
   gender: 'male' | 'female' | 'other';
   blood_group: string;
-  address: string;
-  city: string;
-  state: string;
-  pincode: string;
-  region?: Region;
+  relationship: 'self' | 'spouse' | 'child' | 'parent' | 'other';
+  region?: string;
+  
+  // Extended fields
+  date_of_birth?: string | null;
+  phone?: string;
+  emergency_contact_number?: string;
+  
+  // Geographic Information
+  district?: string;
+  state?: string;
+  country: string;
+  address?: string;
+  pincode?: string;
+  full_address?: string;
+  calculated_age?: number;
+  
+  // Timestamps
   created_at: string;
+  updated_at: string;
+}
+
+export interface PatientProfile {
+  aadhar_id_proof?: string | null;
+  
+  // Consent & Terms
+  terms_accepted: boolean;
+  terms_accepted_at?: string | null;
+  consent_store_data: boolean;
+  consent_store_data_at?: string | null;
+  consent_doctor_access: boolean;
+  consent_doctor_access_at?: string | null;
+  
+  // Privacy Settings
+  data_sharing_enabled: boolean;
+  
+  // Timestamps
+  last_consent_update?: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface HealthCard {
-  id: number;
-  profile: number;
-  card_number: string;
-  qr_code: string;
-  jwt_token: string;
-  issued_at: string;
+  token: string;
+  qr_code_path: string;
   expires_at: string;
-  is_active: boolean;
+  revoked_at?: string | null;
 }
 
 // Secure Digital Patient Card
@@ -106,120 +137,217 @@ export interface PatientHistoryFromQR {
 }
 
 export interface EmergencyContact {
-  id: number;
-  profile: number;
+  id: string; // UUID
   name: string;
   relationship: string;
   phone: string;
-  email?: string;
+  created_at: string;
+}
+
+// Doctor Types
+export interface DoctorProfile {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  
+  // Personal Information
+  date_of_birth?: string | null;
+  phone: string;
+  
+  // Professional Credentials
+  medical_license: string;
+  degree: 'MBBS' | 'MD' | 'MS' | 'DNB' | 'BDS' | 'BAMS' | 'BHMS' | 'BUMS' | 'Other';
+  degree_other?: string;
+  specialization: string;
+  experience_years: number;
+  
+  // Clinic Information
+  clinic_name?: string;
+  clinic_address?: string;
+  consultation_fee?: number | null;
+  
+  // Documents
+  license_certificate?: string;
+  degree_certificate?: string;
+  government_id?: string;
+  
+  // Verification
+  approval_status: 'pending' | 'approved' | 'rejected';
+  approved_by?: number | null;
+  approved_at?: string | null;
+  rejection_reason?: string;
+  is_verified: boolean;
+  
+  // Timestamps
+  created_at: string;
+  updated_at: string;
 }
 
 // Medical Records Types
 export interface MedicalRecord {
-  id: number;
-  profile: number;
-  doctor: number;
+  id: string; // UUID
+  patient: string; // UUID FK to Profile
+  doctor: number; // FK to User
   doctor_name?: string;
-  diagnosis: string;
   symptoms: string;
   notes?: string;
-  visit_date: string;
   created_at: string;
   diagnoses?: Diagnosis[];
-  allergies?: Allergy[];
 }
 
 export interface Diagnosis {
-  id: number;
-  medical_record: number;
-  disease_code: string;
+  id: string; // UUID
+  icd_10_code: string;
   disease_name: string;
-  severity: 'mild' | 'moderate' | 'severe';
-  diagnosed_at: string;
+  severity: number;
+  created_at: string;
 }
 
 export interface Allergy {
-  id: number;
-  profile: number;
+  id: string; // UUID
+  profile: string; // UUID FK
   allergen: string;
-  reaction: string;
-  severity: 'mild' | 'moderate' | 'severe';
-  diagnosed_date?: string;
+  reaction_type: string;
+  severity: number;
+  created_at: string;
 }
 
 export interface ChronicCondition {
-  id: number;
-  profile: number;
-  condition_name: string;
-  diagnosed_date: string;
-  status: 'active' | 'controlled' | 'resolved';
-  notes?: string;
+  id: string; // UUID
+  profile: string; // UUID FK
+  icd_10_code: string;
+  disease_name: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface DoctorPatientAccess {
+  id: string; // UUID
+  doctor: number;
+  patient: string; // UUID FK
+  granted_at: string;
+  expires_at: string;
+  access_method: string;
+  is_valid: boolean;
 }
 
 // Prescription Types
-export interface Prescription {
-  id: number;
-  profile: number;
-  doctor: number;
-  doctor_name?: string;
-  medical_record?: number;
-  prescription_number: string;
-  diagnosis: string;
-  notes?: string;
-  language: string;
-  qr_code?: string;
-  qr_hash?: string;
-  issued_at: string;
-  expires_at: string;
-  is_dispensed: boolean;
-  medicines: PrescriptionMedicine[];
-}
-
 export interface Medicine {
-  id: number;
+  id: string; // UUID
   name: string;
   generic_name: string;
-  strength: string;
-  form: string;
-  manufacturer?: string;
-  description?: string;
+  drug_class: string;
+  therapeutic_category: string;
+  standard_dosages: Record<string, string>;
+  allergens: string[];
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Prescription {
+  id: string; // UUID
+  patient: string; // UUID FK to Profile
+  patient_name?: string;
+  doctor: number; // FK to User
+  doctor_name?: string;
+  medical_record?: string | null; // UUID FK
+  qr_code_path: string;
+  security_hash: string;
+  status: 'pending' | 'partially_dispensed' | 'fully_dispensed';
+  medicines: PrescriptionMedicine[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PrescriptionMedicine {
-  id: number;
-  prescription: number;
-  medicine: Medicine;
+  id: string; // UUID
+  prescription: string; // UUID FK
+  medicine: string | Medicine; // UUID FK or populated Medicine
+  medicine_name?: string;
+  medicine_generic?: string;
   dosage: string;
   frequency: string;
   duration_days: number;
-  instructions: string;
-  morning: boolean;
-  afternoon: boolean;
-  evening: boolean;
-  night: boolean;
+  quantity: number;
+  special_instructions?: string;
+  dispense_status: 'pending' | 'dispensed' | 'unavailable' | 'patient_has';
+  dispensed_at?: string | null;
+  created_at: string;
+}
+
+export interface DrugInteraction {
+  id: string; // UUID
+  medicine_a: string; // UUID FK
+  medicine_b: string; // UUID FK
+  severity: 'minor' | 'moderate' | 'major' | 'contraindicated';
+  description: string;
+  created_at: string;
 }
 
 // Adherence Types
 export interface AdherenceTracker {
-  id: number;
-  profile: number;
-  medicine_name: string;
-  prescription?: number;
+  id: string; // UUID
+  prescription: string; // UUID FK
+  patient: string; // UUID FK to Profile
   start_date: string;
   end_date: string;
-  total_doses: number;
-  taken_doses: number;
+  expected_doses: number;
+  actual_doses: number;
   adherence_percentage: number;
-  status: 'active' | 'completed' | 'discontinued';
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DoseSchedule {
-  id: number;
-  tracker: number;
+  id: string; // UUID
+  tracker: string; // UUID FK
+  medicine: string; // UUID FK
+  prescription_medicine: string; // UUID FK
   scheduled_time: string;
   is_taken: boolean;
-  taken_time?: string;
+  taken_at?: string | null;
+  reminder_sent: boolean;
+  created_at: string;
+}
+
+export interface AdherenceReminder {
+  id: string; // UUID
+  tracker: string; // UUID FK
+  dose_schedule: string; // UUID FK
+  channel: 'email' | 'sms' | 'push';
+  status: 'pending' | 'sent' | 'failed' | 'acknowledged';
+  sent_at?: string | null;
+  acknowledged_at?: string | null;
+  error_message?: string;
+  created_at: string;
+}
+
+// Pharmacy Types
+export interface Pharmacy {
+  id: string; // UUID
+  name: string;
+  license_number: string;
+  address: string;
+  phone: string;
+  email: string;
+  owner: number; // FK to User
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface DispensingRecord {
+  id: string; // UUID
+  prescription: string; // UUID FK
+  prescription_medicine: string; // UUID FK
+  pharmacy: string; // UUID FK
+  pharmacist: number; // FK to User
+  status: string;
+  quantity_dispensed: number;
   notes?: string;
+  dispensed_at: string;
 }
 
 // Surveillance Types

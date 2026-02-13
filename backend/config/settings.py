@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env if present
-load_dotenv(BASE_DIR.parent / ".env")
+load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_ME")
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
@@ -70,16 +70,35 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 # Database
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME", "health_surveillance"),
-        "USER": os.getenv("DB_USER", "postgres"),
-        "PASSWORD": os.getenv("DB_PASSWORD", "postgres"),
-        "HOST": os.getenv("DB_HOST", "localhost"),
-        "PORT": os.getenv("DB_PORT", "5432"),
+# Support both DATABASE_URL (Neon/Heroku style) and individual settings
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    # Parse DATABASE_URL if provided (e.g., from Neon)
+    import dj_database_url
+    DATABASES = {
+        "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
-}
+else:
+    # Use individual environment variables
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DB_NAME", "health_surveillance"),
+            "USER": os.getenv("DB_USER", "postgres"),
+            "PASSWORD": os.getenv("DB_PASSWORD", "postgres"),
+            "HOST": os.getenv("DB_HOST", "localhost"),
+            "PORT": os.getenv("DB_PORT", "5432"),
+            "OPTIONS": {
+                # Enable SSL for Neon and other cloud databases
+                "sslmode": os.getenv("DB_SSLMODE", "prefer"),
+            },
+        }
+    }
+
+# For Neon cloud specifically, ensure SSL is required
+if "neon.tech" in DATABASES["default"].get("HOST", ""):
+    DATABASES["default"].setdefault("OPTIONS", {})["sslmode"] = "require"
 
 # Cache / Redis
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")

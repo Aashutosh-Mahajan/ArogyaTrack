@@ -10,12 +10,14 @@ from .views import (
     MyCardQRImageView,
     MyCardView,
     MyProfilesView,
+    PatientProfileView,
     RevokeHealthCardView,
     SwitchProfileView,
 )
 
 urlpatterns = [
     path("profile/", ActiveProfileView.as_view(), name="active-profile"),
+    path("patient-profile/", PatientProfileView.as_view(), name="patient-profile"),
     path("create-profile/", CreateProfileView.as_view(), name="create-profile"),
     path("my-profiles/", MyProfilesView.as_view(), name="my-profiles"),
     path("switch-profile/", SwitchProfileView.as_view(), name="switch-profile"),

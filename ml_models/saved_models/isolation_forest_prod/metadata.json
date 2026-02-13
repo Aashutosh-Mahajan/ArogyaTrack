@@ -1,6 +1,59 @@
 {
-  "model": "IsolationForest",
-  "timestamp": "2026-02-13T09:59:50.551717",
-  "contamination": 0.03,
-  "features_count": 27
+  "model": "XGBoost Outbreak Detector",
+  "version": "2.0",
+  "timestamp": "2026-02-13T22:18:03.605680",
+  "configuration": {
+    "objective": "binary:logistic",
+    "eval_metric": "auc",
+    "learning_rate": 0.05,
+    "max_depth": 6,
+    "n_estimators": 500,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "min_child_weight": 3,
+    "gamma": 0.1,
+    "reg_alpha": 0.1,
+    "reg_lambda": 1.0,
+    "random_state": 42,
+    "n_jobs": -1,
+    "early_stopping_rounds": 30,
+    "verbosity": 0
+  },
+  "dataset": {
+    "train_size": 271961,
+    "val_size": 68228,
+    "train_outbreak_rate": 0.07979452936266597,
+    "val_outbreak_rate": 0.07993785542592484,
+    "features_count": 32,
+    "split_date": "2024-01-01"
+  },
+  "performance": {
+    "precision": 0.9797595190380761,
+    "recall": 0.8964063072973965,
+    "f1_score": 0.9362313289927231,
+    "roc_auc": 0.9983010777049711,
+    "balanced_accuracy": 0.9473986804591612
+  },
+  "feature_importance": {
+    "deviation_28": 0.367164671421051,
+    "severity_avg": 0.3519454896450043,
+    "case_count": 0.13675455749034882,
+    "deviation_7": 0.012682191096246243,
+    "growth_7": 0.00972314178943634,
+    "cases_lag_14": 0.009691977873444557,
+    "cases_lag_21": 0.00968173798173666,
+    "is_spike_2std": 0.009099802002310753,
+    "cases_lag_7": 0.008514294400811195,
+    "water_quality_index": 0.00843940768390894,
+    "acceleration_7": 0.007091009523719549,
+    "env_risk": 0.006946812849491835,
+    "rainfall_mm": 0.00676256837323308,
+    "humidity_percent": 0.005938968621194363,
+    "growth_14": 0.005667025223374367,
+    "growth_21": 0.005182481836527586,
+    "cases_rstd_28": 0.004657665267586708,
+    "aqi": 0.003909019753336906,
+    "cases_rstd_7": 0.003591227577999234,
+    "cases_rmax_28": 0.0030611385591328144
+  }
 }
