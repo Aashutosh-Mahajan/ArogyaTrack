@@ -5,7 +5,6 @@ import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaf
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 import { HeatMapData } from '@/types';
-import { Card } from '@/components/ui/card';
 
 interface DynamicMapProps {
   data: HeatMapData[];
@@ -43,7 +42,7 @@ export function DynamicMap({ data, center = [20.5937, 78.9629], zoom = 5 }: Dyna
   };
 
   return (
-    <Card className="p-0 overflow-hidden">
+    <div className="relative overflow-hidden rounded-lg">
       <div style={{ height: '600px', width: '100%' }}>
         <MapContainer
           center={center}
@@ -126,6 +125,6 @@ export function DynamicMap({ data, center = [20.5937, 78.9629], zoom = 5 }: Dyna
           ))}
         </div>
       </div>
-    </Card>
+    </div>
   );
 }

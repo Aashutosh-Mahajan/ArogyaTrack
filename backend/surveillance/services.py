@@ -46,8 +46,8 @@ ML_MODELS_ROOT = Path(settings.BASE_DIR).parent / "ml_models" / "saved_models"
 
 DBSCAN_DIR = ML_MODELS_ROOT / "dbscan_prod"
 ISOLATION_FOREST_DIR = ML_MODELS_ROOT / "isolation_forest_prod"
-PROPHET_DIR = ML_MODELS_ROOT / "prophet_prod"
-XGBOOST_DIR = ML_MODELS_ROOT / "xgboost_prod"
+PROPHET_DIR = ML_MODELS_ROOT / "final_ensemble_model"
+XGBOOST_DIR = ML_MODELS_ROOT / "xgboost_outbreak_v3"
 
 
 # ===================================================================

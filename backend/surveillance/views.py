@@ -644,13 +644,29 @@ def run_ml_pipeline(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    task = run_complete_ml_pipeline.delay(disease_code)
-
-    return Response({
-        'message': 'ML pipeline started',
-        'task_id': task.id,
-        'disease_code': disease_code,
-    })
+    # Try async (Celery) first; fall back to synchronous execution
+    try:
+        task = run_complete_ml_pipeline.delay(disease_code)
+        return Response({
+            'message': 'ML pipeline started (async)',
+            'task_id': task.id,
+            'disease_code': disease_code,
+        })
+    except Exception:
+        # Redis/Celery unavailable – run synchronously
+        try:
+            result = run_complete_ml_pipeline(disease_code)
+            return Response({
+                'message': 'ML pipeline completed (sync)',
+                'task_id': 'sync',
+                'disease_code': disease_code,
+                'result': result,
+            })
+        except Exception as exc:
+            return Response(
+                {'error': f'Pipeline failed: {str(exc)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class EnvironmentalDataViewSet(viewsets.ReadOnlyModelViewSet):

@@ -301,10 +301,10 @@ export const api = {
       apiClient.get('/surveillance/dashboard-overview/'),
     
     getHeatMap: (params?: any): Promise<HeatMapData[]> => 
-      apiClient.get('/surveillance/heat-map-data/', { params }),
+      apiClient.get<any>('/surveillance/heat-map-data/', { params }).then(res => res?.data || res || []),
     
     getDiseaseStats: (params?: any): Promise<DiseaseStats[]> => 
-      apiClient.get('/surveillance/disease-statistics/', { params }),
+      apiClient.get<any>('/surveillance/disease-statistics/', { params }).then(res => res?.statistics || res || []),
     
     getRegionalComparison: (params?: any) => 
       apiClient.get('/surveillance/regional-comparison/', { params }),
@@ -344,10 +344,35 @@ export const api = {
 
     // ML Model endpoints
     getMLModels: (): Promise<MLModelInfo[]> =>
-      apiClient.get('/surveillance/ml-models/'),
+      apiClient.get<any>('/surveillance/ml-models/').then(res => {
+        // Transform object format to array format
+        if (res && !Array.isArray(res)) {
+          return Object.entries(res).map(([key, val]: [string, any]) => ({
+            name: val.name || key.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+            type: val.description || key,
+            version: val.version || '1.0',
+            path: val.artifacts?.model || '',
+            loaded: val.model_available ?? false,
+            features: val.features || [],
+            metrics: val.metrics || {},
+            metadata: val,
+          }));
+        }
+        return res || [];
+      }),
 
     getMLPipelineStatus: (): Promise<MLPipelineStatus> =>
-      apiClient.get('/surveillance/ml-pipeline-status/'),
+      apiClient.get<any>('/surveillance/ml-pipeline-status/').then(res => {
+        // Transform backend format {models: {name: bool}} to frontend format {models: {name: {loaded, path}}}
+        if (res?.models && typeof Object.values(res.models)[0] === 'boolean') {
+          const transformed: Record<string, { loaded: boolean; path: string; error?: string }> = {};
+          for (const [name, loaded] of Object.entries(res.models)) {
+            transformed[name] = { loaded: loaded as boolean, path: '', error: (loaded as boolean) ? undefined : 'Not loaded' };
+          }
+          return { ...res, overall_status: res.active_alerts > 0 ? 'warning' : 'healthy', models: transformed };
+        }
+        return res;
+      }),
 
     runMLPipeline: (diseaseCode: string): Promise<{ message: string; task_id: string; disease_code: string }> =>
       apiClient.post('/surveillance/run-ml-pipeline/', { disease_code: diseaseCode }),

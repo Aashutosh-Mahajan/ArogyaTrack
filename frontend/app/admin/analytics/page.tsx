@@ -66,10 +66,15 @@ function AnalyticsPage(): React.JSX.Element {
           <select value={selectedDisease} onChange={(e) => setSelectedDisease(e.target.value)}
             className="px-3 py-2 border rounded-lg text-sm">
             <option value="">All Diseases</option>
-            <option value="A09">Dengue</option>
-            <option value="A15">Tuberculosis</option>
-            <option value="A00">Cholera</option>
-            <option value="B01">Chickenpox</option>
+            <option value="A90">Dengue Fever</option>
+            <option value="U07.1">COVID-19</option>
+            <option value="B50.0">Malaria</option>
+            <option value="J18.9">Pneumonia</option>
+            <option value="J10.1">Influenza</option>
+            <option value="A09">Gastroenteritis</option>
+            <option value="B05">Measles</option>
+            <option value="I10">Hypertension</option>
+            <option value="E11">Type 2 Diabetes</option>
           </select>
         </div>
 

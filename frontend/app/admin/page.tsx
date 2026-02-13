@@ -35,6 +35,33 @@ import {
 } from 'react-icons/fi';
 import { LineChartComponent, BarChartComponent, ForecastChart } from '@/components/charts/Charts';
 
+// Reusable loading skeleton
+function LoadingSkeleton({ height = 'h-[300px]', rows }: { height?: string; rows?: number }) {
+  if (rows) {
+    return (
+      <div className="space-y-3 animate-pulse">
+        {Array.from({ length: rows }).map((_, i) => (
+          <div key={i} className="flex items-center justify-between p-3 bg-gray-100 rounded-lg">
+            <div className="space-y-2 flex-1">
+              <div className="h-4 bg-gray-200 rounded w-1/3" />
+              <div className="h-3 bg-gray-200 rounded w-1/4" />
+            </div>
+            <div className="h-6 bg-gray-200 rounded w-16" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div className={`${height} bg-gray-100 animate-pulse rounded-lg flex items-center justify-center`}>
+      <div className="flex flex-col items-center gap-2">
+        <FiRefreshCw className="h-6 w-6 text-gray-400 animate-spin" />
+        <span className="text-sm text-gray-400">Loading...</span>
+      </div>
+    </div>
+  );
+}
+
 // Dynamic import to avoid SSR issues with Leaflet
 const DynamicMap = dynamic(
   () => import('@/components/maps/DynamicMap').then((mod) => mod.DynamicMap),
@@ -61,15 +88,15 @@ function AdminDashboard(): React.JSX.Element {
   const [selectedRegion, setSelectedRegion] = useState('');
   const [mapZoom, setMapZoom] = useState(5);
   const [mapCenter, setMapCenter] = useState<[number, number]>([20.5937, 78.9629]);
-  const [pipelineDisease, setPipelineDisease] = useState('A09');
+  const [pipelineDisease, setPipelineDisease] = useState('A90');
 
   // Queries
-  const { data: dashboard, refetch: refetchDashboard } = useQuery<AdminDashboardData>({
+  const { data: dashboard, refetch: refetchDashboard, isLoading: isDashboardLoading } = useQuery<AdminDashboardData>({
     queryKey: ['admin-dashboard'],
     queryFn: () => api.surveillance.getDashboard(),
   });
 
-  const { data: heatMapData, refetch: refetchHeatMap } = useQuery<HeatMapData[]>({
+  const { data: heatMapData, refetch: refetchHeatMap, isLoading: isHeatMapLoading } = useQuery<HeatMapData[]>({
     queryKey: ['heat-map', selectedDisease, selectedRegion],
     queryFn: () => api.surveillance.getHeatMap({ 
       disease_code: selectedDisease || undefined,
@@ -77,37 +104,37 @@ function AdminDashboard(): React.JSX.Element {
     }),
   });
 
-  const { data: diseaseStats } = useQuery<DiseaseStats[]>({
+  const { data: diseaseStats, isLoading: isDiseaseStatsLoading } = useQuery<DiseaseStats[]>({
     queryKey: ['disease-stats'],
     queryFn: () => api.surveillance.getDiseaseStats(),
   });
 
-  const { data: alerts } = useQuery<PaginatedResponse<Alert>>({
+  const { data: alerts, isLoading: isAlertsLoading } = useQuery<PaginatedResponse<Alert>>({
     queryKey: ['alerts'],
     queryFn: () => api.surveillance.getAlerts({ status: 'active' }),
   });
 
-  const { data: clusters } = useQuery<PaginatedResponse<Cluster>>({
+  const { data: clusters, isLoading: isClustersLoading } = useQuery<PaginatedResponse<Cluster>>({
     queryKey: ['clusters'],
     queryFn: () => api.surveillance.getClusters({ is_active: true }),
   });
 
-  const { data: forecasts } = useQuery<PaginatedResponse<Forecast>>({
+  const { data: forecasts, isLoading: isForecastsLoading } = useQuery<PaginatedResponse<Forecast>>({
     queryKey: ['forecasts'],
     queryFn: () => api.surveillance.getForecasts(),
   });
 
-  const { data: anomalies } = useQuery<PaginatedResponse<Anomaly>>({
+  const { data: anomalies, isLoading: isAnomaliesLoading } = useQuery<PaginatedResponse<Anomaly>>({
     queryKey: ['anomalies'],
     queryFn: () => api.surveillance.getAnomalies({ is_resolved: false }),
   });
 
-  const { data: riskScores } = useQuery<PaginatedResponse<RiskScore>>({
+  const { data: riskScores, isLoading: isRiskScoresLoading } = useQuery<PaginatedResponse<RiskScore>>({
     queryKey: ['risk-scores'],
     queryFn: () => api.surveillance.getRiskScores({ ordering: '-risk_level' }),
   });
 
-  const { data: pipelineStatus } = useQuery<MLPipelineStatus>({
+  const { data: pipelineStatus, isLoading: isPipelineLoading } = useQuery<MLPipelineStatus>({
     queryKey: ['ml-pipeline-status'],
     queryFn: () => api.surveillance.getMLPipelineStatus(),
     refetchInterval: 30000,
@@ -216,7 +243,22 @@ function AdminDashboard(): React.JSX.Element {
 
         {/* Stats Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {stats.map((stat, index) => (
+          {isDashboardLoading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i} className="card-hover">
+                <CardContent className="p-4 animate-pulse">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2 flex-1">
+                      <div className="h-3 bg-gray-200 rounded w-20" />
+                      <div className="h-7 bg-gray-200 rounded w-16" />
+                    </div>
+                    <div className="h-9 w-9 bg-gray-200 rounded-lg" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            stats.map((stat, index) => (
             <Card key={index} className="card-hover">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -237,7 +279,8 @@ function AdminDashboard(): React.JSX.Element {
                 </div>
               </CardContent>
             </Card>
-          ))}
+          ))
+          )}
         </div>
 
         {/* ML Pipeline Status */}
@@ -259,10 +302,14 @@ function AdminDashboard(): React.JSX.Element {
                   onChange={(e) => setPipelineDisease(e.target.value)}
                   className="px-3 py-2 border rounded-lg text-sm"
                 >
-                  <option value="A09">Dengue (A09)</option>
-                  <option value="A15">Tuberculosis (A15)</option>
-                  <option value="A00">Cholera (A00)</option>
-                  <option value="B01">Chickenpox (B01)</option>
+                  <option value="A90">Dengue (A90)</option>
+                  <option value="U07.1">COVID-19 (U07.1)</option>
+                  <option value="B50.0">Malaria (B50.0)</option>
+                  <option value="J18.9">Pneumonia (J18.9)</option>
+                  <option value="J10.1">Influenza (J10.1)</option>
+                  <option value="A09">Gastroenteritis (A09)</option>
+                  <option value="B05">Measles (B05)</option>
+                  <option value="I10">Hypertension (I10)</option>
                 </select>
                 <Button
                   onClick={() => runPipelineMutation.mutate(pipelineDisease)}
@@ -281,7 +328,18 @@ function AdminDashboard(): React.JSX.Element {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {pipelineStatus?.models && Object.entries(pipelineStatus.models).map(([name, info]) => (
+              {isPipelineLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg animate-pulse">
+                    <div className="w-3 h-3 rounded-full bg-gray-300" />
+                    <div className="space-y-1 flex-1">
+                      <div className="h-4 bg-gray-200 rounded w-24" />
+                      <div className="h-3 bg-gray-200 rounded w-16" />
+                    </div>
+                  </div>
+                ))
+              ) : pipelineStatus?.models ? (
+                Object.entries(pipelineStatus.models).map(([name, info]) => (
                 <div key={name} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <div className={`w-3 h-3 rounded-full ${info.loaded ? 'bg-green-500' : 'bg-red-500'}`} />
                   <div>
@@ -289,8 +347,7 @@ function AdminDashboard(): React.JSX.Element {
                     <p className="text-xs text-gray-500">{info.loaded ? 'Loaded' : info.error || 'Not loaded'}</p>
                   </div>
                 </div>
-              ))}
-              {!pipelineStatus?.models && (
+              ))) : (
                 <div className="col-span-4 text-center py-4 text-gray-500 text-sm">
                   Pipeline status unavailable — check backend connection
                 </div>
@@ -371,10 +428,15 @@ function AdminDashboard(): React.JSX.Element {
                   className="px-3 py-2 border rounded-lg text-sm"
                 >
                   <option value="">All Diseases</option>
-                  <option value="A09">Dengue</option>
-                  <option value="A15">Tuberculosis</option>
-                  <option value="A00">Cholera</option>
-                  <option value="B01">Chickenpox</option>
+                  <option value="A90">Dengue Fever</option>
+                  <option value="U07.1">COVID-19</option>
+                  <option value="B50.0">Malaria</option>
+                  <option value="J18.9">Pneumonia</option>
+                  <option value="J10.1">Influenza</option>
+                  <option value="A09">Gastroenteritis</option>
+                  <option value="B05">Measles</option>
+                  <option value="I10">Hypertension</option>
+                  <option value="E11">Type 2 Diabetes</option>
                 </select>
                 {(selectedRegion || selectedDisease) && (
                   <Button size="sm" variant="outline" onClick={resetMap}>
@@ -385,7 +447,9 @@ function AdminDashboard(): React.JSX.Element {
             </div>
           </CardHeader>
           <CardContent>
-            {heatMapData && heatMapData.length > 0 ? (
+            {isHeatMapLoading ? (
+              <LoadingSkeleton height="h-[600px]" />
+            ) : heatMapData && heatMapData.length > 0 ? (
               <DynamicMap 
                 data={heatMapData} 
                 center={mapCenter}
@@ -410,7 +474,9 @@ function AdminDashboard(): React.JSX.Element {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {diseaseStats && diseaseStats.length > 0 ? (
+              {isDiseaseStatsLoading ? (
+                <LoadingSkeleton height="h-[300px]" />
+              ) : diseaseStats && diseaseStats.length > 0 ? (
                 <BarChartComponent
                   data={diseaseStats.map((d) => ({
                     name: d.disease_name?.substring(0, 15) || 'Unknown',
@@ -438,7 +504,9 @@ function AdminDashboard(): React.JSX.Element {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {forecasts?.results && forecasts.results.length > 0 ? (
+              {isForecastsLoading ? (
+                <LoadingSkeleton height="h-[350px]" />
+              ) : forecasts?.results && forecasts.results.length > 0 ? (
                 <ForecastChart
                   data={forecasts.results.slice(0, 7).map((f) => ({
                     date: new Date(f.prediction_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
@@ -469,7 +537,9 @@ function AdminDashboard(): React.JSX.Element {
               <CardDescription>Detected by Isolation Forest model</CardDescription>
             </CardHeader>
             <CardContent>
-              {anomalies?.results && anomalies.results.length > 0 ? (
+              {isAnomaliesLoading ? (
+                <LoadingSkeleton rows={4} />
+              ) : anomalies?.results && anomalies.results.length > 0 ? (
                 <div className="space-y-3 max-h-[400px] overflow-y-auto">
                   {anomalies.results.slice(0, 8).map((anomaly) => (
                     <div key={anomaly.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
@@ -508,7 +578,9 @@ function AdminDashboard(): React.JSX.Element {
               <CardDescription>Computed by XGBoost outbreak classifier</CardDescription>
             </CardHeader>
             <CardContent>
-              {riskScores?.results && riskScores.results.length > 0 ? (
+              {isRiskScoresLoading ? (
+                <LoadingSkeleton rows={4} />
+              ) : riskScores?.results && riskScores.results.length > 0 ? (
                 <div className="space-y-3 max-h-[400px] overflow-y-auto">
                   {riskScores.results.slice(0, 8).map((score) => (
                     <div key={score.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">

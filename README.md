@@ -1427,7 +1427,24 @@ This will:
 - Seed medicines database
 - Create superuser account
 
-**5. Start Services**
+**5. Load Demo Data (Optional - Recommended for Testing)**
+```bash
+python manage.py seed_demo_data --clear
+```
+
+This will populate the database with demo data from the ML models dataset:
+- ✅ **50 regions** from ML dataset (realistic Indian locations)
+- ✅ **3 months** of surveillance data (~837 records)
+- ✅ **16 demo users** (admin, doctors, patients)
+- ✅ **12 patient profiles** with medical records
+- ✅ **11 disease clusters** for visualization
+- ✅ **Demo login:** admin@demo.com / demo123
+
+See [DEMO_DATA_SETUP.md](backend/DEMO_DATA_SETUP.md) for detailed documentation.
+
+**Note:** This loads only a SUBSET of data for demo purposes, not the entire ML dataset.
+
+**6. Start Services**
 
 Terminal 1 - Django:
 ```bash

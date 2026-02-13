@@ -16,7 +16,7 @@ function ForecastsPage(): React.JSX.Element {
   const queryClient = useQueryClient();
   const [selectedDisease, setSelectedDisease] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('');
-  const [pipelineDisease, setPipelineDisease] = useState('A09');
+  const [pipelineDisease, setPipelineDisease] = useState('A90');
 
   const { data: regions } = useQuery<PaginatedResponse<Region>>({
     queryKey: ['regions'],
@@ -63,10 +63,12 @@ function ForecastsPage(): React.JSX.Element {
           <div className="flex items-center gap-3">
             <select value={pipelineDisease} onChange={(e) => setPipelineDisease(e.target.value)}
               className="px-3 py-2 border rounded-lg text-sm">
-              <option value="A09">Dengue (A09)</option>
-              <option value="A15">Tuberculosis (A15)</option>
-              <option value="A00">Cholera (A00)</option>
-              <option value="B01">Chickenpox (B01)</option>
+              <option value="A90">Dengue (A90)</option>
+              <option value="U07.1">COVID-19 (U07.1)</option>
+              <option value="B50.0">Malaria (B50.0)</option>
+              <option value="J18.9">Pneumonia (J18.9)</option>
+              <option value="J10.1">Influenza (J10.1)</option>
+              <option value="A09">Gastroenteritis (A09)</option>
             </select>
             <Button size="sm"
               onClick={() => runPipelineMutation.mutate(pipelineDisease)}
@@ -88,10 +90,13 @@ function ForecastsPage(): React.JSX.Element {
               <select value={selectedDisease} onChange={(e) => setSelectedDisease(e.target.value)}
                 className="px-3 py-2 border rounded-lg text-sm">
                 <option value="">All Diseases</option>
-                <option value="A09">Dengue</option>
-                <option value="A15">Tuberculosis</option>
-                <option value="A00">Cholera</option>
-                <option value="B01">Chickenpox</option>
+                <option value="A90">Dengue Fever</option>
+                <option value="U07.1">COVID-19</option>
+                <option value="B50.0">Malaria</option>
+                <option value="J18.9">Pneumonia</option>
+                <option value="J10.1">Influenza</option>
+                <option value="A09">Gastroenteritis</option>
+                <option value="B05">Measles</option>
               </select>
               <select value={selectedRegion} onChange={(e) => setSelectedRegion(e.target.value)}
                 className="px-3 py-2 border rounded-lg text-sm">
