@@ -3,6 +3,7 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.permissions import IsApprovedDoctor, IsDoctorOrAdmin, IsDoctorVerified
 from patients.models import HealthCard, Profile
 
 from .models import Allergy, ChronicCondition, HealthCardValidator, MedicalRecord
@@ -14,12 +15,8 @@ from .serializers import (
 )
 
 
-def require_doctor(user):
-    return user.role in (user.Role.DOCTOR, user.Role.ADMIN)
-
-
 class DoctorScanHealthCardView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsApprovedDoctor]
 
     def post(self, request):
         token = request.data.get("token")
@@ -65,11 +62,9 @@ class DoctorScanHealthCardView(APIView):
 
 
 class CreateMedicalRecordView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsDoctorOrAdmin]
 
     def post(self, request):
-        if not require_doctor(request.user):
-            return Response({"detail": "Doctor role required"}, status=status.HTTP_403_FORBIDDEN)
         serializer = MedicalRecordSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         record = serializer.save()
@@ -77,11 +72,9 @@ class CreateMedicalRecordView(APIView):
 
 
 class AllergyCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsDoctorOrAdmin]
 
     def post(self, request, profile_id):
-        if not require_doctor(request.user):
-            return Response({"detail": "Doctor role required"}, status=status.HTTP_403_FORBIDDEN)
         profile = get_object_or_404(Profile, id=profile_id)
         serializer = AllergySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -90,11 +83,9 @@ class AllergyCreateView(APIView):
 
 
 class ChronicConditionCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsDoctorOrAdmin]
 
     def post(self, request, profile_id):
-        if not require_doctor(request.user):
-            return Response({"detail": "Doctor role required"}, status=status.HTTP_403_FORBIDDEN)
         profile = get_object_or_404(Profile, id=profile_id)
         serializer = ChronicConditionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -103,11 +94,9 @@ class ChronicConditionCreateView(APIView):
 
 
 class PatientHistoryView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsDoctorOrAdmin]
 
     def get(self, request, profile_id):
-        if not require_doctor(request.user):
-            return Response({"detail": "Doctor role required"}, status=status.HTTP_403_FORBIDDEN)
         profile = get_object_or_404(Profile, id=profile_id)
 
         # Check if doctor has access

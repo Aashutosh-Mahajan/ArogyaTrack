@@ -48,8 +48,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Role(models.TextChoices):
         PATIENT = "patient", "Patient"
         DOCTOR = "doctor", "Doctor"
-        PHARMACIST = "pharmacist", "Pharmacist"
-        AUTHORITY = "authority", "Authority"
         ADMIN = "admin", "Admin"
 
     email = models.EmailField(unique=True)
@@ -77,8 +75,67 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self) -> str:  # pragma: no cover - simple display
         return self.email
 
+    # ── Role helper properties ──────────────────────────────────────
+
+    @property
+    def is_doctor(self) -> bool:
+        return self.role == self.Role.DOCTOR
+
+    @property
+    def is_patient(self) -> bool:
+        return self.role == self.Role.PATIENT
+
+    @property
+    def is_admin(self) -> bool:
+        return self.role == self.Role.ADMIN
+
+    @property
+    def is_approved_doctor(self) -> bool:
+        """True only when the doctor's profile has been approved by admin."""
+        if not self.is_doctor:
+            return False
+        profile = getattr(self, "doctor_profile", None)
+        if profile is None:
+            try:
+                profile = DoctorProfile.objects.get(user=self)
+            except DoctorProfile.DoesNotExist:
+                return False
+        return profile.approval_status == DoctorProfile.ApprovalStatus.APPROVED
+
     class Meta:
         ordering = ["-date_joined"]
+
+
+class DoctorProfile(models.Model):
+    """Extended profile for doctors. Kept separate from User."""
+
+    class ApprovalStatus(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctor_profile")
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    medical_license = models.CharField(max_length=50, unique=True)
+    specialization = models.CharField(max_length=100)
+    phone = models.CharField(max_length=20, blank=True)
+    approval_status = models.CharField(
+        max_length=16, choices=ApprovalStatus.choices, default=ApprovalStatus.PENDING
+    )
+    approved_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="approved_doctors"
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"Dr. {self.first_name} {self.last_name} ({self.approval_status})"
 
 
 class OTP(models.Model):

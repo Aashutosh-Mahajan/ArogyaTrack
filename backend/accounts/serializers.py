@@ -6,9 +6,17 @@ from django.contrib.auth import get_user_model, authenticate
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import SessionService, OTPService
+from .models import DoctorProfile, SessionService, OTPService
 
 User = get_user_model()
+
+
+def _assign_group(user, role_name: str) -> None:
+    """Add user to the Django Group matching their role. Idempotent."""
+    from django.contrib.auth.models import Group
+
+    group, _ = Group.objects.get_or_create(name=role_name)
+    user.groups.add(group)
 
 
 class SendOTPSerializer(serializers.Serializer):
@@ -101,18 +109,37 @@ class DoctorRegistrationSerializer(serializers.Serializer):
     def create(self, validated_data):
         password = validated_data.pop('password')
         email = validated_data['email']
-        
+        first_name = validated_data['first_name']
+        last_name = validated_data['last_name']
+        medical_license = validated_data['medical_license']
+        specialization = validated_data['specialization']
+        phone = validated_data.get('phone', '')
+
         user = User.objects.create(
             email=email,
             role=User.Role.DOCTOR,
-            verification_status=User.VerificationStatus.PENDING
+            verification_status=User.VerificationStatus.PENDING,
         )
         user.set_password(password)
         user.save()
-        
-        # Send OTP for verification
+
+        # Assign to Doctor group
+        _assign_group(user, 'Doctor')
+
+        # Create DoctorProfile with pending approval
+        DoctorProfile.objects.create(
+            user=user,
+            first_name=first_name,
+            last_name=last_name,
+            medical_license=medical_license,
+            specialization=specialization,
+            phone=phone,
+            approval_status=DoctorProfile.ApprovalStatus.PENDING,
+        )
+
+        # Send OTP for email verification
         OTPService.issue_otp(user)
-        
+
         return user
 
 
@@ -172,10 +199,13 @@ class PatientRegistrationSerializer(serializers.Serializer):
         )
         user.active_profile = profile
         user.save(update_fields=['active_profile'])
-        
-        # Send OTP for verification
+
+        # Assign to Patient group
+        _assign_group(user, 'Patient')
+
+        # Send OTP for email verification
         OTPService.issue_otp(user)
-        
+
         return user
 
 
@@ -234,44 +264,6 @@ class PasswordLoginSerializer(serializers.Serializer):
             "expires_in": int(refresh.access_token.lifetime.total_seconds()),
             "refresh_expires_in": int(refresh.lifetime.total_seconds()),
         }
-
-
-class PharmacyRegistrationSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(min_length=8, write_only=True)
-    first_name = serializers.CharField(max_length=100)
-    last_name = serializers.CharField(max_length=100)
-    pharmacy_name = serializers.CharField(max_length=200)
-    license_number = serializers.CharField(max_length=50)
-    phone = serializers.CharField(max_length=20)
-    address = serializers.CharField()
-
-    def validate_email(self, value):
-        value = value.lower()
-        existing = User.objects.filter(email=value).first()
-        if existing:
-            if existing.verification_status == User.VerificationStatus.VERIFIED:
-                raise serializers.ValidationError("Email already registered")
-            # Remove unverified user so they can re-register
-            existing.delete()
-        return value
-
-    def create(self, validated_data):
-        password = validated_data.pop('password')
-        email = validated_data['email']
-
-        user = User.objects.create(
-            email=email,
-            role=User.Role.PHARMACIST,
-            verification_status=User.VerificationStatus.PENDING,
-        )
-        user.set_password(password)
-        user.save()
-
-        # Send OTP for verification
-        OTPService.issue_otp(user, purpose="verification")
-
-        return user
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
@@ -346,3 +338,49 @@ class EmailVerificationSerializer(serializers.Serializer):
         user.save(update_fields=['verification_status'])
         
         return {"detail": "Email verified successfully"}
+
+
+# ─── Admin serializers ──────────────────────────────────────────────
+
+
+class DoctorProfileSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email", read_only=True)
+
+    class Meta:
+        model = DoctorProfile
+        fields = [
+            "id", "email", "first_name", "last_name",
+            "medical_license", "specialization", "phone",
+            "approval_status", "approved_by", "approved_at",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = fields
+
+
+class DoctorApprovalSerializer(serializers.Serializer):
+    action = serializers.ChoiceField(choices=["approve", "reject"])
+
+    def update(self, doctor_profile, validated_data):
+        from django.utils import timezone as tz
+        action = validated_data["action"]
+        admin_user = self.context["request"].user
+        if action == "approve":
+            doctor_profile.approval_status = DoctorProfile.ApprovalStatus.APPROVED
+        else:
+            doctor_profile.approval_status = DoctorProfile.ApprovalStatus.REJECTED
+        doctor_profile.approved_by = admin_user
+        doctor_profile.approved_at = tz.now()
+        doctor_profile.save(update_fields=[
+            "approval_status", "approved_by", "approved_at", "updated_at",
+        ])
+        return doctor_profile
+
+
+class UserListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "id", "email", "role", "verification_status",
+            "is_active", "is_staff", "date_joined",
+        ]
+        read_only_fields = fields
