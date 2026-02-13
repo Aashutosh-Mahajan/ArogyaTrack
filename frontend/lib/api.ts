@@ -226,6 +226,12 @@ export const api = {
     generateHealthCard: () => apiClient.post('/patients/health-card/'),
     getEmergencyContacts: () => apiClient.get('/patients/emergency-contacts/'),
     addEmergencyContact: (data: any) => apiClient.post('/patients/emergency-contacts/', data),
+    // Secure Digital Patient Card
+    getPatientCard: () => apiClient.get('/patients/my-card/'),
+    downloadPatientCardPDF: () =>
+      apiClient.get('/patients/my-card/pdf/', { responseType: 'blob' as any }),
+    getQRImage: () =>
+      apiClient.get('/patients/my-card/qr-image/', { responseType: 'blob' as any }),
   },
 
   // Medical Records (backend mounts medical app at /api/doctors/)
@@ -239,6 +245,7 @@ export const api = {
     getChronicConditions: (): Promise<ChronicCondition[]> => 
       apiClient.get('/doctors/my-conditions/'),
     scanQR: (token: string) => apiClient.post('/doctors/scan-health-card/', { token }),
+    scanPatientQR: (signedToken: string) => apiClient.get(`/patients/qr/${signedToken}/`),
     createRecord: (data: any) => apiClient.post('/doctors/medical-records/', data),
     addDiagnosis: (recordId: number, data: any) => 
       apiClient.post(`/doctors/patients/${recordId}/conditions/`, data),

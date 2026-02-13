@@ -41,6 +41,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const patientLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: FiHome },
+    { href: '/dashboard/patient-card', label: 'Patient Card', icon: FiUser },
     { href: '/dashboard/profile', label: 'My Profile', icon: FiUser },
     { href: '/dashboard/medical-records', label: 'Medical Records', icon: FiActivity },
     { href: '/dashboard/prescriptions', label: 'Prescriptions', icon: FiFileText },

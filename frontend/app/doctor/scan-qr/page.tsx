@@ -20,6 +20,15 @@ function ScanQRPage() {
   const [patientData, setPatientData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Auto-scan if redirected from QR landing page
+  React.useEffect(() => {
+    const storedToken = sessionStorage.getItem('qr_scan_token');
+    if (storedToken) {
+      sessionStorage.removeItem('qr_scan_token');
+      handleScan(storedToken);
+    }
+  }, []);
+
   const startScanning = () => {
     setIsScanning(true);
     const html5QrcodeScanner = new Html5QrcodeScanner(
@@ -54,15 +63,31 @@ function ScanQRPage() {
     }
   };
 
-  const handleScan = async (token: string) => {
+  const handleScan = async (scannedData: string) => {
     setIsLoading(true);
     try {
-      const data = await api.medical.scanQR(token);
+      // The QR code encodes a URL like: https://domain.com/patient/qr/<signed_token>/
+      // Extract the signed token from the URL, or use raw input as token
+      let signedToken = scannedData;
+      const qrUrlMatch = scannedData.match(/\/patient\/qr\/(.+?)\/?$/);
+      if (qrUrlMatch) {
+        signedToken = qrUrlMatch[1];
+      }
+
+      // Use the new secure QR scan endpoint
+      const data = await api.medical.scanPatientQR(signedToken);
       setPatientData(data);
       toast.success('Patient data loaded successfully');
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to scan QR code');
-      setPatientData(null);
+      // Fallback to legacy scan
+      try {
+        const data = await api.medical.scanQR(scannedData);
+        setPatientData(data);
+        toast.success('Patient data loaded successfully');
+      } catch (fallbackError: any) {
+        toast.error(fallbackError.response?.data?.detail || 'Failed to scan QR code');
+        setPatientData(null);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -164,7 +189,7 @@ function ScanQRPage() {
                     <div>
                       <p className="text-sm text-gray-600">Name</p>
                       <p className="font-medium">
-                        {patientData.profile.user.first_name} {patientData.profile.user.last_name}
+                        {patientData.patient?.name || `${patientData.profile?.user?.first_name || ''} ${patientData.profile?.user?.last_name || ''}`}
                       </p>
                     </div>
                   </div>
@@ -173,21 +198,37 @@ function ScanQRPage() {
                     <FiActivity className="h-5 w-5 text-red-600" />
                     <div>
                       <p className="text-sm text-gray-600">Blood Group</p>
-                      <p className="font-medium">{patientData.profile.blood_group}</p>
+                      <p className="font-medium">{patientData.patient?.blood_group || patientData.profile?.blood_group}</p>
                     </div>
                   </div>
 
                   <div className="p-3 bg-white rounded-lg">
-                    <p className="text-sm text-gray-600">Age</p>
-                    <p className="font-medium">
-                      {new Date().getFullYear() - new Date(patientData.profile.date_of_birth).getFullYear()} years
+                    <p className="text-sm text-gray-600">Patient ID</p>
+                    <p className="font-medium font-mono">
+                      {patientData.patient?.unique_patient_id || 'N/A'}
                     </p>
                   </div>
 
                   <div className="p-3 bg-white rounded-lg">
-                    <p className="text-sm text-gray-600">Gender</p>
+                    <p className="text-sm text-gray-600">Age / Gender</p>
                     <p className="font-medium">
-                      {patientData.profile.gender === 'M' ? 'Male' : patientData.profile.gender === 'F' ? 'Female' : 'Other'}
+                      {patientData.patient?.age || '—'} years • {patientData.patient?.gender || patientData.profile?.gender || '—'}
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-white rounded-lg">
+                    <p className="text-sm text-gray-600">Date of Birth</p>
+                    <p className="font-medium">
+                      {patientData.patient?.date_of_birth
+                        ? new Date(patientData.patient.date_of_birth).toLocaleDateString()
+                        : 'N/A'}
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-white rounded-lg">
+                    <p className="text-sm text-gray-600">District</p>
+                    <p className="font-medium">
+                      {patientData.patient?.district || 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -200,9 +241,9 @@ function ScanQRPage() {
                       <p className="font-semibold text-red-900">Allergies</p>
                     </div>
                     <div className="space-y-1">
-                      {patientData.allergies.map((allergy: any) => (
-                        <p key={allergy.id} className="text-sm text-red-800">
-                          • {allergy.allergen} ({allergy.severity})
+                      {patientData.allergies.map((allergy: any, idx: number) => (
+                        <p key={idx} className="text-sm text-red-800">
+                          • {allergy.allergen} — {allergy.reaction_type} (Severity: {allergy.severity})
                         </p>
                       ))}
                     </div>
@@ -214,10 +255,49 @@ function ScanQRPage() {
                   <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4">
                     <p className="font-semibold text-yellow-900 mb-2">Chronic Conditions</p>
                     <div className="space-y-1">
-                      {patientData.chronic_conditions.map((condition: any) => (
-                        <p key={condition.id} className="text-sm text-yellow-800">
-                          • {condition.condition_name} ({condition.status})
+                      {patientData.chronic_conditions.map((condition: any, idx: number) => (
+                        <p key={idx} className="text-sm text-yellow-800">
+                          • {condition.disease_name || condition.condition_name} ({condition.is_active ? 'Active' : 'Inactive'})
                         </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Medical Records */}
+                {patientData.medical_records && patientData.medical_records.length > 0 && (
+                  <div className="bg-white border rounded-lg p-4">
+                    <p className="font-semibold text-gray-900 mb-3">Recent Medical Records</p>
+                    <div className="space-y-3">
+                      {patientData.medical_records.slice(0, 5).map((record: any) => (
+                        <div key={record.id} className="border-l-4 border-blue-400 pl-3 py-1">
+                          <p className="text-sm font-medium text-gray-900">{record.symptoms || 'No symptoms recorded'}</p>
+                          {record.diagnoses && record.diagnoses.length > 0 && (
+                            <p className="text-xs text-gray-600 mt-1">
+                              Dx: {record.diagnoses.map((d: any) => d.disease_name).join(', ')}
+                            </p>
+                          )}
+                          <p className="text-xs text-gray-400 mt-1">
+                            {new Date(record.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Prescriptions */}
+                {patientData.prescriptions && patientData.prescriptions.length > 0 && (
+                  <div className="bg-white border rounded-lg p-4">
+                    <p className="font-semibold text-gray-900 mb-3">Recent Prescriptions</p>
+                    <div className="space-y-2">
+                      {patientData.prescriptions.slice(0, 5).map((rx: any) => (
+                        <div key={rx.id} className="flex justify-between items-center py-2 border-b last:border-0">
+                          <p className="text-sm font-mono">{rx.prescription_number}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(rx.issued_at).toLocaleDateString()}
+                          </p>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -225,18 +305,12 @@ function ScanQRPage() {
 
                 {/* Action Buttons */}
                 <div className="flex gap-3 pt-4">
-                  <Button 
-                    onClick={() => router.push(`/doctor/patients/${patientData.profile.id}`)}
-                    className="flex-1"
-                  >
-                    View Full Medical History
-                  </Button>
-                  <Button 
-                    onClick={() => router.push(`/doctor/patients/${patientData.profile.id}/new-record`)}
+                  <Button
+                    onClick={() => setPatientData(null)}
                     variant="outline"
                     className="flex-1"
                   >
-                    Add New Record
+                    Scan Another Patient
                   </Button>
                 </div>
               </div>

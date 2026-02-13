@@ -54,6 +54,57 @@ export interface HealthCard {
   is_active: boolean;
 }
 
+// Secure Digital Patient Card
+export interface PatientCard {
+  unique_patient_id: string;
+  name: string;
+  date_of_birth: string | null;
+  age: number;
+  blood_group: string;
+  district: string;
+  gender: string;
+  qr_code_url: string | null;
+}
+
+export interface PatientHistoryFromQR {
+  patient: {
+    unique_patient_id: string;
+    name: string;
+    date_of_birth: string | null;
+    blood_group: string;
+    district: string;
+    gender: string;
+    age: number;
+  };
+  medical_records: Array<{
+    id: string;
+    symptoms: string;
+    notes: string;
+    diagnoses: Array<{
+      icd_10_code: string;
+      disease_name: string;
+      severity: number;
+    }>;
+    created_at: string;
+  }>;
+  allergies: Array<{
+    allergen: string;
+    reaction_type: string;
+    severity: number;
+  }>;
+  chronic_conditions: Array<{
+    icd_10_code: string;
+    disease_name: string;
+    is_active: boolean;
+  }>;
+  prescriptions: Array<{
+    id: string;
+    prescription_number: string;
+    issued_at: string;
+    items: Array<{ medicine_name: string }>;
+  }>;
+}
+
 export interface EmergencyContact {
   id: number;
   profile: number;
