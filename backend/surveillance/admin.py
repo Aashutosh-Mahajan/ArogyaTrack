@@ -7,7 +7,7 @@ from .models import (
 
 @admin.register(Region)
 class RegionAdmin(admin.ModelAdmin):
-    list_display = ['name', 'district', 'state', 'population', 'created_at']
+    list_display = ['name', 'district', 'state', 'population', 'hospital_count', 'sanitation_index', 'created_at']
     list_filter = ['state', 'district']
     search_fields = ['name', 'district', 'state']
 

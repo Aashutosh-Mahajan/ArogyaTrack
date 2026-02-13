@@ -173,108 +173,180 @@ export interface DoseSchedule {
 
 // Surveillance Types
 export interface Region {
-  id: number;
+  id: string; // UUID
   name: string;
-  region_type: 'city' | 'district' | 'state' | 'country';
-  parent_region?: number;
-  population?: number;
+  district: string;
+  state: string;
+  country: string;
   latitude: number;
   longitude: number;
+  population: number;
+  hospital_count: number;
+  sanitation_index: number;
+  created_at: string;
 }
 
 export interface SurveillanceData {
-  id: number;
-  region: Region;
+  id: string;
+  date: string;
+  region: string; // UUID FK
+  region_name: string;
+  region_details: Region;
   disease_code: string;
   disease_name: string;
-  date: string;
   case_count: number;
+  average_severity: number;
   cases_per_100k: number;
   created_at: string;
 }
 
-export interface Cluster {
-  id: number;
-  disease_code: string;
-  disease_name: string;
-  cluster_label: number;
-  center_latitude: number;
-  center_longitude: number;
-  radius_km: number;
-  total_cases: number;
-  severity_score: number;
-  detected_at: string;
-  is_active: boolean;
-  regions: ClusterRegion[];
-}
-
 export interface ClusterRegion {
-  id: number;
-  cluster: number;
-  region: Region;
+  region: string; // UUID FK
+  region_details: Region;
   case_count: number;
 }
 
+export interface Cluster {
+  id: string;
+  disease_code: string;
+  disease_name: string;
+  detection_date: string;
+  centroid_lat: number;
+  centroid_lon: number;
+  radius_km: number;
+  total_cases: number;
+  total_population: number;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  growth_rate: number | null;
+  is_active: boolean;
+  regions_data: ClusterRegion[];
+  affected_region_names: string[];
+  created_at: string;
+}
+
 export interface Forecast {
-  id: number;
-  region: Region;
+  id: string;
+  region: string;
+  region_details: Region;
   disease_code: string;
   disease_name: string;
   forecast_date: string;
+  prediction_date: string;
+  horizon_days: number;
   predicted_cases: number;
   lower_bound: number;
   upper_bound: number;
-  confidence_level: number;
-  model_name: string;
-  generated_at: string;
+  confidence: number;
+  created_at: string;
 }
 
 export interface Anomaly {
-  id: number;
-  region: Region;
+  id: string;
+  region: string;
+  region_details: Region;
   disease_code: string;
   disease_name: string;
-  date: string;
+  detection_date: string;
+  anomaly_score: number;
   actual_cases: number;
   expected_cases: number;
   deviation_percentage: number;
-  anomaly_score: number;
-  is_outbreak: boolean;
+  description: string;
   is_resolved: boolean;
-  detected_at: string;
+  created_at: string;
 }
 
 export interface RiskScore {
-  id: number;
-  region: Region;
+  id: string;
+  region: string;
+  region_details: Region;
   disease_code: string;
   disease_name: string;
-  risk_level: 'low' | 'medium' | 'high' | 'critical';
-  risk_score: number;
+  calculation_date: string;
+  risk_level: number; // 0=Low, 1=Medium, 2=High, 3=Critical
+  risk_level_display: string;
+  risk_probability: number;
   contributing_factors: Record<string, any>;
-  calculated_at: string;
+  created_at: string;
+}
+
+export interface EnvironmentalData {
+  id: string;
+  region: string;
+  region_details: Region;
+  date: string;
+  temperature: number | null;
+  humidity: number | null;
+  rainfall: number | null;
+  aqi: number | null;
+  pm25: number | null;
+  pm10: number | null;
+  water_quality_index: number | null;
+  created_at: string;
 }
 
 export interface Alert {
-  id: number;
-  region: Region;
+  id: string;
+  alert_type: string;
   disease_code: string;
   disease_name: string;
-  alert_type: 'outbreak' | 'cluster' | 'forecast' | 'anomaly' | 'environmental';
   severity: 'low' | 'medium' | 'high' | 'critical';
-  confidence_score: number;
+  severity_display: string;
+  status: 'active' | 'acknowledged' | 'resolved' | 'false_positive';
+  status_display: string;
+  confidence: number;
+  affected_regions_data: Region[];
   title: string;
   description: string;
-  recommendations: string;
-  is_active: boolean;
-  is_acknowledged: boolean;
-  acknowledged_by?: number;
-  acknowledged_at?: string;
-  created_at: string;
+  predicted_impact: string;
+  contributing_factors: Record<string, any>;
+  recommended_actions: string;
+  generated_at: string;
+  acknowledged_at: string | null;
+  acknowledged_by: number | null;
+  acknowledged_by_email: string | null;
+  resolved_at: string | null;
+  resolved_by: number | null;
+  resolved_by_email: string | null;
   escalation_level: number;
+  escalated_at: string | null;
+}
+
+export interface Notification {
+  id: string;
+  alert: string;
+  alert_details: Alert;
+  recipient: number;
+  recipient_email: string;
+  channel: 'email' | 'sms' | 'push' | 'dashboard';
+  channel_display: string;
+  status: 'pending' | 'sent' | 'failed' | 'delivered';
+  status_display: string;
+  sent_at: string | null;
+  delivered_at: string | null;
+  error_message: string;
+  created_at: string;
 }
 
 // Dashboard Types
+export interface AdminDashboardData {
+  date: string;
+  total_cases_today: number;
+  active_alerts: number;
+  critical_alerts: number;
+  high_risk_regions: number;
+  active_clusters: number;
+  monitored_regions: number;
+  top_diseases: TrendingDisease[];
+}
+
+export interface TrendingDisease {
+  disease_code: string;
+  disease_name: string;
+  total_cases: number;
+  growth_rate: number;
+}
+
 export interface DashboardStats {
   total_patients: number;
   total_prescriptions: number;
@@ -286,18 +358,42 @@ export interface DiseaseStats {
   disease_code: string;
   disease_name: string;
   total_cases: number;
-  trend: 'up' | 'down' | 'stable';
-  trend_percentage: number;
+  affected_regions: number;
+  growth_rate?: number;
+  average_severity: number;
 }
 
 export interface HeatMapData {
-  region_id: number;
+  region_id: string;
   region_name: string;
   latitude: number;
   longitude: number;
   case_count: number;
   cases_per_100k: number;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  average_severity: number;
+  risk_level: string;
+}
+
+// ML Model Types
+export interface MLModelInfo {
+  name: string;
+  type: string;
+  version: string;
+  path: string;
+  loaded: boolean;
+  features?: string[];
+  metrics?: Record<string, number>;
+  metadata?: Record<string, any>;
+}
+
+export interface MLPipelineStatus {
+  overall_status: string;
+  models: Record<string, {
+    loaded: boolean;
+    path: string;
+    error?: string;
+  }>;
+  last_run?: string;
 }
 
 // Chart Data Types

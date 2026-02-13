@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { withAuth } from '@/components/auth/withAuth';
@@ -15,7 +15,11 @@ import type {
   Alert, 
   Cluster, 
   Forecast, 
-  DiseaseStats 
+  DiseaseStats,
+  Anomaly,
+  RiskScore,
+  AdminDashboardData,
+  MLPipelineStatus,
 } from '@/types';
 import { 
   FiAlertTriangle, 
@@ -24,17 +28,12 @@ import {
   FiActivity,
   FiMapPin,
   FiBarChart2,
-  FiRefreshCw
+  FiRefreshCw,
+  FiCpu,
+  FiShield,
+  FiZap,
 } from 'react-icons/fi';
 import { LineChartComponent, BarChartComponent, ForecastChart } from '@/components/charts/Charts';
-
-// Dashboard response type
-interface AdminDashboardData {
-  total_cases: number;
-  monitored_regions: number;
-  active_outbreaks?: number;
-  total_alerts?: number;
-}
 
 // Dynamic import to avoid SSR issues with Leaflet
 const DynamicMap = dynamic(
@@ -42,12 +41,29 @@ const DynamicMap = dynamic(
   { ssr: false, loading: () => <div className="h-[600px] bg-gray-100 animate-pulse rounded-lg" /> }
 );
 
+const RISK_LEVEL_LABELS: Record<number, string> = {
+  0: 'Low',
+  1: 'Medium',
+  2: 'High',
+  3: 'Critical',
+};
+
+const RISK_LEVEL_COLORS: Record<number, string> = {
+  0: 'bg-green-100 text-green-800',
+  1: 'bg-yellow-100 text-yellow-800',
+  2: 'bg-orange-100 text-orange-800',
+  3: 'bg-red-100 text-red-800',
+};
+
 function AdminDashboard(): React.JSX.Element {
+  const queryClient = useQueryClient();
   const [selectedDisease, setSelectedDisease] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('');
   const [mapZoom, setMapZoom] = useState(5);
   const [mapCenter, setMapCenter] = useState<[number, number]>([20.5937, 78.9629]);
+  const [pipelineDisease, setPipelineDisease] = useState('A09');
 
+  // Queries
   const { data: dashboard, refetch: refetchDashboard } = useQuery<AdminDashboardData>({
     queryKey: ['admin-dashboard'],
     queryFn: () => api.surveillance.getDashboard(),
@@ -61,14 +77,14 @@ function AdminDashboard(): React.JSX.Element {
     }),
   });
 
-  const { data: diseaseStats } = useQuery<PaginatedResponse<DiseaseStats>>({
+  const { data: diseaseStats } = useQuery<DiseaseStats[]>({
     queryKey: ['disease-stats'],
     queryFn: () => api.surveillance.getDiseaseStats(),
   });
 
   const { data: alerts } = useQuery<PaginatedResponse<Alert>>({
     queryKey: ['alerts'],
-    queryFn: () => api.surveillance.getAlerts({ is_active: true }),
+    queryFn: () => api.surveillance.getAlerts({ status: 'active' }),
   });
 
   const { data: clusters } = useQuery<PaginatedResponse<Cluster>>({
@@ -81,38 +97,81 @@ function AdminDashboard(): React.JSX.Element {
     queryFn: () => api.surveillance.getForecasts(),
   });
 
+  const { data: anomalies } = useQuery<PaginatedResponse<Anomaly>>({
+    queryKey: ['anomalies'],
+    queryFn: () => api.surveillance.getAnomalies({ is_resolved: false }),
+  });
+
+  const { data: riskScores } = useQuery<PaginatedResponse<RiskScore>>({
+    queryKey: ['risk-scores'],
+    queryFn: () => api.surveillance.getRiskScores({ ordering: '-risk_level' }),
+  });
+
+  const { data: pipelineStatus } = useQuery<MLPipelineStatus>({
+    queryKey: ['ml-pipeline-status'],
+    queryFn: () => api.surveillance.getMLPipelineStatus(),
+    refetchInterval: 30000,
+  });
+
+  // Mutations
+  const runPipelineMutation = useMutation({
+    mutationFn: (diseaseCode: string) => api.surveillance.runMLPipeline(diseaseCode),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ml-pipeline-status'] });
+    },
+  });
+
+  const acknowledgeAlertMutation = useMutation({
+    mutationFn: (id: string) => api.surveillance.acknowledgeAlert(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] });
+    },
+  });
+
   const stats = [
     {
-      title: 'Total Cases',
-      value: dashboard?.total_cases?.toLocaleString() || '0',
+      title: 'Cases Today',
+      value: dashboard?.total_cases_today?.toLocaleString() || '0',
       icon: FiUsers,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
-      trend: '+12%',
     },
     {
       title: 'Active Alerts',
-      value: alerts?.count || 0,
+      value: dashboard?.active_alerts || 0,
       icon: FiAlertTriangle,
       color: 'text-red-600',
       bgColor: 'bg-red-100',
-      trend: '+5',
+      extra: dashboard?.critical_alerts ? `${dashboard.critical_alerts} critical` : undefined,
     },
     {
       title: 'Active Clusters',
-      value: clusters?.count || 0,
+      value: dashboard?.active_clusters || 0,
       icon: FiMapPin,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100',
-      trend: '+3',
     },
     {
       title: 'Monitored Regions',
-      value: dashboard?.monitored_regions || '0',
+      value: dashboard?.monitored_regions || 0,
       icon: FiActivity,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
-      trend: 'Stable',
+    },
+    {
+      title: 'High Risk Regions',
+      value: dashboard?.high_risk_regions || 0,
+      icon: FiShield,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-100',
+    },
+    {
+      title: 'Unresolved Anomalies',
+      value: anomalies?.count || 0,
+      icon: FiZap,
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-100',
     },
   ];
 
@@ -136,13 +195,17 @@ function AdminDashboard(): React.JSX.Element {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Surveillance Dashboard</h1>
             <p className="text-gray-600 mt-1">
-              Real-time disease monitoring and analytics
+              Real-time disease monitoring and ML analytics
             </p>
           </div>
           <Button 
             onClick={() => {
               refetchDashboard();
               refetchHeatMap();
+              queryClient.invalidateQueries({ queryKey: ['alerts'] });
+              queryClient.invalidateQueries({ queryKey: ['clusters'] });
+              queryClient.invalidateQueries({ queryKey: ['anomalies'] });
+              queryClient.invalidateQueries({ queryKey: ['risk-scores'] });
             }}
             variant="outline"
           >
@@ -152,24 +215,24 @@ function AdminDashboard(): React.JSX.Element {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {stats.map((stat, index) => (
             <Card key={index} className="card-hover">
-              <CardContent className="p-6">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className="text-xs font-medium text-gray-600">
                       {stat.title}
                     </p>
-                    <p className="text-2xl font-bold mt-2">
+                    <p className="text-2xl font-bold mt-1">
                       {stat.value}
                     </p>
-                    <p className="text-xs text-green-600 mt-1">
-                      {stat.trend}
-                    </p>
+                    {'extra' in stat && stat.extra && (
+                      <p className="text-xs text-red-600 mt-0.5">{stat.extra}</p>
+                    )}
                   </div>
-                  <div className={`${stat.bgColor} ${stat.color} p-3 rounded-lg`}>
-                    <stat.icon className="h-6 w-6" />
+                  <div className={`${stat.bgColor} ${stat.color} p-2 rounded-lg`}>
+                    <stat.icon className="h-5 w-5" />
                   </div>
                 </div>
               </CardContent>
@@ -177,18 +240,77 @@ function AdminDashboard(): React.JSX.Element {
           ))}
         </div>
 
+        {/* ML Pipeline Status */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center">
+                  <FiCpu className="mr-2" />
+                  ML Pipeline Control
+                </CardTitle>
+                <CardDescription>
+                  Monitor and trigger ML model pipeline runs
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-3">
+                <select
+                  value={pipelineDisease}
+                  onChange={(e) => setPipelineDisease(e.target.value)}
+                  className="px-3 py-2 border rounded-lg text-sm"
+                >
+                  <option value="A09">Dengue (A09)</option>
+                  <option value="A15">Tuberculosis (A15)</option>
+                  <option value="A00">Cholera (A00)</option>
+                  <option value="B01">Chickenpox (B01)</option>
+                </select>
+                <Button
+                  onClick={() => runPipelineMutation.mutate(pipelineDisease)}
+                  disabled={runPipelineMutation.isPending}
+                  size="sm"
+                >
+                  {runPipelineMutation.isPending ? (
+                    <FiRefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <FiZap className="mr-2 h-4 w-4" />
+                  )}
+                  Run Pipeline
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {pipelineStatus?.models && Object.entries(pipelineStatus.models).map(([name, info]) => (
+                <div key={name} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div className={`w-3 h-3 rounded-full ${info.loaded ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <div>
+                    <p className="text-sm font-medium capitalize">{name.replace(/_/g, ' ')}</p>
+                    <p className="text-xs text-gray-500">{info.loaded ? 'Loaded' : info.error || 'Not loaded'}</p>
+                  </div>
+                </div>
+              ))}
+              {!pipelineStatus?.models && (
+                <div className="col-span-4 text-center py-4 text-gray-500 text-sm">
+                  Pipeline status unavailable — check backend connection
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Active Alerts */}
         {alerts?.results && alerts.results.length > 0 && (
           <Card className="border-red-200 bg-red-50">
             <CardHeader>
               <CardTitle className="text-red-900 flex items-center">
                 <FiAlertTriangle className="mr-2" />
-                Active Alerts
+                Active Alerts ({alerts.count})
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {alerts.results.slice(0, 3).map((alert: any) => (
+                {alerts.results.slice(0, 5).map((alert) => (
                   <div 
                     key={alert.id}
                     className="flex items-start justify-between p-4 bg-white rounded-lg border border-red-200"
@@ -197,14 +319,29 @@ function AdminDashboard(): React.JSX.Element {
                       <div className="flex items-center space-x-2 mb-2">
                         <Badge variant="destructive">{alert.severity.toUpperCase()}</Badge>
                         <Badge variant="outline">{alert.alert_type}</Badge>
+                        {alert.confidence && (
+                          <span className="text-xs text-gray-500">
+                            {(alert.confidence * 100).toFixed(0)}% confidence
+                          </span>
+                        )}
                       </div>
                       <p className="font-semibold text-gray-900">{alert.title}</p>
                       <p className="text-sm text-gray-600 mt-1">{alert.description}</p>
-                      <p className="text-xs text-gray-500 mt-2">
-                        {alert.region.name} • {new Date(alert.created_at).toLocaleString()}
-                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        {alert.affected_regions_data?.map((r) => (
+                          <span key={r.id} className="text-xs bg-gray-100 px-2 py-0.5 rounded">{r.name}</span>
+                        ))}
+                        <span className="text-xs text-gray-500">
+                          {new Date(alert.generated_at).toLocaleString()}
+                        </span>
+                      </div>
                     </div>
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => acknowledgeAlertMutation.mutate(alert.id)}
+                      disabled={acknowledgeAlertMutation.isPending}
+                    >
                       Acknowledge
                     </Button>
                   </div>
@@ -262,22 +399,23 @@ function AdminDashboard(): React.JSX.Element {
           </CardContent>
         </Card>
 
-        {/* Charts Grid */}
+        {/* Charts + Risk Scores Grid */}
         <div className="grid gap-6 md:grid-cols-2">
           {/* Disease Trends */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
                 <FiTrendingUp className="mr-2" />
-                Disease Trends
+                Disease Statistics
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {diseaseStats?.results && diseaseStats.results.length > 0 ? (
+              {diseaseStats && diseaseStats.length > 0 ? (
                 <BarChartComponent
-                  data={diseaseStats.results.map((d) => ({
+                  data={diseaseStats.map((d) => ({
                     name: d.disease_name?.substring(0, 15) || 'Unknown',
                     cases: d.total_cases,
+                    severity: d.average_severity,
                   }))}
                   dataKey="cases"
                   xAxisKey="name"
@@ -285,29 +423,29 @@ function AdminDashboard(): React.JSX.Element {
                 />
               ) : (
                 <div className="h-[300px] flex items-center justify-center text-gray-500">
-                  No trend data available
+                  No disease data available
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Forecast Visualization */}
+          {/* Forecast */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
                 <FiBarChart2 className="mr-2" />
-                7-Day Forecast
+                Case Forecasts
               </CardTitle>
             </CardHeader>
             <CardContent>
               {forecasts?.results && forecasts.results.length > 0 ? (
                 <ForecastChart
                   data={forecasts.results.slice(0, 7).map((f) => ({
-                    date: new Date(f.forecast_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                    forecast: f.predicted_cases,
-                    lowerBound: f.lower_bound,
-                    upperBound: f.upper_bound,
-                    actual: 0, // actual_cases is not in the Forecast type
+                    date: new Date(f.prediction_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                    forecast: Math.round(f.predicted_cases),
+                    lowerBound: Math.round(f.lower_bound),
+                    upperBound: Math.round(f.upper_bound),
+                    actual: 0,
                   }))}
                 />
               ) : (
@@ -319,63 +457,209 @@ function AdminDashboard(): React.JSX.Element {
           </Card>
         </div>
 
-        {/* Regional Comparison */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Regional Comparison</CardTitle>
-            <CardDescription>
-              Cases per 100k population across major regions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {heatMapData && heatMapData.length > 0 ? (
-              <div className="space-y-3">
-                {heatMapData
-                  .sort((a, b) => b.cases_per_100k - a.cases_per_100k)
-                  .slice(0, 10)
-                  .map((region, index) => (
-                    <div 
-                      key={index}
-                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition cursor-pointer"
-                      onClick={() => handleRegionClick(region)}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <span className="text-lg font-bold text-gray-400">
-                          #{index + 1}
-                        </span>
-                        <div>
-                          <p className="font-medium text-gray-900">{region.region_name}</p>
-                          <p className="text-sm text-gray-600">
-                            {region.case_count} cases
-                          </p>
-                        </div>
+        {/* Anomalies + Risk Scores */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Recent Anomalies */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <FiZap className="mr-2" />
+                Recent Anomalies
+              </CardTitle>
+              <CardDescription>Detected by Isolation Forest model</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {anomalies?.results && anomalies.results.length > 0 ? (
+                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                  {anomalies.results.slice(0, 8).map((anomaly) => (
+                    <div key={anomaly.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                      <div>
+                        <p className="font-medium text-sm">{anomaly.disease_name}</p>
+                        <p className="text-xs text-gray-600">
+                          {anomaly.region_details?.name || 'Unknown Region'} • {anomaly.detection_date}
+                        </p>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="text-right">
-                          <p className="font-bold text-gray-900">
-                            {region.cases_per_100k.toFixed(2)}
-                          </p>
-                          <p className="text-xs text-gray-500">per 100k</p>
-                        </div>
-                        <Badge 
-                          variant={
-                            region.severity === 'critical' ? 'destructive' :
-                            region.severity === 'high' ? 'warning' : 'secondary'
-                          }
-                        >
-                          {region.severity}
-                        </Badge>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-red-600">
+                          +{anomaly.deviation_percentage.toFixed(1)}%
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {anomaly.actual_cases} actual / {anomaly.expected_cases.toFixed(0)} expected
+                        </p>
                       </div>
                     </div>
                   ))}
+                </div>
+              ) : (
+                <div className="h-[200px] flex items-center justify-center text-gray-500">
+                  No anomalies detected
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Risk Scores */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <FiShield className="mr-2" />
+                Regional Risk Scores
+              </CardTitle>
+              <CardDescription>Computed by XGBoost outbreak classifier</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {riskScores?.results && riskScores.results.length > 0 ? (
+                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                  {riskScores.results.slice(0, 8).map((score) => (
+                    <div key={score.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                      <div>
+                        <p className="font-medium text-sm">{score.region_details?.name || 'Unknown'}</p>
+                        <p className="text-xs text-gray-600">
+                          {score.disease_name} • {score.calculation_date}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-mono">
+                          {(score.risk_probability * 100).toFixed(1)}%
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${RISK_LEVEL_COLORS[score.risk_level] || 'bg-gray-100'}`}>
+                          {RISK_LEVEL_LABELS[score.risk_level] || score.risk_level_display}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-[200px] flex items-center justify-center text-gray-500">
+                  No risk scores available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Top Diseases + Regional Comparison */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Top Trending Diseases */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Trending Diseases</CardTitle>
+              <CardDescription>Week-over-week growth by disease</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {dashboard?.top_diseases && dashboard.top_diseases.length > 0 ? (
+                <div className="space-y-3">
+                  {dashboard.top_diseases.map((disease, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg border">
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-bold text-gray-400">#{idx + 1}</span>
+                        <div>
+                          <p className="font-medium text-sm">{disease.disease_name}</p>
+                          <p className="text-xs text-gray-500">{disease.disease_code}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold">{disease.total_cases.toLocaleString()}</p>
+                        <p className={`text-xs font-medium ${disease.growth_rate > 0 ? 'text-red-600' : disease.growth_rate < 0 ? 'text-green-600' : 'text-gray-500'}`}>
+                          {disease.growth_rate > 0 ? '+' : ''}{disease.growth_rate}%
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center py-8 text-gray-500">No trending data</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Regional Comparison */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Regional Comparison</CardTitle>
+              <CardDescription>Cases per 100k population by region</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {heatMapData && heatMapData.length > 0 ? (
+                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                  {heatMapData
+                    .sort((a, b) => b.cases_per_100k - a.cases_per_100k)
+                    .slice(0, 10)
+                    .map((region, index) => (
+                      <div 
+                        key={index}
+                        className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition cursor-pointer"
+                        onClick={() => handleRegionClick(region)}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <span className="text-lg font-bold text-gray-400">#{index + 1}</span>
+                          <div>
+                            <p className="font-medium text-sm">{region.region_name}</p>
+                            <p className="text-xs text-gray-600">{region.case_count} cases</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <div className="text-right">
+                            <p className="font-bold text-sm">{region.cases_per_100k.toFixed(2)}</p>
+                            <p className="text-xs text-gray-500">per 100k</p>
+                          </div>
+                          <Badge 
+                            variant={
+                              region.risk_level === 'critical' || region.risk_level === 'Critical' ? 'destructive' :
+                              region.risk_level === 'high' || region.risk_level === 'High' ? 'warning' : 'secondary'
+                            }
+                          >
+                            {region.risk_level}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <p className="text-center py-8 text-gray-500">No regional data available</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Active Clusters */}
+        {clusters?.results && clusters.results.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <FiMapPin className="mr-2" />
+                Active Clusters ({clusters.count})
+              </CardTitle>
+              <CardDescription>Detected by DBSCAN geo-clustering model</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {clusters.results.slice(0, 6).map((cluster) => (
+                  <div key={cluster.id} className="p-4 bg-gray-50 rounded-lg border">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-semibold text-sm">{cluster.disease_name}</p>
+                      <Badge variant={
+                        cluster.severity === 'critical' ? 'destructive' :
+                        cluster.severity === 'high' ? 'warning' : 'secondary'
+                      }>
+                        {cluster.severity}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      <p>Cases: <span className="font-medium">{cluster.total_cases}</span></p>
+                      <p>Radius: <span className="font-medium">{cluster.radius_km.toFixed(1)} km</span></p>
+                      <p>Population: <span className="font-medium">{cluster.total_population?.toLocaleString()}</span></p>
+                      <p>Detected: <span className="font-medium">{cluster.detection_date}</span></p>
+                      {cluster.affected_region_names && cluster.affected_region_names.length > 0 && (
+                        <p>Regions: <span className="font-medium">{cluster.affected_region_names.join(', ')}</span></p>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <p className="text-center py-8 text-gray-500">
-                No regional data available
-              </p>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );

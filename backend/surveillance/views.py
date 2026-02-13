@@ -20,8 +20,9 @@ from .serializers import (
 from .tasks import (
     run_clustering_analysis, generate_forecasts_for_region,
     detect_anomalies_for_region, calculate_risk_scores_for_region,
-    evaluate_and_generate_alerts
+    evaluate_and_generate_alerts, run_complete_ml_pipeline
 )
+from .services import MLModelInfoService
 from accounts.models import User
 
 
@@ -597,5 +598,63 @@ def dashboard_overview(request):
         'critical_alerts': critical_alerts,
         'high_risk_regions': high_risk_regions,
         'active_clusters': active_clusters,
+        'monitored_regions': Region.objects.count(),
         'top_diseases': trending
     })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthority])
+def ml_model_info(request):
+    """Get information about all deployed ML models."""
+    return Response(MLModelInfoService.get_all_models_info())
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthority])
+def ml_pipeline_status(request):
+    """Get ML pipeline health status."""
+    return Response(MLModelInfoService.get_pipeline_status())
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthority])
+def run_ml_pipeline(request):
+    """Trigger the complete ML pipeline for a disease."""
+    disease_code = request.data.get('disease_code')
+    if not disease_code:
+        return Response(
+            {'error': 'disease_code is required'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    task = run_complete_ml_pipeline.delay(disease_code)
+
+    return Response({
+        'message': 'ML pipeline started',
+        'task_id': task.id,
+        'disease_code': disease_code,
+    })
+
+
+class EnvironmentalDataViewSet(viewsets.ReadOnlyModelViewSet):
+    """Environmental data viewset."""
+    queryset = EnvironmentalData.objects.all()
+    serializer_class = EnvironmentalDataSerializer
+    permission_classes = [IsAuthority]
+
+    def get_queryset(self):
+        queryset = EnvironmentalData.objects.select_related('region')
+
+        region_id = self.request.query_params.get('region_id')
+        date_from = self.request.query_params.get('date_from')
+        date_to = self.request.query_params.get('date_to')
+
+        if region_id:
+            queryset = queryset.filter(region_id=region_id)
+        if date_from:
+            queryset = queryset.filter(date__gte=date_from)
+        if date_to:
+            queryset = queryset.filter(date__lte=date_to)
+
+        return queryset.order_by('-date')

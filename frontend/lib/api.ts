@@ -11,6 +11,10 @@ import type {
   Anomaly,
   RiskScore,
   Alert,
+  EnvironmentalData,
+  AdminDashboardData,
+  MLModelInfo,
+  MLPipelineStatus,
   Profile,
   MedicalRecord,
   Allergy,
@@ -265,17 +269,13 @@ export const api = {
 
   // Surveillance
   surveillance: {
-    getDashboard: (): Promise<{
-      total_cases: number;
-      monitored_regions: number;
-      active_outbreaks?: number;
-      total_alerts?: number;
-    }> => apiClient.get('/surveillance/dashboard-overview/'),
+    getDashboard: (): Promise<AdminDashboardData> => 
+      apiClient.get('/surveillance/dashboard-overview/'),
     
     getHeatMap: (params?: any): Promise<HeatMapData[]> => 
       apiClient.get('/surveillance/heat-map-data/', { params }),
     
-    getDiseaseStats: (params?: any): Promise<PaginatedResponse<DiseaseStats>> => 
+    getDiseaseStats: (params?: any): Promise<DiseaseStats[]> => 
       apiClient.get('/surveillance/disease-statistics/', { params }),
     
     getRegionalComparison: (params?: any) => 
@@ -301,12 +301,28 @@ export const api = {
     
     getAlerts: (params?: any): Promise<PaginatedResponse<Alert>> => 
       apiClient.get('/surveillance/alerts/', { params }),
+
+    getEnvironmentalData: (params?: any): Promise<PaginatedResponse<EnvironmentalData>> =>
+      apiClient.get('/surveillance/environmental-data/', { params }),
     
-    acknowledgeAlert: (id: number) => 
-      apiClient.post(`/surveillance/alerts/${id}/acknowledge/`),
+    acknowledgeAlert: (id: string, data?: any) => 
+      apiClient.post(`/surveillance/alerts/${id}/action/`, { action: 'acknowledge', ...data }),
     
-    resolveAlert: (id: number, data?: any) => 
-      apiClient.post(`/surveillance/alerts/${id}/resolve/`, data),
+    resolveAlert: (id: string, data?: any) => 
+      apiClient.post(`/surveillance/alerts/${id}/action/`, { action: 'resolve', ...data }),
+
+    escalateAlert: (id: string, data?: any) =>
+      apiClient.post(`/surveillance/alerts/${id}/action/`, { action: 'escalate', ...data }),
+
+    // ML Model endpoints
+    getMLModels: (): Promise<MLModelInfo[]> =>
+      apiClient.get('/surveillance/ml-models/'),
+
+    getMLPipelineStatus: (): Promise<MLPipelineStatus> =>
+      apiClient.get('/surveillance/ml-pipeline-status/'),
+
+    runMLPipeline: (diseaseCode: string): Promise<{ message: string; task_id: string; disease_code: string }> =>
+      apiClient.post('/surveillance/run-ml-pipeline/', { disease_code: diseaseCode }),
   },
 
   // Pharmacy

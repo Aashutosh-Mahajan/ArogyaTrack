@@ -17,7 +17,9 @@ class Command(BaseCommand):
                 'state': 'Maharashtra',
                 'latitude': 19.1357,
                 'longitude': 72.8262,
-                'population': 650000
+                'population': 650000,
+                'hospital_count': 12,
+                'sanitation_index': 6.5,
             },
             {
                 'name': 'Borivali',
@@ -25,7 +27,9 @@ class Command(BaseCommand):
                 'state': 'Maharashtra',
                 'latitude': 19.2304,
                 'longitude': 72.8569,
-                'population': 800000
+                'population': 800000,
+                'hospital_count': 8,
+                'sanitation_index': 5.8,
             },
             {
                 'name': 'Thane',
@@ -33,7 +37,9 @@ class Command(BaseCommand):
                 'state': 'Maharashtra',
                 'latitude': 19.2183,
                 'longitude': 72.9781,
-                'population': 1841488
+                'population': 1841488,
+                'hospital_count': 15,
+                'sanitation_index': 5.5,
             },
             {
                 'name': 'Pune City',
@@ -207,6 +213,8 @@ class Command(BaseCommand):
                     'latitude': region_data['latitude'],
                     'longitude': region_data['longitude'],
                     'population': region_data['population'],
+                    'hospital_count': region_data.get('hospital_count', 5),
+                    'sanitation_index': region_data.get('sanitation_index', 5.0),
                     'country': 'India'
                 }
             )

@@ -8,7 +8,11 @@ from .models import (
 class RegionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Region
-        fields = ['id', 'name', 'district', 'state', 'country', 'latitude', 'longitude', 'population', 'created_at']
+        fields = [
+            'id', 'name', 'district', 'state', 'country',
+            'latitude', 'longitude', 'population',
+            'hospital_count', 'sanitation_index', 'created_at'
+        ]
 
 
 class SurveillanceDataSerializer(serializers.ModelSerializer):
@@ -94,8 +98,8 @@ class EnvironmentalDataSerializer(serializers.ModelSerializer):
         model = EnvironmentalData
         fields = [
             'id', 'region', 'region_details', 'date',
-            'temperature', 'humidity', 'rainfall', 'aqi', 'pm25',
-            'water_quality_index', 'sanitation_index', 'created_at'
+            'temperature', 'humidity', 'rainfall', 'aqi', 'pm25', 'pm10',
+            'water_quality_index', 'created_at'
         ]
 
 

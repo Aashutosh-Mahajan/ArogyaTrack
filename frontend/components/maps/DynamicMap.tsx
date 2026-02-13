@@ -24,14 +24,18 @@ function MapController({ center, zoom }: { center: [number, number], zoom: numbe
 }
 
 export function DynamicMap({ data, center = [20.5937, 78.9629], zoom = 5 }: DynamicMapProps) {
-  const getSeverityColor = (severity: string) => {
+  const getSeverityColor = (level: string) => {
     const colors: Record<string, string> = {
       critical: '#dc2626',
+      Critical: '#dc2626',
       high: '#ea580c',
+      High: '#ea580c',
       medium: '#f59e0b',
+      Medium: '#f59e0b',
       low: '#3b82f6',
+      Low: '#3b82f6',
     };
-    return colors[severity] || colors.low;
+    return colors[level] || colors.low;
   };
 
   const getRadius = (casesper100k: number) => {
@@ -67,7 +71,7 @@ export function DynamicMap({ data, center = [20.5937, 78.9629], zoom = 5 }: Dyna
                 key={index}
                 center={[point.latitude, point.longitude]}
                 radius={getRadius(point.cases_per_100k)}
-                fillColor={getSeverityColor(point.severity)}
+                fillColor={getSeverityColor(point.risk_level)}
                 color="#fff"
                 weight={2}
                 opacity={0.8}
@@ -85,12 +89,12 @@ export function DynamicMap({ data, center = [20.5937, 78.9629], zoom = 5 }: Dyna
                         {point.cases_per_100k.toFixed(2)}
                       </p>
                       <p>
-                        <span className="font-medium">Severity:</span>{' '}
+                        <span className="font-medium">Risk Level:</span>{' '}
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-semibold text-white`}
-                          style={{ backgroundColor: getSeverityColor(point.severity) }}
+                          style={{ backgroundColor: getSeverityColor(point.risk_level) }}
                         >
-                          {point.severity.toUpperCase()}
+                          {point.risk_level.toUpperCase()}
                         </span>
                       </p>
                     </div>

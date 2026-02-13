@@ -14,6 +14,8 @@ class Region(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
     population = models.IntegerField()
+    hospital_count = models.IntegerField(default=0)
+    sanitation_index = models.FloatField(default=50.0)  # 0-100
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -195,8 +197,8 @@ class EnvironmentalData(models.Model):
     rainfall = models.FloatField(null=True, blank=True)  # mm
     aqi = models.IntegerField(null=True, blank=True)  # Air Quality Index
     pm25 = models.FloatField(null=True, blank=True)  # PM2.5
+    pm10 = models.FloatField(null=True, blank=True)  # PM10
     water_quality_index = models.FloatField(null=True, blank=True)  # 0-100
-    sanitation_index = models.FloatField(null=True, blank=True)  # 0-100
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
