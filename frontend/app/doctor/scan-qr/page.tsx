@@ -19,6 +19,7 @@ function ScanQRPage() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [manualToken, setManualToken] = useState('');
+  const [manualPatientId, setManualPatientId] = useState('');
   const [patientData, setPatientData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAddingPatient, setIsAddingPatient] = useState(false);
@@ -124,7 +125,7 @@ function ScanQRPage() {
     try {
       // The scanned data should be the JWT token directly from the QR code
       // Use the new patients API endpoint that verifies QR tokens
-      const response = await api.patients.scanPatientQR(scannedData);
+      const response = await api.patients.scanPatientQR({ token: scannedData });
       setPatientData(response);
       toast.success('Patient data loaded successfully');
     } catch (error: any) {
@@ -137,10 +138,35 @@ function ScanQRPage() {
     }
   };
 
-  const handleManualSubmit = (e: React.FormEvent) => {
+  const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (manualToken.trim()) {
-      handleScan(manualToken);
+      setIsLoading(true);
+      try {
+        const response = await api.patients.scanPatientQR({ token: manualToken });
+        setPatientData(response);
+        toast.success('Patient data loaded successfully');
+      } catch (error: any) {
+        toast.error(error.response?.data?.detail || 'Failed to access records');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handlePatientIdSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (manualPatientId.trim()) {
+      setIsLoading(true);
+      try {
+        const response = await api.patients.scanPatientQR({ patient_id: manualPatientId.trim() });
+        setPatientData(response);
+        toast.success('Patient found and records loaded');
+      } catch (error: any) {
+        toast.error(error.response?.data?.detail || 'Patient not found');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -246,24 +272,57 @@ function ScanQRPage() {
             <CardHeader>
               <CardTitle>Manual Entry</CardTitle>
               <CardDescription>
-                Or enter the token manually
+                Access records using Patient ID or Token
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleManualSubmit} className="space-y-4">
+            <CardContent className="space-y-6">
+              {/* Option 1: Patient ID */}
+              <form onSubmit={handlePatientIdSubmit} className="space-y-3">
+                <label className="text-sm font-medium text-gray-700">Universal Patient ID</label>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="e.g. HS-2026-4F6509"
+                    value={manualPatientId}
+                    onChange={(e) => setManualPatientId(e.target.value.toUpperCase())}
+                    className="font-mono text-sm"
+                  />
+                  <Button 
+                    type="submit" 
+                    disabled={!manualPatientId.trim() || isLoading}
+                    className="whitespace-nowrap bg-blue-600"
+                  >
+                    Find Patient
+                  </Button>
+                </div>
+              </form>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-gray-500">Or use token</span>
+                </div>
+              </div>
+
+              {/* Option 2: JWT Token */}
+              <form onSubmit={handleManualSubmit} className="space-y-3">
+                <label className="text-sm font-medium text-gray-700">Digital Token</label>
                 <Input
                   type="text"
-                  placeholder="Enter JWT token"
+                  placeholder="Paste long JWT token here"
                   value={manualToken}
                   onChange={(e) => setManualToken(e.target.value)}
                   className="font-mono text-sm"
                 />
                 <Button 
                   type="submit"
+                  variant="outline"
                   className="w-full"
                   disabled={!manualToken.trim() || isLoading}
                 >
-                  {isLoading ? 'Loading...' : 'Access Patient Records'}
+                  {isLoading ? 'Loading...' : 'Access via Token'}
                 </Button>
               </form>
             </CardContent>

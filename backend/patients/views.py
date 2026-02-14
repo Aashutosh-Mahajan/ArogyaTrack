@@ -207,9 +207,7 @@ class MyCardView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        short_id = str(profile.id).split("-")[-1].upper()[:6]
-        created_year = profile.created_at.year if hasattr(profile, 'created_at') and profile.created_at else 2026
-        unique_patient_id = f"HS-{created_year}-{short_id}"
+        unique_patient_id = profile.patient_id or "N/A"
 
         qr_code_url = None
         if card and card.qr_code_path:
@@ -309,9 +307,7 @@ class MyCardPDFView(APIView):
         if not profile or not card:
             return Response({"detail": "No health card found."}, status=status.HTTP_404_NOT_FOUND)
 
-        short_id = str(profile.id).split("-")[-1].upper()[:6]
-        created_year = profile.created_at.year if hasattr(profile, 'created_at') and profile.created_at else 2026
-        unique_patient_id = f"HS-{created_year}-{short_id}"
+        unique_patient_id = profile.patient_id or "N/A"
 
         try:
             from io import BytesIO
@@ -395,52 +391,56 @@ class ScanPatientQRView(APIView):
 
     def post(self, request):
         # Check authorization - only doctors and admins can scan
-        if request.user.role not in ['doctor', 'admin']:
+        if request.user.role not in ["doctor", "admin"]:
             return Response(
                 {"detail": "Only doctors and administrators can scan patient QR codes."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        token = request.data.get('token')
-        if not token:
+        token = request.data.get("token")
+        patient_id_input = request.data.get("patient_id")
+
+        if not token and not patient_id_input:
             return Response(
-                {"detail": "QR token is required."},
+                {"detail": "QR token or Patient ID is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        profile = None
         try:
-            # Decode the JWT token
-            import jwt
-            from django.conf import settings
-            
-            payload = jwt.decode(
-                token,
-                settings.SIMPLE_JWT.get("SIGNING_KEY"),
-                algorithms=[settings.SIMPLE_JWT.get("ALGORITHM", "HS256")]
-            )
-            
-            patient_id = payload.get('patient_id')
-            if not patient_id:
-                return Response(
-                    {"detail": "Invalid QR code format."},
-                    status=status.HTTP_400_BAD_REQUEST,
+            if patient_id_input:
+                # Lookup by the generated HS-YYYY-XXXXXX format
+                profile = Profile.objects.select_related("user", "health_card").get(patient_id=patient_id_input)
+            else:
+                # Decode the JWT token
+                import jwt
+                from django.conf import settings
+
+                payload = jwt.decode(
+                    token, settings.SIMPLE_JWT.get("SIGNING_KEY"), algorithms=[settings.SIMPLE_JWT.get("ALGORITHM", "HS256")]
                 )
 
-            # Get the profile and health card
-            profile = Profile.objects.select_related('user', 'health_card').get(id=patient_id)
+                patient_id = payload.get("patient_id")
+                if not patient_id:
+                    return Response(
+                        {"detail": "Invalid QR code format."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                # Get the profile and health card
+                profile = Profile.objects.select_related("user", "health_card").get(id=patient_id)
+
             card = profile.health_card
 
             # Check if card is still active
-            if not card.is_active():
+            if card and not card.is_active():
                 return Response(
                     {"detail": "This health card has expired or been revoked."},
                     status=status.HTTP_410_GONE,
                 )
 
             # Build patient information response
-            short_id = str(profile.id).split("-")[-1].upper()[:6]
-            created_year = profile.created_at.year if hasattr(profile, 'created_at') and profile.created_at else 2026
-            unique_patient_id = f"HS-{created_year}-{short_id}"
+            unique_patient_id = profile.patient_id or "N/A"
 
             profile_photo_url = None
             if profile.profile_photo:

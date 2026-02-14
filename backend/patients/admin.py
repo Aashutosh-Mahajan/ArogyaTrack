@@ -16,6 +16,7 @@ class ProfileAdmin(admin.ModelAdmin):
     Admin interface for patient profiles with extended fields.
     """
     list_display = (
+        "patient_id",
         "name",
         "user",
         "relationship",
@@ -26,6 +27,7 @@ class ProfileAdmin(admin.ModelAdmin):
         "created_at",
     )
     search_fields = (
+        "patient_id",
         "name",
         "user__email",
         "district",
@@ -39,9 +41,12 @@ class ProfileAdmin(admin.ModelAdmin):
         "state",
         "district",
     )
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ("patient_id", "created_at", "updated_at")
     
     fieldsets = (
+        ("Universal ID", {
+            "fields": ("patient_id",)
+        }),
         ("User Account", {
             "fields": ("user", "relationship")
         }),

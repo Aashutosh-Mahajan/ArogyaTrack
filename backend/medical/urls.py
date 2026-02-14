@@ -6,7 +6,10 @@ from .views import (
     ChronicConditionCreateView,
     CreateMedicalRecordView,
     CreateVisitRecordView,
+    DoctorDashboardSummaryView,
+    DoctorRecentActivityView,
     DoctorScanHealthCardView,
+    HighRiskPatientsView,
     MyPatientsListView,
     PatientHistoryView,
     PatientOwnAllergiesView,
@@ -34,4 +37,9 @@ urlpatterns = [
     path("patients/<uuid:profile_id>/allergies/", AllergyCreateView.as_view(), name="add-allergy"),
     path("patients/<uuid:profile_id>/conditions/", ChronicConditionCreateView.as_view(), name="add-condition"),
     path("patient-history/<uuid:profile_id>/", PatientHistoryView.as_view(), name="patient-history"),
+    # Doctor-facing endpoints - High-Risk Patients
+    path("high-risk-patients/", HighRiskPatientsView.as_view(), name="high-risk-patients"),
+    # Doctor-facing endpoints - Dashboard Summary & Activity
+    path("dashboard-summary/", DoctorDashboardSummaryView.as_view(), name="doctor-dashboard-summary"),
+    path("recent-activity/", DoctorRecentActivityView.as_view(), name="doctor-recent-activity"),
 ]

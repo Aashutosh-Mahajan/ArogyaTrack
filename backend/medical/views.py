@@ -3,12 +3,14 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
+from django.db.models import Q, F
 from datetime import timedelta
+import re
 
 from accounts.permissions import IsApprovedDoctor, IsDoctorOrAdmin, IsDoctorVerified
 from patients.models import HealthCard, Profile
 
-from .models import Allergy, ChronicCondition, HealthCardValidator, MedicalRecord, PatientVisitRecord, DoctorPatientAccess
+from .models import Allergy, ChronicCondition, HealthCardValidator, HealthMetric, LabTestResult, MedicalRecord, PatientVisitRecord, DoctorPatientAccess
 from .serializers import (
     AllergySerializer,
     ChronicConditionSerializer,
@@ -252,9 +254,7 @@ class MyPatientsListView(APIView):
         patients = []
         for access in active_accesses:
             profile = access.patient
-            short_id = str(profile.id).split("-")[-1].upper()[:6]
-            created_year = profile.created_at.year if hasattr(profile, 'created_at') and profile.created_at else 2026
-            unique_patient_id = f"HS-{created_year}-{short_id}"
+            unique_patient_id = profile.patient_id or "N/A"
             
             # Get recent visit records count
             visit_count = PatientVisitRecord.objects.filter(patient=profile.user).count()
@@ -348,6 +348,299 @@ class AddPatientToMyListView(APIView):
                 "patient_name": profile.name,
                 "expires_at": access.expires_at.isoformat()
             }, status=status.HTTP_201_CREATED)
+
+
+class HighRiskPatientsView(APIView):
+    """
+    Lists a doctor's patients flagged as high-risk based on chronic
+    conditions, abnormal vitals, or recent elevated lab results.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role not in ['doctor', 'admin']:
+            return Response(
+                {"detail": "Only doctors and administrators can access high-risk patient data."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        active_accesses = DoctorPatientAccess.objects.filter(
+            doctor=request.user,
+            expires_at__gt=timezone.now(),
+        ).select_related('patient')
+
+        high_risk_patients = []
+        for access in active_accesses:
+            profile = access.patient
+            user = profile.user
+
+            risk_factors = []
+            risk_level = 'low'
+            primary_condition = None
+
+            # 1. Chronic conditions (FK is profile, field is disease_name)
+            conditions = ChronicCondition.objects.filter(profile=profile)
+            if conditions.exists():
+                risk_factors.extend([c.disease_name for c in conditions if c.disease_name])
+                primary_condition = conditions.first().disease_name if conditions.first() else None
+                risk_level = 'medium'
+
+            # 2. Latest BP from HealthMetric
+            latest_bp_metric = HealthMetric.objects.filter(
+                patient=user, metric_type='blood_pressure'
+            ).order_by('-recorded_at').first()
+            latest_bp = None
+            latest_bp_value = None
+            if latest_bp_metric:
+                systolic = latest_bp_metric.value
+                diastolic = latest_bp_metric.secondary_value or 0
+                latest_bp = f"{int(systolic)}/{int(diastolic)}"
+                latest_bp_value = int(systolic)
+                if systolic >= 140:
+                    risk_factors.append(f'High BP ({latest_bp})')
+                    risk_level = 'high'
+
+            # 3. Latest blood sugar from HealthMetric
+            latest_sugar_metric = HealthMetric.objects.filter(
+                patient=user, metric_type='sugar'
+            ).order_by('-recorded_at').first()
+            latest_sugar = None
+            if latest_sugar_metric:
+                latest_sugar = int(latest_sugar_metric.value)
+                if latest_sugar > 200:
+                    risk_factors.append(f'High Sugar ({latest_sugar} mg/dL)')
+                    risk_level = 'high'
+
+            # 4. Most recent visit
+            latest_visit = PatientVisitRecord.objects.filter(
+                patient=user
+            ).order_by('-visit_date').first()
+
+            # 5. Check abnormal lab results (last 90 days)
+            recent_labs = LabTestResult.objects.filter(
+                patient=user,
+                tested_at__gte=timezone.now() - timedelta(days=90),
+            )
+            abnormal_count = 0
+            for lab in recent_labs:
+                if lab.value is not None and lab.normal_max is not None and lab.value > lab.normal_max:
+                    abnormal_count += 1
+                elif lab.value is not None and lab.normal_min is not None and lab.value < lab.normal_min:
+                    abnormal_count += 1
+            if abnormal_count >= 3:
+                risk_factors.append(f'{abnormal_count} abnormal labs (90 d)')
+                risk_level = 'high'
+            elif abnormal_count >= 1:
+                risk_factors.append(f'{abnormal_count} abnormal lab(s)')
+                if risk_level == 'low':
+                    risk_level = 'medium'
+
+            # 6. Promote to critical if ≥ 3 risk factors
+            if len(risk_factors) >= 3:
+                risk_level = 'critical'
+
+            # Skip patients with no risk factors
+            if not risk_factors:
+                continue
+
+            unique_patient_id = profile.patient_id or "N/A"
+
+            # Assign a numeric risk_score for sorting (critical=4, high=3, medium=2, low=1)
+            risk_score_num = {'critical': 4, 'high': 3, 'medium': 2, 'low': 1}.get(risk_level, 0)
+
+            high_risk_patients.append({
+                "patient_id": str(profile.id),
+                "unique_patient_id": unique_patient_id,
+                "name": profile.name,
+                "age": profile.age,
+                "gender": profile.gender,
+                "blood_group": profile.blood_group,
+                "district": profile.district,
+                "condition": primary_condition or (risk_factors[0] if risk_factors else "Unknown"),
+                "risk_level": risk_level,
+                "risk_score": risk_score_num,
+                "risk_factors": risk_factors,
+                "last_visit_date": latest_visit.visit_date.isoformat() if latest_visit else None,
+                "latest_bp": latest_bp,
+                "latest_bp_value": latest_bp_value,
+                "latest_sugar": latest_sugar,
+                "conditions_count": conditions.count(),
+                "abnormal_labs": abnormal_count,
+            })
+
+        # Sort by risk severity descending
+        high_risk_patients.sort(key=lambda p: p.get('risk_score', 0), reverse=True)
+
+        return Response({
+            "count": len(high_risk_patients),
+            "results": high_risk_patients,
+        })
+
+
+class DoctorDashboardSummaryView(APIView):
+    """
+    GET /api/doctors/dashboard-summary/
+    Returns KPI snapshot for the doctor dashboard.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role not in ['doctor', 'admin']:
+            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+        now = timezone.now()
+
+        # Total assigned (active-access) patients
+        active_accesses = DoctorPatientAccess.objects.filter(
+            doctor=request.user,
+            expires_at__gt=now,
+        ).select_related('patient')
+        total_patients = active_accesses.count()
+
+        # High-risk count (patients with chronic conditions or abnormal labs)
+        high_risk_count = 0
+        pending_labs = 0
+        recent_updates = 0
+        patient_users = []
+
+        for acc in active_accesses:
+            profile = acc.patient
+            user = profile.user
+            patient_users.append(user)
+
+            has_risk = False
+            conditions = ChronicCondition.objects.filter(profile=profile)
+            if conditions.exists():
+                has_risk = True
+
+            # Check abnormal labs in last 90 days
+            abnormal = LabTestResult.objects.filter(
+                patient=user,
+                tested_at__gte=now - timedelta(days=90),
+            ).filter(
+                Q(value__gt=F('normal_max')) | Q(value__lt=F('normal_min'))
+            ).count()
+            if abnormal > 0:
+                has_risk = True
+
+            if has_risk:
+                high_risk_count += 1
+
+        # Pending lab reviews — abnormal labs in last 30 days across all doctor's patients
+        if patient_users:
+            pending_labs = LabTestResult.objects.filter(
+                patient__in=patient_users,
+                tested_at__gte=now - timedelta(days=30),
+            ).filter(
+                Q(value__gt=F('normal_max')) | Q(value__lt=F('normal_min'))
+            ).count()
+
+        # Recent updates — visit records + lab results created in last 7 days
+        if patient_users:
+            recent_visits = PatientVisitRecord.objects.filter(
+                patient__in=patient_users,
+                created_at__gte=now - timedelta(days=7),
+            ).count()
+            recent_labs_count = LabTestResult.objects.filter(
+                patient__in=patient_users,
+                created_at__gte=now - timedelta(days=7),
+            ).count()
+            recent_updates = recent_visits + recent_labs_count
+
+        return Response({
+            "total_patients": total_patients,
+            "high_risk_count": high_risk_count,
+            "pending_labs": pending_labs,
+            "recent_updates": recent_updates,
+        })
+
+
+class DoctorRecentActivityView(APIView):
+    """
+    GET /api/doctors/recent-activity/
+    Returns timeline of recent clinical events for the doctor's patients.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role not in ['doctor', 'admin']:
+            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+        now = timezone.now()
+        active_accesses = DoctorPatientAccess.objects.filter(
+            doctor=request.user,
+            expires_at__gt=now,
+        ).select_related('patient')
+
+        patient_users = [acc.patient.user for acc in active_accesses]
+        patient_profile_map = {acc.patient.user_id: acc.patient.name for acc in active_accesses}
+
+        activities = []
+
+        if not patient_users:
+            return Response({"count": 0, "results": []})
+
+        # 1. Abnormal lab results (last 30 days)
+        abnormal_labs = LabTestResult.objects.filter(
+            patient__in=patient_users,
+            tested_at__gte=now - timedelta(days=30),
+        ).order_by('-tested_at')[:20]
+
+        for lab in abnormal_labs:
+            lab_status = lab.status  # 'high', 'low', or 'normal'
+            if lab_status == 'normal':
+                continue
+            patient_name = patient_profile_map.get(lab.patient_id, 'Unknown')
+            activities.append({
+                "type": "abnormal_lab",
+                "icon": "lab",
+                "title": f"Abnormal {lab.test_name} detected",
+                "description": f"{patient_name} — {lab.value} {lab.unit} ({lab_status.upper()})",
+                "timestamp": lab.tested_at.isoformat(),
+                "severity": "high" if lab_status == "high" else "medium",
+            })
+
+        # 2. Recent visit records (last 14 days)
+        recent_visits = PatientVisitRecord.objects.filter(
+            patient__in=patient_users,
+            created_at__gte=now - timedelta(days=14),
+        ).order_by('-created_at')[:15]
+
+        for visit in recent_visits:
+            patient_name = patient_profile_map.get(visit.patient_id, 'Unknown')
+            # Determine if it mentions follow-up or critical
+            diag_lower = (visit.diagnosis or '').lower()
+            notes_lower = (visit.doctor_notes or '').lower()
+            if 'critical' in diag_lower or 'critical' in notes_lower:
+                act_type = "critical_visit"
+                title = "Critical visit recorded"
+                severity = "critical"
+            elif 'follow' in diag_lower or 'follow' in notes_lower:
+                act_type = "follow_up"
+                title = "Follow-up required"
+                severity = "medium"
+            else:
+                act_type = "new_record"
+                title = "New record added"
+                severity = "low"
+
+            activities.append({
+                "type": act_type,
+                "icon": "record",
+                "title": title,
+                "description": f"{patient_name} — {visit.diagnosis[:80]}",
+                "timestamp": visit.created_at.isoformat(),
+                "severity": severity,
+            })
+
+        # Sort all by timestamp descending, limit to 20
+        activities.sort(key=lambda a: a['timestamp'], reverse=True)
+        activities = activities[:20]
+
+        return Response({
+            "count": len(activities),
+            "results": activities,
+        })
 
 
 class CreateVisitRecordView(APIView):

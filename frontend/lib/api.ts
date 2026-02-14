@@ -271,8 +271,9 @@ export const api = {
       apiClient.get('/patients/my-card/pdf/', { responseType: 'blob' as any }),
     getQRImage: () =>
       apiClient.get('/patients/my-card/qr-image/', { responseType: 'blob' as any }),
-    // Scan Patient QR Code (for doctors/admins)
-    scanPatientQR: (token: string) => apiClient.post('/patients/scan-qr/', { token }),
+    // Scan Patient QR Code or Enter Patient ID (for doctors/admins)
+    scanPatientQR: (data: { token?: string; patient_id?: string }) => 
+      apiClient.post('/patients/scan-qr/', data),
   },
 
   // Medical Records (backend mounts medical app at /api/doctors/)
@@ -296,6 +297,11 @@ export const api = {
       apiClient.post('/doctors/my-patients/add/', { patient_id: patientId }),
     createVisitRecord: (patientId: string, data: any) => 
       apiClient.post(`/doctors/patients/${patientId}/visit-records/create/`, data),
+    // High-Risk Patients
+    getHighRiskPatients: () => apiClient.get('/doctors/high-risk-patients/'),
+    // Dashboard Summary & Activity
+    getDashboardSummary: () => apiClient.get('/doctors/dashboard-summary/'),
+    getRecentActivity: () => apiClient.get('/doctors/recent-activity/'),
   },
 
   // Prescriptions

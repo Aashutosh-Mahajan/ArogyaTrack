@@ -4,6 +4,8 @@ patients/models.py
 Production-grade patient models with comprehensive data fields
 """
 import uuid
+import random
+import string
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -19,6 +21,13 @@ from .validators import (
     validate_full_name,
 )
 from .storage import patient_id_proof_path, profile_photo_path
+
+
+def generate_patient_id():
+    """Generate a unique patient ID in format: HS-YYYY-XXXXXX"""
+    year = timezone.now().year
+    random_part = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    return f"HS-{year}-{random_part}"
 
 
 class Profile(models.Model):
@@ -57,6 +66,13 @@ class Profile(models.Model):
 
     # ─── Core Fields (existing) ────────────────────────────────────
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    patient_id = models.CharField(
+        max_length=20,
+        unique=True,
+        editable=False,
+        db_index=True,
+        help_text="Auto-generated unique patient identifier (HS-YYYY-XXXXXX)"
+    )
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profiles")
     name = models.CharField(max_length=120, validators=[validate_full_name])
     age = models.PositiveSmallIntegerField()
@@ -100,6 +116,16 @@ class Profile(models.Model):
     def __str__(self) -> str:
         return f"{self.name} ({self.relationship})"
     
+    def save(self, *args, **kwargs):
+        """Override save to auto-generate patient_id."""
+        if not self.patient_id:
+            while True:
+                new_id = generate_patient_id()
+                if not Profile.objects.filter(patient_id=new_id).exists():
+                    self.patient_id = new_id
+                    break
+        super().save(*args, **kwargs)
+
     @property
     def full_address(self) -> str:
         """Return formatted full address."""

@@ -69,10 +69,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   ];
 
   const doctorLinks = [
-    { href: '/doctor', label: 'Dashboard', icon: FiHome },
-    { href: '/doctor/scan-qr', label: 'Scan QR Code', icon: FiCamera },
+    { href: '/doctor/dashboard', label: 'Dashboard', icon: FiHome },
+    { href: '/doctor/scan-qr', label: 'Scan Patient QR', icon: FiCamera },
     { href: '/doctor/patients', label: 'My Patients', icon: FiUsers },
-    { href: '/doctor/prescriptions', label: 'Prescriptions', icon: FiFileText },
+    { href: '/doctor/add-record', label: 'Add / Update Record', icon: FiFileText },
+    { href: '/doctor/high-risk', label: 'High-Risk Patients', icon: FiAlertTriangle },
+    { href: '/doctor/security', label: 'Security', icon: FiShield },
   ];
 
   const adminLinks = [

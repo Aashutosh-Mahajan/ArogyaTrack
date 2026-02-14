@@ -29,13 +29,13 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = [
-            "id", "name", "age", "gender", "blood_group", "relationship", "region",
+            "id", "patient_id", "name", "age", "gender", "blood_group", "relationship", "region",
             "date_of_birth", "phone", "emergency_contact_number",
             "district", "state", "country", "address", "pincode",
             "full_address", "calculated_age",
             "created_at", "updated_at"
         ]
-        read_only_fields = ["id", "created_at", "updated_at", "full_address", "calculated_age"]
+        read_only_fields = ["id", "patient_id", "created_at", "updated_at", "full_address", "calculated_age"]
     
     def get_calculated_age(self, obj):
         """Return calculated age from date_of_birth if available."""
