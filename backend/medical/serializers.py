@@ -1,7 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import Allergy, ChronicCondition, Diagnosis, MedicalRecord, validate_icd10
+from .models import Allergy, ChronicCondition, Diagnosis, MedicalRecord, PatientVisitRecord, VisitReportAttachment, validate_icd10
 
 
 class DiagnosisSerializer(serializers.ModelSerializer):
@@ -126,3 +126,54 @@ class ScanHealthCardSerializer(serializers.Serializer):
         )
 
         return {"patient_id": str(patient.id), "patient_name": patient.name, "access_expires_at": access.expires_at}
+
+
+class VisitReportAttachmentSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Visit Report Attachments
+    """
+    file_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = VisitReportAttachment
+        fields = [
+            "id",
+            "file",
+            "file_url",
+            "file_name",
+            "file_type",
+            "uploaded_at"
+        ]
+        read_only_fields = ["id", "uploaded_at", "file_url"]
+    
+    def get_file_url(self, obj):
+        request = self.context.get('request')
+        if obj.file and hasattr(obj.file, 'url'):
+            if request:
+                return request.build_absolute_uri(obj.file.url)
+            return obj.file.url
+        return None
+
+
+class PatientVisitRecordSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Patient Visit Records (Consultation History)
+    """
+    report_attachments = VisitReportAttachmentSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = PatientVisitRecord
+        fields = [
+            "id",
+            "doctor_name",
+            "department",
+            "diagnosis",
+            "tests_performed",
+            "prescription",
+            "doctor_notes",
+            "visit_date",
+            "created_at",
+            "report_attachments"
+        ]
+        read_only_fields = ["id", "created_at"]
+

@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block title %}My Medical Records - Health Surveillance{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .page-header h1 {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .page-header p {
+        opacity: 0.9;
+        margin-bottom: 0;
+    }
+    
+    .search-filter-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+    }
+    
+    .medical-record-card {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+        border-left: 4px solid #3498db;
+    }
+    
+    .medical-record-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    
+    .record-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f1f3f5;
+    }
+    
+    .visit-date {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .visit-date i {
+        color: #3498db;
+        margin-right: 0.5rem;
+    }
+    
+    .record-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 0.25rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .badge-cardiology { background-color: #e3f2fd; color: #1976d2; }
+    .badge-general { background-color: #f3e5f5; color: #7b1fa2; }
+    .badge-orthopedics { background-color: #fff3e0; color: #ef6c00; }
+    .badge-neurology { background-color: #fce4ec; color: #c2185b; }
+    .badge-dermatology { background-color: #e8f5e9; color: #388e3c; }
+    .badge-default { background-color: #f5f5f5; color: #616161; }
+    
+    .record-detail {
+        margin-bottom: 1rem;
+    }
+    
+    .record-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .record-value {
+        color: #212529;
+        line-height: 1.6;
+        white-space: pre-line;
+    }
+    
+    .doctor-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+    
+    .doctor-info i {
+        color: #3498db;
+    }
+    
+    .download-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 0.5rem 1.25rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: opacity 0.2s;
+    }
+    
+    .download-btn:hover {
+        opacity: 0.9;
+        color: white;
+    }
+    
+    .no-records {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .no-records i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+    
+    .filter-badge {
+        display: inline-block;
+        background-color: #e3f2fd;
+        color: #1976d2;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.85rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .filter-badge .remove {
+        margin-left: 0.5rem;
+        cursor: pointer;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header text-center">
+    <h1><i class="bi bi-file-medical-fill"></i> My Medical Records</h1>
+    <p>View and download your complete medical history</p>
+</div>
+
+<!-- Search and Filter Section -->
+<div class="search-filter-section">
+    <form method="get" action="{% url 'medical_web:records_list' %}" class="row g-3">
+        <!-- Search Bar -->
+        <div class="col-md-12">
+            <div class="input-group input-group-lg">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" name="search" 
+                       placeholder="Search by diagnosis, doctor, department, or tests..." 
+                       value="{{ search_query }}">
+                <button class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+        <div class="col-md-4">
+            <label class="form-label"><i class="bi bi-calendar3"></i> Year</label>
+            <select name="year" class="form-select">
+                <option value="">All Years</option>
+                {% for year in years %}
+                <option value="{{ year.year }}" {% if selected_year == year.year|stringformat:"s" %}selected{% endif %}>
+                    {{ year.year }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="col-md-4">
+            <label class="form-label"><i class="bi bi-hospital"></i> Department</label>
+            <select name="department" class="form-select">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                <option value="{{ dept }}" {% if selected_department == dept %}selected{% endif %}>
+                    {{ dept }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="col-md-4">
+            <label class="form-label"><i class="bi bi-person"></i> Doctor</label>
+            <select name="doctor" class="form-select">
+                <option value="">All Doctors</option>
+                {% for doc in doctors %}
+                <option value="{{ doc }}" {% if selected_doctor == doc %}selected{% endif %}>
+                    {{ doc }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="col-md-12">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-funnel"></i> Apply Filters
+            </button>
+            <a href="{% url 'medical_web:records_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Clear All
+            </a>
+        </div>
+    </form>
+    
+    <!-- Active Filters Display -->
+    {% if search_query or selected_year or selected_department or selected_doctor %}
+    <div class="mt-3">
+        <strong>Active Filters:</strong>
+        {% if search_query %}
+        <span class="filter-badge">
+            Search: "{{ search_query }}"
+        </span>
+        {% endif %}
+        {% if selected_year %}
+        <span class="filter-badge">
+            Year: {{ selected_year }}
+        </span>
+        {% endif %}
+        {% if selected_department %}
+        <span class="filter-badge">
+            Department: {{ selected_department }}
+        </span>
+        {% endif %}
+        {% if selected_doctor %}
+        <span class="filter-badge">
+            Doctor: {{ selected_doctor }}
+        </span>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Medical Records List -->
+{% if records %}
+<div class="row">
+    <div class="col-12">
+        <p class="text-muted mb-3">
+            <i class="bi bi-info-circle"></i> Showing {{ records|length }} record{{ records|length|pluralize }} 
+            (sorted by newest first)
+        </p>
+    </div>
+</div>
+
+{% for record in records %}
+<div class="medical-record-card">
+    <!-- Record Header -->
+    <div class="record-header">
+        <div>
+            <div class="visit-date">
+                <i class="bi bi-calendar-check"></i>
+                {{ record.visit_date|date:"d M Y | h:i A" }}
+            </div>
+            <div class="doctor-info">
+                <i class="bi bi-person-fill"></i>
+                <strong>Doctor:</strong> {{ record.doctor_name }}
+            </div>
+        </div>
+        <div>
+            <span class="record-badge badge-{{ record.department|lower|cut:" " }}">
+                {{ record.department }}
+            </span>
+        </div>
+    </div>
+    
+    <!-- Record Details -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="record-detail">
+                <div class="record-label">
+                    <i class="bi bi-clipboard2-pulse"></i> Diagnosis
+                </div>
+                <div class="record-value">{{ record.diagnosis }}</div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="record-detail">
+                <div class="record-label">
+                    <i class="bi bi-prescription2"></i> Prescription
+                </div>
+                <div class="record-value">{{ record.prescription }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-2">
+        <div class="col-md-12">
+            <div class="record-detail">
+                <div class="record-label">
+                    <i class="bi bi-file-earmark-medical"></i> Tests Performed
+                </div>
+                <div class="record-value">{{ record.tests_performed }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Actions -->
+    <div class="mt-3 text-end">
+        <a href="{% url 'medical_web:download_pdf' record.id %}" class="btn download-btn">
+            <i class="bi bi-download"></i> Download Report (PDF)
+        </a>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Medical records pagination">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_department %}&department={{ selected_department }}{% endif %}{% if selected_doctor %}&doctor={{ selected_doctor }}{% endif %}">
+                First
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_department %}&department={{ selected_department }}{% endif %}{% if selected_doctor %}&doctor={{ selected_doctor }}{% endif %}">
+                Previous
+            </a>
+        </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_department %}&department={{ selected_department }}{% endif %}{% if selected_doctor %}&doctor={{ selected_doctor }}{% endif %}">
+                Next
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_department %}&department={{ selected_department }}{% endif %}{% if selected_doctor %}&doctor={{ selected_doctor }}{% endif %}">
+                Last
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<!-- No Records Found -->
+<div class="no-records">
+    <i class="bi bi-file-earmark-x"></i>
+    <h3>No Medical Records Found</h3>
+    <p class="text-muted">
+        {% if search_query or selected_year or selected_department or selected_doctor %}
+        No records match your search criteria. Try adjusting your filters.
+        {% else %}
+        You don't have any medical records yet.
+        {% endif %}
+    </p>
+    {% if search_query or selected_year or selected_department or selected_doctor %}
+    <a href="{% url 'medical_web:records_list' %}" class="btn btn-primary mt-3">
+        <i class="bi bi-arrow-clockwise"></i> Clear Filters
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

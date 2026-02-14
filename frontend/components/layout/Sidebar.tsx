@@ -3,7 +3,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
+import { api } from '@/lib/api';
+import type { DashboardAlert } from '@/types';
 import { 
   FiHome, 
   FiUser, 
@@ -18,7 +21,10 @@ import {
   FiAlertTriangle,
   FiCamera,
   FiUsers,
-  FiTrendingUp
+  FiTrendingUp,
+  FiBell,
+  FiShield,
+  FiDownload,
 } from 'react-icons/fi';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -32,6 +38,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, clearAuth } = useAuthStore();
+
+  // Fetch unread alert count for badge (patients only)
+  const { data: alerts } = useQuery<DashboardAlert[]>({
+    queryKey: ['dashboard-alerts'],
+    queryFn: () => api.dashboard.getAlerts(),
+    staleTime: 30_000,
+    refetchInterval: 2 * 60_000,
+    enabled: user?.role === 'patient',
+  });
+  const unreadAlertCount = alerts?.filter((a) => !a.is_read).length ?? 0;
 
   const handleLogout = () => {
     clearAuth();
@@ -47,6 +63,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { href: '/dashboard/prescriptions', label: 'Prescriptions', icon: FiFileText },
     { href: '/dashboard/medicines', label: 'Medicines', icon: FiShoppingBag },
     { href: '/dashboard/adherence', label: 'Adherence', icon: FiHeart },
+    { href: '/dashboard/alerts', label: 'Alerts', icon: FiBell, badge: unreadAlertCount },
+    { href: '/dashboard/downloads', label: 'Downloads', icon: FiDownload },
+    { href: '/dashboard/security', label: 'Security', icon: FiShield },
   ];
 
   const doctorLinks = [
@@ -123,6 +142,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             {links.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href;
+              const badge = 'badge' in link ? (link as any).badge : 0;
 
               return (
                 <Link
@@ -137,7 +157,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   )}
                 >
                   <Icon className="h-5 w-5" />
-                  <span>{link.label}</span>
+                  <span className="flex-1">{link.label}</span>
+                  {badge > 0 && (
+                    <span className="ml-auto inline-flex items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+                      {badge > 99 ? '99+' : badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
-import { FiCamera, FiX, FiUser, FiActivity, FiAlertTriangle, FiAlertCircle } from 'react-icons/fi';
+import { FiCamera, FiX, FiUser, FiActivity, FiAlertTriangle, FiAlertCircle, FiUserPlus } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 
 function ScanQRPage() {
@@ -21,6 +21,7 @@ function ScanQRPage() {
   const [manualToken, setManualToken] = useState('');
   const [patientData, setPatientData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAddingPatient, setIsAddingPatient] = useState(false);
 
   // Auto-scan if redirected from QR landing page
   useEffect(() => {
@@ -143,6 +144,29 @@ function ScanQRPage() {
     }
   };
 
+  const handleAddToMyPatients = async () => {
+    if (!patientData?.patient?.id) {
+      toast.error('Patient ID not found in response');
+      console.error('Patient data:', patientData);
+      return;
+    }
+
+    setIsAddingPatient(true);
+    try {
+      const response: any = await api.medical.addPatientToMyList(patientData.patient.id);
+      toast.success(response?.message || '✅ Patient added to your list!');
+      // Optionally redirect to create record page
+      if (confirm('Patient added successfully! Would you like to create a visit record now?')) {
+        router.push(`/doctor/patients/${patientData.patient.id}/create-record`);
+      }
+    } catch (error: any) {
+      console.error('Error adding patient:', error);
+      toast.error(error.response?.data?.detail || 'Failed to add patient to your list');
+    } finally {
+      setIsAddingPatient(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-6">
@@ -248,89 +272,300 @@ function ScanQRPage() {
 
         {/* Patient Data Display */}
         {patientData && (
-          <Card className="border-green-200 bg-green-50">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-green-900">Patient Information</CardTitle>
-                {patientData.patient?.profile_photo_url && (
-                  <img
-                    src={patientData.patient.profile_photo_url}
-                    alt="Patient"
-                    className="w-16 h-16 rounded-full object-cover border-2 border-green-300"
-                  />
+          <div className="space-y-4">
+            {/* Action Bar - Clear/Scan Another */}
+            <div className="flex justify-end gap-3">
+              <Button
+                onClick={() => setPatientData(null)}
+                variant="outline"
+                className="border-red-300 text-red-700 hover:bg-red-50"
+              >
+                <FiX className="mr-2" />Clear Patient Data
+              </Button>
+              <Button
+                onClick={startScanning}
+                variant="outline"
+                className="border-blue-300 text-blue-700 hover:bg-blue-50"
+              >
+                <FiCamera className="mr-2" />Scan Another QR
+              </Button>
+            </div>
+
+            {/* Compact Patient Info Box */}
+            <Card className="border-green-200 bg-gradient-to-r from-green-50 to-blue-50">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    {patientData.patient?.profile_photo_url && (
+                      <img
+                        src={patientData.patient.profile_photo_url}
+                        alt="Patient"
+                        className="w-16 h-16 rounded-full object-cover border-2 border-green-300"
+                      />
+                    )}
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <FiUser className="h-5 w-5 text-blue-600" />
+                        <p className="text-xl font-bold text-gray-900">
+                          {patientData.patient?.name || `${patientData.profile?.user?.first_name || ''} ${patientData.profile?.user?.last_name || ''}`}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-4 text-sm text-gray-600">
+                        <span className="font-mono font-medium">
+                          {patientData.patient?.unique_patient_id || 'N/A'}
+                        </span>
+                        <span>•</span>
+                        <span className="flex items-center space-x-1">
+                          <FiActivity className="h-4 w-4 text-red-600" />
+                          <span className="font-semibold">{patientData.patient?.blood_group || patientData.profile?.blood_group || 'N/A'}</span>
+                        </span>
+                        <span>•</span>
+                        <span>
+                          {patientData.patient?.age || '—'} years • {patientData.patient?.gender || patientData.profile?.gender || '—'}
+                        </span>
+                        <span>•</span>
+                        <span>{patientData.patient?.district || 'N/A'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right space-y-1">
+                    {patientData.patient?.phone && (
+                      <p className="text-sm text-gray-600">📱 {patientData.patient.phone}</p>
+                    )}
+                    {patientData.patient?.emergency_contact && (
+                      <p className="text-sm text-red-600 font-medium">🚨 {patientData.patient.emergency_contact}</p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Action Buttons */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <Button
+                onClick={handleAddToMyPatients}
+                disabled={isAddingPatient}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg font-semibold"
+                size="lg"
+              >
+                <FiUserPlus className="mr-2 h-5 w-5" />
+                {isAddingPatient ? 'Adding...' : '➕ Add to My Patients'}
+              </Button>
+              
+              <Button
+                onClick={() => router.push(`/doctor/patients/${patientData.patient?.id}/create-record`)}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg font-semibold"
+                size="lg"
+              >
+                📋 Create Visit Record
+              </Button>
+            </div>
+
+            {/* Critical Alerts Row */}
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Allergies Alert */}
+              {patientData.allergies && patientData.allergies.length > 0 && (
+                <div className="bg-red-100 border-2 border-red-400 rounded-lg p-3">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <FiAlertTriangle className="h-5 w-5 text-red-600" />
+                    <p className="font-bold text-red-900">⚠️ Allergies</p>
+                  </div>
+                  <div className="space-y-1">
+                    {patientData.allergies.map((allergy: any, idx: number) => (
+                      <p key={idx} className="text-sm text-red-800 font-medium">
+                        • {allergy.allergen} — {allergy.reaction_type}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Chronic Conditions */}
+              {patientData.chronic_conditions && patientData.chronic_conditions.length > 0 && (
+                <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-3">
+                  <p className="font-bold text-yellow-900 mb-2">🩺 Chronic Conditions</p>
+                  <div className="space-y-1">
+                    {patientData.chronic_conditions.map((condition: any, idx: number) => (
+                      <p key={idx} className="text-sm text-yellow-800 font-medium">
+                        • {condition.disease_name || condition.condition_name}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Medical Records - Prominent Display */}
+            <Card>
+              <CardHeader className="bg-blue-50">
+                <CardTitle className="text-blue-900">📋 Medical Records & Consultation History</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4">
+                {/* Visit Records (New Model - More Detailed) */}
+                {patientData.visit_records && patientData.visit_records.length > 0 ? (
+                  <div className="space-y-4">
+                    {patientData.visit_records.map((record: any) => (
+                      <div key={record.id} className="border-l-4 border-blue-500 bg-gray-50 rounded-r-lg p-4 hover:bg-gray-100 transition">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <p className="font-semibold text-gray-900">Dr. {record.doctor_name}</p>
+                            <p className="text-xs text-gray-500">{record.department}</p>
+                          </div>
+                          <p className="text-sm text-gray-500">
+                            {new Date(record.visit_date).toLocaleDateString('en-US', { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-xs font-semibold text-gray-600 uppercase mb-1">Diagnosis</p>
+                            <p className="text-sm text-blue-900 font-medium">{record.diagnosis}</p>
+                          </div>
+                          
+                          {record.tests_performed && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-600 uppercase mb-1">Tests Performed</p>
+                              <p className="text-sm text-gray-700 whitespace-pre-line">{record.tests_performed}</p>
+                            </div>
+                          )}
+                          
+                          {record.prescription && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-600 uppercase mb-1">Prescription</p>
+                              <p className="text-sm text-gray-700 whitespace-pre-line">{record.prescription}</p>
+                            </div>
+                          )}
+                          
+                          {record.doctor_notes && (
+                            <div className="bg-yellow-50 border-l-2 border-yellow-400 pl-3 py-2">
+                              <p className="text-xs font-semibold text-yellow-800 uppercase mb-1">Doctor's Notes</p>
+                              <p className="text-sm text-yellow-900">{record.doctor_notes}</p>
+                            </div>
+                          )}
+                          
+                          {record.report_attachments && record.report_attachments.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-600 uppercase mb-2">📎 Attached Reports</p>
+                              <div className="flex flex-wrap gap-2">
+                                {record.report_attachments.map((attachment: any) => (
+                                  <a
+                                    key={attachment.id}
+                                    href={attachment.file_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition"
+                                  >
+                                    📄 {attachment.file_name}
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : patientData.medical_records && patientData.medical_records.length > 0 ? (
+                  // Fallback to old medical records format
+                  <div className="space-y-4">
+                    {patientData.medical_records.map((record: any) => (
+                      <div key={record.id} className="border-l-4 border-blue-500 bg-gray-50 rounded-r-lg p-4 hover:bg-gray-100 transition">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="text-sm text-gray-500">
+                              {new Date(record.created_at).toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              })}
+                            </p>
+                            {record.doctor && (
+                              <p className="text-xs text-gray-400">
+                                Consulted: {record.doctor.first_name} {record.doctor.last_name}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div>
+                            <p className="text-xs font-semibold text-gray-600 uppercase">Symptoms</p>
+                            <p className="text-sm text-gray-900">{record.symptoms || 'No symptoms recorded'}</p>
+                          </div>
+                          
+                          {record.diagnoses && record.diagnoses.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-600 uppercase">Diagnosis</p>
+                              <div className="space-y-1">
+                                {record.diagnoses.map((d: any, idx: number) => (
+                                  <p key={idx} className="text-sm text-blue-900 font-medium">
+                                    • {d.disease_name} <span className="text-gray-500">({d.icd_10_code})</span>
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {record.notes && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-600 uppercase">Notes</p>
+                              <p className="text-sm text-gray-700">{record.notes}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No medical records available</p>
+                  </div>
                 )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Patient Details */}
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="flex items-center space-x-3 p-3 bg-white rounded-lg">
-                    <FiUser className="h-5 w-5 text-blue-600" />
+              </CardContent>
+            </Card>
+
+            {/* Additional Details - Collapsible */}
+            <details className="group">
+              <summary className="cursor-pointer list-none">
+                <Card className="hover:shadow-md transition">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="font-semibold text-gray-700">📄 Additional Patient Details</p>
+                      <span className="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </summary>
+              
+              <Card className="mt-2">
+                <CardContent className="p-4 space-y-3">
+                  <div className="grid gap-3 md:grid-cols-3 text-sm">
                     <div>
-                      <p className="text-sm text-gray-600">Name</p>
+                      <p className="text-gray-500">Date of Birth</p>
                       <p className="font-medium">
-                        {patientData.patient?.name || `${patientData.profile?.user?.first_name || ''} ${patientData.profile?.user?.last_name || ''}`}
+                        {patientData.patient?.date_of_birth
+                          ? new Date(patientData.patient.date_of_birth).toLocaleDateString()
+                          : 'N/A'}
                       </p>
                     </div>
-                  </div>
-
-                  <div className="flex items-center space-x-3 p-3 bg-white rounded-lg">
-                    <FiActivity className="h-5 w-5 text-red-600" />
                     <div>
-                      <p className="text-sm text-gray-600">Blood Group</p>
-                      <p className="font-medium">{patientData.patient?.blood_group || patientData.profile?.blood_group}</p>
+                      <p className="text-gray-500">Phone</p>
+                      <p className="font-medium">{patientData.patient?.phone || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Emergency Contact</p>
+                      <p className="font-medium">{patientData.patient?.emergency_contact || 'N/A'}</p>
                     </div>
                   </div>
-
-                  <div className="p-3 bg-white rounded-lg">
-                    <p className="text-sm text-gray-600">Patient ID</p>
-                    <p className="font-medium font-mono">
-                      {patientData.patient?.unique_patient_id || 'N/A'}
-                    </p>
-                  </div>
-
-                  <div className="p-3 bg-white rounded-lg">
-                    <p className="text-sm text-gray-600">Age / Gender</p>
-                    <p className="font-medium">
-                      {patientData.patient?.age || '—'} years • {patientData.patient?.gender || patientData.profile?.gender || '—'}
-                    </p>
-                  </div>
-
-                  <div className="p-3 bg-white rounded-lg">
-                    <p className="text-sm text-gray-600">Date of Birth</p>
-                    <p className="font-medium">
-                      {patientData.patient?.date_of_birth
-                        ? new Date(patientData.patient.date_of_birth).toLocaleDateString()
-                        : 'N/A'}
-                    </p>
-                  </div>
-
-                  <div className="p-3 bg-white rounded-lg">
-                    <p className="text-sm text-gray-600">District</p>
-                    <p className="font-medium">
-                      {patientData.patient?.district || 'N/A'}
-                    </p>
-                  </div>
-
-                  {patientData.patient?.phone && (
-                    <div className="p-3 bg-white rounded-lg">
-                      <p className="text-sm text-gray-600">Phone</p>
-                      <p className="font-medium">{patientData.patient.phone}</p>
-                    </div>
-                  )}
-
-                  {patientData.patient?.emergency_contact && (
-                    <div className="p-3 bg-white rounded-lg">
-                      <p className="text-sm text-gray-600">Emergency Contact</p>
-                      <p className="font-medium">{patientData.patient.emergency_contact}</p>
-                    </div>
-                  )}
-
+                  
                   {patientData.patient?.address && (
-                    <div className="p-3 bg-white rounded-lg col-span-2">
-                      <p className="text-sm text-gray-600">Address</p>
-                      <p className="font-medium">{patientData.patient.address}</p>
+                    <div>
+                      <p className="text-gray-500 text-sm">Address</p>
+                      <p className="font-medium text-sm">{patientData.patient.address}</p>
                       {patientData.patient?.state && (
                         <p className="text-sm text-gray-500">
                           {patientData.patient.state}{patientData.patient?.pincode && ` - ${patientData.patient.pincode}`}
@@ -338,112 +573,52 @@ function ScanQRPage() {
                       )}
                     </div>
                   )}
-                </div>
 
-                {/* Card Information */}
-                {patientData.card_info && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p className="font-semibold text-blue-900 mb-2">Health Card Information</p>
-                    <div className="grid gap-2 md:grid-cols-2 text-sm">
-                      <div>
-                        <span className="text-blue-700">Issued: </span>
-                        <span className="text-blue-900">
-                          {new Date(patientData.card_info.issued_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-blue-700">Expires: </span>
-                        <span className="text-blue-900">
-                          {new Date(patientData.card_info.expires_at).toLocaleDateString()}
-                        </span>
+                  {patientData.card_info && (
+                    <div className="border-t pt-3">
+                      <p className="text-gray-500 text-sm mb-1">Health Card</p>
+                      <div className="flex gap-4 text-sm">
+                        <span>Issued: {new Date(patientData.card_info.issued_at).toLocaleDateString()}</span>
+                        <span>Expires: {new Date(patientData.card_info.expires_at).toLocaleDateString()}</span>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </CardContent>
+              </Card>
+            </details>
 
-                {/* Allergies Alert */}
-                {patientData.allergies && patientData.allergies.length > 0 && (
-                  <div className="bg-red-100 border border-red-300 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <FiAlertTriangle className="h-5 w-5 text-red-600" />
-                      <p className="font-semibold text-red-900">Allergies</p>
-                    </div>
-                    <div className="space-y-1">
-                      {patientData.allergies.map((allergy: any, idx: number) => (
-                        <p key={idx} className="text-sm text-red-800">
-                          • {allergy.allergen} — {allergy.reaction_type} (Severity: {allergy.severity})
+            {/* Prescriptions */}
+            {patientData.prescriptions && patientData.prescriptions.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>💊 Recent Prescriptions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {patientData.prescriptions.slice(0, 5).map((rx: any) => (
+                      <div key={rx.id} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded border-b last:border-0">
+                        <p className="text-sm font-mono font-medium">{rx.prescription_number}</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(rx.issued_at).toLocaleDateString()}
                         </p>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
-                )}
+                </CardContent>
+              </Card>
+            )}
 
-                {/* Chronic Conditions */}
-                {patientData.chronic_conditions && patientData.chronic_conditions.length > 0 && (
-                  <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4">
-                    <p className="font-semibold text-yellow-900 mb-2">Chronic Conditions</p>
-                    <div className="space-y-1">
-                      {patientData.chronic_conditions.map((condition: any, idx: number) => (
-                        <p key={idx} className="text-sm text-yellow-800">
-                          • {condition.disease_name || condition.condition_name} ({condition.is_active ? 'Active' : 'Inactive'})
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Medical Records */}
-                {patientData.medical_records && patientData.medical_records.length > 0 && (
-                  <div className="bg-white border rounded-lg p-4">
-                    <p className="font-semibold text-gray-900 mb-3">Recent Medical Records</p>
-                    <div className="space-y-3">
-                      {patientData.medical_records.slice(0, 5).map((record: any) => (
-                        <div key={record.id} className="border-l-4 border-blue-400 pl-3 py-1">
-                          <p className="text-sm font-medium text-gray-900">{record.symptoms || 'No symptoms recorded'}</p>
-                          {record.diagnoses && record.diagnoses.length > 0 && (
-                            <p className="text-xs text-gray-600 mt-1">
-                              Dx: {record.diagnoses.map((d: any) => d.disease_name).join(', ')}
-                            </p>
-                          )}
-                          <p className="text-xs text-gray-400 mt-1">
-                            {new Date(record.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Prescriptions */}
-                {patientData.prescriptions && patientData.prescriptions.length > 0 && (
-                  <div className="bg-white border rounded-lg p-4">
-                    <p className="font-semibold text-gray-900 mb-3">Recent Prescriptions</p>
-                    <div className="space-y-2">
-                      {patientData.prescriptions.slice(0, 5).map((rx: any) => (
-                        <div key={rx.id} className="flex justify-between items-center py-2 border-b last:border-0">
-                          <p className="text-sm font-mono">{rx.prescription_number}</p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(rx.issued_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    onClick={() => setPatientData(null)}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    Scan Another Patient
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setPatientData(null)}
+                variant="outline"
+                className="flex-1"
+              >
+                Scan Another Patient
+              </Button>
+            </div>
+          </div>
         )}
       </div>
     </DashboardLayout>

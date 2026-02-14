@@ -1,14 +1,19 @@
 from django.urls import path
 
 from .views import (
+    AddPatientToMyListView,
     AllergyCreateView,
     ChronicConditionCreateView,
     CreateMedicalRecordView,
+    CreateVisitRecordView,
     DoctorScanHealthCardView,
+    MyPatientsListView,
     PatientHistoryView,
     PatientOwnAllergiesView,
     PatientOwnConditionsView,
     PatientOwnRecordsView,
+    PatientVisitRecordDetailView,
+    PatientVisitRecordsView,
 )
 
 urlpatterns = [
@@ -16,7 +21,14 @@ urlpatterns = [
     path("my-records/", PatientOwnRecordsView.as_view(), name="patient-own-records"),
     path("my-allergies/", PatientOwnAllergiesView.as_view(), name="patient-own-allergies"),
     path("my-conditions/", PatientOwnConditionsView.as_view(), name="patient-own-conditions"),
-    # Doctor-facing endpoints
+    # Patient visit records (Consultation History)
+    path("visit-records/", PatientVisitRecordsView.as_view(), name="visit-records-list"),
+    path("visit-records/<int:record_id>/", PatientVisitRecordDetailView.as_view(), name="visit-record-detail"),
+    # Doctor-facing endpoints - My Patients Management
+    path("my-patients/", MyPatientsListView.as_view(), name="my-patients-list"),
+    path("my-patients/add/", AddPatientToMyListView.as_view(), name="add-patient-to-my-list"),
+    path("patients/<uuid:patient_id>/visit-records/create/", CreateVisitRecordView.as_view(), name="create-visit-record"),
+    # Doctor-facing endpoints - Other
     path("scan-health-card/", DoctorScanHealthCardView.as_view(), name="scan-health-card"),
     path("medical-records/", CreateMedicalRecordView.as_view(), name="create-medical-record"),
     path("patients/<uuid:profile_id>/allergies/", AllergyCreateView.as_view(), name="add-allergy"),

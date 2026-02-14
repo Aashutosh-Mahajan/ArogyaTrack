@@ -114,6 +114,11 @@ class SwitchProfileView(APIView):
 class EmergencyContactCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    def get(self, request, profile_id):
+        profile = get_object_or_404(Profile, id=profile_id, user=request.user)
+        contacts = profile.emergency_contacts.all()
+        return Response(EmergencyContactSerializer(contacts, many=True).data)
+
     def post(self, request, profile_id):
         profile = get_object_or_404(Profile, id=profile_id, user=request.user)
         serializer = EmergencyContactSerializer(data=request.data, context={"profile": profile})
@@ -441,9 +446,42 @@ class ScanPatientQRView(APIView):
             if profile.profile_photo:
                 profile_photo_url = request.build_absolute_uri(profile.profile_photo.url)
 
+            # Get medical history
+            from medical.models import MedicalRecord, PatientVisitRecord
+            from medical.serializers import MedicalHistorySerializer, PatientVisitRecordSerializer
+            from prescriptions.models import Prescription
+            
+            # Get medical records (old model)
+            medical_records = profile.medical_records.prefetch_related('diagnoses').order_by('-created_at')[:10]
+            
+            # Get visit records (new model for consultation history)
+            visit_records = PatientVisitRecord.objects.filter(
+                patient=profile.user
+            ).order_by('-visit_date')[:10]
+            
+            # Get allergies
+            allergies = profile.allergies.all()
+            
+            # Get chronic conditions
+            chronic_conditions = profile.chronic_conditions.filter(is_active=True)
+            
+            # Get prescriptions
+            prescriptions = Prescription.objects.filter(patient=profile).order_by('-created_at')[:10]
+            
+            # Serialize medical data
+            from medical.serializers import AllergySerializer, ChronicConditionSerializer
+            from prescriptions.serializers import PrescriptionSerializer
+            
+            medical_records_data = MedicalHistorySerializer(medical_records, many=True).data
+            visit_records_data = PatientVisitRecordSerializer(visit_records, many=True, context={'request': request}).data
+            allergies_data = AllergySerializer(allergies, many=True).data
+            chronic_conditions_data = ChronicConditionSerializer(chronic_conditions, many=True).data
+            prescriptions_data = PrescriptionSerializer(prescriptions, many=True).data
+
             return Response({
                 "success": True,
                 "patient": {
+                    "id": str(profile.id),
                     "unique_patient_id": unique_patient_id,
                     "name": profile.name,
                     "age": profile.age,
@@ -461,7 +499,12 @@ class ScanPatientQRView(APIView):
                 "card_info": {
                     "issued_at": card.created_at.isoformat(),
                     "expires_at": card.expires_at.isoformat(),
-                }
+                },
+                "medical_records": medical_records_data,
+                "visit_records": visit_records_data,
+                "allergies": allergies_data,
+                "chronic_conditions": chronic_conditions_data,
+                "prescriptions": prescriptions_data,
             })
 
         except jwt.ExpiredSignatureError:

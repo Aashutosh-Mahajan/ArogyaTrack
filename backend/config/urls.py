@@ -12,6 +12,9 @@ urlpatterns = [
     path("api/pharmacy/", include("pharmacy.urls")),
     path("api/adherence/", include("adherence.urls")),
     path("api/surveillance/", include("surveillance.urls")),
+    path("api/dashboard/", include("dashboard.urls")),
+    # Web interface for medical records
+    path("medical/", include("medical.web_urls")),
 ]
 
 # Serve media files in development

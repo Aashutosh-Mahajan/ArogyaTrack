@@ -294,7 +294,8 @@ class DoctorRegistrationSerializer(serializers.Serializer):
             
             # Log doctor registration in audit
             AuditService.log_event(
-                event_type="doctor_registration",
+                event_type="user_registration",
+                action="doctor_registration",
                 user=user,
                 details={
                     "medical_license": medical_license,

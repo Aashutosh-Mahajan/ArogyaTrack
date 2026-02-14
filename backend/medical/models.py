@@ -113,3 +113,151 @@ class HealthCardValidator:
     def has_access(doctor, patient) -> bool:
         """Check if doctor has valid access to patient records."""
         return DoctorPatientAccess.objects.filter(doctor=doctor, patient=patient, expires_at__gt=timezone.now()).exists()
+
+
+class PatientVisitRecord(models.Model):
+    """
+    Simple medical visit records for patients.
+    Stores visit history with diagnosis, tests, and prescriptions.
+    """
+    patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="visit_records")
+    doctor_name = models.CharField(max_length=255)
+    department = models.CharField(max_length=255)
+    diagnosis = models.TextField()
+    tests_performed = models.TextField()
+    prescription = models.TextField()
+    doctor_notes = models.TextField(blank=True, help_text="Important notes from the doctor")
+    visit_date = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-visit_date"]
+        verbose_name = "Patient Visit Record"
+        verbose_name_plural = "Patient Visit Records"
+
+    def __str__(self):
+        return f"{self.patient.email} - {self.doctor_name} - {self.visit_date.strftime('%d %b %Y')}"
+
+
+class VisitReportAttachment(models.Model):
+    """
+    Attachments for patient visit records (lab reports, prescriptions, etc.)
+    """
+    visit_record = models.ForeignKey(PatientVisitRecord, on_delete=models.CASCADE, related_name="report_attachments")
+    file = models.FileField(upload_to="visit_reports/%Y/%m/")
+    file_name = models.CharField(max_length=255)
+    file_type = models.CharField(max_length=100, blank=True)  # e.g., "Lab Report", "Prescription", "X-Ray"
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+        verbose_name = "Visit Report Attachment"
+        verbose_name_plural = "Visit Report Attachments"
+
+    def __str__(self):
+        return f"{self.file_name} - {self.visit_record.doctor_name}"
+
+
+class LabTestResult(models.Model):
+    """
+    Structured lab test result with numeric value and normal range.
+
+    Allows the dashboard to show colour-coded status (High / Low / Normal)
+    and trend arrows by comparing successive results for the same test.
+    """
+
+    patient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="lab_test_results",
+    )
+    visit_record = models.ForeignKey(
+        PatientVisitRecord,
+        on_delete=models.CASCADE,
+        related_name="lab_tests",
+        null=True,
+        blank=True,
+    )
+    test_name = models.CharField(max_length=255, db_index=True)
+    value = models.FloatField(help_text="Numeric result value")
+    unit = models.CharField(max_length=50, help_text="e.g. mg/dL, mmol/L, %")
+    normal_min = models.FloatField(help_text="Lower bound of normal range")
+    normal_max = models.FloatField(help_text="Upper bound of normal range")
+    report_file = models.FileField(
+        upload_to="lab_reports/%Y/%m/",
+        blank=True,
+        help_text="PDF or image of the lab report",
+    )
+    tested_at = models.DateTimeField(help_text="When the test was performed")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-tested_at"]
+        indexes = [
+            models.Index(fields=["patient", "test_name", "-tested_at"]),
+        ]
+        verbose_name = "Lab Test Result"
+        verbose_name_plural = "Lab Test Results"
+
+    def __str__(self):
+        return f"{self.patient.email} – {self.test_name}: {self.value} {self.unit}"
+
+    @property
+    def status(self) -> str:
+        if self.value > self.normal_max:
+            return "high"
+        if self.value < self.normal_min:
+            return "low"
+        return "normal"
+
+
+class HealthMetric(models.Model):
+    """
+    Point-in-time health metric recording used for trend charts.
+
+    Supports blood_pressure (systolic/diastolic), sugar, weight and BMI.
+    """
+
+    class MetricType(models.TextChoices):
+        BLOOD_PRESSURE = "blood_pressure", "Blood Pressure"
+        SUGAR = "sugar", "Blood Sugar"
+        WEIGHT = "weight", "Weight"
+        BMI = "bmi", "BMI"
+
+    patient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="health_metrics",
+    )
+    metric_type = models.CharField(
+        max_length=20,
+        choices=MetricType.choices,
+        db_index=True,
+    )
+    value = models.FloatField(help_text="Primary value (systolic for BP)")
+    secondary_value = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Diastolic for BP; unused for other metrics",
+    )
+    unit = models.CharField(max_length=20, help_text="mmHg, mg/dL, kg, kg/m²")
+    recorded_at = models.DateTimeField(
+        help_text="When the measurement was taken",
+        db_index=True,
+    )
+    notes = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-recorded_at"]
+        indexes = [
+            models.Index(fields=["patient", "metric_type", "-recorded_at"]),
+        ]
+        verbose_name = "Health Metric"
+        verbose_name_plural = "Health Metrics"
+
+    def __str__(self):
+        val = f"{self.value}"
+        if self.secondary_value is not None:
+            val += f"/{self.secondary_value}"
+        return f"{self.patient.email} – {self.get_metric_type_display()}: {val} {self.unit}"

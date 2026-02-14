@@ -76,6 +76,27 @@ function DoctorDashboard() {
           </CardContent>
         </Card>
 
+        {/* My Patients */}
+        <Card className="border-green-200 bg-gradient-to-r from-green-50 to-blue-50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold mb-2 text-gray-900">My Patients</h3>
+                <p className="text-gray-600 mb-4">
+                  View and manage your patient list, create consultation records
+                </p>
+                <Link href="/doctor/my-patients">
+                  <Button className="bg-green-600 hover:bg-green-700" size="lg">
+                    <FiUsers className="mr-2" />
+                    View My Patients
+                  </Button>
+                </Link>
+              </div>
+              <FiUsers className="h-24 w-24 opacity-20 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Stats Grid */}
         <div className="grid gap-4 md:grid-cols-3">
           {stats.map((stat, index) => (

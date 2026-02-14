@@ -187,17 +187,29 @@ export interface DoctorProfile {
 }
 
 // Medical Records Types
-export interface MedicalRecord {
-  id: string; // UUID
-  patient: string; // UUID FK to Profile
-  doctor: number; // FK to User
-  doctor_name?: string;
-  symptoms: string;
-  notes?: string;
-  created_at: string;
-  diagnoses?: Diagnosis[];
+export interface VisitReportAttachment {
+  id: number;
+  file: string;
+  file_url: string;
+  file_name: string;
+  file_type: string;
+  uploaded_at: string;
 }
 
+export interface MedicalRecord {
+  id: number;
+  doctor_name: string;
+  department: string;
+  diagnosis: string;
+  tests_performed: string;
+  prescription: string;
+  doctor_notes?: string;
+  visit_date: string;
+  created_at: string;
+  report_attachments?: VisitReportAttachment[];
+}
+
+// Legacy diagnosis model (for old medical records)
 export interface Diagnosis {
   id: string; // UUID
   icd_10_code: string;
@@ -232,6 +244,21 @@ export interface DoctorPatientAccess {
   expires_at: string;
   access_method: string;
   is_valid: boolean;
+}
+
+export interface MyPatient {
+  patient_id: string;
+  unique_patient_id: string;
+  name: string;
+  age: number;
+  gender: string;
+  blood_group: string;
+  district: string;
+  access_granted_at: string;
+  access_expires_at: string;
+  access_method: string;
+  visit_count: number;
+  last_visit_date: string | null;
 }
 
 // Prescription Types
@@ -676,4 +703,142 @@ export interface RegistrationResponse {
   email?: string;
   status?: string;
   approval_message?: string;
+}
+
+// Patient Dashboard Summary
+export interface KPITrend {
+  current: number;
+  previous: number;
+  change: number;
+  direction: 'up' | 'down' | 'flat';
+}
+
+export interface DashboardKPIs {
+  total_medical_records: number;
+  active_prescriptions: number;
+  pending_lab_reports: number;
+  adherence_percentage: number;
+  alerts_count: number;
+  total_downloads: number;
+  monthly_trends: {
+    medical_records: KPITrend;
+    prescriptions: KPITrend;
+    lab_reports: KPITrend;
+    adherence: KPITrend;
+    alerts: KPITrend;
+    downloads: KPITrend;
+  };
+  last_updated: string;
+}
+
+export interface DashboardSummary {
+  patient_name: string;
+  last_login: string | null;
+  total_alerts: number;
+  adherence_percentage: number;
+  calculated_risk_score: number;
+  calculated_risk_level: 'Low' | 'Medium' | 'High';
+  health_id: string | null;
+  blood_group: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  emergency_contact_relationship: string | null;
+}
+
+// Recent Medical Records
+export interface RecentRecordAttachment {
+  id: number;
+  file_name: string;
+  file_type: string;
+  file_url: string;
+  uploaded_at: string;
+}
+
+export interface RecentRecord {
+  id: number;
+  visit_date: string;
+  visit_time: string;
+  doctor_name: string;
+  department: string;
+  tests_performed: string;
+  diagnosis_summary: string;
+  prescription_text: string;
+  doctor_notes: string;
+  prescriptions_count: number;
+  status: 'completed' | 'follow_up' | 'critical';
+  attachments: RecentRecordAttachment[];
+  created_at: string;
+}
+
+// Lab & Test Monitoring
+export interface LabTest {
+  id: number;
+  test_name: string;
+  value: number;
+  unit: string;
+  normal_min: number;
+  normal_max: number;
+  status: 'high' | 'low' | 'normal';
+  trend: 'up' | 'down' | null;
+  previous_value: number | null;
+  report_url: string | null;
+  tested_at: string;
+}
+
+// Health Trends
+export interface HealthMetricPoint {
+  date: string;
+  value: number;
+  secondary_value: number | null;
+}
+
+export interface HealthTrendSeries {
+  metric: 'blood_pressure' | 'sugar' | 'weight' | 'bmi';
+  label: string;
+  unit: string;
+  data: HealthMetricPoint[];
+}
+
+export interface HealthTrendsResponse {
+  period_months: number;
+  trends: HealthTrendSeries[];
+}
+
+// Alerts & Risk Monitoring
+export interface DashboardAlert {
+  id: string;
+  alert_type: 'abnormal_labs' | 'low_adherence' | 'high_risk';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  message: string;
+  is_read: boolean;
+  is_dismissed: boolean;
+  created_at: string;
+  read_at: string | null;
+}
+
+// Security Settings
+export interface ActiveSession {
+  id: number;
+  device: string;
+  ip_address: string;
+  last_active: string;
+}
+
+export interface SecurityInfo {
+  last_login: string | null;
+  password_last_changed: string | null;
+  is_2fa_enabled: boolean;
+  active_sessions: ActiveSession[];
+}
+
+// Download Center
+export interface DownloadItem {
+  id: number;
+  type: 'visit_attachment' | 'lab_report';
+  type_label: string;
+  title: string;
+  visit_info: string;
+  created_at: string;
+  file_url: string | null;
 }

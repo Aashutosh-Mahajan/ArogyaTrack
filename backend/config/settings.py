@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "pharmacy",
     "adherence",
     "surveillance",
+    "dashboard",
 ]
 
 MIDDLEWARE = [

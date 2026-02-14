@@ -21,10 +21,21 @@ import type {
   Allergy,
   ChronicCondition,
   Prescription,
+  Medicine,
   AdherenceTracker,
+  DoseSchedule,
   PatientRegistrationData,
   DoctorRegistrationData,
   RegistrationResponse,
+  DashboardSummary,
+  DashboardKPIs,
+  RecentRecord,
+  LabTest,
+  HealthTrendsResponse,
+  DashboardAlert,
+  SecurityInfo,
+  DownloadItem,
+  EmergencyContact,
 } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -245,7 +256,7 @@ export const api = {
     switchProfile: (profileId: string) => apiClient.put('/patients/switch-profile/', { profile_id: profileId }),
     getHealthCard: () => apiClient.get('/patients/health-card/'),
     generateHealthCard: () => apiClient.post('/patients/health-card/'),
-    getEmergencyContacts: (profileId: string) => apiClient.get(`/patients/${profileId}/emergency-contacts/`),
+    getEmergencyContacts: (profileId: string): Promise<EmergencyContact[]> => apiClient.get(`/patients/${profileId}/emergency-contacts/`),
     addEmergencyContact: (profileId: string, data: any) => apiClient.post(`/patients/${profileId}/emergency-contacts/`, data),
     // Secure Digital Patient Card
     getPatientCard: () => apiClient.get('/patients/my-card/'),
@@ -267,9 +278,9 @@ export const api = {
   // Medical Records (backend mounts medical app at /api/doctors/)
   medical: {
     getRecords: (params?: any): Promise<PaginatedResponse<MedicalRecord>> => 
-      apiClient.get('/doctors/my-records/', { params }),
+      apiClient.get('/doctors/visit-records/', { params }),
     getRecord: (id: number): Promise<MedicalRecord> => 
-      apiClient.get(`/doctors/medical-records/${id}/`),
+      apiClient.get(`/doctors/visit-records/${id}/`),
     getAllergies: (): Promise<Allergy[]> => 
       apiClient.get('/doctors/my-allergies/'),
     getChronicConditions: (): Promise<ChronicCondition[]> => 
@@ -279,6 +290,12 @@ export const api = {
     createRecord: (data: any) => apiClient.post('/doctors/medical-records/', data),
     addDiagnosis: (recordId: number, data: any) => 
       apiClient.post(`/doctors/patients/${recordId}/conditions/`, data),
+    // My Patients Management
+    getMyPatients: () => apiClient.get('/doctors/my-patients/'),
+    addPatientToMyList: (patientId: string) => 
+      apiClient.post('/doctors/my-patients/add/', { patient_id: patientId }),
+    createVisitRecord: (patientId: string, data: any) => 
+      apiClient.post(`/doctors/patients/${patientId}/visit-records/create/`, data),
   },
 
   // Prescriptions
@@ -287,6 +304,8 @@ export const api = {
       apiClient.get('/prescriptions/my-prescriptions/', { params }),
     getById: (id: string): Promise<Prescription> => 
       apiClient.get(`/prescriptions/${id}/`),
+    getMedicines: (params?: any): Promise<Medicine[]> =>
+      apiClient.get('/prescriptions/medicines/', { params }),
     create: (data: any) => apiClient.post('/prescriptions/create/', data),
     validateHash: (prescriptionNumber: string, hash: string) => 
       apiClient.post('/prescriptions/validate-hash/', { prescription_number: prescriptionNumber, hash }),
@@ -296,10 +315,10 @@ export const api = {
   adherence: {
     getTrackers: (params?: any): Promise<PaginatedResponse<AdherenceTracker>> => 
       apiClient.get('/adherence/my-trackers/', { params }),
-    getTracker: (trackerId: string) => 
+    getTracker: (trackerId: string): Promise<AdherenceTracker> => 
       apiClient.get(`/adherence/tracker/${trackerId}/`),
-    getUpcomingDoses: () => apiClient.get('/adherence/upcoming-doses/'),
-    getMissedDoses: () => apiClient.get('/adherence/missed-doses/'),
+    getUpcomingDoses: (): Promise<DoseSchedule[]> => apiClient.get('/adherence/upcoming-doses/'),
+    getMissedDoses: (): Promise<DoseSchedule[]> => apiClient.get('/adherence/missed-doses/'),
     markDoseTaken: (data: any) => 
       apiClient.post('/adherence/record-dose/', data),
   },
@@ -394,6 +413,40 @@ export const api = {
     dispense: (data: any) => apiClient.post('/pharmacy/dispense/', data),
     getDispensingRecords: (params?: any) => 
       apiClient.get('/pharmacy/dispensing-records/', { params }),
+  },
+
+  // Patient Dashboard
+  dashboard: {
+    getSummary: (): Promise<DashboardSummary> =>
+      apiClient.get('/dashboard/summary/'),
+    getKPIs: (): Promise<DashboardKPIs> =>
+      apiClient.get('/dashboard/kpis/'),
+    getRecentRecords: (params?: { limit?: number }): Promise<RecentRecord[]> =>
+      apiClient.get('/dashboard/recent-records/', { params }),
+    getLabMonitoring: (): Promise<LabTest[]> =>
+      apiClient.get('/dashboard/lab-monitoring/'),
+    getHealthTrends: (params?: { months?: number }): Promise<HealthTrendsResponse> =>
+      apiClient.get('/dashboard/health-trends/', { params }),
+    getAlerts: (): Promise<DashboardAlert[]> =>
+      apiClient.get('/dashboard/alerts/'),
+    markAlertRead: (alertId: string): Promise<DashboardAlert> =>
+      apiClient.patch(`/dashboard/alerts/${alertId}/`, { is_read: true }),
+    dismissAlert: (alertId: string): Promise<DashboardAlert> =>
+      apiClient.patch(`/dashboard/alerts/${alertId}/`, { is_dismissed: true }),
+    // Security
+    getSecurity: (): Promise<SecurityInfo> =>
+      apiClient.get('/dashboard/security/'),
+    changePassword: (data: { old_password: string; new_password: string; confirm_password: string }): Promise<{ detail: string }> =>
+      apiClient.post('/dashboard/change-password/', data),
+    toggle2FA: (): Promise<{ detail: string; is_2fa_enabled: boolean }> =>
+      apiClient.post('/dashboard/toggle-2fa/'),
+    // Downloads
+    getDownloads: (): Promise<DownloadItem[]> =>
+      apiClient.get('/dashboard/downloads/'),
+    downloadFile: (fileId: number, type: string): Promise<Blob> =>
+      apiClient.get(`/dashboard/download/${fileId}/`, { params: { type }, responseType: 'blob' }),
+    downloadAll: (): Promise<Blob> =>
+      apiClient.get('/dashboard/download-all/', { responseType: 'blob' }),
   },
 };
 
