@@ -8,6 +8,18 @@ from datetime import datetime
 from django.utils.text import slugify
 
 
+def profile_photo_path(instance, filename):
+    """
+    Generate secure path for profile photo uploads.
+    
+    Path format: uploads/patients/{user_id}/profile_photos/{profile_id}_{timestamp}.{ext}
+    """
+    ext = filename.split('.')[-1]
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    safe_filename = f"{instance.id}_{timestamp}.{ext}"
+    return f"uploads/patients/{instance.user.id}/profile_photos/{safe_filename}"
+
+
 def patient_id_proof_path(instance, filename):
     """
     Generate secure path for patient ID proof uploads.

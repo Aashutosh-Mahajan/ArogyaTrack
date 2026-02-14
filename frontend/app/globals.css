@@ -176,3 +176,24 @@
   border: 1px solid hsl(var(--border)) !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
 }
+
+/* QR Code Scanner Styles */
+#qr-reader {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+#qr-reader video {
+  width: 100% !important;
+  height: auto !important;
+  border-radius: 0.5rem;
+  display: block;
+}
+
+#qr-reader__dashboard {
+  display: none !important;
+}
+
+#qr-reader__dashboard_section_csr {
+  display: none !important;
+}

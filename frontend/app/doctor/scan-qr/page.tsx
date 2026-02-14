@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import React, { useState, useEffect, useRef } from 'react';
+import { Html5Qrcode } from 'html5-qrcode';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { withAuth } from '@/components/auth/withAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,19 +9,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
-import { FiCamera, FiX, FiUser, FiActivity, FiAlertTriangle } from 'react-icons/fi';
+import { FiCamera, FiX, FiUser, FiActivity, FiAlertTriangle, FiAlertCircle } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 
 function ScanQRPage() {
   const router = useRouter();
   const [isScanning, setIsScanning] = useState(false);
-  const [scanner, setScanner] = useState<Html5QrcodeScanner | null>(null);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
   const [manualToken, setManualToken] = useState('');
   const [patientData, setPatientData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Auto-scan if redirected from QR landing page
-  React.useEffect(() => {
+  useEffect(() => {
     const storedToken = sessionStorage.getItem('qr_scan_token');
     if (storedToken) {
       sessionStorage.removeItem('qr_scan_token');
@@ -29,65 +31,106 @@ function ScanQRPage() {
     }
   }, []);
 
-  const startScanning = () => {
-    setIsScanning(true);
-    const html5QrcodeScanner = new Html5QrcodeScanner(
-      "qr-reader",
-      { 
-        fps: 10, 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (scannerRef.current?.isScanning) {
+        scannerRef.current.stop().catch(() => {});
+      }
+    };
+  }, []);
+
+  const startScanning = async () => {
+    try {
+      setCameraError(null);
+      setIsScanning(true);
+      
+      // Wait for DOM to update (React state is async)
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Verify the element exists before initializing scanner
+      const element = document.getElementById("qr-reader");
+      if (!element) {
+        throw new Error("Scanner element not found. Please try again.");
+      }
+      
+      // Initialize scanner if not already done
+      if (!scannerRef.current) {
+        scannerRef.current = new Html5Qrcode("qr-reader");
+      }
+
+      // Request camera permissions and start scanning
+      const config = {
+        fps: 10,
         qrbox: { width: 250, height: 250 },
         aspectRatio: 1.0,
-      },
-      false
-    );
+      };
 
-    html5QrcodeScanner.render(
-      (decodedText: string) => {
-        handleScan(decodedText);
-        html5QrcodeScanner.clear();
-        setIsScanning(false);
-      },
-      (error: any) => {
-        // Silent error handling
+      await scannerRef.current.start(
+        { facingMode: "environment" }, // Try back camera first, will fallback to front
+        config,
+        (decodedText) => {
+          // Success callback
+          handleScan(decodedText);
+          stopScanning();
+        },
+        (errorMessage) => {
+          // Error callback - ignore frame parsing errors
+          // These happen continuously while scanning
+        }
+      );
+
+      setIsCameraReady(true);
+      toast.success('Camera started. Point at QR code to scan.');
+    } catch (error: any) {
+      console.error('Camera error:', error);
+      setIsScanning(false);
+      setIsCameraReady(false);
+      
+      let errorMsg = 'Failed to start camera. ';
+      if (error.name === 'NotAllowedError' || error.message?.includes('Permission')) {
+        errorMsg += 'Please allow camera access in your browser settings.';
+      } else if (error.name === 'NotFoundError' || error.message?.includes('No camera')) {
+        errorMsg += 'No camera found on this device.';
+      } else if (error.message?.includes('secure')) {
+        errorMsg += 'Camera requires HTTPS or localhost.';
+      } else if (error.message?.includes('not found')) {
+        errorMsg += 'Scanner initialization failed. Please try again.';
+      } else {
+        errorMsg += error.message || 'Unknown error';
       }
-    );
-
-    setScanner(html5QrcodeScanner);
+      
+      setCameraError(errorMsg);
+      toast.error(errorMsg);
+    }
   };
 
-  const stopScanning = () => {
-    if (scanner) {
-      scanner.clear();
+  const stopScanning = async () => {
+    try {
+      if (scannerRef.current?.isScanning) {
+        await scannerRef.current.stop();
+      }
+    } catch (error) {
+      console.error('Error stopping scanner:', error);
+    } finally {
       setIsScanning(false);
-      setScanner(null);
+      setIsCameraReady(false);
     }
   };
 
   const handleScan = async (scannedData: string) => {
     setIsLoading(true);
     try {
-      // The QR code encodes a URL like: https://domain.com/patient/qr/<signed_token>/
-      // Extract the signed token from the URL, or use raw input as token
-      let signedToken = scannedData;
-      const qrUrlMatch = scannedData.match(/\/patient\/qr\/(.+?)\/?$/);
-      if (qrUrlMatch) {
-        signedToken = qrUrlMatch[1];
-      }
-
-      // Use the new secure QR scan endpoint
-      const data = await api.medical.scanPatientQR(signedToken);
-      setPatientData(data);
+      // The scanned data should be the JWT token directly from the QR code
+      // Use the new patients API endpoint that verifies QR tokens
+      const response = await api.patients.scanPatientQR(scannedData);
+      setPatientData(response);
       toast.success('Patient data loaded successfully');
     } catch (error: any) {
-      // Fallback to legacy scan
-      try {
-        const data = await api.medical.scanQR(scannedData);
-        setPatientData(data);
-        toast.success('Patient data loaded successfully');
-      } catch (fallbackError: any) {
-        toast.error(fallbackError.response?.data?.detail || 'Failed to scan QR code');
-        setPatientData(null);
-      }
+      console.error('QR Scan Error:', error);
+      const errorMessage = error.response?.data?.detail || 'Failed to scan QR code';
+      toast.error(errorMessage);
+      setPatientData(null);
     } finally {
       setIsLoading(false);
     }
@@ -120,6 +163,22 @@ function ScanQRPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Camera Error Message */}
+              {cameraError && !isScanning && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-start space-x-3">
+                    <FiAlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-red-900">Camera Access Error</p>
+                      <p className="text-sm text-red-700 mt-1">{cameraError}</p>
+                      <p className="text-xs text-red-600 mt-2">
+                        💡 Tip: Check browser permissions and ensure you're using HTTPS or localhost
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {!isScanning ? (
                 <Button 
                   onClick={startScanning}
@@ -131,7 +190,20 @@ function ScanQRPage() {
                 </Button>
               ) : (
                 <div className="space-y-4">
-                  <div id="qr-reader" className="w-full"></div>
+                  {!isCameraReady && (
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                      <div className="loading-dots"><span></span><span></span><span></span></div>
+                      <p className="text-sm text-blue-700 mt-2">Requesting camera access...</p>
+                    </div>
+                  )}
+                  <div id="qr-reader" className="w-full rounded-lg overflow-hidden bg-black"></div>
+                  {isCameraReady && (
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-sm text-green-800 text-center">
+                        📷 Camera active - Point at QR code to scan
+                      </p>
+                    </div>
+                  )}
                   <Button 
                     onClick={stopScanning}
                     variant="destructive"
@@ -178,7 +250,16 @@ function ScanQRPage() {
         {patientData && (
           <Card className="border-green-200 bg-green-50">
             <CardHeader>
-              <CardTitle className="text-green-900">Patient Information</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-green-900">Patient Information</CardTitle>
+                {patientData.patient?.profile_photo_url && (
+                  <img
+                    src={patientData.patient.profile_photo_url}
+                    alt="Patient"
+                    className="w-16 h-16 rounded-full object-cover border-2 border-green-300"
+                  />
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -231,7 +312,54 @@ function ScanQRPage() {
                       {patientData.patient?.district || 'N/A'}
                     </p>
                   </div>
+
+                  {patientData.patient?.phone && (
+                    <div className="p-3 bg-white rounded-lg">
+                      <p className="text-sm text-gray-600">Phone</p>
+                      <p className="font-medium">{patientData.patient.phone}</p>
+                    </div>
+                  )}
+
+                  {patientData.patient?.emergency_contact && (
+                    <div className="p-3 bg-white rounded-lg">
+                      <p className="text-sm text-gray-600">Emergency Contact</p>
+                      <p className="font-medium">{patientData.patient.emergency_contact}</p>
+                    </div>
+                  )}
+
+                  {patientData.patient?.address && (
+                    <div className="p-3 bg-white rounded-lg col-span-2">
+                      <p className="text-sm text-gray-600">Address</p>
+                      <p className="font-medium">{patientData.patient.address}</p>
+                      {patientData.patient?.state && (
+                        <p className="text-sm text-gray-500">
+                          {patientData.patient.state}{patientData.patient?.pincode && ` - ${patientData.patient.pincode}`}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
+
+                {/* Card Information */}
+                {patientData.card_info && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="font-semibold text-blue-900 mb-2">Health Card Information</p>
+                    <div className="grid gap-2 md:grid-cols-2 text-sm">
+                      <div>
+                        <span className="text-blue-700">Issued: </span>
+                        <span className="text-blue-900">
+                          {new Date(patientData.card_info.issued_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-blue-700">Expires: </span>
+                        <span className="text-blue-900">
+                          {new Date(patientData.card_info.expires_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Allergies Alert */}
                 {patientData.allergies && patientData.allergies.length > 0 && (

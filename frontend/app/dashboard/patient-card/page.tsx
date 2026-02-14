@@ -1,24 +1,64 @@
 'use client';
 
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { withAuth } from '@/components/auth/withAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import type { PatientCard } from '@/types';
-import { FiDownload, FiUser, FiDroplet, FiCalendar, FiMapPin, FiHash } from 'react-icons/fi';
+import { FiDownload, FiUser, FiDroplet, FiCalendar, FiMapPin, FiHash, FiCamera, FiUpload } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 function PatientCardPage(): React.JSX.Element {
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
   const { data: card, isLoading, error } = useQuery<PatientCard>({
     queryKey: ['patient-card'],
     queryFn: () => api.patients.getPatientCard() as Promise<PatientCard>,
   });
+
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a JPG or PNG image');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      await api.patients.uploadCardPhoto(file);
+      toast.success('Profile photo uploaded successfully!');
+      // Refetch the card data to get the new photo URL
+      queryClient.invalidateQueries({ queryKey: ['patient-card'] });
+    } catch (err: any) {
+      console.error('Photo upload error:', err);
+      toast.error(err?.response?.data?.detail || 'Failed to upload photo');
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const handleDownloadPDF = async () => {
     try {
@@ -97,7 +137,7 @@ function PatientCardPage(): React.JSX.Element {
         {/* Digital Card */}
         <Card className="overflow-hidden shadow-xl border-0">
           {/* Card Header - Blue Gradient */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6 text-white">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6 text-white relative">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-200 text-xs font-medium tracking-widest uppercase">
@@ -106,8 +146,39 @@ function PatientCardPage(): React.JSX.Element {
                 <h2 className="text-2xl font-bold mt-1">{card.name}</h2>
                 <p className="text-blue-100 text-sm mt-1">Digital Patient Card</p>
               </div>
-              <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2">
-                <span className="text-3xl">🏥</span>
+              {/* Profile Photo */}
+              <div className="relative">
+                {card.profile_photo_url ? (
+                  <img
+                    src={card.profile_photo_url}
+                    alt="Profile"
+                    className="w-24 h-24 rounded-lg object-cover border-4 border-white/30 shadow-lg"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center border-4 border-white/30">
+                    <FiUser className="w-12 h-12 text-white/70" />
+                  </div>
+                )}
+                {/* Upload button */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="absolute -bottom-2 -right-2 bg-white text-blue-600 rounded-full p-2 shadow-lg hover:bg-blue-50 transition-colors disabled:opacity-50"
+                  title="Upload photo"
+                >
+                  {isUploading ? (
+                    <div className="loading-dots small"><span></span><span></span><span></span></div>
+                  ) : (
+                    <FiCamera className="w-4 h-4" />
+                  )}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
               </div>
             </div>
           </div>

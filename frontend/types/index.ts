@@ -95,6 +95,7 @@ export interface PatientCard {
   district: string;
   gender: string;
   qr_code_url: string | null;
+  profile_photo_url: string | null;
 }
 
 export interface PatientHistoryFromQR {

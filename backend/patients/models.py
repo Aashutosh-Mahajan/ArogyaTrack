@@ -18,7 +18,7 @@ from .validators import (
     validate_patient_age,
     validate_full_name,
 )
-from .storage import patient_id_proof_path
+from .storage import patient_id_proof_path, profile_photo_path
 
 
 class Profile(models.Model):
@@ -76,6 +76,14 @@ class Profile(models.Model):
     country = models.CharField(max_length=120, default="India")
     address = models.TextField(blank=True)
     pincode = models.CharField(max_length=10, blank=True)
+    
+    # Profile Photo
+    profile_photo = models.ImageField(
+        upload_to=profile_photo_path,
+        null=True,
+        blank=True,
+        help_text="Profile photo for ID card (max 5MB, JPG/PNG)"
+    )
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)

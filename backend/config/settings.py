@@ -174,8 +174,30 @@ SIMPLE_JWT = {
 # Custom user model
 AUTH_USER_MODEL = "accounts.User"
 
-# CORS - Allow all origins for development
-CORS_ALLOW_ALL_ORIGINS = True
+# ========================================================================
+# CORS Configuration for Local Development
+# ========================================================================
+# For production, set CORS_ALLOWED_ORIGINS in environment variables
+# For development, allowing common development ports
+
+if DEBUG:
+    # Development: Allow localhost on common ports (3000, 3001, 3002)
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:3002",
+    ]
+else:
+    # Production: Use environment variable
+    CORS_ALLOWED_ORIGINS = [
+        origin.strip()
+        for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
+        if origin.strip()
+    ]
+
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -197,15 +219,22 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
-# CSRF trusted origins
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip()
-    for origin in os.getenv(
-        "CSRF_TRUSTED_ORIGINS",
-        "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://localhost:3002,http://localhost:8080,http://127.0.0.1:8080",
-    ).split(",")
-    if origin.strip()
-]
+# CSRF trusted origins (must match CORS origins)
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:3002",
+    ]
+else:
+    CSRF_TRUSTED_ORIGINS = [
+        origin.strip()
+        for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+        if origin.strip()
+    ]
 
 # Email / SMTP
 # Use console backend in development (prints OTP to terminal)

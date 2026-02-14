@@ -249,10 +249,19 @@ export const api = {
     addEmergencyContact: (profileId: string, data: any) => apiClient.post(`/patients/${profileId}/emergency-contacts/`, data),
     // Secure Digital Patient Card
     getPatientCard: () => apiClient.get('/patients/my-card/'),
+    uploadCardPhoto: (photo: File) => {
+      const formData = new FormData();
+      formData.append('photo', photo);
+      return apiClient.post('/patients/my-card/upload-photo/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    },
     downloadPatientCardPDF: () =>
       apiClient.get('/patients/my-card/pdf/', { responseType: 'blob' as any }),
     getQRImage: () =>
       apiClient.get('/patients/my-card/qr-image/', { responseType: 'blob' as any }),
+    // Scan Patient QR Code (for doctors/admins)
+    scanPatientQR: (token: string) => apiClient.post('/patients/scan-qr/', { token }),
   },
 
   // Medical Records (backend mounts medical app at /api/doctors/)

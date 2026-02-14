@@ -208,7 +208,15 @@ class MyCardView(APIView):
 
         qr_code_url = None
         if card and card.qr_code_path:
-            qr_code_url = request.build_absolute_uri("/api/patients/my-card/qr-image/")
+            # Convert absolute file path to relative media URL
+            import os
+            rel_path = os.path.relpath(card.qr_code_path, settings.MEDIA_ROOT)
+            media_url = settings.MEDIA_URL + rel_path.replace("\\", "/")
+            qr_code_url = request.build_absolute_uri(media_url)
+        
+        profile_photo_url = None
+        if profile.profile_photo:
+            profile_photo_url = request.build_absolute_uri(profile.profile_photo.url)
 
         return Response({
             "unique_patient_id": unique_patient_id,
@@ -219,7 +227,56 @@ class MyCardView(APIView):
             "district": profile.district or "",
             "gender": profile.gender,
             "qr_code_url": qr_code_url,
+            "profile_photo_url": profile_photo_url,
         })
+
+
+class MyCardPhotoUploadView(APIView):
+    """Upload profile photo for the patient card."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        profile, _ = _get_or_create_card(request.user)
+        if not profile:
+            return Response(
+                {"detail": "No profile found. Please complete your profile first."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        
+        photo = request.FILES.get('photo')
+        if not photo:
+            return Response(
+                {"detail": "No photo file provided."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        # Validate file type
+        allowed_extensions = ['jpg', 'jpeg', 'png']
+        file_ext = photo.name.split('.')[-1].lower()
+        if file_ext not in allowed_extensions:
+            return Response(
+                {"detail": f"Invalid file type. Allowed: {', '.join(allowed_extensions)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        # Validate file size (max 5MB)
+        max_size = 5 * 1024 * 1024  # 5MB in bytes
+        if photo.size > max_size:
+            return Response(
+                {"detail": "File too large. Maximum size is 5MB."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        # Save the photo
+        profile.profile_photo = photo
+        profile.save()
+        
+        profile_photo_url = request.build_absolute_uri(profile.profile_photo.url)
+        
+        return Response({
+            "detail": "Profile photo uploaded successfully.",
+            "profile_photo_url": profile_photo_url,
+        }, status=status.HTTP_200_OK)
 
 
 class MyCardQRImageView(APIView):
@@ -273,6 +330,16 @@ class MyCardPDFView(APIView):
             c.setFont("Helvetica", 8)
             c.drawString(10 * mm, height - 24 * mm, "Digital Patient Card")
 
+            # Profile photo in header (if available)
+            if profile.profile_photo:
+                try:
+                    from reportlab.lib.utils import ImageReader
+                    photo_img = ImageReader(profile.profile_photo.path)
+                    # Draw photo in top-right corner of header
+                    c.drawImage(photo_img, width - 35 * mm, height - 35 * mm, 25 * mm, 25 * mm, mask='auto', preserveAspectRatio=True)
+                except Exception:
+                    pass  # Skip if photo can't be loaded
+
             # Body
             y = height - 50 * mm
             fields = [
@@ -311,4 +378,109 @@ class MyCardPDFView(APIView):
             return Response(
                 {"detail": "PDF generation requires reportlab. Install: pip install reportlab"},
                 status=status.HTTP_501_NOT_IMPLEMENTED,
+            )
+
+
+class ScanPatientQRView(APIView):
+    """
+    Verify a scanned QR code token and return patient information.
+    Only accessible by doctors and admins.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        # Check authorization - only doctors and admins can scan
+        if request.user.role not in ['doctor', 'admin']:
+            return Response(
+                {"detail": "Only doctors and administrators can scan patient QR codes."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        token = request.data.get('token')
+        if not token:
+            return Response(
+                {"detail": "QR token is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            # Decode the JWT token
+            import jwt
+            from django.conf import settings
+            
+            payload = jwt.decode(
+                token,
+                settings.SIMPLE_JWT.get("SIGNING_KEY"),
+                algorithms=[settings.SIMPLE_JWT.get("ALGORITHM", "HS256")]
+            )
+            
+            patient_id = payload.get('patient_id')
+            if not patient_id:
+                return Response(
+                    {"detail": "Invalid QR code format."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Get the profile and health card
+            profile = Profile.objects.select_related('user', 'health_card').get(id=patient_id)
+            card = profile.health_card
+
+            # Check if card is still active
+            if not card.is_active():
+                return Response(
+                    {"detail": "This health card has expired or been revoked."},
+                    status=status.HTTP_410_GONE,
+                )
+
+            # Build patient information response
+            short_id = str(profile.id).split("-")[-1].upper()[:6]
+            created_year = profile.created_at.year if hasattr(profile, 'created_at') and profile.created_at else 2026
+            unique_patient_id = f"HS-{created_year}-{short_id}"
+
+            profile_photo_url = None
+            if profile.profile_photo:
+                profile_photo_url = request.build_absolute_uri(profile.profile_photo.url)
+
+            return Response({
+                "success": True,
+                "patient": {
+                    "unique_patient_id": unique_patient_id,
+                    "name": profile.name,
+                    "age": profile.age,
+                    "gender": profile.gender,
+                    "blood_group": profile.blood_group,
+                    "date_of_birth": str(profile.date_of_birth) if profile.date_of_birth else None,
+                    "phone": profile.phone or None,
+                    "emergency_contact": profile.emergency_contact_number or None,
+                    "address": profile.address or None,
+                    "district": profile.district or None,
+                    "state": profile.state or None,
+                    "pincode": profile.pincode or None,
+                    "profile_photo_url": profile_photo_url,
+                },
+                "card_info": {
+                    "issued_at": card.created_at.isoformat(),
+                    "expires_at": card.expires_at.isoformat(),
+                }
+            })
+
+        except jwt.ExpiredSignatureError:
+            return Response(
+                {"detail": "This QR code has expired."},
+                status=status.HTTP_410_GONE,
+            )
+        except jwt.InvalidTokenError:
+            return Response(
+                {"detail": "Invalid QR code."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Profile.DoesNotExist:
+            return Response(
+                {"detail": "Patient not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {"detail": f"Error processing QR code: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
