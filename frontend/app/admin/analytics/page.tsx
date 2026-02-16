@@ -82,8 +82,8 @@ function AnalyticsPage(): React.JSX.Element {
         {mlModels && (
           <Card>
             <CardHeader>
-              <CardTitle>Deployed ML Models</CardTitle>
-              <CardDescription>Model details and performance metrics</CardDescription>
+              <CardTitle>Deployed ML Models (v5.0)</CardTitle>
+              <CardDescription>Model details, performance metrics, and feature counts</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -95,12 +95,39 @@ function AnalyticsPage(): React.JSX.Element {
                         {model.loaded ? 'Active' : 'Inactive'}
                       </Badge>
                     </div>
-                    <p className="text-xs text-gray-500 mb-2">{model.type}</p>
+                    <p className="text-xs text-gray-500 mb-1">{model.version}</p>
+                    {model.n_features && (
+                      <p className="text-xs text-indigo-600 mb-2">{model.n_features} features</p>
+                    )}
+                    {model.corrector_available !== undefined && (
+                      <p className="text-xs mb-1">
+                        GB Corrector: <span className={model.corrector_available ? 'text-green-600' : 'text-red-500'}>{model.corrector_available ? 'Yes' : 'No'}</span>
+                        {model.scoring_method && <span className="text-gray-400 ml-1">({model.scoring_method})</span>}
+                      </p>
+                    )}
+                    {model.xgb_available !== undefined && (
+                      <p className="text-xs mb-1">
+                        XGBoost component: <span className={model.xgb_available ? 'text-green-600' : 'text-red-500'}>{model.xgb_available ? 'Yes' : 'No'}</span>
+                      </p>
+                    )}
+                    {model.risk_tiers && (
+                      <div className="text-xs mb-2 space-y-0.5">
+                        {Object.entries(model.risk_tiers).map(([tier, range]: [string, any]) => (
+                          <div key={tier} className="flex justify-between">
+                            <span className="capitalize text-gray-500">{tier}:</span>
+                            <span className="font-mono">[{Array.isArray(range) ? range.join(', ') : range}]</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {model.metrics && (
-                      <div className="text-xs space-y-1">
-                        {Object.entries(model.metrics).map(([key, val]) => (
+                      <div className="text-xs space-y-1 border-t pt-2 mt-2">
+                        {Object.entries(model.metrics)
+                          .filter(([, val]) => typeof val === 'number' && val !== 0)
+                          .slice(0, 6)
+                          .map(([key, val]) => (
                           <div key={key} className="flex justify-between">
-                            <span className="text-gray-500">{key}:</span>
+                            <span className="text-gray-500">{key.replace(/_/g, ' ')}:</span>
                             <span className="font-mono">{typeof val === 'number' ? (val as number).toFixed(4) : String(val)}</span>
                           </div>
                         ))}
@@ -173,7 +200,7 @@ function AnalyticsPage(): React.JSX.Element {
             <CardTitle className="flex items-center">
               <FiShield className="mr-2" /> Regional Risk Assessment
             </CardTitle>
-            <CardDescription>XGBoost outbreak classifier results ({riskScores?.count || 0} records)</CardDescription>
+            <CardDescription>XGBoost v4.0 outbreak classifier — risk tiers: low [0,0.3), medium [0.3,0.6), high [0.6,0.85), critical [0.85,1.0] ({riskScores?.count || 0} records)</CardDescription>
           </CardHeader>
           <CardContent>
             {riskScores?.results && riskScores.results.length > 0 ? (
@@ -217,7 +244,7 @@ function AnalyticsPage(): React.JSX.Element {
             <CardTitle className="flex items-center">
               <FiZap className="mr-2" /> Anomaly Detection Results
             </CardTitle>
-            <CardDescription>Isolation Forest anomaly detection ({anomalies?.count || 0} records)</CardDescription>
+            <CardDescription>Isolation Forest v5.0 ensemble + GradientBoosting corrector ({anomalies?.count || 0} records)</CardDescription>
           </CardHeader>
           <CardContent>
             {anomalies?.results && anomalies.results.length > 0 ? (

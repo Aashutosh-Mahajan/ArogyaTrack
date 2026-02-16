@@ -354,8 +354,11 @@ export const api = {
     
     getForecasts: (params?: any): Promise<PaginatedResponse<Forecast>> => 
       apiClient.get('/surveillance/forecasts/', { params }),
-    
-    getAnomalies: (params?: any): Promise<PaginatedResponse<Anomaly>> => 
+
+    getForecastChartData: (params?: { horizon?: number; disease_code?: string }): Promise<any> =>
+      apiClient.get('/surveillance/forecast-chart-data/', { params }),
+
+    getAnomalies: (params?: any): Promise<PaginatedResponse<Anomaly>> =>
       apiClient.get('/surveillance/anomalies/', { params }),
     
     getRiskScores: (params?: any): Promise<PaginatedResponse<RiskScore>> => 
@@ -368,18 +371,18 @@ export const api = {
       apiClient.get('/surveillance/environmental-data/', { params }),
     
     acknowledgeAlert: (id: string, data?: any) => 
-      apiClient.post(`/surveillance/alerts/${id}/action/`, { action: 'acknowledge', ...data }),
+      apiClient.post(`/surveillance/alerts/${id}/acknowledge/`, data || {}),
     
     resolveAlert: (id: string, data?: any) => 
-      apiClient.post(`/surveillance/alerts/${id}/action/`, { action: 'resolve', ...data }),
+      apiClient.post(`/surveillance/alerts/${id}/resolve/`, data || {}),
 
     escalateAlert: (id: string, data?: any) =>
-      apiClient.post(`/surveillance/alerts/${id}/action/`, { action: 'escalate', ...data }),
+      apiClient.post(`/surveillance/alerts/${id}/escalate/`, data || {}),
 
-    // ML Model endpoints
+    // ML Model endpoints (v5.0 aligned)
     getMLModels: (): Promise<MLModelInfo[]> =>
       apiClient.get<any>('/surveillance/ml-models/').then(res => {
-        // Transform object format to array format
+        // Transform object format {key: ModelInfoObj} to array of MLModelInfo
         if (res && !Array.isArray(res)) {
           return Object.entries(res).map(([key, val]: [string, any]) => ({
             name: val.name || key.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -390,6 +393,21 @@ export const api = {
             features: val.features || [],
             metrics: val.metrics || {},
             metadata: val,
+            // v5.0 enriched fields
+            n_features: val.n_features,
+            description: val.description,
+            model_available: val.model_available,
+            corrector_available: val.corrector_available,
+            xgb_available: val.xgb_available,
+            scoring_method: val.scoring_method,
+            risk_tiers: val.risk_tiers,
+            risk_tier_distribution: val.risk_tier_distribution,
+            config: val.config,
+            horizon_metrics: val.horizon_metrics,
+            artifacts: val.artifacts,
+            cluster_profiles: val.cluster_profiles,
+            parameters: val.parameters,
+            latest_forecasts: val.latest_forecasts,
           }));
         }
         return res || [];

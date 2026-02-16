@@ -1,27 +1,27 @@
 {
-  "model": "DBSCAN",
-  "timestamp": "2026-02-13T22:22:40.327316",
+  "model": "DBSCAN v5.0",
+  "timestamp": "2026-02-14T18:34:33.065689",
   "parameters": {
-    "eps_km": 108.15124898650109,
-    "eps_radians": 0.016975529681657494,
-    "min_samples": 5,
-    "metric": "haversine",
-    "auto_tuned": true
+    "best_eps": 3.0,
+    "best_min_samples": 2,
+    "geo_weight": 1.25,
+    "feature_set": "full",
+    "n_features": 13
   },
   "results": {
-    "n_clusters": 50,
-    "n_points": 1536,
-    "n_noise": 16,
-    "noise_percent": 1.0416666666666665,
-    "clustered_percent": 98.95833333333333
+    "n_clusters": 3,
+    "n_points": 500,
+    "n_noise": 3,
+    "noise_pct": 0.6
   },
   "quality_metrics": {
-    "silhouette_score": 0.4799879303742516,
-    "calinski_harabasz": 1241.6163593619938,
-    "davies_bouldin": 0.4027488787262222
+    "silhouette_score": 0.6832619002399047,
+    "calinski_harabasz": 171.37867013410906,
+    "davies_bouldin": 0.7323704440318517
   },
   "outbreak_correlation": {
-    "high_risk_clusters": 0,
-    "high_risk_threshold": 0.15
+    "high_risk_clusters": 2,
+    "threshold": 0.061298808796698905,
+    "n_hotspot_regions": 17
   }
 }

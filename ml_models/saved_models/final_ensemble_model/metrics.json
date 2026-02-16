@@ -1,12 +1,149 @@
 {
-    "mae": 394.6387647920349,
-    "rmse": 465.7971571473674,
-    "r2": 0.98360649370086,
-    "mape": 3.3416434321673654,
-    "smape": 3.377950071386722,
-    "mase": 0.14478171688228564,
-    "prophet_r2": -0.2708537690200863,
-    "xgb_r2": 0.9835335637791726,
-    "blend_weight_prophet": 0.05,
-    "timestamp": "2026-02-13T18:21:08.180822"
+  "model": "Prophet + XGBoost Ensemble v5.0",
+  "prophet_weight": 0.2,
+  "xgboost_weight": 0.8,
+  "use_weekly": true,
+  "feature_cols": [
+    "rm_4",
+    "rm_8",
+    "rstd_8",
+    "rmax_4",
+    "rmin_4",
+    "diff_1",
+    "diff_2",
+    "month",
+    "quarter",
+    "week",
+    "is_monsoon",
+    "is_winter",
+    "temperature_celsius",
+    "rainfall_mm",
+    "aqi",
+    "humidity_percent",
+    "temperature_celsius_lag1",
+    "rainfall_mm_lag1",
+    "aqi_lag1",
+    "humidity_percent_lag1"
+  ],
+  "horizons": [
+    7,
+    14,
+    30,
+    60,
+    90
+  ],
+  "horizon_metrics": {
+    "7d": {
+      "mae": 810.0581974972368,
+      "mape": 4.469850890823195,
+      "r2": 0.9731436559338643,
+      "n_windows": 26,
+      "n_weeks": 1
+    },
+    "14d": {
+      "mae": 1426.9593300869594,
+      "mape": 3.852892315186037,
+      "r2": 0.9796408079339335,
+      "n_windows": 25,
+      "n_weeks": 2
+    },
+    "30d": {
+      "mae": 2322.745944480468,
+      "mape": 3.0456936579933527,
+      "r2": 0.9870244631592007,
+      "n_windows": 23,
+      "n_weeks": 4
+    },
+    "60d": {
+      "mae": 3108.739345145237,
+      "mape": 2.154946226480088,
+      "r2": 0.9932515365900063,
+      "n_windows": 19,
+      "n_weeks": 8
+    },
+    "90d": {
+      "mae": 2659.21252245183,
+      "mape": 1.3388090435133817,
+      "r2": 0.996902398214224,
+      "n_windows": 15,
+      "n_weeks": 12
+    }
+  },
+  "overall": {
+    "r2": 0.9731436559338643,
+    "mape": 4.469850890823195,
+    "mae": 810.0581974972368
+  },
+  "forecasts": {
+    "7d": {
+      "horizon_days": 7,
+      "n_weeks": 1,
+      "weekly_predictions": [
+        13880.8
+      ],
+      "total_cases": 13881.0,
+      "avg_weekly_cases": 13880.8,
+      "start_date": "2026-01-11",
+      "end_date": "2026-01-11"
+    },
+    "14d": {
+      "horizon_days": 14,
+      "n_weeks": 2,
+      "weekly_predictions": [
+        13880.8,
+        13855.5
+      ],
+      "total_cases": 27736.0,
+      "avg_weekly_cases": 13868.2,
+      "start_date": "2026-01-11",
+      "end_date": "2026-01-18"
+    },
+    "30d": {
+      "horizon_days": 30,
+      "n_weeks": 4,
+      "weekly_predictions": [
+        13880.8,
+        13855.5,
+        13839.6,
+        13844.3
+      ],
+      "total_cases": 55420.0,
+      "avg_weekly_cases": 13855.1,
+      "start_date": "2026-01-11",
+      "end_date": "2026-02-01"
+    },
+    "weekly_detail": [
+      {
+        "date": "2026-01-11",
+        "prophet": 12703.7,
+        "xgboost": 14175.1,
+        "ensemble": 13880.8
+      },
+      {
+        "date": "2026-01-18",
+        "prophet": 12632.7,
+        "xgboost": 14161.2,
+        "ensemble": 13855.5
+      },
+      {
+        "date": "2026-01-25",
+        "prophet": 12553.3,
+        "xgboost": 14161.2,
+        "ensemble": 13839.6
+      },
+      {
+        "date": "2026-02-01",
+        "prophet": 12499.7,
+        "xgboost": 14180.4,
+        "ensemble": 13844.3
+      },
+      {
+        "date": "2026-02-08",
+        "prophet": 12531.0,
+        "xgboost": 14180.4,
+        "ensemble": 13850.5
+      }
+    ]
+  },
+  "timestamp": "2026-02-14T12:49:15.417040"
 }

@@ -1,7 +1,13 @@
 {
+    "version": "4.1",
     "forecast_days": 90,
+    "horizons": [
+        7,
+        14,
+        30
+    ],
     "use_weekly": true,
-    "smooth_window": 5,
+    "smooth_window": 3,
     "outlier_percentile": 99,
     "log_transform": false,
     "feature_cols": [
@@ -16,17 +22,21 @@
         "lag_3",
         "lag_4",
         "lag_8",
-        "rolling_mean_4",
-        "rolling_std_4",
-        "rolling_mean_8",
-        "rolling_std_8",
-        "rolling_max_4",
-        "rolling_min_4",
+        "rm_4",
+        "rstd_4",
+        "rm_8",
+        "rstd_8",
+        "rmax_4",
+        "rmin_4",
         "diff_1",
         "diff_2",
-        "pct_change_1",
+        "pct_1",
         "temp_rain",
         "temp_aqi"
     ],
-    "blend_weight_prophet": 0.05
+    "blend_weight_prophet": 0.0,
+    "walk_forward_folds": 3,
+    "interval_width": 0.95,
+    "aggregation": "per_region_mean",
+    "approx_n_regions": 2821.0
 }

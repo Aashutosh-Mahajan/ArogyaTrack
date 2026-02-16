@@ -100,7 +100,11 @@ def calculate_risk_scores_for_region(region_id, disease_code):
 @shared_task
 def run_complete_ml_pipeline(disease_code):
     """
-    Run complete ML pipeline: clustering, forecasting, anomaly detection, risk scoring
+    Run complete ML pipeline (v5.0 aligned):
+      - DBSCAN v5.0 clustering (13 features)
+      - Prophet+XGBoost Ensemble v5.0 forecasting (horizons: 7,14,30,60,90)
+      - Isolation Forest v5.0 anomaly detection (59 features, ensemble+GB corrector)
+      - XGBoost v4.0 risk scoring (56 features, risk tiers)
     """
     results = {
         'disease_code': disease_code,
@@ -108,7 +112,7 @@ def run_complete_ml_pipeline(disease_code):
         'stages': {}
     }
     
-    # Stage 1: Clustering
+    # Stage 1: Clustering (DBSCAN v5.0)
     clusters = ClusteringService.detect_clusters(disease_code)
     results['stages']['clustering'] = {
         'clusters_detected': len(clusters),
@@ -125,23 +129,28 @@ def run_complete_ml_pipeline(disease_code):
     anomaly_count = 0
     risk_scores_count = 0
     
+    # Forecast horizons matching Ensemble v5.0 config
+    HORIZONS = [7, 14, 30, 60, 90]
+    
     for region in regions:
-        # Forecasting
-        forecasts = ForecastingService.generate_forecast(region, disease_code)
-        forecast_count += len(forecasts)
+        # Forecasting (Prophet+XGBoost Ensemble v5.0, all horizons)
+        for horizon in HORIZONS:
+            forecasts = ForecastingService.generate_forecast(region, disease_code, horizon)
+            forecast_count += len(forecasts)
         
-        # Anomaly Detection
+        # Anomaly Detection (Isolation Forest v5.0 ensemble + GB corrector)
         anomaly = AnomalyDetectionService.detect_anomalies(region, disease_code)
         if anomaly:
             anomaly_count += 1
         
-        # Risk Scoring
+        # Risk Scoring (XGBoost v4.0, 56 features)
         risk_score = RiskScoringService.calculate_risk_score(region, disease_code)
         if risk_score:
             risk_scores_count += 1
     
     results['stages']['forecasting'] = {
         'regions_processed': regions.count(),
+        'horizons': HORIZONS,
         'forecasts_generated': forecast_count,
         'status': 'complete'
     }
@@ -423,7 +432,16 @@ def master_daily_pipeline():
     results['stages']['environmental_sync'] = env_result
     
     # Stage 3: ML Pipeline for each disease
-    common_diseases = ['A90', 'U07.1', 'A00']  # Dengue, COVID, Cholera
+    common_diseases = [
+        'A90',    # Dengue Fever
+        'U07.1',  # COVID-19
+        'A00',    # Cholera
+        'B50.0',  # Malaria
+        'J18.9',  # Pneumonia
+        'J10.1',  # Influenza
+        'A09',    # Gastroenteritis
+        'B05',    # Measles
+    ]
     
     for disease_code in common_diseases:
         ml_result = run_complete_ml_pipeline(disease_code)

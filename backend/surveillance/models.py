@@ -99,11 +99,13 @@ class ClusterRegion(models.Model):
 
 
 class Forecast(models.Model):
-    """Prophet time series forecasts"""
+    """Prophet + XGBoost Ensemble time series forecasts (v5.0)"""
     HORIZON_CHOICES = [
         (7, '7 days'),
         (14, '14 days'),
         (30, '30 days'),
+        (60, '60 days'),
+        (90, '90 days'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -157,7 +159,14 @@ class Anomaly(models.Model):
 
 
 class RiskScore(models.Model):
-    """Regional risk scores from XGBoost"""
+    """Regional risk scores from XGBoost v4.0 outbreak classifier
+    
+    Risk tiers align with xgboost_outbreak_v3/risk_tiers.json:
+      low:      [0.0, 0.3)
+      medium:   [0.3, 0.6)
+      high:     [0.6, 0.85)
+      critical: [0.85, 1.0]
+    """
     RISK_LEVELS = [
         (0, 'Low'),
         (1, 'Medium'),

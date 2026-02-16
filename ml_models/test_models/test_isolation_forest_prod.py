@@ -1,268 +1,269 @@
 #!/usr/bin/env python3
 """
-Test Isolation Forest Prod (XGBoost Outbreak Detection)
-Tests the trained outbreak detection model on test data
+Test Isolation Forest Anomaly Detector  (v4.0)
+Matches feature engineering from train_isolation_forest_prod.py exactly.
+
+Tests:
+  - Anomaly score distribution
+  - Threshold-based classification vs ground truth
+  - Per-region and per-disease analysis
 """
 
 import os
+import json
 import numpy as np
 import pandas as pd
 import joblib
-import json
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from sklearn.metrics import (
-    roc_auc_score, classification_report, f1_score,
-    precision_score, recall_score, confusion_matrix
+    classification_report, roc_auc_score, f1_score, precision_score,
+    recall_score, confusion_matrix, precision_recall_curve, auc,
 )
 import warnings
 warnings.filterwarnings("ignore")
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-DATA_DIR = os.path.join(BASE_DIR, "india_surveillance_extreme_quality")
-MODEL_DIR = os.path.join(BASE_DIR, "saved_models", "isolation_forest_prod")
-OUTPUT_DIR = os.path.join(BASE_DIR, "test_results", "isolation_forest_prod")
+BASE_DIR   = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+DATA_DIR   = os.path.join(BASE_DIR, "india_surveillance_extreme_quality")
+MODEL_DIR  = os.path.join(BASE_DIR, "saved_models", "isolation_forest_prod")
+OUTPUT_DIR = os.path.join(BASE_DIR, "test_results", "isolation_forest")
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-print("="*70)
-print("ISOLATION FOREST PROD (XGBOOST OUTBREAK) MODEL TESTING")
-print("="*70)
+print("=" * 70)
+print("ISOLATION FOREST ANOMALY DETECTOR TESTING  (v4.0)")
+print("=" * 70)
+
 
 # ==========================================================
-# LOAD MODEL
+# LOAD MODEL AND CONFIG
 # ==========================================================
 
 print("\nLoading model...")
-model = joblib.load(os.path.join(MODEL_DIR, "xgboost_model.pkl"))
-scaler = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
+iforest = joblib.load(os.path.join(MODEL_DIR, "isolation_forest.pkl"))
 
 with open(os.path.join(MODEL_DIR, "features.json")) as f:
-    FEATURES = json.load(f)
+    FEATURE_COLS = json.load(f)   # plain list saved by training script
 
-# Load metrics for optimal threshold
 with open(os.path.join(MODEL_DIR, "metrics.json")) as f:
-    metrics = json.load(f)
-    opt_threshold = metrics.get("optimal_threshold", 0.5)
+    train_metrics = json.load(f)
+THRESHOLD    = train_metrics.get("threshold", 0.0)
 
-print(f"Loaded model with {len(FEATURES)} features")
-print(f"Optimal threshold: {opt_threshold:.4f}")
+print(f"  Feature count:  {len(FEATURE_COLS)}")
+print(f"  Threshold:      {THRESHOLD:.4f}")
+print(f"  Algorithm:      {train_metrics.get('algorithm', 'IsolationForest')}")
+
+# Load scaler if exists
+scaler = None
+scaler_path = os.path.join(MODEL_DIR, "scaler.pkl")
+if os.path.exists(scaler_path):
+    scaler = joblib.load(scaler_path)
+    print("  Scaler:         loaded")
+
 
 # ==========================================================
-# LOAD DATA
+# LOAD DATA + FEATURE ENGINEERING  (match training exactly)
 # ==========================================================
 
 print("\nLoading data...")
+surv = pd.read_csv(os.path.join(DATA_DIR, "disease_surveillance_historical.csv"),
+                    parse_dates=["date"])
+env  = pd.read_csv(os.path.join(DATA_DIR, "environmental_data.csv"),
+                    parse_dates=["date"])
+regions = pd.read_csv(os.path.join(DATA_DIR, "regions.csv"))
 
-surv = pd.read_csv(
-    os.path.join(DATA_DIR, "disease_surveillance_historical.csv"),
-    parse_dates=['date']
-)
+has_labels = "outbreak_occurred" in surv.columns
 
-env = pd.read_csv(
-    os.path.join(DATA_DIR, "environmental_data.csv"),
-    parse_dates=['date']
-)
+df = surv.merge(regions[["region_id", "state"]], on="region_id", how="left")
+df = df.merge(env, on=["region_id", "date"], how="left", suffixes=("", "_env"))
 
-regions = pd.read_csv(
-    os.path.join(DATA_DIR, "regions.csv")
-)
+# Resolve suffix duplicates
+for col in list(df.columns):
+    if col.endswith("_env"):
+        base = col.rsplit("_", 1)[0]
+        if base in df.columns:
+            df[base] = df[base].fillna(df[col])
+            df.drop(columns=[col], inplace=True)
 
-labels = pd.read_csv(
-    os.path.join(DATA_DIR, "outbreak_labels.csv"),
-    parse_dates=['date']
-)
+df = df.sort_values(["region_id", "date"]).reset_index(drop=True)
 
-print(f"Loaded {len(surv)} surveillance records")
-print(f"Loaded {len(labels)} labeled outbreak records")
+print(f"  Total rows: {len(df):,}")
+if has_labels:
+    print(f"  Outbreak rate: {df['outbreak_occurred'].mean():.2%}")
 
-# ==========================================================
-# FEATURE ENGINEERING (Matching Training)
-# ==========================================================
+# ---------- rolling features (match training: groupby region_id) ----------
+grp = df.groupby("region_id")
 
-print("\nEngineering features...")
+for w in [7, 14, 28]:
+    df[f"cases_rm_{w}"]   = grp["case_count"].transform(
+        lambda x: x.rolling(w, 1).mean()).fillna(0)
+    df[f"cases_rstd_{w}"] = grp["case_count"].transform(
+        lambda x: x.rolling(w, 1).std()).fillna(0)
+    df[f"cases_rmax_{w}"] = grp["case_count"].transform(
+        lambda x: x.rolling(w, 1).max()).fillna(0)
 
-# Merge regions
-surv = surv.merge(regions, on='region_id', how='left')
+# Growth rates (pct_change, clipped - match training exactly)
+for p in [7, 14, 21]:
+    df[f"growth_{p}"] = grp["case_count"].pct_change(periods=p).fillna(0)
+    df[f"growth_{p}"] = df[f"growth_{p}"].replace([np.inf, -np.inf], 0).clip(-5, 5)
 
-# Sort for rolling operations
-surv = surv.sort_values(['region_id','disease_id','date'])
+# Acceleration (second derivative of case_count)
+df["accel_7"] = grp["case_count"].diff().diff().fillna(0)
 
-# Per-capita calculations
-surv['per_capita_cases'] = surv['case_count'] / (surv['population'] + 1)
-surv['case_fatality_rate'] = surv['death_count'] / (surv['case_count'] + 1)
+# Deviation z-scores (divide by rstd + 1, match training)
+df["dev_7"]  = (df["case_count"] - df["cases_rm_7"])  / (df["cases_rstd_7"]  + 1)
+df["dev_14"] = (df["case_count"] - df["cases_rm_14"]) / (df["cases_rstd_14"] + 1)
+df["dev_28"] = (df["case_count"] - df["cases_rm_28"]) / (df["cases_rstd_28"] + 1)
+
+# Spike flags (based on dev_7, match training)
+df["spike_2std"] = (df["dev_7"] > 2).astype(int)
+df["spike_3std"] = (df["dev_7"] > 3).astype(int)
 
 # Lag features
-g = surv.groupby(['region_id','disease_id'])
-for lag in [7, 14]:
-    surv[f'cases_lag_{lag}'] = g['case_count'].shift(lag).fillna(0)
-    surv[f'deaths_lag_{lag}'] = g['death_count'].shift(lag).fillna(0)
-    surv[f'severity_lag_{lag}'] = g['severity_avg'].shift(lag).fillna(0)
+for lag in [7, 14, 21]:
+    df[f"cases_lag_{lag}"] = grp["case_count"].shift(lag).fillna(0)
 
-# Rolling features
-for window in [7, 14, 21]:
-    surv[f'cases_rm_{window}'] = g['case_count'].transform(
-        lambda x: x.rolling(window, min_periods=1).mean()
-    )
-    
-surv['cases_rstd_7'] = g['case_count'].transform(
-    lambda x: x.rolling(7, min_periods=1).std()
-).fillna(0)
-
-surv['cases_rstd_14'] = g['case_count'].transform(
-    lambda x: x.rolling(14, min_periods=1).std()
-).fillna(0)
-
-surv['cases_rmax_7'] = g['case_count'].transform(
-    lambda x: x.rolling(7, min_periods=1).max()
-)
-
-surv['cases_rmax_14'] = g['case_count'].transform(
-    lambda x: x.rolling(14, min_periods=1).max()
-)
-
-# Growth rates
-surv['growth_7'] = g['case_count'].pct_change(7).fillna(0).replace([np.inf, -np.inf], 0)
-surv['growth_14'] = g['case_count'].pct_change(14).fillna(0).replace([np.inf, -np.inf], 0)
-
-# Deviations
-surv['deviation_7'] = (surv['case_count'] - surv['cases_rm_7']) / (surv['cases_rstd_7'] + 1)
-surv['deviation_14'] = (surv['case_count'] - surv['cases_rm_14']) / (surv['cases_rstd_14'] + 1)
-
-# Z-score
-mean_cases = g['case_count'].transform('mean')
-std_cases = g['case_count'].transform('std').fillna(1)
-surv['cases_zscore'] = (surv['case_count'] - mean_cases) / std_cases
-
-# Spike detection
-surv['is_spike'] = (surv['cases_zscore'] > 2).astype(int)
-
-# Case density
-surv['case_density'] = (surv['case_count'] / (surv['population'] + 1)) * 100000
-
-# Infrastructure
-surv['cases_per_hospital'] = surv['case_count'] / (surv['hospital_count'] + 1)
-surv['sanitation_weighted'] = surv['case_count'] * (10 - surv['sanitation_index']) / 10
-
-# Environmental features
-env = env.sort_values(['region_id', 'date'])
-env_g = env.groupby('region_id')
-
-env['temp_rm_7'] = env_g['temperature_celsius'].transform(
-    lambda x: x.rolling(7, min_periods=1).mean()
-)
-env['rain_rm_7'] = env_g['rainfall_mm'].transform(
-    lambda x: x.rolling(7, min_periods=1).mean()
-)
-env['aqi_rm_7'] = env_g['aqi'].transform(
-    lambda x: x.rolling(7, min_periods=1).mean()
-)
-
-env['env_risk'] = ((env['temperature_celsius'] > 30).astype(int) +
-                   (env['rainfall_mm'] > 50).astype(int) +
-                   (env['aqi'] > 150).astype(int))
-
-# Aggregate surveillance to region-date level
-surv_agg = surv.groupby(['region_id', 'date']).agg({
-    'case_count': 'sum',
-    'death_count': 'sum',
-    'per_capita_cases': 'mean',
-    'case_fatality_rate': 'mean',
-    'cases_lag_7': 'sum',
-    'cases_lag_14': 'sum',
-    'deaths_lag_7': 'sum',
-    'deaths_lag_14': 'sum',
-    'severity_lag_7': 'mean',
-    'severity_lag_14': 'mean',
-    'cases_rm_7': 'mean',
-    'cases_rm_14': 'mean',
-    'cases_rm_21': 'mean',
-    'cases_rstd_7': 'mean',
-    'cases_rstd_14': 'mean',
-    'cases_rmax_7': 'max',
-    'cases_rmax_14': 'max',
-    'growth_7': 'mean',
-    'growth_14': 'mean',
-    'deviation_7': 'mean',
-    'deviation_14': 'mean',
-    'cases_zscore': 'max',
-    'is_spike': 'max',
-    'case_density': 'mean',
-    'cases_per_hospital': 'mean',
-    'sanitation_weighted': 'sum'
-}).reset_index()
-
-# Merge with environmental and labels
-df = labels.merge(surv_agg, on=['region_id', 'date'], how='left')
-df = df.merge(env[['region_id', 'date', 'temp_rm_7', 'rain_rm_7', 'aqi_rm_7', 'env_risk']],
-              on=['region_id', 'date'], how='left')
+# environmental risk
+# Environmental risk (match training: fixed thresholds)
+env_parts = []
+if "temperature_celsius" in df.columns:
+    env_parts.append((df["temperature_celsius"] > 30).astype(int))
+if "rainfall_mm" in df.columns:
+    env_parts.append((df["rainfall_mm"] > 50).astype(int))
+if "aqi" in df.columns:
+    env_parts.append((df["aqi"] > 150).astype(int))
+df["env_risk"] = sum(env_parts) if env_parts else 0
 
 df = df.fillna(0).replace([np.inf, -np.inf], 0)
 
-print(f"\nFinal dataset: {len(df)} records")
+# Use only the features the model was trained with
+available = [c for c in FEATURE_COLS if c in df.columns]
+missing   = [c for c in FEATURE_COLS if c not in df.columns]
+if missing:
+    print(f"  Warning: Missing features (zero-filled): {missing}")
+    for c in missing:
+        df[c] = 0
 
-# Split into test set (last 20%)
-df = df.sort_values('date')
-test_size = int(len(df) * 0.2)
-df_test = df.iloc[-test_size:].copy()
+X = df[FEATURE_COLS].values.astype(np.float32)
 
-print(f"Testing on {len(df_test)} records (last 20%)")
+# ---------- Apply scaler ----------
+if scaler is not None:
+    X = scaler.transform(X)
 
-X_test = df_test[FEATURES].astype(float)
-y_test = df_test['outbreak_occurred'].astype(int)
-
-print(f"Test set outbreak rate: {y_test.mean():.2%}")
-
-# ==========================================================
-# PREDICT
-# ==========================================================
-
-print("\nMaking predictions...")
-X_test_scaled = scaler.transform(X_test)
-pred_probs = model.predict_proba(X_test_scaled)[:, 1]
-
-# Use optimal threshold
-preds = (pred_probs >= opt_threshold).astype(int)
+print(f"  Feature matrix: {X.shape}")
 
 # ==========================================================
-# METRICS
+# ANOMALY SCORING
 # ==========================================================
 
-print("\n" + "="*70)
-print("TEST RESULTS")
-print("="*70)
+print("\nComputing anomaly scores...")
+raw_scores = iforest.decision_function(X)         # higher = more normal
+anomaly_pred = (raw_scores <= THRESHOLD).astype(int)  # 1 = anomaly (match training)
 
-auc = roc_auc_score(y_test, pred_probs)
-f1 = f1_score(y_test, preds)
-precision = precision_score(y_test, preds)
-recall = recall_score(y_test, preds)
+df["anomaly_score"]  = raw_scores
+df["anomaly_pred"]   = anomaly_pred
 
-print(f"\nROC-AUC Score: {auc:.4f}")
-print(f"F1 Score: {f1:.4f}")
-print(f"Precision: {precision:.4f}")
-print(f"Recall: {recall:.4f}")
+print(f"  Score range:   [{raw_scores.min():.4f}, {raw_scores.max():.4f}]")
+print(f"  Threshold:      {THRESHOLD:.4f}")
+print(f"  Flagged %:      {anomaly_pred.mean():.2%}")
 
-print("\nClassification Report:")
-print(classification_report(y_test, preds))
+# ==========================================================
+# EVALUATION AGAINST LABELS (if available)
+# ==========================================================
 
-print("\nConfusion Matrix:")
-cm = confusion_matrix(y_test, preds)
-print(cm)
+if has_labels:
+    y_true = df["outbreak_occurred"].values
+    y_pred = anomaly_pred
 
-# Save test results
-test_results = {
-    'test_size': len(df_test),
-    'outbreak_rate': float(y_test.mean()),
-    'roc_auc': float(auc),
-    'f1_score': float(f1),
-    'precision': float(precision),
-    'recall': float(recall),
-    'optimal_threshold': float(opt_threshold)
-}
+    print("\n" + "=" * 70)
+    print("CLASSIFICATION RESULTS  vs ground truth")
+    print("=" * 70)
 
-with open(os.path.join(OUTPUT_DIR, "test_metrics.json"), "w") as f:
-    json.dump(test_results, f, indent=2)
+    roc  = roc_auc_score(y_true, -raw_scores)  # negate: lower score = anomaly
+    f1   = f1_score(y_true, y_pred)
+    prec = precision_score(y_true, y_pred, zero_division=0)
+    rec  = recall_score(y_true, y_pred, zero_division=0)
 
-print(f"\nTest results saved to {OUTPUT_DIR}")
-print("\n" + "="*70)
+    precision_curve, recall_curve, _ = precision_recall_curve(y_true, -raw_scores)
+    pr_auc = auc(recall_curve, precision_curve)
+
+    print(f"\n  ROC AUC:    {roc:.4f}")
+    print(f"  PR AUC:     {pr_auc:.4f}")
+    print(f"  F1:         {f1:.4f}")
+    print(f"  Precision:  {prec:.4f}")
+    print(f"  Recall:     {rec:.4f}")
+
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+    print(f"\n  TP: {tp:,}  FP: {fp:,}  FN: {fn:,}  TN: {tn:,}")
+
+    report = classification_report(y_true, y_pred, target_names=["Normal", "Anomaly"],
+                                   output_dict=True)
+
+    # ---------- per-disease ----------
+    print("\n  Per-disease F1:")
+    disease_results = {}
+    for d, g in df.groupby("disease_name"):
+        d_f1 = f1_score(g["outbreak_occurred"], g["anomaly_pred"], zero_division=0)
+        disease_results[d] = round(d_f1, 4)
+        print(f"    {d:25s}  F1={d_f1:.4f}")
+
+    # ---------- save results ----------
+    test_results = {
+        "test_size": len(df),
+        "anomaly_rate_predicted": float(anomaly_pred.mean()),
+        "anomaly_rate_actual": float(y_true.mean()),
+        "roc_auc": float(roc),
+        "pr_auc": float(pr_auc),
+        "f1": float(f1),
+        "precision": float(prec),
+        "recall": float(rec),
+        "confusion_matrix": {"TP": int(tp), "FP": int(fp), "FN": int(fn), "TN": int(tn)},
+        "per_disease_f1": disease_results,
+        "classification_report": report,
+    }
+
+    with open(os.path.join(OUTPUT_DIR, "test_metrics.json"), "w") as f:
+        json.dump(test_results, f, indent=2)
+
+    # ---------- plots ----------
+    print("\nGenerating plots...")
+
+    # 1. Score distribution
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.hist(raw_scores[y_true == 0], bins=100, alpha=0.6, label="Normal", density=True)
+    ax.hist(raw_scores[y_true == 1], bins=100, alpha=0.6, label="Outbreak", density=True)
+    ax.axvline(THRESHOLD, color="red", linestyle="--", label=f"Threshold={THRESHOLD:.3f}")
+    ax.set_xlabel("Anomaly Score (decision_function)")
+    ax.set_ylabel("Density")
+    ax.set_title("Anomaly Score Distribution by Label")
+    ax.legend()
+    plt.tight_layout()
+    plt.savefig(os.path.join(OUTPUT_DIR, "score_distribution.png"), dpi=150)
+    plt.close()
+
+    # 2. Per-disease F1 bar chart
+    fig, ax = plt.subplots(figsize=(10, 5))
+    diseases = list(disease_results.keys())
+    f1s      = [disease_results[d] for d in diseases]
+    ax.barh(diseases, f1s, color="steelblue")
+    ax.set_xlabel("F1 Score")
+    ax.set_title("Isolation Forest: Per-Disease F1")
+    plt.tight_layout()
+    plt.savefig(os.path.join(OUTPUT_DIR, "per_disease_f1.png"), dpi=150)
+    plt.close()
+
+else:
+    print("\n  No outbreak_labels.csv found; skipping supervised evaluation.")
+    test_results = {
+        "test_size": len(df),
+        "anomaly_rate_predicted": float(anomaly_pred.mean()),
+        "score_range": [float(raw_scores.min()), float(raw_scores.max())],
+    }
+    with open(os.path.join(OUTPUT_DIR, "test_metrics.json"), "w") as f:
+        json.dump(test_results, f, indent=2)
+
+print(f"\nResults saved to {OUTPUT_DIR}")
+print("\n" + "=" * 70)
 print("TESTING COMPLETE")
-print("="*70)
+print("=" * 70)

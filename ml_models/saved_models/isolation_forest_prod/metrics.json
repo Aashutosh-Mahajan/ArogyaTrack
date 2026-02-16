@@ -1,13 +1,33 @@
 {
-  "model": "XGBoost",
-  "threshold": 0.7000000000000002,
-  "precision": 0.9797595190380761,
-  "recall": 0.8964063072973965,
-  "f1_score": 0.9362313289927231,
-  "roc_auc": 0.9983010777049711,
-  "balanced_accuracy": 0.9473986804591612,
-  "training_samples": 325338,
-  "validation_samples": 68228,
-  "features_count": 32,
-  "best_iteration": 346
+  "model": "Isolation Forest v5.0 (chunked warm_start + GB corrector)",
+  "approach": "Semi-supervised IF (normal-only, all data via warm_start) + GradientBoosting",
+  "scoring_method": "corrected_gb",
+  "n_ensemble": 3,
+  "n_estimators": 200,
+  "contamination": "auto (semi-supervised)",
+  "roc_auc": 0.8927766394374377,
+  "raw_if_roc_auc": 0.6787678806370782,
+  "corrected_roc_auc": 0.8927766394374377,
+  "f1_score": 0.45259440699702785,
+  "precision": 0.4533576864535769,
+  "recall": 0.45183369335695733,
+  "threshold": 0.8082588315010071,
+  "n_features": 59,
+  "confusion_matrix": [
+    [
+      1706730,
+      44893
+    ],
+    [
+      45170,
+      37232
+    ]
+  ],
+  "disease_contamination": {},
+  "score_distribution": {
+    "p90": -0.07497274726629258,
+    "p95": -0.05486915931105614,
+    "p99": -0.00809600424021482
+  },
+  "timestamp": "2026-02-14T18:21:03.021722"
 }

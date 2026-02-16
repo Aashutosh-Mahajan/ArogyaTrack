@@ -5,16 +5,24 @@ FINAL TRUE MODEL EVALUATION
 Evaluates:
 
 1) final_ensemble_model (Prophet + XGBoost Forecast)
-2) isolation_forest_prod (XGBoost outbreak detector)
+2) isolation_forest_prod (IsolationForest Anomaly Detector v4.0)
 3) dbscan_prod (DBSCAN Clustering)
 4) xgboost_outbreak_v3 (Alternative outbreak detector)
 
 Fully stable. Matches training feature engineering.
+
+Usage:
+  python evaluate_all_models.py               # Uses real data
+  python evaluate_all_models.py --use-dummy   # Uses dummy data
+  python evaluate_all_models.py --generate-dummy  # Generates and uses dummy data
 """
 
 import os
 import json
+import sys
 import warnings
+import argparse
+import subprocess
 import numpy as np
 import pandas as pd
 import joblib
@@ -36,12 +44,13 @@ from sklearn.metrics import (
 warnings.filterwarnings("ignore")
 
 # ==========================================================
-# PATHS
+# PATHS AND CONFIGURATION
 # ==========================================================
 
 BASE_DIR = r"D:\python\ml_models"
 DATA_DIR = os.path.join(BASE_DIR, "india_surveillance_extreme_quality")
 MODELS_DIR = os.path.join(BASE_DIR, "saved_models")
+DUMMY_DATA_DIR = os.path.join(BASE_DIR, "test_dummy_data")
 
 FORECAST_DIR = os.path.join(MODELS_DIR, "final_ensemble_model")
 OUTBREAK_DIR = os.path.join(MODELS_DIR, "isolation_forest_prod")
@@ -54,6 +63,74 @@ USE_WEEKLY = True   # must match training script
 # Feature engineering config (must match training)
 LAG_PERIODS = [7, 14, 21]
 ROLLING_WINDOWS = [7, 14, 28]
+
+# Global flag to track which data source is being used
+USING_DUMMY_DATA = False
+
+print("=" * 80)
+print("COMPREHENSIVE MODEL EVALUATION")
+print("=" * 80)
+
+
+# ==========================================================
+# SETUP DUMMY DATA
+# ==========================================================
+
+def setup_dummy_data(generate=False):
+    """
+    Setup dummy data directory. Can generate new data or use existing.
+    
+    Parameters:
+    -----------
+    generate : bool
+        If True, generates new dummy datasets
+    
+    Returns:
+    --------
+    str : Path to data directory to use
+    """
+    global USING_DUMMY_DATA
+    
+    # Try to generate if requested
+    if generate:
+        print("\n[SETUP] Generating dummy datasets...")
+        try:
+            generator_script = os.path.join(BASE_DIR, "generate_dummy_datasets.py")
+            if os.path.exists(generator_script):
+                subprocess.run(
+                    [sys.executable, generator_script,
+                     "--output-dir", DUMMY_DATA_DIR,
+                     "--regions", "5",
+                     "--days", "365"],
+                    check=True,
+                    cwd=BASE_DIR
+                )
+                print("[OK] Dummy data generated successfully")
+                USING_DUMMY_DATA = True
+                return DUMMY_DATA_DIR
+            else:
+                print("[WARN] Generator script not found, cannot generate dummy data")
+                return None
+        except subprocess.CalledProcessError as e:
+            print(f"[ERROR] Failed to generate dummy data: {e}")
+            return None
+    
+    # Check if dummy data exists
+    if os.path.exists(DUMMY_DATA_DIR):
+        required_files = [
+            "disease_surveillance_historical.csv",
+            "environmental_data.csv",
+            "regions.csv"
+        ]
+        
+        if all(os.path.exists(os.path.join(DUMMY_DATA_DIR, f)) 
+               for f in required_files):
+            print(f"\n[SETUP] Using dummy data from: {DUMMY_DATA_DIR}")
+            USING_DUMMY_DATA = True
+            return DUMMY_DATA_DIR
+    
+    return None
+
 
 print("=" * 80)
 print("COMPREHENSIVE MODEL EVALUATION")
@@ -102,7 +179,8 @@ def evaluate_forecast():
         parse_dates=["date"]
     )
 
-    daily = surv.groupby("date", as_index=False)["case_count"].sum()
+    # Use MEAN (not sum) - matches training v4.0; scale-independent
+    daily = surv.groupby("date", as_index=False)["case_count"].mean()
     env_daily = env.groupby("date", as_index=False).mean(numeric_only=True)
 
     df = daily.merge(env_daily, on="date", how="left")
@@ -119,7 +197,7 @@ def evaluate_forecast():
     # ---- Weekly aggregation (must match training) ----
     if USE_WEEKLY:
         df = df.set_index("ds").resample("W").agg({
-            "y": "sum",
+            "y": "mean",
             "temperature_celsius": "mean",
             "rainfall_mm": "mean",
             "aqi": "mean"
@@ -142,16 +220,16 @@ def evaluate_forecast():
     for lag in [1, 2, 3, 4, 8]:
         df[f"lag_{lag}"] = df["y_original"].shift(lag)
 
-    df["rolling_mean_4"] = df["y_original"].rolling(4, min_periods=1).mean()
-    df["rolling_std_4"] = df["y_original"].rolling(4, min_periods=1).std().fillna(0)
-    df["rolling_mean_8"] = df["y_original"].rolling(8, min_periods=1).mean()
-    df["rolling_std_8"] = df["y_original"].rolling(8, min_periods=1).std().fillna(0)
-    df["rolling_max_4"] = df["y_original"].rolling(4, min_periods=1).max()
-    df["rolling_min_4"] = df["y_original"].rolling(4, min_periods=1).min()
+    df["rm_4"]    = df["y_original"].rolling(4, min_periods=1).mean()
+    df["rstd_4"]  = df["y_original"].rolling(4, min_periods=1).std().fillna(0)
+    df["rm_8"]    = df["y_original"].rolling(8, min_periods=1).mean()
+    df["rstd_8"]  = df["y_original"].rolling(8, min_periods=1).std().fillna(0)
+    df["rmax_4"]  = df["y_original"].rolling(4, min_periods=1).max()
+    df["rmin_4"]  = df["y_original"].rolling(4, min_periods=1).min()
 
     df["diff_1"] = df["y_original"].diff().fillna(0)
     df["diff_2"] = df["y_original"].diff(2).fillna(0)
-    df["pct_change_1"] = df["y_original"].pct_change().fillna(0).replace([np.inf, -np.inf], 0)
+    df["pct_1"]  = df["y_original"].pct_change().fillna(0).replace([np.inf, -np.inf], 0)
 
     df["temp_rain"] = df["temperature_celsius"] * df["rainfall_mm"]
     df["temp_aqi"] = df["temperature_celsius"] * df["aqi"]
@@ -218,28 +296,37 @@ def evaluate_forecast():
 
 
 # ==========================================================
-# 2️⃣ OUTBREAK DETECTOR (XGBoost from isolation_forest_prod)
+# 2️⃣ ISOLATION FOREST ANOMALY DETECTOR (isolation_forest_prod)
 # ==========================================================
 
 def evaluate_outbreak():
     """
-    Evaluate XGBoost outbreak detector with proper feature engineering
+    Evaluate Isolation Forest anomaly detector (v4.0)
+    Uses decision_function() for anomaly scoring.
     """
-    print("\n[2] XGBoost Outbreak Detector (isolation_forest_prod)")
+    print("\n[2] Isolation Forest Anomaly Detector (isolation_forest_prod)")
 
     # Check if model exists
-    if not os.path.exists(os.path.join(OUTBREAK_DIR, "xgboost_model.pkl")):
-        print("  ⚠️  Model not found, skipping...")
+    if not os.path.exists(os.path.join(OUTBREAK_DIR, "isolation_forest.pkl")):
+        print("  [WARN] isolation_forest.pkl not found, skipping...")
         return 0.0
 
     # Load model artifacts
-    model = joblib.load(os.path.join(OUTBREAK_DIR, "xgboost_model.pkl"))
-    scaler = joblib.load(os.path.join(OUTBREAK_DIR, "scaler.pkl"))
+    iforest = joblib.load(os.path.join(OUTBREAK_DIR, "isolation_forest.pkl"))
+    scaler  = joblib.load(os.path.join(OUTBREAK_DIR, "scaler.pkl"))
 
     with open(os.path.join(OUTBREAK_DIR, "features.json")) as f:
-        FEATURES = json.load(f)
+        FEATURES = json.load(f)   # plain list
 
-    print(f"  ✓ Loaded model with {len(FEATURES)} features")
+    # Load threshold from metrics
+    metrics_path = os.path.join(OUTBREAK_DIR, "metrics.json")
+    threshold = 0.0
+    if os.path.exists(metrics_path):
+        with open(metrics_path) as f:
+            m = json.load(f)
+            threshold = m.get("threshold", 0.0)
+
+    print(f"  [OK] Loaded IsolationForest with {len(FEATURES)} features, threshold={threshold:.4f}")
 
     # Load data
     surv = pd.read_csv(
@@ -248,28 +335,25 @@ def evaluate_outbreak():
     )
 
     if "outbreak_occurred" not in surv.columns:
-        print("  ⚠️  No outbreak labels found, skipping...")
+        print("  [WARN] No outbreak labels found, skipping...")
         return 0.0
 
-    # Load environmental data if needed
+    # Load environmental data
     env = pd.read_csv(
         os.path.join(DATA_DIR, "environmental_data.csv"),
         parse_dates=["date"]
     )
 
-    # Load regions for population
-    regions = pd.read_csv(
-        os.path.join(DATA_DIR, "regions.csv"),
-        usecols=["region_id", "population"]
-    )
+    # Load regions
+    regions = pd.read_csv(os.path.join(DATA_DIR, "regions.csv"))
 
     # Merge datasets
     df = surv.merge(env, on=["region_id", "date"], how="left", suffixes=('', '_env'))
-    df = df.merge(regions, on="region_id", how="left")
+    df = df.merge(regions, on="region_id", how="left", suffixes=('', '_reg'))
 
     # Handle duplicate columns
-    for col in df.columns:
-        if col.endswith('_env'):
+    for col in list(df.columns):
+        if col.endswith('_env') or col.endswith('_reg'):
             base_col = col.rsplit('_', 1)[0]
             if base_col in df.columns:
                 df[base_col] = df[base_col].fillna(df[col])
@@ -277,50 +361,39 @@ def evaluate_outbreak():
 
     df = df.sort_values(["region_id", "date"]).reset_index(drop=True)
 
-    # Feature engineering (MUST MATCH TRAINING)
+    # Feature engineering (MUST MATCH train_isolation_forest_prod.py v4.0)
     print("  Engineering features...")
     group = df.groupby("region_id")
+
+    # Rolling stats
+    for w in ROLLING_WINDOWS:
+        df[f"cases_rm_{w}"]   = group["case_count"].transform(
+            lambda x: x.rolling(w, 1).mean()).fillna(0)
+        df[f"cases_rstd_{w}"] = group["case_count"].transform(
+            lambda x: x.rolling(w, 1).std()).fillna(0)
+        df[f"cases_rmax_{w}"] = group["case_count"].transform(
+            lambda x: x.rolling(w, 1).max()).fillna(0)
+
+    # Growth rates (pct_change, clipped)
+    for p in LAG_PERIODS:
+        df[f"growth_{p}"] = group["case_count"].pct_change(periods=p).fillna(0)
+        df[f"growth_{p}"] = df[f"growth_{p}"].replace([np.inf, -np.inf], 0).clip(-5, 5)
+
+    # Acceleration
+    df["accel_7"] = group["case_count"].diff().diff().fillna(0)
+
+    # Deviation z-scores (divide by rstd + 1)
+    df["dev_7"]  = (df["case_count"] - df["cases_rm_7"])  / (df["cases_rstd_7"]  + 1)
+    df["dev_14"] = (df["case_count"] - df["cases_rm_14"]) / (df["cases_rstd_14"] + 1)
+    df["dev_28"] = (df["case_count"] - df["cases_rm_28"]) / (df["cases_rstd_28"] + 1)
+
+    # Spike indicators (based on dev_7)
+    df["spike_2std"] = (df["dev_7"] > 2).astype(int)
+    df["spike_3std"] = (df["dev_7"] > 3).astype(int)
 
     # Lag features
     for lag in LAG_PERIODS:
         df[f"cases_lag_{lag}"] = group["case_count"].shift(lag).fillna(0)
-        if "severity_avg" in df.columns:
-            df[f"severity_lag_{lag}"] = group["severity_avg"].shift(lag).fillna(0)
-
-    # Rolling mean
-    for w in ROLLING_WINDOWS:
-        df[f"cases_rm_{w}"] = group["case_count"].transform(
-            lambda x: x.rolling(window=w, min_periods=1).mean()
-        ).fillna(0)
-
-    # Rolling std
-    for w in ROLLING_WINDOWS:
-        df[f"cases_rstd_{w}"] = group["case_count"].transform(
-            lambda x: x.rolling(window=w, min_periods=1).std()
-        ).fillna(0)
-
-    # Rolling max
-    for w in ROLLING_WINDOWS:
-        df[f"cases_rmax_{w}"] = group["case_count"].transform(
-            lambda x: x.rolling(window=w, min_periods=1).max()
-        ).fillna(0)
-
-    # Growth rates
-    for p in LAG_PERIODS:
-        df[f"growth_{p}"] = group["case_count"].pct_change(periods=p).fillna(0)
-        df[f"growth_{p}"] = df[f"growth_{p}"].replace([np.inf, -np.inf], 0)
-
-    # Acceleration
-    df["acceleration_7"] = group["case_count"].diff().diff().fillna(0)
-
-    # Deviation from baseline
-    df["deviation_7"] = (df["case_count"] - df["cases_rm_7"]) / (df["cases_rstd_7"] + 1)
-    df["deviation_14"] = (df["case_count"] - df["cases_rm_14"]) / (df["cases_rstd_14"] + 1)
-    df["deviation_28"] = (df["case_count"] - df["cases_rm_28"]) / (df["cases_rstd_28"] + 1)
-
-    # Spike indicators
-    df["is_spike_2std"] = (df["deviation_7"] > 2).astype(int)
-    df["is_spike_3std"] = (df["deviation_7"] > 3).astype(int)
 
     # Environmental risk
     env_risk_components = []
@@ -330,7 +403,6 @@ def evaluate_outbreak():
         env_risk_components.append((df["rainfall_mm"] > 50).astype(int))
     if "aqi" in df.columns:
         env_risk_components.append((df["aqi"] > 150).astype(int))
-
     df["env_risk"] = sum(env_risk_components) if env_risk_components else 0
 
     # Replace inf/nan
@@ -340,34 +412,28 @@ def evaluate_outbreak():
     split_date = df["date"].quantile(0.8)
     test_df = df[df["date"] >= split_date].copy()
 
-    # Extract features (only those that exist in both FEATURES list and dataframe)
-    available_features = [f for f in FEATURES if f in test_df.columns]
-    missing_features = [f for f in FEATURES if f not in test_df.columns]
-
-    if missing_features:
-        print(f"  ⚠️  Missing {len(missing_features)} features: {missing_features[:5]}")
-        # Fill missing features with zeros
-        for f in missing_features:
+    # Extract features
+    for f in FEATURES:
+        if f not in test_df.columns:
             test_df[f] = 0
-        available_features = FEATURES
 
-    X = test_df[available_features].fillna(0)
+    X = test_df[FEATURES].astype(float).fillna(0)
     y_true = test_df["outbreak_occurred"].values
 
     # Scale features
     X_scaled = scaler.transform(X)
 
-    # Predict
-    probs = model.predict_proba(X_scaled)[:, 1]
-    preds = (probs >= 0.5).astype(int)
+    # Anomaly scoring via decision_function
+    raw_scores = iforest.decision_function(X_scaled)
+    preds = (raw_scores <= threshold).astype(int)   # below threshold = anomaly
 
     # Calculate metrics
     precision = precision_score(y_true, preds, zero_division=0)
     recall = recall_score(y_true, preds, zero_division=0)
     f1 = f1_score(y_true, preds, zero_division=0)
-    
+
     if len(np.unique(y_true)) > 1:
-        roc = roc_auc_score(y_true, probs)
+        roc = roc_auc_score(y_true, -raw_scores)   # negate: higher = more anomalous
     else:
         roc = 0.0
 
@@ -391,7 +457,7 @@ def evaluate_xgboost_v3():
 
     # Check if model exists
     if not os.path.exists(os.path.join(XGBOOST_V3_DIR, "xgboost_model.pkl")):
-        print("  Model not found, skipping...")
+        print("  [WARN] Model not found, skipping...")
         return 0.0
 
     # Load model artifacts
@@ -435,61 +501,40 @@ def evaluate_xgboost_v3():
         parse_dates=["date"]
     )
 
-    # Feature engineering (match training script)
+    # Feature engineering (match training script exactly)
     print("  Engineering features...")
-    df = df.sort_values(["region_id", "date"])
+    df = df.sort_values(["region_id", "date"]).reset_index(drop=True)
+    grp = df.groupby("region_id")
 
-    # Rolling averages
-    for w in [7, 14, 21, 28]:
-        df[f"cases_{w}d"] = df.groupby("region_id")["case_count"] \
-            .transform(lambda x: x.rolling(w, 1).mean())
-
-    # Rolling std
+    # Rolling statistics (match train_xgboost_prod.py)
     for w in [7, 14, 28]:
-        df[f"cases_std_{w}d"] = df.groupby("region_id")["case_count"] \
-            .transform(lambda x: x.rolling(w, 1).std()).fillna(0)
-
-    # Rolling max
-    for w in [7, 14, 28]:
-        df[f"cases_max_{w}d"] = df.groupby("region_id")["case_count"] \
-            .transform(lambda x: x.rolling(w, 1).max())
+        df[f"cases_rm_{w}"]   = grp["case_count"].transform(lambda x: x.rolling(w, 1).mean())
+        df[f"cases_rstd_{w}"] = grp["case_count"].transform(lambda x: x.rolling(w, 1).std()).fillna(0)
+        df[f"cases_rmax_{w}"] = grp["case_count"].transform(lambda x: x.rolling(w, 1).max())
 
     # Growth rates
-    for p in [7, 14, 21]:
-        df[f"growth_{p}d"] = (
-            (df["cases_7d"] - df.groupby("region_id")["cases_7d"].shift(p))
-            / (df.groupby("region_id")["cases_7d"].shift(p) + 1)
-        )
-        df[f"growth_{p}d"] = df[f"growth_{p}d"].replace([np.inf, -np.inf], 0)
+    for p in [7, 14]:
+        df[f"growth_{p}"] = grp["case_count"].pct_change(periods=p).fillna(0)
+        df[f"growth_{p}"] = df[f"growth_{p}"].replace([np.inf, -np.inf], 0).clip(-5, 5)
 
     # Acceleration
-    df["acceleration"] = df.groupby("region_id")["growth_7d"].diff().fillna(0)
+    df["acceleration_7"] = grp["case_count"].diff().diff().fillna(0)
 
-    # Z-score
-    df["rolling_mean_30"] = df.groupby("region_id")["case_count"] \
-        .transform(lambda x: x.rolling(30, 1).mean())
-    df["rolling_std_30"] = df.groupby("region_id")["case_count"] \
-        .transform(lambda x: x.rolling(30, 1).std())
-    df["zscore"] = (df["case_count"] - df["rolling_mean_30"]) / (df["rolling_std_30"] + 1)
-
-    # Deviation
-    df["deviation_7"] = (df["case_count"] - df["cases_7d"]) / (df["cases_std_7d"] + 1)
-    df["deviation_14"] = (df["case_count"] - df["cases_14d"]) / (df["cases_std_14d"] + 1)
+    # Deviation from baseline
+    df["deviation_7"]  = (df["case_count"] - df["cases_rm_7"])  / (df["cases_rstd_7"]  + 1)
+    df["deviation_14"] = (df["case_count"] - df["cases_rm_14"]) / (df["cases_rstd_14"] + 1)
 
     # Spikes
     df["is_spike_2std"] = (df["deviation_7"] > 2).astype(int)
     df["is_spike_3std"] = (df["deviation_7"] > 3).astype(int)
 
-    # Severity
+    # Severity features
     if "severity_avg" in df.columns:
-        df["severity_7d"] = df.groupby("region_id")["severity_avg"] \
-            .transform(lambda x: x.rolling(7, 1).mean())
-        for lag in [7, 14, 21]:
-            df[f"severity_lag_{lag}"] = df.groupby("region_id")["severity_avg"].shift(lag)
+        df["severity_rm_7"] = grp["severity_avg"].transform(lambda x: x.rolling(7, 1).mean())
 
     # Lag features
     for lag in [7, 14, 21]:
-        df[f"cases_lag_{lag}"] = df.groupby("region_id")["case_count"].shift(lag)
+        df[f"cases_lag_{lag}"] = grp["case_count"].shift(lag).fillna(0)
 
     df = df.fillna(0)
 
@@ -505,7 +550,7 @@ def evaluate_xgboost_v3():
     df = df.fillna(0)
 
     # Per-capita
-    df["cases_per_100k"] = df["cases_7d"] / (df["population"] / 100000 + 1)
+    df["cases_per_100k"] = df["cases_rm_7"] / (df["population"] / 100000 + 1)
 
     # Environmental risk
     env_risk_components = []
@@ -563,7 +608,7 @@ def evaluate_dbscan():
 
     # Check if model exists
     if not os.path.exists(os.path.join(DBSCAN_DIR, "dbscan_model.pkl")):
-        print("  ⚠️  Model not found, skipping...")
+        print("  [WARN] Model not found, skipping...")
         return 0.0
 
     dbscan = joblib.load(os.path.join(DBSCAN_DIR, "dbscan_model.pkl"))
@@ -586,7 +631,7 @@ def evaluate_dbscan():
         score = silhouette_score(coords, labels, metric="haversine")
         print(f"  Silhouette Score: {score:.4f}")
     else:
-        print("  ⚠️  Only one cluster found, cannot compute silhouette score")
+        print("  [WARN] Only one cluster found, cannot compute silhouette score")
         score = 0
 
     return score
@@ -598,6 +643,39 @@ def evaluate_dbscan():
 
 if __name__ == "__main__":
 
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Evaluate ML models")
+    parser.add_argument(
+        "--use-dummy",
+        action="store_true",
+        help="Use existing dummy datasets for evaluation"
+    )
+    parser.add_argument(
+        "--generate-dummy",
+        action="store_true",
+        help="Generate and use new dummy datasets for evaluation"
+    )
+    
+    args = parser.parse_args()
+    
+    # Setup data source
+    if args.generate_dummy:
+        data_dir = setup_dummy_data(generate=True)
+        if data_dir:
+            DATA_DIR = data_dir
+        else:
+            print("[WARN] Failed to generate dummy data, falling back to real data")
+    elif args.use_dummy:
+        data_dir = setup_dummy_data(generate=False)
+        if data_dir:
+            DATA_DIR = data_dir
+        else:
+            print("[WARN] Dummy data not found, using real data")
+    
+    # Print data source info
+    data_source = "dummy" if USING_DUMMY_DATA else "real"
+    print(f"\n[DATA SOURCE] Using {data_source} data: {DATA_DIR}\n")
+    
     results = {}
     
     # Evaluate Forecast Model
@@ -605,7 +683,7 @@ if __name__ == "__main__":
         forecast_r2 = evaluate_forecast()
         results["forecast_r2"] = forecast_r2
     except Exception as e:
-        print(f"\n❌ Error evaluating forecast model: {e}")
+        print(f"\n[ERROR] Error evaluating forecast model: {e}")
         results["forecast_r2"] = None
 
     # Evaluate Outbreak Detector
@@ -613,7 +691,7 @@ if __name__ == "__main__":
         outbreak_f1 = evaluate_outbreak()
         results["outbreak_f1"] = outbreak_f1
     except Exception as e:
-        print(f"\n❌ Error evaluating outbreak detector: {e}")
+        print(f"\n[ERROR] Error evaluating outbreak detector: {e}")
         results["outbreak_f1"] = None
 
     # Evaluate XGBoost V3
@@ -621,7 +699,7 @@ if __name__ == "__main__":
         xgboost_v3_f1 = evaluate_xgboost_v3()
         results["xgboost_v3_f1"] = xgboost_v3_f1
     except Exception as e:
-        print(f"\n❌ Error evaluating xgboost_v3: {e}")
+        print(f"\n[ERROR] Error evaluating xgboost_v3: {e}")
         results["xgboost_v3_f1"] = None
 
     # Evaluate DBSCAN
@@ -629,7 +707,7 @@ if __name__ == "__main__":
         dbscan_score = evaluate_dbscan()
         results["dbscan_silhouette"] = dbscan_score
     except Exception as e:
-        print(f"\n❌ Error evaluating DBSCAN: {e}")
+        print(f"\n[ERROR] Error evaluating DBSCAN: {e}")
         results["dbscan_silhouette"] = None
 
     # Print Final Summary

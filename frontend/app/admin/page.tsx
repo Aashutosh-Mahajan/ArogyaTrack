@@ -89,6 +89,7 @@ function AdminDashboard(): React.JSX.Element {
   const [mapZoom, setMapZoom] = useState(5);
   const [mapCenter, setMapCenter] = useState<[number, number]>([20.5937, 78.9629]);
   const [pipelineDisease, setPipelineDisease] = useState('A90');
+  const [forecastHorizon, setForecastHorizon] = useState(7);
 
   // Queries
   const { data: dashboard, refetch: refetchDashboard, isLoading: isDashboardLoading } = useQuery<AdminDashboardData>({
@@ -120,8 +121,16 @@ function AdminDashboard(): React.JSX.Element {
   });
 
   const { data: forecasts, isLoading: isForecastsLoading } = useQuery<PaginatedResponse<Forecast>>({
-    queryKey: ['forecasts'],
-    queryFn: () => api.surveillance.getForecasts(),
+    queryKey: ['forecasts', forecastHorizon],
+    queryFn: () => api.surveillance.getForecasts({ horizon: forecastHorizon }),
+  });
+
+  const { data: forecastChartData, isLoading: isForecastChartLoading } = useQuery<any>({
+    queryKey: ['forecast-chart', forecastHorizon, selectedDisease],
+    queryFn: () => api.surveillance.getForecastChartData({
+      horizon: forecastHorizon,
+      disease_code: selectedDisease || undefined,
+    }),
   });
 
   const { data: anomalies, isLoading: isAnomaliesLoading } = useQuery<PaginatedResponse<Anomaly>>({
@@ -353,6 +362,30 @@ function AdminDashboard(): React.JSX.Element {
                 </div>
               )}
             </div>
+            {pipelineStatus && (
+              <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-3 text-xs text-gray-600">
+                <div className="p-2 bg-blue-50 rounded text-center">
+                  <p className="font-semibold text-blue-700">{pipelineStatus.surveillance_records_week ?? '—'}</p>
+                  <p>Records (7d)</p>
+                </div>
+                <div className="p-2 bg-green-50 rounded text-center">
+                  <p className="font-semibold text-green-700">{pipelineStatus.forecasts_generated_today ?? '—'}</p>
+                  <p>Forecasts today</p>
+                </div>
+                <div className="p-2 bg-orange-50 rounded text-center">
+                  <p className="font-semibold text-orange-700">{pipelineStatus.recent_anomalies ?? '—'}</p>
+                  <p>Anomalies (7d)</p>
+                </div>
+                <div className="p-2 bg-purple-50 rounded text-center">
+                  <p className="font-semibold text-purple-700">{pipelineStatus.risk_scores_today ?? '—'}</p>
+                  <p>Risk scores today</p>
+                </div>
+                <div className="p-2 bg-gray-50 rounded text-center">
+                  <p className="font-semibold text-gray-700">{pipelineStatus.regions_count ?? '—'}</p>
+                  <p>Regions</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -498,24 +531,43 @@ function AdminDashboard(): React.JSX.Element {
           {/* Forecast */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <FiBarChart2 className="mr-2" />
-                Case Forecasts
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center">
+                    <FiBarChart2 className="mr-2" />
+                    Case Forecasts
+                  </CardTitle>
+                  <CardDescription>
+                    {forecastHorizon}-day forecast
+                    {forecasts?.count ? ` (${forecasts.count} predictions)` : ''}
+                  </CardDescription>
+                </div>
+                <select
+                  value={forecastHorizon}
+                  onChange={(e) => setForecastHorizon(Number(e.target.value))}
+                  className="px-3 py-2 border rounded-lg text-sm"
+                >
+                  <option value={7}>7 Days</option>
+                  <option value={14}>14 Days</option>
+                  <option value={30}>30 Days</option>
+                </select>
+              </div>
             </CardHeader>
             <CardContent>
-              {isForecastsLoading ? (
+              {isForecastChartLoading ? (
                 <LoadingSkeleton height="h-[350px]" />
-              ) : forecasts?.results && forecasts.results.length > 0 ? (
-                <ForecastChart
-                  data={forecasts.results.slice(0, 7).map((f) => ({
-                    date: new Date(f.prediction_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                    forecast: Math.round(f.predicted_cases),
-                    lowerBound: Math.round(f.lower_bound),
-                    upperBound: Math.round(f.upper_bound),
-                    actual: 0,
-                  }))}
-                />
+              ) : forecastChartData?.data && forecastChartData.data.length > 0 ? (
+                <>
+                  <ForecastChart data={forecastChartData.data} />
+                  <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+                    <span>
+                      {forecastChartData.disease_name} &bull; {forecastChartData.data.length} days
+                    </span>
+                    <span>
+                      Avg confidence: {(forecastChartData.data.reduce((s: number, d: any) => s + d.confidence, 0) / forecastChartData.data.length * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                </>
               ) : (
                 <div className="h-[350px] flex items-center justify-center text-gray-500">
                   No forecast data available
@@ -534,7 +586,7 @@ function AdminDashboard(): React.JSX.Element {
                 <FiZap className="mr-2" />
                 Recent Anomalies
               </CardTitle>
-              <CardDescription>Detected by Isolation Forest model</CardDescription>
+              <CardDescription>Detected by Isolation Forest v5.0 ensemble + GB corrector</CardDescription>
             </CardHeader>
             <CardContent>
               {isAnomaliesLoading ? (
@@ -575,7 +627,7 @@ function AdminDashboard(): React.JSX.Element {
                 <FiShield className="mr-2" />
                 Regional Risk Scores
               </CardTitle>
-              <CardDescription>Computed by XGBoost outbreak classifier</CardDescription>
+              <CardDescription>Computed by XGBoost v4.0 outbreak classifier (56 features)</CardDescription>
             </CardHeader>
             <CardContent>
               {isRiskScoresLoading ? (
@@ -702,7 +754,7 @@ function AdminDashboard(): React.JSX.Element {
                 <FiMapPin className="mr-2" />
                 Active Clusters ({clusters.count})
               </CardTitle>
-              <CardDescription>Detected by DBSCAN geo-clustering model</CardDescription>
+              <CardDescription>Detected by DBSCAN v5.0 geo-clustering (13 features)</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

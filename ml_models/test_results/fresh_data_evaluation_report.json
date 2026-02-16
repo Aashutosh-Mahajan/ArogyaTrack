@@ -1,0 +1,71 @@
+{
+  "evaluation_date": "2026-02-14 14:45:23",
+  "test_data": {
+    "source": "fresh_test_data",
+    "regions": 20,
+    "days": 365
+  },
+  "results": {
+    "forecast": {
+      "mae": 0.8606624261599501,
+      "rmse": 1.191616303226439,
+      "r2": 0.9530781219774985,
+      "mape": 3.1121218051568333,
+      "ci_coverage": 11.76470588235294,
+      "blend_prophet": 0.0,
+      "prophet_r2": -8.25869049132459,
+      "xgb_r2": 0.9530781219774985,
+      "n_test": 68,
+      "status": "OK",
+      "eval_mode": "pipeline_transfer_daily"
+    },
+    "outbreak_detector": {
+      "accuracy": 0.8662891601706133,
+      "precision": 0.511555835697027,
+      "recall": 0.522983567823005,
+      "f1": 0.517206585236325,
+      "roc_auc": 0.8256199231646405,
+      "optimal_threshold": -0.12999999999999967,
+      "optimal_f1": 0.5178085953590553,
+      "optimal_precision": 0.5298712977013432,
+      "optimal_recall": 0.5062828912039523,
+      "n_test": 135980,
+      "outbreak_pct": 13.694660979555817,
+      "status": "OK"
+    },
+    "xgboost_v3": {
+      "accuracy": 0.9507874595231086,
+      "precision": 0.8017603318326673,
+      "recall": 0.8513266731120421,
+      "f1": 0.825800401177482,
+      "roc_auc": 0.9721945583443004,
+      "optimal_threshold": 0.8900000000000002,
+      "optimal_f1": 0.8460856889701889,
+      "optimal_precision": 0.904209175881239,
+      "optimal_recall": 0.794983349446772,
+      "n_test": 135880,
+      "outbreak_pct": 13.701795702090081,
+      "status": "OK"
+    },
+    "dbscan": {
+      "n_clusters": 4,
+      "n_noise": 24,
+      "noise_pct": 48.0,
+      "silhouette_score": 0.6367943494561022,
+      "high_risk_clusters": 1,
+      "n_regions": 50,
+      "status": "OK"
+    }
+  },
+  "recommendations": [],
+  "thresholds": {
+    "forecast_r2_min": 0.6,
+    "outbreak_f1_min": 0.45,
+    "outbreak_auc_min": 0.75,
+    "outbreak_precision_min": 0.4,
+    "outbreak_recall_min": 0.4,
+    "xgboost_f1_min": 0.75,
+    "xgboost_auc_min": 0.9,
+    "dbscan_silhouette_min": 0.2
+  }
+}

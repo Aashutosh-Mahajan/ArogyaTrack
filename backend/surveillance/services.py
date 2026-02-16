@@ -1,10 +1,10 @@
 """Surveillance services for data aggregation and ML integration.
 
-Aligns with the production ML models:
-  - dbscan_prod/       (DBSCAN geo-clustering, haversine metric)
-  - isolation_forest_prod/ (27-feature anomaly detection with scaler)
-  - prophet_prod/      (national daily case forecast with env regressors)
-  - xgboost_prod/      (binary outbreak classifier, 6 features with scaler)
+Aligns with the production ML models (v5.0):
+  - dbscan_prod/              (DBSCAN v5.0 - 13 features, density-aware clustering)
+  - isolation_forest_prod/    (IF v5.0 - 59 features, ensemble + GB corrector)
+  - final_ensemble_model/     (Prophet + XGBoost Ensemble v5.0 - weekly forecasting)
+  - xgboost_outbreak_v3/      (XGBoost v4.0 - 56 features, chunked training)
 """
 
 import json
@@ -76,6 +76,29 @@ def _load_json(path: Path):
         with open(path) as f:
             return json.load(f)
     return None
+
+
+# Indian holidays (month, day) -- shared across models
+INDIAN_HOLIDAYS = [
+    (1, 26), (3, 14), (10, 2), (8, 15), (12, 25), (5, 1),
+    (1, 15), (4, 10), (11, 1), (10, 25), (11, 12), (4, 14),
+    (6, 29), (8, 21), (10, 19),
+]
+
+
+def _is_holiday(dt) -> int:
+    """Check if a date falls on an Indian holiday."""
+    return int((dt.month, dt.day) in INDIAN_HOLIDAYS)
+
+
+def _get_season_flags(dt) -> dict:
+    """Return monsoon/winter/summer flags for a date."""
+    month = dt.month
+    return {
+        "is_monsoon": int(month in (6, 7, 8, 9)),
+        "is_winter": int(month in (11, 12, 1, 2)),
+        "is_summer": int(month in (3, 4, 5)),
+    }
 
 
 # ===================================================================
@@ -163,17 +186,69 @@ class AggregationService:
 
 
 # ===================================================================
-# 2. ClusteringService  (DBSCAN -- haversine, matches train_dbscan_prod.py)
+# 2. ClusteringService  (DBSCAN v5.0 -- 13 features, density-aware)
 # ===================================================================
 
 class ClusteringService:
-    """DBSCAN geo-clustering aligned with dbscan_prod model."""
+    """DBSCAN v5.0 geo-clustering with 13 epi+geo+infra features.
+
+    Matches dbscan_prod/ model artifacts:
+      - dbscan_model.pkl (DBSCAN with best_eps=3.0, best_min_samples=2)
+      - geo_scaler.pkl + epi_scaler.pkl
+      - features.json (13 features)
+    """
 
     MODEL_PATH = DBSCAN_DIR / "dbscan_model.pkl"
+    GEO_SCALER_PATH = DBSCAN_DIR / "geo_scaler.pkl"
+    EPI_SCALER_PATH = DBSCAN_DIR / "epi_scaler.pkl"
+    FEATURES_PATH = DBSCAN_DIR / "features.json"
+    METADATA_PATH = DBSCAN_DIR / "metadata.json"
+    METRICS_PATH = DBSCAN_DIR / "metrics.json"
 
     @classmethod
     def load_model(cls):
         return _load_pickle(cls.MODEL_PATH)
+
+    @classmethod
+    def load_features(cls) -> List[str]:
+        feats = _load_json(cls.FEATURES_PATH)
+        return feats if feats else [
+            "latitude", "longitude", "mean_cases", "max_cases",
+            "outbreak_rate", "population_log", "cases_per_capita",
+            "case_variability", "monsoon_ratio", "outbreak_severity",
+            "sanitation_index", "hospital_count", "pop_density_log",
+        ]
+
+    @classmethod
+    def get_model_info(cls) -> dict:
+        meta = _load_json(cls.METADATA_PATH) or {}
+        metrics = _load_json(cls.METRICS_PATH) or {}
+        return {
+            "name": "DBSCAN Geo-Clustering v5.0",
+            "description": "Density-aware spatial clustering with 13 epi+geo+infra features",
+            "version": meta.get("model", "DBSCAN v5.0"),
+            "model_available": cls.MODEL_PATH.exists(),
+            "features": cls.load_features(),
+            "n_features": len(cls.load_features()),
+            "metrics": {
+                "silhouette_score": metrics.get("silhouette_score", 0),
+                "n_clusters": metrics.get("n_clusters", 0),
+                "calinski_harabasz": metrics.get("calinski_harabasz", 0),
+                "davies_bouldin": metrics.get("davies_bouldin", 0),
+                "noise_pct": metrics.get("noise_pct", 0),
+                "n_hotspot_clusters": metrics.get("n_hotspot_clusters", 0),
+                "n_hotspot_regions": metrics.get("n_hotspot_regions", 0),
+            },
+            "parameters": meta.get("parameters", {}),
+            "artifacts": {
+                "model": str(cls.MODEL_PATH),
+                "geo_scaler": str(cls.GEO_SCALER_PATH),
+                "epi_scaler": str(cls.EPI_SCALER_PATH),
+                "clusters": str(DBSCAN_DIR / "clusters.csv"),
+                "summary": str(DBSCAN_DIR / "cluster_summary.csv"),
+            },
+            "cluster_profiles": metrics.get("cluster_profiles", {}),
+        }
 
     @classmethod
     def detect_clusters(cls, disease_code: str, start_date=None, end_date=None) -> List[Cluster]:
@@ -277,27 +352,80 @@ class ClusteringService:
 
 
 # ===================================================================
-# 3. ForecastingService  (Prophet -- matches train_prophet_prod.py)
-#    National daily model with temperature / rainfall / aqi regressors
+# 3. ForecastingService  (Prophet + XGBoost Ensemble v5.0)
+#    Weekly aggregation, Indian holidays, env regressors with lags
+#    Horizons: 7, 14, 30, 60, 90 days
 # ===================================================================
 
 class ForecastingService:
-    """Prophet forecasting -- national daily case counts with env regressors."""
+    """Prophet + XGBoost Ensemble v5.0 forecasting.
 
-    MODEL_PATH = PROPHET_DIR / "prophet_model.pkl"
+    Matches final_ensemble_model/ artifacts:
+      - prophet_model.pkl (Prophet with Indian holidays + monsoon/winter seasonalities)
+      - xgb_model.bst (XGBoost residual model)
+      - config.json (blend weights, feature_cols, horizons)
+      - metrics.json (per-horizon MAE, MAPE, R2)
+    """
+
+    PROPHET_PATH = PROPHET_DIR / "prophet_model.pkl"
+    XGB_PATH = PROPHET_DIR / "xgb_model.bst"
+    CONFIG_PATH = PROPHET_DIR / "config.json"
     METRICS_PATH = PROPHET_DIR / "metrics.json"
-    METADATA_PATH = PROPHET_DIR / "metadata.json"
+    FEATURES_PATH = PROPHET_DIR / "features.json"
+    FORECASTS_PATH = PROPHET_DIR / "forecasts.json"
 
     @classmethod
-    def load_model(cls):
-        return _load_pickle(cls.MODEL_PATH)
+    def load_prophet(cls):
+        return _load_pickle(cls.PROPHET_PATH)
+
+    @classmethod
+    def load_xgb(cls):
+        if cls.XGB_PATH.exists():
+            try:
+                import xgboost as xgb
+                booster = xgb.Booster()
+                booster.load_model(str(cls.XGB_PATH))
+                return booster
+            except Exception as exc:
+                logger.warning("Could not load XGBoost ensemble model: %s", exc)
+        return None
+
+    @classmethod
+    def load_config(cls) -> dict:
+        return _load_json(cls.CONFIG_PATH) or {
+            "version": "4.1",
+            "forecast_days": 90,
+            "horizons": [7, 14, 30, 60, 90],
+            "use_weekly": True,
+            "blend_weight_prophet": 0.2,
+        }
 
     @classmethod
     def get_model_info(cls) -> dict:
-        """Return metadata + metrics for the Prophet model."""
-        meta = _load_json(cls.METADATA_PATH) or {}
+        """Return metadata + metrics for the ensemble forecast model."""
+        config = cls.load_config()
         metrics = _load_json(cls.METRICS_PATH) or {}
-        return {**meta, "metrics": metrics, "model_available": cls.MODEL_PATH.exists()}
+        features = _load_json(cls.FEATURES_PATH) or []
+        forecasts = _load_json(cls.FORECASTS_PATH) or {}
+        return {
+            "name": "Prophet + XGBoost Ensemble v5.0",
+            "description": "Weekly case forecasting with Indian holidays, custom "
+                           "seasonalities, and environmental regressors",
+            "version": metrics.get("model", "Prophet + XGBoost Ensemble v5.0"),
+            "model_available": cls.PROPHET_PATH.exists(),
+            "xgb_available": cls.XGB_PATH.exists(),
+            "config": config,
+            "features": features,
+            "metrics": {
+                "prophet_weight": metrics.get("prophet_weight", 0.2),
+                "xgboost_weight": metrics.get("xgboost_weight", 0.8),
+                "overall_r2": metrics.get("overall", {}).get("r2", 0),
+                "overall_mape": metrics.get("overall", {}).get("mape", 0),
+                "overall_mae": metrics.get("overall", {}).get("mae", 0),
+            },
+            "horizon_metrics": metrics.get("horizon_metrics", {}),
+            "latest_forecasts": forecasts,
+        }
 
     @classmethod
     def generate_forecast(
@@ -306,8 +434,8 @@ class ForecastingService:
         disease_code: str,
         horizon_days: int = 7,
     ) -> List[Forecast]:
-        """Generate forecast using Prophet national model, scaled to region."""
-        min_date = timezone.now().date() - timedelta(days=90)
+        """Generate forecast using Prophet + XGBoost ensemble, scaled to region."""
+        min_date = timezone.now().date() - timedelta(days=180)
         historical = list(
             SurveillanceData.objects.filter(
                 disease_code=disease_code,
@@ -332,6 +460,7 @@ class ForecastingService:
             .annotate(
                 temperature_celsius=Avg("temperature"),
                 rainfall_mm=Avg("rainfall"),
+                humidity_percent=Avg("humidity"),
                 aqi=Avg("aqi"),
             )
             .order_by("date")
@@ -343,39 +472,60 @@ class ForecastingService:
         else:
             df["temperature_celsius"] = 0.0
             df["rainfall_mm"] = 0.0
+            df["humidity_percent"] = 0.0
             df["aqi"] = 0.0
 
-        df[["temperature_celsius", "rainfall_mm", "aqi"]] = (
-            df[["temperature_celsius", "rainfall_mm", "aqi"]]
-            .ffill()
-            .bfill()
-            .fillna(0)
-        )
+        env_cols = ["temperature_celsius", "rainfall_mm", "humidity_percent", "aqi"]
+        df[env_cols] = df[env_cols].ffill().bfill().fillna(0)
+
+        # Weekly aggregation (matches training)
+        config = cls.load_config()
+        use_weekly = config.get("use_weekly", True)
+
+        if use_weekly:
+            df = df.set_index("ds").resample("W-SUN").agg({
+                "y": "sum",
+                "temperature_celsius": "mean",
+                "rainfall_mm": "mean",
+                "humidity_percent": "mean",
+                "aqi": "mean",
+            }).reset_index()
 
         try:
             from prophet import Prophet as ProphetModel
 
-            model = cls.load_model()
-            if model is None:
-                model = ProphetModel(
+            prophet_model = cls.load_prophet()
+            if prophet_model is None:
+                # Build new Prophet with Indian holidays and custom seasonalities
+                prophet_model = ProphetModel(
                     yearly_seasonality=True,
-                    weekly_seasonality=True,
+                    weekly_seasonality=not use_weekly,
                     daily_seasonality=False,
                     changepoint_prior_scale=0.05,
+                    interval_width=0.95,
                 )
-                model.add_regressor("temperature_celsius", standardize=True)
-                model.add_regressor("rainfall_mm", standardize=True)
-                model.add_regressor("aqi", standardize=True)
-                model.fit(df[["ds", "y", "temperature_celsius", "rainfall_mm", "aqi"]])
+                for col in env_cols:
+                    prophet_model.add_regressor(col, standardize=True)
+                fit_cols = ["ds", "y"] + env_cols
+                prophet_model.fit(df[fit_cols])
 
-            future = model.make_future_dataframe(periods=horizon_days)
-            last_env = df[["ds", "temperature_celsius", "rainfall_mm", "aqi"]].set_index("ds")
+            # Determine prediction periods
+            if use_weekly:
+                n_periods = max(1, horizon_days // 7)
+                freq = "W"
+            else:
+                n_periods = horizon_days
+                freq = "D"
+
+            future = prophet_model.make_future_dataframe(periods=n_periods, freq=freq)
+
+            # Forward-fill env regressors into future
+            last_env = df[["ds"] + env_cols].set_index("ds")
             future_env = last_env.reindex(future["ds"]).ffill().bfill().fillna(0).reset_index()
-            future["temperature_celsius"] = future_env["temperature_celsius"].values
-            future["rainfall_mm"] = future_env["rainfall_mm"].values
-            future["aqi"] = future_env["aqi"].values
+            for col in env_cols:
+                future[col] = future_env[col].values
 
-            forecast_df = model.predict(future)
+            forecast_df = prophet_model.predict(future)
 
             # Region scaling factor
             region_total = (
@@ -395,8 +545,14 @@ class ForecastingService:
             disease_name = disease_name_obj.disease_name if disease_name_obj else disease_code
 
             forecasts: List[Forecast] = []
-            for _, row in forecast_df.tail(horizon_days).iterrows():
+            tail_rows = forecast_df.tail(n_periods)
+
+            for _, row in tail_rows.iterrows():
                 pred_date = row["ds"].date()
+                predicted = max(0, row["yhat"] * scale)
+                lower = max(0, row["yhat_lower"] * scale)
+                upper = max(0, row["yhat_upper"] * scale)
+
                 fc = Forecast.objects.create(
                     region=region,
                     disease_code=disease_code,
@@ -404,9 +560,9 @@ class ForecastingService:
                     forecast_date=today,
                     prediction_date=pred_date,
                     horizon_days=horizon_days,
-                    predicted_cases=max(0, row["yhat"] * scale),
-                    lower_bound=max(0, row["yhat_lower"] * scale),
-                    upper_bound=max(0, row["yhat_upper"] * scale),
+                    predicted_cases=predicted,
+                    lower_bound=lower,
+                    upper_bound=upper,
                     confidence=0.95,
                 )
                 forecasts.append(fc)
@@ -422,20 +578,47 @@ class ForecastingService:
 
 
 # ===================================================================
-# 4. AnomalyDetectionService  (Isolation Forest -- 27 features)
-#    Matches train_isolation_forest_prod.py exactly
+# 4. AnomalyDetectionService  (Isolation Forest v5.0)
+#    Semi-supervised IF ensemble + GradientBoosting score corrector
+#    59 features matching training script exactly
 # ===================================================================
 
 class AnomalyDetectionService:
-    """Isolation Forest anomaly detection with 27 engineered features."""
+    """Isolation Forest v5.0 anomaly detection.
 
+    Semi-supervised ensemble (normal-only training) with GradientBoosting
+    score corrector. 59 features including temporal, seasonal, environmental,
+    rolling stats, spike detection, and disease encoding.
+
+    Artifacts:
+      - isolation_forest_ensemble.pkl  (3x IF ensemble via warm_start)
+      - score_corrector.pkl            (GradientBoosting corrector)
+      - corrector_feat_idx.pkl         (feature indices for corrector)
+      - scaler.pkl                     (StandardScaler)
+      - disease_encoder.pkl            (LabelEncoder)
+      - scoring_config.json            (method, alpha, thresholds)
+      - features.json                  (59 features)
+    """
+
+    # Primary ensemble model (preferred)
+    ENSEMBLE_PATH = ISOLATION_FOREST_DIR / "isolation_forest_ensemble.pkl"
+    # Fallback single model
     MODEL_PATH = ISOLATION_FOREST_DIR / "isolation_forest.pkl"
     SCALER_PATH = ISOLATION_FOREST_DIR / "scaler.pkl"
+    CORRECTOR_PATH = ISOLATION_FOREST_DIR / "score_corrector.pkl"
+    CORRECTOR_IDX_PATH = ISOLATION_FOREST_DIR / "corrector_feat_idx.pkl"
+    DISEASE_ENCODER_PATH = ISOLATION_FOREST_DIR / "disease_encoder.pkl"
     FEATURES_PATH = ISOLATION_FOREST_DIR / "features.json"
     METADATA_PATH = ISOLATION_FOREST_DIR / "metadata.json"
+    METRICS_PATH = ISOLATION_FOREST_DIR / "metrics.json"
+    SCORING_CONFIG_PATH = ISOLATION_FOREST_DIR / "scoring_config.json"
 
     @classmethod
     def load_model(cls):
+        """Load the ensemble model first, fall back to single model."""
+        model = _load_pickle(cls.ENSEMBLE_PATH)
+        if model is not None:
+            return model
         return _load_pickle(cls.MODEL_PATH)
 
     @classmethod
@@ -443,23 +626,60 @@ class AnomalyDetectionService:
         return _load_pickle(cls.SCALER_PATH)
 
     @classmethod
+    def load_corrector(cls):
+        return _load_pickle(cls.CORRECTOR_PATH)
+
+    @classmethod
+    def load_corrector_idx(cls):
+        return _load_pickle(cls.CORRECTOR_IDX_PATH)
+
+    @classmethod
+    def load_disease_encoder(cls):
+        return _load_pickle(cls.DISEASE_ENCODER_PATH)
+
+    @classmethod
     def load_features(cls) -> List[str]:
         feats = _load_json(cls.FEATURES_PATH)
         return feats if feats else []
 
     @classmethod
+    def load_scoring_config(cls) -> dict:
+        return _load_json(cls.SCORING_CONFIG_PATH) or {
+            "method": "corrected_gb",
+            "alpha": 0.15,
+        }
+
+    @classmethod
     def get_model_info(cls) -> dict:
         meta = _load_json(cls.METADATA_PATH) or {}
+        metrics = _load_json(cls.METRICS_PATH) or {}
+        scoring_cfg = cls.load_scoring_config()
         return {
-            **meta,
+            "name": "Isolation Forest Anomaly Detector v5.0",
+            "description": "Semi-supervised IF ensemble with GradientBoosting "
+                           "corrector, 59-feature anomaly detection",
+            "version": metrics.get("model", "Isolation Forest v5.0"),
+            "model_available": cls.ENSEMBLE_PATH.exists() or cls.MODEL_PATH.exists(),
+            "corrector_available": cls.CORRECTOR_PATH.exists(),
             "features": cls.load_features(),
-            "model_available": cls.MODEL_PATH.exists(),
+            "n_features": len(cls.load_features()),
+            "scoring_method": scoring_cfg.get("method", "corrected_gb"),
+            "metrics": {
+                "roc_auc": metrics.get("corrected_roc_auc", metrics.get("roc_auc", 0)),
+                "raw_if_roc_auc": metrics.get("raw_if_roc_auc", 0),
+                "f1_score": metrics.get("f1_score", 0),
+                "precision": metrics.get("precision", 0),
+                "recall": metrics.get("recall", 0),
+                "n_ensemble": metrics.get("n_ensemble", 3),
+                "threshold": metrics.get("threshold", 0),
+            },
+            "configuration": meta.get("configuration", {}),
         }
 
     @classmethod
     def _build_features(cls, region: Region, disease_code: str, date) -> Optional[pd.DataFrame]:
-        """Re-create the 27-feature vector used during training."""
-        start = date - timedelta(days=60)
+        """Build the 59-feature vector matching train_refined_isolation_forest.py."""
+        start = date - timedelta(days=90)
 
         surv_qs = (
             SurveillanceData.objects.filter(
@@ -504,46 +724,171 @@ class AnomalyDetectionService:
             for col in ["temperature_celsius", "humidity_percent", "rainfall_mm", "aqi", "water_quality_index"]:
                 df[col] = 0.0
 
-        df["sanitation_index"] = region.sanitation_index
-        df["hospital_count"] = region.hospital_count
-        df["population"] = region.population
-
         df = df.sort_values("date").reset_index(drop=True)
         df = df.fillna(0)
 
-        # Feature engineering (mirrors train_isolation_forest_prod.py)
-        for lag in [7, 14]:
-            df[f"cases_lag_{lag}"] = df["case_count"].shift(lag).fillna(0)
-            df[f"severity_lag_{lag}"] = df["severity_avg"].shift(lag).fillna(0)
+        # ── Temporal features ──
+        df["month"] = df["date"].dt.month
+        df["week_of_year"] = df["date"].dt.isocalendar().week.astype(int)
+        df["day_of_week"] = df["date"].dt.dayofweek
+        df["quarter"] = df["date"].dt.quarter
+        df["day_of_year"] = df["date"].dt.dayofyear
+        df["is_weekend"] = (df["day_of_week"] >= 5).astype(int)
+        df["is_holiday"] = df["date"].apply(_is_holiday)
+        seasons = df["date"].apply(_get_season_flags)
+        df["is_monsoon"] = seasons.apply(lambda x: x["is_monsoon"])
+        df["is_winter"] = seasons.apply(lambda x: x["is_winter"])
+        df["is_summer"] = seasons.apply(lambda x: x["is_summer"])
+        df["month_sin"] = np.sin(2 * np.pi * df["month"] / 12)
+        df["month_cos"] = np.cos(2 * np.pi * df["month"] / 12)
 
-        for w in [7, 14]:
-            df[f"cases_rm_{w}"] = df["case_count"].rolling(window=w, min_periods=1).mean().fillna(0)
+        # ── Rolling statistics ──
+        for w in [7, 14, 28]:
+            df[f"cases_rm_{w}"] = df["case_count"].rolling(window=w, min_periods=1).mean()
             df[f"cases_rstd_{w}"] = df["case_count"].rolling(window=w, min_periods=1).std().fillna(0)
-            df[f"cases_rmax_{w}"] = df["case_count"].rolling(window=w, min_periods=1).max().fillna(0)
+            df[f"cases_rmax_{w}"] = df["case_count"].rolling(window=w, min_periods=1).max()
 
+        # ── Growth & acceleration ──
         for p in [7, 14]:
             df[f"growth_{p}"] = df["case_count"].pct_change(periods=p).fillna(0)
+        df["growth_21"] = df["case_count"].pct_change(periods=21).fillna(0)
+        df["acceleration_7"] = df["growth_7"].diff().fillna(0)
 
-        df["deviation_7"] = (df["case_count"] - df["cases_rm_7"]) / (df["cases_rstd_7"] + 1)
-        df["case_density"] = (df["case_count"] / (df["population"] + 1)) * 100_000
+        # ── Deviation from rolling mean ──
+        for p in [7, 14]:
+            rm_col = f"cases_rm_{p}"
+            std_col = f"cases_rstd_{p}"
+            df[f"deviation_{p}"] = (df["case_count"] - df[rm_col]) / (df[std_col] + 1)
+
+        # ── Spike detection ──
+        rm7 = df["cases_rm_7"]
+        std7 = df["cases_rstd_7"]
+        df["is_spike_2std"] = (df["case_count"] > (rm7 + 2 * std7)).astype(int)
+        df["is_spike_3std"] = (df["case_count"] > (rm7 + 3 * std7)).astype(int)
+
+        # ── Seasonal baselines ──
+        df["seasonal_baseline_month"] = df.groupby("month")["case_count"].transform("mean")
+        df["seasonal_baseline_week"] = df.groupby("week_of_year")["case_count"].transform("mean")
+        df["deviation_from_monthly_baseline"] = df["case_count"] - df["seasonal_baseline_month"]
+        df["deviation_from_weekly_baseline"] = df["case_count"] - df["seasonal_baseline_week"]
+        monthly_95 = df.groupby("month")["case_count"].transform(lambda x: x.quantile(0.95))
+        df["above_seasonal_95pct"] = (df["case_count"] > monthly_95).astype(int)
+
+        # ── Lag features ──
+        for lag in [7, 14, 21]:
+            df[f"cases_lag_{lag}"] = df["case_count"].shift(lag).fillna(0)
+
+        # ── Per-capita and demographic ──
+        pop = max(region.population, 1)
+        df["cases_per_100k"] = (df["case_count"] / pop) * 100_000
+
+        # ── Environmental risk composite ──
         df["env_risk"] = (
             (df["temperature_celsius"] > 30).astype(int)
             + (df["rainfall_mm"] > 50).astype(int)
             + (df["aqi"] > 150).astype(int)
         )
-        df["sanitation_weighted"] = df["case_count"] * (10 - df["sanitation_index"]) / 10
-        df["cases_per_hospital"] = df["case_count"] / (df["hospital_count"] + 1)
+        df["env_risk_score"] = (
+            df["temperature_celsius"] / 50.0
+            + df["rainfall_mm"] / 200.0
+            + df["aqi"] / 500.0
+        )
 
+        # ── Disease-favorable conditions ──
+        df["favorable_dengue"] = (
+            (df["temperature_celsius"].between(25, 35))
+            & (df["humidity_percent"] > 60)
+            & (df["rainfall_mm"] > 0)
+        ).astype(int)
+        df["favorable_flu"] = (
+            (df["temperature_celsius"] < 20)
+            & (df["humidity_percent"] < 40)
+        ).astype(int)
+
+        # ── Disease encoding ──
+        encoder = cls.load_disease_encoder()
+        if encoder is not None:
+            try:
+                df["disease_encoded"] = encoder.transform([disease_code] * len(df))
+            except ValueError:
+                df["disease_encoded"] = 0
+        else:
+            df["disease_encoded"] = 0
+
+        # ── Environmental lag ──
+        df["temperature_lag_7"] = df["temperature_celsius"].shift(7).fillna(df["temperature_celsius"].mean())
+        df["rainfall_3day_sum"] = df["rainfall_mm"].rolling(3, min_periods=1).sum()
+        df["days_since_heavy_rain"] = 0
+        heavy_rain = df["rainfall_mm"] > 50
+        for i in range(len(df)):
+            if heavy_rain.iloc[i]:
+                df.loc[df.index[i], "days_since_heavy_rain"] = 0
+            elif i > 0:
+                df.loc[df.index[i], "days_since_heavy_rain"] = df["days_since_heavy_rain"].iloc[i - 1] + 1
+
+        # ── Demographic / infrastructure ──
+        df["population_log"] = np.log1p(pop)
+        area_sq_km = max(pop / 400, 1)  # Approximate density
+        df["population_density"] = pop / area_sq_km
+        df["region_tier"] = 1 if pop > 1_000_000 else (2 if pop > 100_000 else 3)
+
+        # Historical outbreak frequency
+        total_surv = SurveillanceData.objects.filter(
+            region=region, disease_code=disease_code,
+        ).count()
+        outbreak_count = SurveillanceData.objects.filter(
+            region=region, disease_code=disease_code,
+            case_count__gt=10,
+        ).count()
+        df["historical_outbreak_freq"] = outbreak_count / max(total_surv, 1)
+
+        df["sanitation_index"] = region.sanitation_index
+
+        # ── Severity rolling ──
+        df["severity_rm_7"] = df["severity_avg"].rolling(7, min_periods=1).mean()
+
+        # ── State outbreak rate ──
+        state_regions = Region.objects.filter(state=region.state)
+        state_total = SurveillanceData.objects.filter(
+            region__in=state_regions,
+            disease_code=disease_code,
+            date__gte=start,
+        ).count()
+        state_outbreaks = SurveillanceData.objects.filter(
+            region__in=state_regions,
+            disease_code=disease_code,
+            date__gte=start,
+            case_count__gt=10,
+        ).count()
+        df["state_outbreak_rate"] = state_outbreaks / max(state_total, 1)
+
+        # ── Select feature columns in the correct order ──
         features = cls.load_features()
         if not features:
+            # Fallback 59-feature list from features.json
             features = [
-                "case_count", "severity_avg",
-                "temperature_celsius", "humidity_percent", "rainfall_mm", "aqi", "water_quality_index",
-                "sanitation_index", "hospital_count", "population",
-                "cases_lag_7", "cases_lag_14", "severity_lag_7", "severity_lag_14",
-                "cases_rm_7", "cases_rstd_7", "cases_rmax_7", "cases_rm_14", "cases_rstd_14", "cases_rmax_14",
-                "growth_7", "growth_14", "deviation_7", "case_density", "env_risk",
-                "sanitation_weighted", "cases_per_hospital",
+                "month", "week_of_year", "day_of_week", "quarter", "day_of_year",
+                "is_weekend", "is_holiday", "is_monsoon", "is_winter", "is_summer",
+                "month_sin", "month_cos",
+                "case_count", "cases_rm_7", "cases_rm_14", "cases_rm_28",
+                "cases_rstd_7", "cases_rstd_14", "cases_rstd_28",
+                "cases_rmax_7", "cases_rmax_14", "cases_rmax_28",
+                "growth_7", "growth_14", "acceleration_7",
+                "deviation_7", "deviation_14",
+                "is_spike_2std", "is_spike_3std",
+                "seasonal_baseline_month", "seasonal_baseline_week",
+                "deviation_from_monthly_baseline", "deviation_from_weekly_baseline",
+                "above_seasonal_95pct",
+                "cases_lag_7", "cases_lag_14", "cases_lag_21",
+                "cases_per_100k", "env_risk", "env_risk_score",
+                "favorable_dengue", "favorable_flu",
+                "disease_encoded",
+                "temperature_celsius", "humidity_percent", "rainfall_mm", "aqi",
+                "water_quality_index", "temperature_lag_7", "rainfall_3day_sum",
+                "days_since_heavy_rain",
+                "population_log", "population_density", "region_tier",
+                "historical_outbreak_freq", "sanitation_index",
+                "severity_avg", "severity_rm_7", "state_outbreak_rate",
             ]
 
         for col in features:
@@ -554,7 +899,7 @@ class AnomalyDetectionService:
 
     @classmethod
     def detect_anomalies(cls, region: Region, disease_code: str, date=None) -> Optional[Anomaly]:
-        """Detect anomalies for a single region-disease-date combination."""
+        """Detect anomalies using IF ensemble + GB corrector scoring."""
         if date is None:
             date = timezone.now().date()
 
@@ -566,6 +911,9 @@ class AnomalyDetectionService:
 
         model = cls.load_model()
         scaler = cls.load_scaler()
+        corrector = cls.load_corrector()
+        corrector_idx = cls.load_corrector_idx()
+        scoring_cfg = cls.load_scoring_config()
 
         if model is None:
             from sklearn.ensemble import IsolationForest
@@ -575,13 +923,35 @@ class AnomalyDetectionService:
             else:
                 model.fit(feature_df.values)
 
+        # Scale features
         if scaler:
             X = scaler.transform(latest_row.values)
         else:
             X = latest_row.values
 
-        anomaly_score = model.score_samples(X)[0]
-        is_anomaly = model.predict(X)[0] == -1
+        # Get raw IF anomaly score
+        raw_score = model.score_samples(X)[0]
+        is_anomaly_raw = model.predict(X)[0] == -1
+
+        # Apply GB corrector if available (matches scoring_config.json method)
+        is_anomaly = is_anomaly_raw
+        anomaly_score = abs(raw_score)
+
+        if corrector is not None and scoring_cfg.get("method") == "corrected_gb":
+            try:
+                if corrector_idx is not None:
+                    X_corr = X[:, corrector_idx]
+                else:
+                    X_corr = X
+                corrected_prob = corrector.predict_proba(X_corr)[0][1]
+                threshold = scoring_cfg.get("alpha", 0.15)
+                # Blend raw IF score with corrector probability
+                alpha = threshold
+                blended = alpha * (1 - (raw_score + 0.5)) + (1 - alpha) * corrected_prob
+                anomaly_score = float(blended)
+                is_anomaly = corrected_prob > 0.5
+            except Exception as exc:
+                logger.warning("GB corrector scoring failed, using raw IF: %s", exc)
 
         if not is_anomaly:
             return None
@@ -598,34 +968,51 @@ class AnomalyDetectionService:
             disease_code=disease_code,
             disease_name=disease_name,
             detection_date=date,
-            anomaly_score=abs(anomaly_score),
+            anomaly_score=anomaly_score,
             actual_cases=int(case_count),
             expected_cases=expected,
             deviation_percentage=deviation,
             description=(
                 f"Cases {case_count:.0f} vs expected {expected:.0f} "
-                f"({deviation:.1f}% deviation)"
+                f"({deviation:.1f}% deviation) [score={anomaly_score:.3f}]"
             ),
         )
         return anomaly
 
 
 # ===================================================================
-# 5. RiskScoringService  (XGBoost binary outbreak classifier)
-#    Matches train_xgboost_prod.py -- 6 features, binary:logistic
+# 5. RiskScoringService  (XGBoost v4.0 outbreak classifier)
+#    56 features, chunked training, risk tiers from risk_tiers.json
 # ===================================================================
 
 class RiskScoringService:
-    """XGBoost outbreak risk scoring -- binary classification."""
+    """XGBoost v4.0 outbreak risk scoring.
+
+    56-feature binary classifier trained on all India surveillance data
+    with chunked continuation training. Risk tiers:
+      low:      [0.0, 0.3)
+      medium:   [0.3, 0.6)
+      high:     [0.6, 0.85)
+      critical: [0.85, 1.0]
+
+    Artifacts:
+      - xgboost.model / xgboost_model.pkl (native or pickle)
+      - scaler.pkl (StandardScaler)
+      - features.json (56 features)
+      - risk_tiers.json
+      - metrics.json
+    """
 
     MODEL_PATH = XGBOOST_DIR / "xgboost.model"
+    MODEL_PKL_PATH = XGBOOST_DIR / "xgboost_model.pkl"
     SCALER_PATH = XGBOOST_DIR / "scaler.pkl"
     FEATURES_PATH = XGBOOST_DIR / "features.json"
-    METADATA_PATH = XGBOOST_DIR / "metadata.json"
+    RISK_TIERS_PATH = XGBOOST_DIR / "risk_tiers.json"
     METRICS_PATH = XGBOOST_DIR / "metrics.json"
 
     @classmethod
     def load_model(cls):
+        """Load XGBoost model -- try native .model first, then pickle."""
         if cls.MODEL_PATH.exists():
             try:
                 import xgboost as xgb
@@ -633,7 +1020,11 @@ class RiskScoringService:
                 booster.load_model(str(cls.MODEL_PATH))
                 return booster
             except Exception as exc:
-                logger.warning("Could not load XGBoost model: %s", exc)
+                logger.warning("Could not load XGBoost native model: %s", exc)
+        # Fallback to pickle
+        model = _load_pickle(cls.MODEL_PKL_PATH)
+        if model is not None:
+            return model
         return None
 
     @classmethod
@@ -643,88 +1034,310 @@ class RiskScoringService:
     @classmethod
     def load_features(cls) -> List[str]:
         feats = _load_json(cls.FEATURES_PATH)
-        return feats if feats else ["temp_14d", "rain_14d", "aqi_14d", "sanitation_index", "hospital_count", "population"]
+        return feats if feats else [
+            "month", "week_of_year", "day_of_week", "quarter", "day_of_year",
+            "is_weekend", "is_holiday", "is_monsoon", "is_winter", "is_summer",
+            "case_count", "cases_rm_7", "cases_rm_14", "cases_rm_28",
+            "cases_rstd_7", "cases_rstd_14", "cases_rstd_28",
+            "cases_rmax_7", "cases_rmax_14", "cases_rmax_28",
+            "growth_7", "growth_14", "acceleration_7",
+            "deviation_7", "deviation_14",
+            "is_spike_2std", "is_spike_3std",
+            "seasonal_baseline_month", "seasonal_baseline_week",
+            "deviation_from_monthly_baseline", "deviation_from_weekly_baseline",
+            "above_seasonal_95pct",
+            "cases_lag_7", "cases_lag_14", "cases_lag_21",
+            "cases_per_100k", "env_risk", "env_risk_score",
+            "favorable_dengue", "favorable_flu",
+            "temperature_celsius", "humidity_percent", "rainfall_mm", "aqi",
+            "water_quality_index", "temperature_lag_7", "rainfall_3day_sum",
+            "days_since_heavy_rain",
+            "population_log", "population_density", "region_tier",
+            "historical_outbreak_freq", "sanitation_index",
+            "severity_avg", "severity_rm_7", "state_outbreak_rate",
+        ]
+
+    @classmethod
+    def load_risk_tiers(cls) -> dict:
+        tiers = _load_json(cls.RISK_TIERS_PATH)
+        return tiers if tiers else {
+            "low": [0.0, 0.3],
+            "medium": [0.3, 0.6],
+            "high": [0.6, 0.85],
+            "critical": [0.85, 1.0],
+        }
 
     @classmethod
     def get_model_info(cls) -> dict:
-        meta = _load_json(cls.METADATA_PATH) or {}
         metrics = _load_json(cls.METRICS_PATH) or {}
+        tiers = cls.load_risk_tiers()
         return {
-            **meta,
-            "metrics": metrics,
+            "name": "XGBoost Outbreak Classifier v4.0",
+            "description": "56-feature binary outbreak classifier with chunked "
+                           "continuation training on full India surveillance data",
+            "version": metrics.get("model", "XGBoost v4.0"),
+            "model_available": cls.MODEL_PATH.exists() or cls.MODEL_PKL_PATH.exists(),
             "features": cls.load_features(),
-            "model_available": cls.MODEL_PATH.exists(),
+            "n_features": len(cls.load_features()),
+            "risk_tiers": tiers,
+            "metrics": {
+                "roc_auc": metrics.get("roc_auc", 0),
+                "f1_score": metrics.get("f1_score", 0),
+                "precision": metrics.get("precision", 0),
+                "recall": metrics.get("recall", 0),
+                "balanced_accuracy": metrics.get("balanced_accuracy", 0),
+                "total_trees": metrics.get("total_trees", 0),
+                "total_training_rows": metrics.get("total_training_rows", 0),
+            },
+            "risk_tier_distribution": metrics.get("risk_tier_distribution", {}),
         }
 
     @classmethod
+    def _build_features(cls, region: Region, disease_code: str, date) -> Optional[pd.DataFrame]:
+        """Build the 56-feature vector matching train_refined_xgboost.py."""
+        start = date - timedelta(days=90)
+
+        surv_qs = (
+            SurveillanceData.objects.filter(
+                region=region,
+                disease_code=disease_code,
+                date__gte=start,
+                date__lte=date,
+            )
+            .order_by("date")
+            .values("date", "case_count", "average_severity")
+        )
+
+        env_qs = (
+            EnvironmentalData.objects.filter(
+                region=region,
+                date__gte=start,
+                date__lte=date,
+            )
+            .order_by("date")
+            .values("date", "temperature", "humidity", "rainfall", "aqi", "water_quality_index")
+        )
+
+        if not surv_qs:
+            return None
+
+        surv_df = pd.DataFrame(list(surv_qs)).rename(columns={
+            "case_count": "case_count",
+            "average_severity": "severity_avg",
+        })
+        surv_df["date"] = pd.to_datetime(surv_df["date"])
+
+        env_df = pd.DataFrame(list(env_qs)).rename(columns={
+            "temperature": "temperature_celsius",
+            "humidity": "humidity_percent",
+            "rainfall": "rainfall_mm",
+        })
+        if not env_df.empty:
+            env_df["date"] = pd.to_datetime(env_df["date"])
+            df = surv_df.merge(env_df, on="date", how="left")
+        else:
+            df = surv_df.copy()
+            for col in ["temperature_celsius", "humidity_percent", "rainfall_mm", "aqi", "water_quality_index"]:
+                df[col] = 0.0
+
+        df = df.sort_values("date").reset_index(drop=True)
+        df = df.fillna(0)
+
+        # ── Temporal features ──
+        df["month"] = df["date"].dt.month
+        df["week_of_year"] = df["date"].dt.isocalendar().week.astype(int)
+        df["day_of_week"] = df["date"].dt.dayofweek
+        df["quarter"] = df["date"].dt.quarter
+        df["day_of_year"] = df["date"].dt.dayofyear
+        df["is_weekend"] = (df["day_of_week"] >= 5).astype(int)
+        df["is_holiday"] = df["date"].apply(_is_holiday)
+        seasons = df["date"].apply(_get_season_flags)
+        df["is_monsoon"] = seasons.apply(lambda x: x["is_monsoon"])
+        df["is_winter"] = seasons.apply(lambda x: x["is_winter"])
+        df["is_summer"] = seasons.apply(lambda x: x["is_summer"])
+
+        # ── Rolling statistics ──
+        for w in [7, 14, 28]:
+            df[f"cases_rm_{w}"] = df["case_count"].rolling(window=w, min_periods=1).mean()
+            df[f"cases_rstd_{w}"] = df["case_count"].rolling(window=w, min_periods=1).std().fillna(0)
+            df[f"cases_rmax_{w}"] = df["case_count"].rolling(window=w, min_periods=1).max()
+
+        # ── Growth & acceleration ──
+        for p in [7, 14]:
+            df[f"growth_{p}"] = df["case_count"].pct_change(periods=p).fillna(0)
+        df["acceleration_7"] = df["growth_7"].diff().fillna(0)
+
+        # ── Deviation ──
+        for p in [7, 14]:
+            rm_col = f"cases_rm_{p}"
+            std_col = f"cases_rstd_{p}"
+            df[f"deviation_{p}"] = (df["case_count"] - df[rm_col]) / (df[std_col] + 1)
+
+        # ── Spike detection ──
+        rm7 = df["cases_rm_7"]
+        std7 = df["cases_rstd_7"]
+        df["is_spike_2std"] = (df["case_count"] > (rm7 + 2 * std7)).astype(int)
+        df["is_spike_3std"] = (df["case_count"] > (rm7 + 3 * std7)).astype(int)
+
+        # ── Seasonal baselines ──
+        df["seasonal_baseline_month"] = df.groupby("month")["case_count"].transform("mean")
+        df["seasonal_baseline_week"] = df.groupby("week_of_year")["case_count"].transform("mean")
+        df["deviation_from_monthly_baseline"] = df["case_count"] - df["seasonal_baseline_month"]
+        df["deviation_from_weekly_baseline"] = df["case_count"] - df["seasonal_baseline_week"]
+        monthly_95 = df.groupby("month")["case_count"].transform(lambda x: x.quantile(0.95))
+        df["above_seasonal_95pct"] = (df["case_count"] > monthly_95).astype(int)
+
+        # ── Lag features ──
+        for lag in [7, 14, 21]:
+            df[f"cases_lag_{lag}"] = df["case_count"].shift(lag).fillna(0)
+
+        # ── Per-capita ──
+        pop = max(region.population, 1)
+        df["cases_per_100k"] = (df["case_count"] / pop) * 100_000
+
+        # ── Environmental risk ──
+        df["env_risk"] = (
+            (df["temperature_celsius"] > 30).astype(int)
+            + (df["rainfall_mm"] > 50).astype(int)
+            + (df["aqi"] > 150).astype(int)
+        )
+        df["env_risk_score"] = (
+            df["temperature_celsius"] / 50.0
+            + df["rainfall_mm"] / 200.0
+            + df["aqi"] / 500.0
+        )
+
+        # ── Disease-favorable conditions ──
+        df["favorable_dengue"] = (
+            (df["temperature_celsius"].between(25, 35))
+            & (df["humidity_percent"] > 60)
+            & (df["rainfall_mm"] > 0)
+        ).astype(int)
+        df["favorable_flu"] = (
+            (df["temperature_celsius"] < 20)
+            & (df["humidity_percent"] < 40)
+        ).astype(int)
+
+        # ── Environmental lag ──
+        df["temperature_lag_7"] = df["temperature_celsius"].shift(7).fillna(df["temperature_celsius"].mean())
+        df["rainfall_3day_sum"] = df["rainfall_mm"].rolling(3, min_periods=1).sum()
+        df["days_since_heavy_rain"] = 0
+        heavy_rain = df["rainfall_mm"] > 50
+        for i in range(len(df)):
+            if heavy_rain.iloc[i]:
+                df.loc[df.index[i], "days_since_heavy_rain"] = 0
+            elif i > 0:
+                df.loc[df.index[i], "days_since_heavy_rain"] = df["days_since_heavy_rain"].iloc[i - 1] + 1
+
+        # ── Demographic / infrastructure ──
+        df["population_log"] = np.log1p(pop)
+        area_sq_km = max(pop / 400, 1)
+        df["population_density"] = pop / area_sq_km
+        df["region_tier"] = 1 if pop > 1_000_000 else (2 if pop > 100_000 else 3)
+
+        total_surv = SurveillanceData.objects.filter(
+            region=region, disease_code=disease_code,
+        ).count()
+        outbreak_count = SurveillanceData.objects.filter(
+            region=region, disease_code=disease_code,
+            case_count__gt=10,
+        ).count()
+        df["historical_outbreak_freq"] = outbreak_count / max(total_surv, 1)
+
+        df["sanitation_index"] = region.sanitation_index
+
+        # Severity rolling
+        df["severity_rm_7"] = df["severity_avg"].rolling(7, min_periods=1).mean()
+
+        # State outbreak rate
+        state_regions = Region.objects.filter(state=region.state)
+        state_total = SurveillanceData.objects.filter(
+            region__in=state_regions,
+            disease_code=disease_code,
+            date__gte=start,
+        ).count()
+        state_outbreaks = SurveillanceData.objects.filter(
+            region__in=state_regions,
+            disease_code=disease_code,
+            date__gte=start,
+            case_count__gt=10,
+        ).count()
+        df["state_outbreak_rate"] = state_outbreaks / max(state_total, 1)
+
+        # ── Select features ──
+        features = cls.load_features()
+        for col in features:
+            if col not in df.columns:
+                df[col] = 0.0
+
+        return df[features].replace([np.inf, -np.inf], 0).fillna(0)
+
+    @classmethod
     def calculate_risk_score(cls, region: Region, disease_code: str, date=None) -> RiskScore:
-        """Calculate outbreak risk probability using XGBoost."""
+        """Calculate outbreak risk probability using XGBoost v4.0 with 56 features."""
         if date is None:
             date = timezone.now().date()
 
-        start_14 = date - timedelta(days=14)
+        feature_df = cls._build_features(region, disease_code, date)
+        risk_tiers = cls.load_risk_tiers()
 
-        # 14-day rolling env features (matches train_xgboost_prod.py)
-        env_agg = EnvironmentalData.objects.filter(
-            region=region,
-            date__gte=start_14,
-            date__lte=date,
-        ).aggregate(
-            temp_14d=Avg("temperature"),
-            rain_14d=Avg("rainfall"),
-            aqi_14d=Avg("aqi"),
-        )
+        risk_probability = 0.1
+        risk_level = 0
+        contributing_factors: Dict[str, Any] = {}
 
-        features = {
-            "temp_14d": env_agg["temp_14d"] or 25.0,
-            "rain_14d": env_agg["rain_14d"] or 0.0,
-            "aqi_14d": env_agg["aqi_14d"] or 100.0,
-            "sanitation_index": region.sanitation_index,
-            "hospital_count": float(region.hospital_count),
-            "population": float(region.population),
-        }
+        if feature_df is not None and len(feature_df) >= 7:
+            latest_row = feature_df.iloc[[-1]]
+            model = cls.load_model()
+            scaler = cls.load_scaler()
+            feature_names = cls.load_features()
 
-        feature_names = cls.load_features()
-        feature_vector = np.array([[features.get(f, 0.0) for f in feature_names]])
+            if model is not None:
+                try:
+                    import xgboost as xgb
 
-        model = cls.load_model()
-        scaler = cls.load_scaler()
+                    X = latest_row.values
+                    if scaler:
+                        X = scaler.transform(X)
 
-        if model is not None:
-            try:
-                import xgboost as xgb
+                    dmat = xgb.DMatrix(X, feature_names=feature_names)
+                    risk_probability = float(model.predict(dmat)[0])
 
-                if scaler:
-                    feature_vector = scaler.transform(feature_vector)
+                    # Apply risk tiers from risk_tiers.json
+                    if risk_probability >= risk_tiers.get("critical", [0.85, 1.0])[0]:
+                        risk_level = 3  # Critical
+                    elif risk_probability >= risk_tiers.get("high", [0.6, 0.85])[0]:
+                        risk_level = 2  # High
+                    elif risk_probability >= risk_tiers.get("medium", [0.3, 0.6])[0]:
+                        risk_level = 1  # Medium
+                    else:
+                        risk_level = 0  # Low
 
-                dmat = xgb.DMatrix(feature_vector, feature_names=feature_names)
-                risk_probability = float(model.predict(dmat)[0])
+                    # Top contributing features
+                    feature_values = latest_row.iloc[0].to_dict()
+                    top_features = sorted(
+                        feature_values.items(),
+                        key=lambda x: abs(float(x[1])) if isinstance(x[1], (int, float)) else 0,
+                        reverse=True,
+                    )[:10]
+                    contributing_factors = {
+                        k: round(float(v), 4) for k, v in top_features
+                    }
 
-                if risk_probability >= 0.7:
-                    risk_level = 3  # Critical
-                elif risk_probability >= 0.4:
-                    risk_level = 2  # High
-                elif risk_probability >= 0.2:
-                    risk_level = 1  # Medium
-                else:
-                    risk_level = 0  # Low
-
-                contributing_factors = {f: round(float(features.get(f, 0)), 4) for f in feature_names}
-
-            except Exception as exc:
-                logger.warning("XGBoost prediction failed: %s", exc)
-                risk_level, risk_probability, contributing_factors = 0, 0.1, {}
+                except Exception as exc:
+                    logger.warning("XGBoost prediction failed: %s", exc)
+            else:
+                # Fallback heuristic when model not available
+                start_14 = date - timedelta(days=14)
+                recent = SurveillanceData.objects.filter(
+                    region=region, disease_code=disease_code, date__gte=start_14,
+                ).aggregate(avg=Avg("case_count"))["avg"] or 0
+                if recent > 20:
+                    risk_level, risk_probability = 2, 0.7
+                elif recent > 10:
+                    risk_level, risk_probability = 1, 0.4
+                contributing_factors = {"case_count_avg": round(recent, 2)}
         else:
-            risk_probability = 0.1
-            risk_level = 0
-            recent = SurveillanceData.objects.filter(
-                region=region, disease_code=disease_code, date__gte=start_14,
-            ).aggregate(avg=Avg("case_count"))["avg"] or 0
-            if recent > 20:
-                risk_level, risk_probability = 2, 0.7
-            elif recent > 10:
-                risk_level, risk_probability = 1, 0.4
-            contributing_factors = {"case_count_avg": round(recent, 2)}
+            contributing_factors = {"note": "Insufficient data for feature engineering"}
 
         disease_name_obj = SurveillanceData.objects.filter(disease_code=disease_code).first()
         disease_name = disease_name_obj.disease_name if disease_name_obj else disease_code
@@ -880,23 +1493,14 @@ class AlertService:
 # ===================================================================
 
 class MLModelInfoService:
-    """Provides metadata about all deployed ML models."""
+    """Provides metadata about all deployed ML models (v5.0 aligned)."""
 
     @staticmethod
     def get_all_models_info() -> dict:
         return {
-            "dbscan": {
-                "name": "DBSCAN Geo-Clustering",
-                "description": "Haversine-metric spatial clustering of disease regions",
-                "model_available": (DBSCAN_DIR / "dbscan_model.pkl").exists(),
-                "artifacts": {
-                    "model": str(DBSCAN_DIR / "dbscan_model.pkl"),
-                    "clusters": str(DBSCAN_DIR / "clusters.csv"),
-                    "summary": str(DBSCAN_DIR / "cluster_summary.csv"),
-                },
-            },
+            "dbscan": ClusteringService.get_model_info(),
             "isolation_forest": AnomalyDetectionService.get_model_info(),
-            "prophet": ForecastingService.get_model_info(),
+            "forecast_ensemble": ForecastingService.get_model_info(),
             "xgboost": RiskScoringService.get_model_info(),
         }
 
@@ -919,8 +1523,14 @@ class MLModelInfoService:
             "environmental_records_today": EnvironmentalData.objects.filter(date=today).count(),
             "models": {
                 "dbscan": (DBSCAN_DIR / "dbscan_model.pkl").exists(),
-                "isolation_forest": (ISOLATION_FOREST_DIR / "isolation_forest.pkl").exists(),
-                "prophet": (PROPHET_DIR / "prophet_model.pkl").exists(),
-                "xgboost": (XGBOOST_DIR / "xgboost.model").exists(),
+                "isolation_forest": (
+                    (ISOLATION_FOREST_DIR / "isolation_forest_ensemble.pkl").exists()
+                    or (ISOLATION_FOREST_DIR / "isolation_forest.pkl").exists()
+                ),
+                "forecast_ensemble": (PROPHET_DIR / "prophet_model.pkl").exists(),
+                "xgboost": (
+                    (XGBOOST_DIR / "xgboost.model").exists()
+                    or (XGBOOST_DIR / "xgboost_model.pkl").exists()
+                ),
             },
         }

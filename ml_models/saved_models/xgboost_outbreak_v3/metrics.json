@@ -1,36 +1,80 @@
 {
-  "roc_auc": 0.9985842698352808,
-  "f1_score": 0.9469657810400083,
-  "precision": 0.9738464809695939,
-  "recall": 0.9215291750503019,
-  "optimal_threshold": 0.8766831755638123,
-  "n_features": 35,
+  "model": "XGBoost v4.0 (Refined) \u2013 Chunked Training on ALL Data",
+  "purpose": "Combines medical, demographic, and environmental features to output risk score & classification for resource prioritization",
+  "training_method": "Chunked continuation training (native xgb.train API)",
+  "total_training_rows": 8251188,
+  "total_trees": 1275,
+  "n_epochs": 3,
+  "chunk_size": 500000,
+  "roc_auc": 0.8851835428646774,
+  "f1_score": 0.4678158719284282,
+  "precision": 0.45123610355282595,
+  "recall": 0.4856604957640414,
+  "balanced_accuracy": 0.7267264581444153,
+  "optimal_threshold": 0.8179548978805542,
+  "val_threshold": 0.7993378639221191,
+  "test_threshold": 0.8365719318389893,
+  "risk_tiers": {
+    "low": [
+      0.0,
+      0.3
+    ],
+    "medium": [
+      0.3,
+      0.6
+    ],
+    "high": [
+      0.6,
+      0.85
+    ],
+    "critical": [
+      0.85,
+      1.0
+    ]
+  },
+  "risk_tier_distribution": {
+    "low": 589022,
+    "medium": 202337,
+    "high": 91105,
+    "critical": 41998
+  },
+  "n_features": 56,
   "classification_report": {
     "0": {
-      "precision": 0.9932120790183622,
-      "recall": 0.9978491991326852,
-      "f1-score": 0.9955252392208858,
-      "support": 57188.0
+      "precision": 0.9718353741652443,
+      "recall": 0.9677924205247891,
+      "f1-score": 0.9698096837855432,
+      "support": 876657.0
     },
     "1": {
-      "precision": 0.9738464809695939,
-      "recall": 0.9215291750503019,
-      "f1-score": 0.9469657810400083,
-      "support": 4970.0
+      "precision": 0.45123610355282595,
+      "recall": 0.4856604957640414,
+      "f1-score": 0.4678158719284282,
+      "support": 47805.0
     },
-    "accuracy": 0.9917468387013739,
+    "accuracy": 0.9428608206719151,
     "macro avg": {
-      "precision": 0.9835292799939781,
-      "recall": 0.9596891870914935,
-      "f1-score": 0.971245510130447,
-      "support": 62158.0
+      "precision": 0.7115357388590351,
+      "recall": 0.7267264581444153,
+      "f1-score": 0.7188127778569857,
+      "support": 924462.0
     },
     "weighted avg": {
-      "precision": 0.991663653678062,
-      "recall": 0.9917468387013739,
-      "f1-score": 0.9916425450035853,
-      "support": 62158.0
+      "precision": 0.9449145833359548,
+      "recall": 0.9428608206719151,
+      "f1-score": 0.943851002762603,
+      "support": 924462.0
     }
   },
-  "timestamp": "2026-02-13T18:24:08.329468"
+  "confusion_matrix": [
+    [
+      848422,
+      28235
+    ],
+    [
+      24588,
+      23217
+    ]
+  ],
+  "timestamp": "2026-02-14T14:39:36.775890"
 }

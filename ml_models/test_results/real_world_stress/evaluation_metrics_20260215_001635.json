@@ -1,0 +1,355 @@
+{
+  "timestamp": "20260215_001635",
+  "results": [
+    {
+      "scenario": "Seasonal_Wave",
+      "metadata": {
+        "scenario": "seasonal_wave",
+        "pattern": "Realistic monsoon dengue - 15x spike June-Sept is NORMAL, not outbreak",
+        "expected_behavior": "Models should learn seasonal baseline, not flag monsoon as outbreak"
+      },
+      "data_stats": {
+        "n_records": 73000,
+        "n_regions": 200,
+        "outbreak_rate": 0.010917808219178083
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 4461.09765625,
+        "r2": -0.755081295967102,
+        "mape": 183.86421245880723,
+        "n_train": 280,
+        "n_test": 71
+      },
+      "isolation_forest": {
+        "status": "FAILED",
+        "error": "name 'ISOLATION_FOREST_DIR' is not defined"
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.030021093867711315,
+        "roc_auc": 0.8437108806098434,
+        "n_test": 73000,
+        "inference_latency_ms": 0.009071111679077148
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 31,
+        "n_noise": 88,
+        "noise_pct": 0.44,
+        "silhouette": 0.5123562249482652
+      }
+    },
+    {
+      "scenario": "Pandemic_Spread",
+      "metadata": {
+        "scenario": "pandemic_spread",
+        "pattern": "Geographic spread: Metro\u2192Tier2\u2192Rural over 120 days",
+        "expected_behavior": "Models should detect early metro signals, predict tier-2/3 spread"
+      },
+      "data_stats": {
+        "n_records": 70080,
+        "n_regions": 192,
+        "outbreak_rate": 0.285259703196347
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 32.191776275634766,
+        "r2": 0.0,
+        "mape": 1.6757821020425647,
+        "n_train": 280,
+        "n_test": 71
+      },
+      "isolation_forest": {
+        "status": "FAILED",
+        "error": "name 'ISOLATION_FOREST_DIR' is not defined"
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.4991131872798581,
+        "roc_auc": 0.8226730198446954,
+        "n_test": 70080,
+        "inference_latency_ms": 0.00596165657043457
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 8,
+        "n_noise": 6,
+        "noise_pct": 0.03125,
+        "silhouette": 0.3922436386723892
+      }
+    },
+    {
+      "scenario": "Urban_Rural_Disparity",
+      "metadata": {
+        "scenario": "urban_rural_disparity",
+        "pattern": "Urban: real-time 95% capture, Rural: 7-day lag 40% capture",
+        "expected_behavior": "Models should have wider uncertainty for rural, detect lag"
+      },
+      "data_stats": {
+        "n_records": 17650,
+        "n_regions": 100,
+        "outbreak_rate": 0.12317280453257791
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 67.87035369873047,
+        "r2": -1.1834490299224854,
+        "mape": 7.907041223334399,
+        "n_train": 132,
+        "n_test": 34
+      },
+      "isolation_forest": {
+        "status": "FAILED",
+        "error": "name 'ISOLATION_FOREST_DIR' is not defined"
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.2938651156349536,
+        "roc_auc": 0.7954981128746579,
+        "n_test": 17650,
+        "inference_latency_ms": 0.009157419204711914
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 10,
+        "n_noise": 3,
+        "noise_pct": 0.03,
+        "silhouette": 0.40107071300497565
+      }
+    },
+    {
+      "scenario": "Delayed_Reporting",
+      "metadata": {
+        "scenario": "delayed_reporting",
+        "pattern": "No weekend reporting, Monday batch updates",
+        "expected_behavior": "Models should smooth Monday spikes, detect true patterns"
+      },
+      "data_stats": {
+        "n_records": 6400,
+        "n_regions": 50,
+        "outbreak_rate": 0.11234375
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 619.752197265625,
+        "r2": 0.25633102655410767,
+        "mape": 28.74807357401408,
+        "n_train": 91,
+        "n_test": 23
+      },
+      "isolation_forest": {
+        "status": "FAILED",
+        "error": "name 'ISOLATION_FOREST_DIR' is not defined"
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.26145454545454544,
+        "roc_auc": 0.7548332912651523,
+        "n_test": 6400,
+        "inference_latency_ms": 0.006578207015991211
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 6,
+        "n_noise": 33,
+        "noise_pct": 0.66,
+        "silhouette": 0.7642784425685278
+      }
+    },
+    {
+      "scenario": "Superspreader_Event",
+      "metadata": {
+        "scenario": "superspreader_event",
+        "pattern": "Day 30 wedding \u2192 15 regions spike simultaneously days 31-45",
+        "expected_behavior": "DBSCAN should detect geographic cluster, early warning"
+      },
+      "data_stats": {
+        "n_records": 9000,
+        "n_regions": 100,
+        "outbreak_rate": 0.028444444444444446
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 68.559326171875,
+        "r2": -0.645544171333313,
+        "mape": 4.937254022665841,
+        "n_train": 60,
+        "n_test": 16
+      },
+      "isolation_forest": {
+        "status": "FAILED",
+        "error": "name 'ISOLATION_FOREST_DIR' is not defined"
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.07449439837043503,
+        "roc_auc": 0.8395714650760521,
+        "n_test": 9000,
+        "inference_latency_ms": 0.0076389312744140625
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 11,
+        "n_noise": 20,
+        "noise_pct": 0.2,
+        "silhouette": 0.46375915561592074
+      }
+    },
+    {
+      "scenario": "Data_Entry_Errors",
+      "metadata": {
+        "scenario": "data_entry_errors",
+        "pattern": "2% typos, 1% duplicates, 5% date errors, 0.5% region errors",
+        "expected_behavior": "Models should be robust to outliers and noise"
+      },
+      "data_stats": {
+        "n_records": 9090,
+        "n_regions": 50,
+        "outbreak_rate": 0.11815181518151815
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 2151.045654296875,
+        "r2": -0.14242541790008545,
+        "mape": 111.86779649091633,
+        "n_train": 133,
+        "n_test": 34
+      },
+      "isolation_forest": {
+        "status": "FAILED",
+        "error": "name 'ISOLATION_FOREST_DIR' is not defined"
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.27457497123865526,
+        "roc_auc": 0.6947696204425414,
+        "n_test": 9090,
+        "inference_latency_ms": 0.007269620895385742
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 4,
+        "n_noise": 41,
+        "noise_pct": 0.82,
+        "silhouette": 0.6827453292848706
+      }
+    },
+    {
+      "scenario": "Production_Scale_Small",
+      "metadata": {
+        "scenario": "production_scale",
+        "pattern": "200 regions, 365 days, 553,752 total records",
+        "expected_behavior": "Models should handle scale: memory < 4GB, inference < 200ms/region"
+      },
+      "data_stats": {
+        "n_records": 553752,
+        "n_regions": 200,
+        "outbreak_rate": 0.12045464395613921
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 1160.986083984375,
+        "r2": -0.013782262802124023,
+        "mape": 3.6950252611091585,
+        "n_train": 280,
+        "n_test": 71
+      },
+      "isolation_forest": {
+        "status": "FAILED",
+        "error": "name 'ISOLATION_FOREST_DIR' is not defined"
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.27480963250258256,
+        "roc_auc": 0.8016988574897312,
+        "n_test": 553752,
+        "inference_latency_ms": 0.0067288875579833984
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 15,
+        "n_noise": 17,
+        "noise_pct": 0.085,
+        "silhouette": 0.43440238076670074
+      }
+    }
+  ],
+  "aggregated": {
+    "isolation_forest": {
+      "auc": [],
+      "f1": [],
+      "precision": [],
+      "recall": []
+    },
+    "xgboost_v3": {
+      "auc": [
+        0.8437108806098434,
+        0.8226730198446954,
+        0.7954981128746579,
+        0.7548332912651523,
+        0.8395714650760521,
+        0.6947696204425414,
+        0.8016988574897312
+      ],
+      "f1": [
+        0.030021093867711315,
+        0.4991131872798581,
+        0.2938651156349536,
+        0.26145454545454544,
+        0.07449439837043503,
+        0.27457497123865526,
+        0.27480963250258256
+      ],
+      "latency": [
+        0.009071111679077148,
+        0.00596165657043457,
+        0.009157419204711914,
+        0.006578207015991211,
+        0.0076389312744140625,
+        0.007269620895385742,
+        0.0067288875579833984
+      ]
+    },
+    "dbscan": {
+      "silhouette": [
+        0.5123562249482652,
+        0.3922436386723892,
+        0.40107071300497565,
+        0.7642784425685278,
+        0.46375915561592074,
+        0.6827453292848706,
+        0.43440238076670074
+      ],
+      "noise_pct": [
+        0.44,
+        0.03125,
+        0.03,
+        0.66,
+        0.2,
+        0.82,
+        0.085
+      ]
+    },
+    "forecast": {
+      "r2": [
+        -0.755081295967102,
+        0.0,
+        -1.1834490299224854,
+        0.25633102655410767,
+        -0.645544171333313,
+        -0.14242541790008545,
+        -0.013782262802124023
+      ],
+      "mape": [
+        183.86421245880723,
+        1.6757821020425647,
+        7.907041223334399,
+        28.74807357401408,
+        4.937254022665841,
+        111.86779649091633,
+        3.6950252611091585
+      ]
+    }
+  }
+}

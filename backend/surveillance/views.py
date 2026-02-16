@@ -386,71 +386,170 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
 @permission_classes([IsAuthority])
 def heat_map_data(request):
     """
-    Get heat map data for disease visualization
+    Get heat map data for disease visualization.
+    
+    When disease_code is provided: returns per-region data for that disease.
+    When disease_code is empty/missing: returns aggregated data for ALL diseases per region.
+    Uses a 7-day window for robust data availability.
     """
     disease_code = request.query_params.get('disease_code')
-    date = request.query_params.get('date')
-    
-    if not disease_code:
-        # Get the most common disease from recent data
-        recent_data = SurveillanceData.objects.filter(
-            date__gte=timezone.now().date() - timedelta(days=7)
-        ).values('disease_code').annotate(
-            total=Sum('case_count')
-        ).order_by('-total').first()
-        
-        if recent_data:
-            disease_code = recent_data['disease_code']
-        else:
-            # No data available, return empty response
-            return Response({
-                'disease_code': None,
-                'disease_name': '',
-                'date': timezone.now().date(),
-                'data': []
-            })
-    
-    if not date:
-        date = timezone.now().date()
-    else:
-        date = datetime.strptime(date, '%Y-%m-%d').date()
-    
-    # Get surveillance data
-    data = SurveillanceData.objects.filter(
-        disease_code=disease_code,
-        date=date
+    days = int(request.query_params.get('days', 7))
+    today = timezone.now().date()
+    start_date = today - timedelta(days=days)
+
+    # Base queryset: last N days
+    base_qs = SurveillanceData.objects.filter(
+        date__gte=start_date,
+        date__lte=today,
     ).select_related('region')
-    
-    # Get risk scores
-    risk_scores = {
-        rs.region_id: rs.get_risk_level_display()
-        for rs in RiskScore.objects.filter(
-            disease_code=disease_code,
-            calculation_date=date
+
+    if disease_code:
+        # ── Single disease mode ──
+        base_qs = base_qs.filter(disease_code=disease_code)
+        disease_name = ''
+        first = base_qs.first()
+        if first:
+            disease_name = first.disease_name
+
+        # Aggregate per region
+        region_agg = base_qs.values(
+            'region__id', 'region__name', 'region__latitude',
+            'region__longitude', 'region__population',
+        ).annotate(
+            total_cases=Sum('case_count'),
+            avg_severity=Avg('average_severity'),
         )
-    }
-    
-    # Build heat map data
-    heat_map = []
-    for record in data:
-        heat_map.append({
-            'region_id': str(record.region.id),
-            'region_name': record.region.name,
-            'latitude': record.region.latitude,
-            'longitude': record.region.longitude,
-            'case_count': record.case_count,
-            'cases_per_100k': record.cases_per_100k,
-            'average_severity': record.average_severity,
-            'risk_level': risk_scores.get(record.region_id, 'Low')
+
+        # Risk scores for this disease (latest per region)
+        risk_scores = {}
+        for rs in RiskScore.objects.filter(disease_code=disease_code).order_by('-calculation_date'):
+            if rs.region_id not in risk_scores:
+                risk_scores[rs.region_id] = rs.get_risk_level_display()
+
+        heat_map = []
+        for row in region_agg:
+            pop = row['region__population'] or 1
+            cases = row['total_cases'] or 0
+            heat_map.append({
+                'region_id': str(row['region__id']),
+                'region_name': row['region__name'],
+                'latitude': row['region__latitude'],
+                'longitude': row['region__longitude'],
+                'case_count': cases,
+                'cases_per_100k': round((cases / pop) * 100_000, 2),
+                'average_severity': round(row['avg_severity'] or 0, 2),
+                'risk_level': risk_scores.get(row['region__id'], 'Low'),
+            })
+
+        serializer = HeatMapDataSerializer(heat_map, many=True)
+        return Response({
+            'disease_code': disease_code,
+            'disease_name': disease_name,
+            'date': today,
+            'data': serializer.data,
         })
-    
-    serializer = HeatMapDataSerializer(heat_map, many=True)
-    
+    else:
+        # ── All diseases mode ── aggregate across all diseases per region
+        region_agg = base_qs.values(
+            'region__id', 'region__name', 'region__latitude',
+            'region__longitude', 'region__population',
+        ).annotate(
+            total_cases=Sum('case_count'),
+            avg_severity=Avg('average_severity'),
+        )
+
+        # Get the highest risk level per region (across all diseases)
+        risk_level_map = {}
+        for rs in RiskScore.objects.order_by('-calculation_date', '-risk_level'):
+            if rs.region_id not in risk_level_map:
+                risk_level_map[rs.region_id] = rs.get_risk_level_display()
+
+        heat_map = []
+        for row in region_agg:
+            pop = row['region__population'] or 1
+            cases = row['total_cases'] or 0
+            heat_map.append({
+                'region_id': str(row['region__id']),
+                'region_name': row['region__name'],
+                'latitude': row['region__latitude'],
+                'longitude': row['region__longitude'],
+                'case_count': cases,
+                'cases_per_100k': round((cases / pop) * 100_000, 2),
+                'average_severity': round(row['avg_severity'] or 0, 2),
+                'risk_level': risk_level_map.get(row['region__id'], 'Low'),
+            })
+
+        serializer = HeatMapDataSerializer(heat_map, many=True)
+        return Response({
+            'disease_code': None,
+            'disease_name': 'All Diseases',
+            'date': today,
+            'data': serializer.data,
+        })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthority])
+def forecast_chart_data(request):
+    """
+    Return aggregated forecast data for chart rendering.
+    Aggregates across regions by prediction_date for a given horizon/disease.
+    Query params:
+      - horizon: 7|14|30 (default 7)
+      - disease_code: optional (if omitted, aggregates all diseases)
+    Returns: { horizon, disease, data: [{ date, forecast, lower, upper, confidence }] }
+    """
+    horizon = int(request.query_params.get('horizon', 7))
+    disease_code = request.query_params.get('disease_code', '')
+    today = timezone.now().date()
+
+    qs = Forecast.objects.filter(horizon_days=horizon)
+
+    # Use the latest forecast_date available
+    latest_fc_date = qs.order_by('-forecast_date').values_list('forecast_date', flat=True).first()
+    if latest_fc_date:
+        qs = qs.filter(forecast_date=latest_fc_date)
+
+    if disease_code:
+        qs = qs.filter(disease_code=disease_code)
+
+    # Aggregate by prediction_date across all regions
+    agg = (
+        qs.values('prediction_date')
+        .annotate(
+            avg_predicted=Avg('predicted_cases'),
+            avg_lower=Avg('lower_bound'),
+            avg_upper=Avg('upper_bound'),
+            avg_confidence=Avg('confidence'),
+            total_predicted=Sum('predicted_cases'),
+            total_lower=Sum('lower_bound'),
+            total_upper=Sum('upper_bound'),
+            region_count=Count('region', distinct=True),
+        )
+        .order_by('prediction_date')
+    )
+
+    data = []
+    for row in agg:
+        data.append({
+            'date': row['prediction_date'].strftime('%b %d'),
+            'date_raw': str(row['prediction_date']),
+            'forecast': round(row['avg_predicted'], 1),
+            'lower_bound': round(row['avg_lower'], 1),
+            'upper_bound': round(row['avg_upper'], 1),
+            'confidence': round(row['avg_confidence'], 2),
+            'total_predicted': round(row['total_predicted'], 0),
+            'regions': row['region_count'],
+        })
+
     return Response({
-        'disease_code': disease_code,
-        'disease_name': data.first().disease_name if data.exists() else '',
-        'date': date,
-        'data': serializer.data
+        'horizon': horizon,
+        'disease_code': disease_code or 'all',
+        'disease_name': 'All Diseases' if not disease_code else (
+            Forecast.objects.filter(disease_code=disease_code).values_list('disease_name', flat=True).first() or disease_code
+        ),
+        'forecast_date': str(latest_fc_date) if latest_fc_date else None,
+        'data': data,
     })
 
 
@@ -557,56 +656,70 @@ def regional_comparison(request):
 @permission_classes([IsAuthority])
 def dashboard_overview(request):
     """
-    Get dashboard overview statistics
+    Get dashboard overview statistics.
+    Uses date ranges for robustness — not just exact 'today'.
     """
     today = timezone.now().date()
-    yesterday = today - timedelta(days=1)
     week_ago = today - timedelta(days=7)
-    
-    # Total cases today
-    today_data = SurveillanceData.objects.filter(date=today)
-    total_cases_today = today_data.aggregate(total=Sum('case_count'))['total'] or 0
-    
+    two_weeks_ago = today - timedelta(days=14)
+
+    # Total cases — try today first, fall back to last 3 days
+    total_cases_today = SurveillanceData.objects.filter(
+        date=today
+    ).aggregate(total=Sum('case_count'))['total'] or 0
+
+    if total_cases_today == 0:
+        # Fall back to latest available date within last 7 days
+        latest_date = SurveillanceData.objects.filter(
+            date__gte=week_ago
+        ).order_by('-date').values_list('date', flat=True).first()
+        if latest_date:
+            total_cases_today = SurveillanceData.objects.filter(
+                date=latest_date
+            ).aggregate(total=Sum('case_count'))['total'] or 0
+
     # Active alerts
     active_alerts = Alert.objects.filter(status='active').count()
     critical_alerts = Alert.objects.filter(status='active', severity='critical').count()
-    
-    # High risk regions
+
+    # High risk regions — use latest calculation_date available
+    latest_risk_date = RiskScore.objects.order_by('-calculation_date').values_list(
+        'calculation_date', flat=True
+    ).first() or today
     high_risk_regions = RiskScore.objects.filter(
-        calculation_date=today,
+        calculation_date=latest_risk_date,
         risk_level__gte=2
     ).values('region__name').distinct().count()
-    
+
     # Active clusters
     active_clusters = Cluster.objects.filter(is_active=True).count()
-    
-    # Top diseases
+
+    # Top diseases (last 7 days)
     top_diseases = SurveillanceData.objects.filter(
         date__gte=week_ago
     ).values('disease_code', 'disease_name').annotate(
         total_cases=Sum('case_count')
     ).order_by('-total_cases')[:5]
-    
+
     # Trending diseases (growth rate)
     trending = []
     for disease in top_diseases:
-        prev_week = week_ago - timedelta(days=7)
         prev_cases = SurveillanceData.objects.filter(
             disease_code=disease['disease_code'],
-            date__gte=prev_week,
+            date__gte=two_weeks_ago,
             date__lt=week_ago
         ).aggregate(total=Sum('case_count'))['total'] or 0
-        
+
         current_cases = disease['total_cases']
         growth_rate = ((current_cases - prev_cases) / prev_cases * 100) if prev_cases > 0 else 0
-        
+
         trending.append({
             'disease_code': disease['disease_code'],
             'disease_name': disease['disease_name'],
             'total_cases': disease['total_cases'],
             'growth_rate': round(growth_rate, 2)
         })
-    
+
     return Response({
         'date': today,
         'total_cases_today': total_cases_today,
@@ -615,6 +728,7 @@ def dashboard_overview(request):
         'high_risk_regions': high_risk_regions,
         'active_clusters': active_clusters,
         'monitored_regions': Region.objects.count(),
+        'unresolved_anomalies': Anomaly.objects.filter(is_resolved=False).count(),
         'top_diseases': trending
     })
 

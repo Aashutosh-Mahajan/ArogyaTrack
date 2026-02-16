@@ -1,0 +1,429 @@
+{
+  "timestamp": "20260215_011404",
+  "results": [
+    {
+      "scenario": "Seasonal_Wave",
+      "metadata": {
+        "scenario": "seasonal_wave",
+        "pattern": "Realistic monsoon dengue - 15x spike June-Sept is NORMAL, not outbreak",
+        "expected_behavior": "Models should learn seasonal baseline, not flag monsoon as outbreak"
+      },
+      "data_stats": {
+        "n_records": 73000,
+        "n_regions": 200,
+        "outbreak_rate": 0.010917808219178083
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 4461.09765625,
+        "r2": -0.755081295967102,
+        "mape": 183.86421245880723,
+        "n_train": 280,
+        "n_test": 71
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "roc_auc": 0.8206294184052487,
+        "f1": 0.17270069709916797,
+        "precision": 0.1052054794520548,
+        "recall": 0.48180677540777916,
+        "accuracy": 0.9496027397260274,
+        "n_anomalies_detected": 3650,
+        "n_true_outbreaks": 797
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.041790885860306645,
+        "roc_auc": 0.8703876014146715,
+        "n_test": 73000,
+        "inference_latency_ms": 0.010126829147338867
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 12,
+        "n_noise": 175,
+        "noise_pct": 0.875,
+        "silhouette": 0.7484670968255683
+      }
+    },
+    {
+      "scenario": "Pandemic_Spread",
+      "metadata": {
+        "scenario": "pandemic_spread",
+        "pattern": "Geographic spread: Metro\u2192Tier2\u2192Rural over 120 days",
+        "expected_behavior": "Models should detect early metro signals, predict tier-2/3 spread"
+      },
+      "data_stats": {
+        "n_records": 70080,
+        "n_regions": 192,
+        "outbreak_rate": 0.285259703196347
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 32.191776275634766,
+        "r2": 0.0,
+        "mape": 1.6757821020425647,
+        "n_train": 280,
+        "n_test": 71
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "roc_auc": 0.972733265915678,
+        "f1": 0.2975952330283039,
+        "precision": 0.997716894977169,
+        "recall": 0.17487869541293583,
+        "accuracy": 0.7645119863013699,
+        "n_anomalies_detected": 3504,
+        "n_true_outbreaks": 19991
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.5946485117162761,
+        "roc_auc": 0.8357795446650108,
+        "n_test": 70080,
+        "inference_latency_ms": 0.006511688232421875
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 9,
+        "n_noise": 6,
+        "noise_pct": 0.03125,
+        "silhouette": 0.5084218276333388
+      }
+    },
+    {
+      "scenario": "Urban_Rural_Disparity",
+      "metadata": {
+        "scenario": "urban_rural_disparity",
+        "pattern": "Urban: real-time 95% capture, Rural: 7-day lag 40% capture",
+        "expected_behavior": "Models should have wider uncertainty for rural, detect lag"
+      },
+      "data_stats": {
+        "n_records": 17650,
+        "n_regions": 100,
+        "outbreak_rate": 0.12317280453257791
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 67.87035369873047,
+        "r2": -1.1834490299224854,
+        "mape": 7.907041223334399,
+        "n_train": 132,
+        "n_test": 34
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "roc_auc": 0.9882036535545555,
+        "f1": 0.549558390578999,
+        "precision": 0.9513023782559457,
+        "recall": 0.38638454461821525,
+        "accuracy": 0.9219830028328612,
+        "n_anomalies_detected": 883,
+        "n_true_outbreaks": 2174
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.459837019790454,
+        "roc_auc": 0.8841615726686518,
+        "n_test": 17650,
+        "inference_latency_ms": 0.010647296905517578
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 13,
+        "n_noise": 42,
+        "noise_pct": 0.42,
+        "silhouette": 0.401866062061952
+      }
+    },
+    {
+      "scenario": "Delayed_Reporting",
+      "metadata": {
+        "scenario": "delayed_reporting",
+        "pattern": "No weekend reporting, Monday batch updates",
+        "expected_behavior": "Models should smooth Monday spikes, detect true patterns"
+      },
+      "data_stats": {
+        "n_records": 6400,
+        "n_regions": 50,
+        "outbreak_rate": 0.11234375
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 619.752197265625,
+        "r2": 0.25633102655410767,
+        "mape": 28.74807357401408,
+        "n_train": 91,
+        "n_test": 23
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "roc_auc": 0.7870695549839287,
+        "f1": 0.3060635226179018,
+        "precision": 0.496875,
+        "recall": 0.2211404728789986,
+        "accuracy": 0.88734375,
+        "n_anomalies_detected": 320,
+        "n_true_outbreaks": 719
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.3182481751824818,
+        "roc_auc": 0.7603523836500606,
+        "n_test": 6400,
+        "inference_latency_ms": 0.01624464988708496
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 0,
+        "n_noise": 50,
+        "noise_pct": 1.0,
+        "silhouette": 0.0
+      }
+    },
+    {
+      "scenario": "Superspreader_Event",
+      "metadata": {
+        "scenario": "superspreader_event",
+        "pattern": "Day 30 wedding \u2192 15 regions spike simultaneously days 31-45",
+        "expected_behavior": "DBSCAN should detect geographic cluster, early warning"
+      },
+      "data_stats": {
+        "n_records": 9000,
+        "n_regions": 100,
+        "outbreak_rate": 0.028444444444444446
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 68.559326171875,
+        "r2": -0.645544171333313,
+        "mape": 4.937254022665841,
+        "n_train": 60,
+        "n_test": 16
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "roc_auc": 0.8881389202596066,
+        "f1": 0.29178470254957506,
+        "precision": 0.2288888888888889,
+        "recall": 0.40234375,
+        "accuracy": 0.9444444444444444,
+        "n_anomalies_detected": 450,
+        "n_true_outbreaks": 256
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.11115954664341761,
+        "roc_auc": 0.846686835258463,
+        "n_test": 9000,
+        "inference_latency_ms": 0.012330770492553711
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 12,
+        "n_noise": 24,
+        "noise_pct": 0.24,
+        "silhouette": 0.5737310976863764
+      }
+    },
+    {
+      "scenario": "Data_Entry_Errors",
+      "metadata": {
+        "scenario": "data_entry_errors",
+        "pattern": "2% typos, 1% duplicates, 5% date errors, 0.5% region errors",
+        "expected_behavior": "Models should be robust to outliers and noise"
+      },
+      "data_stats": {
+        "n_records": 9090,
+        "n_regions": 50,
+        "outbreak_rate": 0.11815181518151815
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 2151.045654296875,
+        "r2": -0.14242541790008545,
+        "mape": 111.86779649091633,
+        "n_train": 133,
+        "n_test": 34
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "roc_auc": 0.8286626235424868,
+        "f1": 0.13472858077174624,
+        "precision": 0.22637362637362637,
+        "recall": 0.09590316573556797,
+        "accuracy": 0.8544554455445544,
+        "n_anomalies_detected": 455,
+        "n_true_outbreaks": 1074
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.3798775822494262,
+        "roc_auc": 0.816358495764523,
+        "n_test": 9090,
+        "inference_latency_ms": 0.014017105102539062
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 0,
+        "n_noise": 50,
+        "noise_pct": 1.0,
+        "silhouette": 0.0
+      }
+    },
+    {
+      "scenario": "Production_Scale_Small",
+      "metadata": {
+        "scenario": "production_scale",
+        "pattern": "200 regions, 365 days, 553,752 total records",
+        "expected_behavior": "Models should handle scale: memory < 4GB, inference < 200ms/region"
+      },
+      "data_stats": {
+        "n_records": 553752,
+        "n_regions": 200,
+        "outbreak_rate": 0.12045464395613921
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 1160.986083984375,
+        "r2": -0.013782262802124023,
+        "mape": 3.6950252611091585,
+        "n_train": 280,
+        "n_test": 71
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "roc_auc": 0.9090463559702947,
+        "f1": 0.5225553554401949,
+        "precision": 0.8907107772320139,
+        "recall": 0.3697340409582921,
+        "accuracy": 0.9186169982230312,
+        "n_anomalies_detected": 27688,
+        "n_true_outbreaks": 66702
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.34088055567155245,
+        "roc_auc": 0.7840669585249168,
+        "n_test": 553752,
+        "inference_latency_ms": 0.012169361114501953
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 23,
+        "n_noise": 34,
+        "noise_pct": 0.17,
+        "silhouette": 0.3817719917845027
+      }
+    }
+  ],
+  "aggregated": {
+    "isolation_forest": {
+      "auc": [
+        0.8206294184052487,
+        0.972733265915678,
+        0.9882036535545555,
+        0.7870695549839287,
+        0.8881389202596066,
+        0.8286626235424868,
+        0.9090463559702947
+      ],
+      "f1": [
+        0.17270069709916797,
+        0.2975952330283039,
+        0.549558390578999,
+        0.3060635226179018,
+        0.29178470254957506,
+        0.13472858077174624,
+        0.5225553554401949
+      ],
+      "precision": [
+        0.1052054794520548,
+        0.997716894977169,
+        0.9513023782559457,
+        0.496875,
+        0.2288888888888889,
+        0.22637362637362637,
+        0.8907107772320139
+      ],
+      "recall": [
+        0.48180677540777916,
+        0.17487869541293583,
+        0.38638454461821525,
+        0.2211404728789986,
+        0.40234375,
+        0.09590316573556797,
+        0.3697340409582921
+      ]
+    },
+    "xgboost_v3": {
+      "auc": [
+        0.8703876014146715,
+        0.8357795446650108,
+        0.8841615726686518,
+        0.7603523836500606,
+        0.846686835258463,
+        0.816358495764523,
+        0.7840669585249168
+      ],
+      "f1": [
+        0.041790885860306645,
+        0.5946485117162761,
+        0.459837019790454,
+        0.3182481751824818,
+        0.11115954664341761,
+        0.3798775822494262,
+        0.34088055567155245
+      ],
+      "latency": [
+        0.010126829147338867,
+        0.006511688232421875,
+        0.010647296905517578,
+        0.01624464988708496,
+        0.012330770492553711,
+        0.014017105102539062,
+        0.012169361114501953
+      ]
+    },
+    "dbscan": {
+      "silhouette": [
+        0.7484670968255683,
+        0.5084218276333388,
+        0.401866062061952,
+        0.0,
+        0.5737310976863764,
+        0.0,
+        0.3817719917845027
+      ],
+      "noise_pct": [
+        0.875,
+        0.03125,
+        0.42,
+        1.0,
+        0.24,
+        1.0,
+        0.17
+      ]
+    },
+    "forecast": {
+      "r2": [
+        -0.755081295967102,
+        0.0,
+        -1.1834490299224854,
+        0.25633102655410767,
+        -0.645544171333313,
+        -0.14242541790008545,
+        -0.013782262802124023
+      ],
+      "mape": [
+        183.86421245880723,
+        1.6757821020425647,
+        7.907041223334399,
+        28.74807357401408,
+        4.937254022665841,
+        111.86779649091633,
+        3.6950252611091585
+      ]
+    }
+  }
+}

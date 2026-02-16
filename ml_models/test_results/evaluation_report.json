@@ -1,6 +1,6 @@
 {
-  "forecast_r2": 0.98360649370086,
-  "outbreak_f1": 0.9293003585547486,
-  "xgboost_v3_f1": 0.9469657810400083,
-  "dbscan_silhouette": 0.46617166974051316
+  "forecast_r2": -273.2319180131718,
+  "outbreak_f1": 0.44417026526835285,
+  "xgboost_v3_f1": 0.44417026526835285,
+  "dbscan_silhouette": null
 }

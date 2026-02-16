@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Test XGBoost Outbreak V3 Model
-Tests the trained xgboost_outbreak_v3 model on test data
+Test XGBoost Outbreak V3 Model  (v3.0)
+Matches feature engineering from train_xgboost_prod.py exactly.
 """
 
 import os
@@ -9,7 +9,6 @@ import json
 import numpy as np
 import pandas as pd
 import joblib
-import matplotlib.pyplot as plt
 from sklearn.metrics import (
     roc_auc_score, classification_report, f1_score,
     precision_score, recall_score, confusion_matrix
@@ -17,29 +16,28 @@ from sklearn.metrics import (
 import warnings
 warnings.filterwarnings("ignore")
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-DATA_DIR = os.path.join(BASE_DIR, "india_surveillance_extreme_quality")
-MODEL_DIR = os.path.join(BASE_DIR, "saved_models", "xgboost_outbreak_v3")
+BASE_DIR   = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+DATA_DIR   = os.path.join(BASE_DIR, "india_surveillance_extreme_quality")
+MODEL_DIR  = os.path.join(BASE_DIR, "saved_models", "xgboost_outbreak_v3")
 OUTPUT_DIR = os.path.join(BASE_DIR, "test_results", "xgboost_outbreak_v3")
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-print("="*70)
-print("XGBOOST OUTBREAK V3 MODEL TESTING")
-print("="*70)
+print("=" * 70)
+print("XGBOOST OUTBREAK V3 MODEL TESTING  (v3.0)")
+print("=" * 70)
 
 # ==========================================================
-# LOAD MODEL
+# LOAD MODEL ARTIFACTS
 # ==========================================================
 
 print("\nLoading model...")
-model = joblib.load(os.path.join(MODEL_DIR, "xgboost_model.pkl"))
+model  = joblib.load(os.path.join(MODEL_DIR, "xgboost_model.pkl"))
 scaler = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
 
 with open(os.path.join(MODEL_DIR, "features.json")) as f:
     FEATURES = json.load(f)
 
-# Load optimal threshold
 with open(os.path.join(MODEL_DIR, "metrics.json")) as f:
     metrics = json.load(f)
     opt_threshold = metrics.get("optimal_threshold", 0.5)
@@ -52,142 +50,106 @@ print(f"Optimal threshold: {opt_threshold:.4f}")
 # ==========================================================
 
 print("\nLoading data...")
-surv = pd.read_csv(
+cases = pd.read_csv(
     os.path.join(DATA_DIR, "disease_surveillance_historical.csv"),
-    parse_dates=['date']
+    parse_dates=["date"],
 )
-
 regions = pd.read_csv(
     os.path.join(DATA_DIR, "regions.csv"),
-    usecols=['region_id', 'population']
+    usecols=["region_id", "population", "sanitation_index"],
 )
-
 env = pd.read_csv(
     os.path.join(DATA_DIR, "environmental_data.csv"),
-    parse_dates=['date']
+    parse_dates=["date"],
 )
 
-labels = pd.read_csv(
-    os.path.join(DATA_DIR, "outbreak_labels.csv"),
-    parse_dates=['date']
-)
-
-print(f"Loaded {len(surv)} surveillance records")
-print(f"Loaded {len(labels)} labeled records")
+print(f"Loaded {len(cases)} surveillance records")
 
 # ==========================================================
-# REBUILD FEATURES (Matching Training)
+# MERGE  (match train_xgboost_prod.py)
+# ==========================================================
+
+df = cases.merge(regions, on="region_id", how="left")
+
+env_merge_cols = ["date", "region_id",
+                  "temperature_celsius", "humidity_percent",
+                  "rainfall_mm", "aqi", "water_quality_index"]
+env_merge_cols = [c for c in env_merge_cols if c in env.columns]
+df = df.merge(env[env_merge_cols], on=["region_id", "date"], how="left")
+df = df.fillna(0)
+
+# ==========================================================
+# FEATURE ENGINEERING  (IDENTICAL to train_xgboost_prod.py)
 # ==========================================================
 
 print("\nEngineering features...")
 
-# Merge regions for population
-surv = surv.merge(regions, on='region_id', how='left')
+df = df.sort_values(["region_id", "date"]).reset_index(drop=True)
+grp = df.groupby("region_id")
 
-# Sort for rolling windows
-surv = surv.sort_values(['region_id', 'disease_id', 'date'])
+# Rolling statistics
+for w in [7, 14, 28]:
+    df[f"cases_rm_{w}"]   = grp["case_count"].transform(lambda x: x.rolling(w, 1).mean())
+    df[f"cases_rstd_{w}"] = grp["case_count"].transform(lambda x: x.rolling(w, 1).std()).fillna(0)
+    df[f"cases_rmax_{w}"] = grp["case_count"].transform(lambda x: x.rolling(w, 1).max())
 
-# Per-capita calculations
-surv['per_capita_cases'] = surv['case_count'] / (surv['population'] + 1)
-surv['per_capita_deaths'] = surv['death_count'] / (surv['population'] + 1)
-surv['case_fatality_rate'] = surv['death_count'] / (surv['case_count'] + 1)
+# Growth rates
+for p in [7, 14]:
+    df[f"growth_{p}"] = grp["case_count"].pct_change(periods=p).fillna(0)
+    df[f"growth_{p}"] = df[f"growth_{p}"].replace([np.inf, -np.inf], 0).clip(-5, 5)
 
-# Rolling features for cases
-for window in [7, 14, 21, 28]:
-    surv[f'cases_rolling_{window}d'] = surv.groupby(['region_id', 'disease_id'])['case_count'] \
-        .transform(lambda x: x.rolling(window, min_periods=1).mean())
-    
-surv['cases_rolling_std_14d'] = surv.groupby(['region_id', 'disease_id'])['case_count'] \
-    .transform(lambda x: x.rolling(14, min_periods=1).std()).fillna(0)
+# Acceleration
+df["acceleration_7"] = grp["case_count"].diff().diff().fillna(0)
 
-surv['cases_rolling_max_28d'] = surv.groupby(['region_id', 'disease_id'])['case_count'] \
-    .transform(lambda x: x.rolling(28, min_periods=1).max())
+# Deviation from baseline
+df["deviation_7"]  = (df["case_count"] - df["cases_rm_7"])  / (df["cases_rstd_7"]  + 1)
+df["deviation_14"] = (df["case_count"] - df["cases_rm_14"]) / (df["cases_rstd_14"] + 1)
 
-# Growth and acceleration
-surv['cases_growth_rate'] = surv.groupby(['region_id', 'disease_id'])['case_count'].pct_change().fillna(0)
-surv['cases_acceleration'] = surv.groupby(['region_id', 'disease_id'])['cases_growth_rate'].diff().fillna(0)
+# Spike indicators
+df["is_spike_2std"] = (df["deviation_7"] > 2).astype(int)
+df["is_spike_3std"] = (df["deviation_7"] > 3).astype(int)
 
-# Z-score and deviations
-mean_cases = surv.groupby(['region_id', 'disease_id'])['case_count'].transform('mean')
-std_cases = surv.groupby(['region_id', 'disease_id'])['case_count'].transform('std').fillna(1)
-surv['cases_zscore'] = (surv['case_count'] - mean_cases) / std_cases
-
-surv['deviation_from_7d_avg'] = surv['case_count'] - surv['cases_rolling_7d']
-surv['deviation_from_14d_avg'] = surv['case_count'] - surv['cases_rolling_14d']
-
-# Spike detection
-surv['is_spike'] = (surv['cases_zscore'] > 2).astype(int)
-
-# Severity features
-surv['severity_index'] = surv['case_count'] * surv['case_fatality_rate']
-surv['death_growth_rate'] = surv.groupby(['region_id', 'disease_id'])['death_count'].pct_change().fillna(0)
+# Severity rolling
+if "severity_avg" in df.columns:
+    df["severity_rm_7"] = grp["severity_avg"].transform(lambda x: x.rolling(7, 1).mean())
 
 # Lag features
 for lag in [7, 14, 21]:
-    surv[f'cases_lag_{lag}d'] = surv.groupby(['region_id', 'disease_id'])['case_count'].shift(lag).fillna(0)
+    df[f"cases_lag_{lag}"] = grp["case_count"].shift(lag).fillna(0)
 
-# Environmental features
-env = env.sort_values(['region_id', 'date'])
+# Cases per capita
+df["cases_per_100k"] = df["cases_rm_7"] / (df["population"] / 100_000 + 1)
 
-for window in [7, 14]:
-    env[f'temp_rolling_{window}d'] = env.groupby('region_id')['temperature_celsius'] \
-        .transform(lambda x: x.rolling(window, min_periods=1).mean())
-    env[f'rainfall_rolling_{window}d'] = env.groupby('region_id')['rainfall_mm'] \
-        .transform(lambda x: x.rolling(window, min_periods=1).mean())
-    env[f'aqi_rolling_{window}d'] = env.groupby('region_id')['aqi'] \
-        .transform(lambda x: x.rolling(window, min_periods=1).mean())
+# Environmental risk composite
+env_risk_parts = []
+if "temperature_celsius" in df.columns:
+    env_risk_parts.append((df["temperature_celsius"] > 30).astype(int))
+if "rainfall_mm" in df.columns:
+    env_risk_parts.append((df["rainfall_mm"] > 50).astype(int))
+if "aqi" in df.columns:
+    env_risk_parts.append((df["aqi"] > 150).astype(int))
+df["env_risk"] = sum(env_risk_parts) if env_risk_parts else 0
 
-env['environmental_risk'] = (env['temperature_celsius'] / 50 + 
-                             env['rainfall_mm'] / 300 + 
-                             env['aqi'] / 500) / 3
+df = df.replace([np.inf, -np.inf], 0).fillna(0)
 
-# Aggregate to region-date level
-surv_agg = surv.groupby(['region_id', 'date']).agg({
-    'case_count': 'sum',
-    'death_count': 'sum',
-    'per_capita_cases': 'mean',
-    'per_capita_deaths': 'mean',
-    'case_fatality_rate': 'mean',
-    'cases_rolling_7d': 'mean',
-    'cases_rolling_14d': 'mean',
-    'cases_rolling_21d': 'mean',
-    'cases_rolling_28d': 'mean',
-    'cases_rolling_std_14d': 'mean',
-    'cases_rolling_max_28d': 'max',
-    'cases_growth_rate': 'mean',
-    'cases_acceleration': 'mean',
-    'cases_zscore': 'max',
-    'deviation_from_7d_avg': 'mean',
-    'deviation_from_14d_avg': 'mean',
-    'is_spike': 'max',
-    'severity_index': 'sum',
-    'death_growth_rate': 'mean',
-    'cases_lag_7d': 'sum',
-    'cases_lag_14d': 'sum',
-    'cases_lag_21d': 'sum'
-}).reset_index()
+# ==========================================================
+# TEMPORAL SPLIT  (last 20% = test)
+# ==========================================================
 
-# Merge with environmental and labels
-df = labels.merge(surv_agg, on=['region_id', 'date'], how='left')
-df = df.merge(env[['region_id', 'date', 'temp_rolling_7d', 'temp_rolling_14d',
-                    'rainfall_rolling_7d', 'rainfall_rolling_14d',
-                    'aqi_rolling_7d', 'aqi_rolling_14d', 'environmental_risk']],
-              on=['region_id', 'date'], how='left')
+df = df.sort_values("date")
+split_date = df["date"].quantile(0.80)
+df_test = df[df["date"] > split_date].copy()
 
-df = df.fillna(0)
+# Ensure all features exist
+for f in FEATURES:
+    if f not in df_test.columns:
+        df_test[f] = 0
 
-print(f"\nFinal dataset: {len(df)} records with {len(FEATURES)} features")
+X_test = df_test[FEATURES].astype(float).fillna(0)
+y_test = df_test["outbreak_occurred"].astype(int)
 
-# Split into test set (last 20%)
-df = df.sort_values('date')
-test_size = int(len(df) * 0.2)
-df_test = df.iloc[-test_size:].copy()
-
+print(f"\nFinal dataset: {len(df)} records")
 print(f"Testing on {len(df_test)} records (last 20%)")
-
-X_test = df_test[FEATURES].astype(float)
-y_test = df_test['outbreak_occurred'].astype(int)
-
 print(f"Test set outbreak rate: {y_test.mean():.2%}")
 
 # ==========================================================
@@ -197,22 +159,20 @@ print(f"Test set outbreak rate: {y_test.mean():.2%}")
 print("\nMaking predictions...")
 X_test_scaled = scaler.transform(X_test)
 pred_probs = model.predict_proba(X_test_scaled)[:, 1]
-
-# Use optimal threshold
 preds = (pred_probs >= opt_threshold).astype(int)
 
 # ==========================================================
 # METRICS
 # ==========================================================
 
-print("\n" + "="*70)
+print("\n" + "=" * 70)
 print("TEST RESULTS")
-print("="*70)
+print("=" * 70)
 
-auc = roc_auc_score(y_test, pred_probs)
-f1 = f1_score(y_test, preds)
-precision = precision_score(y_test, preds)
-recall = recall_score(y_test, preds)
+auc = roc_auc_score(y_test, pred_probs) if len(np.unique(y_test)) > 1 else 0.0
+f1  = f1_score(y_test, preds, zero_division=0)
+precision = precision_score(y_test, preds, zero_division=0)
+recall    = recall_score(y_test, preds, zero_division=0)
 
 print(f"\nROC-AUC Score: {auc:.4f}")
 print(f"F1 Score: {f1:.4f}")
@@ -220,27 +180,26 @@ print(f"Precision: {precision:.4f}")
 print(f"Recall: {recall:.4f}")
 
 print("\nClassification Report:")
-print(classification_report(y_test, preds))
+print(classification_report(y_test, preds, zero_division=0))
 
 print("\nConfusion Matrix:")
-cm = confusion_matrix(y_test, preds)
-print(cm)
+print(confusion_matrix(y_test, preds))
 
-# Save test results
+# Save results
 test_results = {
-    'test_size': len(df_test),
-    'outbreak_rate': float(y_test.mean()),
-    'roc_auc': float(auc),
-    'f1_score': float(f1),
-    'precision': float(precision),
-    'recall': float(recall),
-    'optimal_threshold': float(opt_threshold)
+    "test_size": len(df_test),
+    "outbreak_rate": float(y_test.mean()),
+    "roc_auc": float(auc),
+    "f1_score": float(f1),
+    "precision": float(precision),
+    "recall": float(recall),
+    "optimal_threshold": float(opt_threshold),
 }
 
 with open(os.path.join(OUTPUT_DIR, "test_metrics.json"), "w") as f:
     json.dump(test_results, f, indent=2)
 
 print(f"\nTest results saved to {OUTPUT_DIR}")
-print("\n" + "="*70)
+print("\n" + "=" * 70)
 print("TESTING COMPLETE")
-print("="*70)
+print("=" * 70)

@@ -581,20 +581,45 @@ export interface HeatMapData {
   risk_level: string;
 }
 
-// ML Model Types
+// ML Model Types (v5.0 aligned)
 export interface MLModelInfo {
   name: string;
-  type: string;
+  type: string;            // description from backend
   version: string;
   path: string;
   loaded: boolean;
   features?: string[];
-  metrics?: Record<string, number>;
+  metrics?: Record<string, number | string>;
   metadata?: Record<string, any>;
+  // Enriched fields from v5.0 model info
+  n_features?: number;
+  description?: string;
+  model_available?: boolean;
+  corrector_available?: boolean;  // IF ensemble corrector
+  xgb_available?: boolean;        // Forecast XGBoost component
+  scoring_method?: string;        // IF scoring method
+  risk_tiers?: Record<string, number[]>;      // XGBoost risk tier thresholds
+  risk_tier_distribution?: Record<string, number>;
+  config?: Record<string, any>;   // Forecast ensemble config
+  horizon_metrics?: Record<string, Record<string, number>>; // Forecast per-horizon
+  artifacts?: Record<string, string>;
+  cluster_profiles?: Record<string, any>;
+  parameters?: Record<string, any>;
+  latest_forecasts?: Record<string, any>;
 }
 
 export interface MLPipelineStatus {
   overall_status: string;
+  surveillance_records_today?: number;
+  surveillance_records_week?: number;
+  active_clusters?: number;
+  recent_anomalies?: number;
+  active_alerts?: number;
+  critical_alerts?: number;
+  forecasts_generated_today?: number;
+  risk_scores_today?: number;
+  regions_count?: number;
+  environmental_records_today?: number;
   models: Record<string, {
     loaded: boolean;
     path: string;

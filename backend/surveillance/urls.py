@@ -22,6 +22,7 @@ urlpatterns = [
     path('disease-statistics/', views.disease_statistics, name='disease-statistics'),
     path('regional-comparison/', views.regional_comparison, name='regional-comparison'),
     path('dashboard-overview/', views.dashboard_overview, name='dashboard-overview'),
+    path('forecast-chart-data/', views.forecast_chart_data, name='forecast-chart-data'),
     path('ml-models/', views.ml_model_info, name='ml-models'),
     path('ml-pipeline-status/', views.ml_pipeline_status, name='ml-pipeline-status'),
     path('run-ml-pipeline/', views.run_ml_pipeline, name='run-ml-pipeline'),
