@@ -2,6 +2,8 @@
 export interface User {
   id: number;
   email: string;
+  first_name?: string;
+  last_name?: string;
   role: UserRole;
   active_profile?: string | null; // UUID
   verification_status: 'pending' | 'verified';
@@ -95,6 +97,7 @@ export interface PatientCard {
   gender: string;
   qr_code_url: string | null;
   profile_photo_url: string | null;
+  address?: string;
 }
 
 export interface PatientHistoryFromQR {
@@ -134,6 +137,7 @@ export interface PatientHistoryFromQR {
     issued_at: string;
     items: Array<{ medicine_name: string }>;
   }>;
+}
 
 // Doctor Types
 export interface DoctorProfile {
@@ -213,7 +217,8 @@ export interface Allergy {
   profile: string; // UUID FK
   allergen: string;
   reaction_type: string;
-  severity: number;
+  reaction?: string; // Alias
+  severity: number | string; // Handle both
   created_at: string;
 }
 
@@ -222,6 +227,9 @@ export interface ChronicCondition {
   profile: string; // UUID FK
   icd_10_code: string;
   disease_name: string;
+  condition_name?: string; // Alias or alternative from backend
+  diagnosed_date?: string;
+  status?: string;
   is_active: boolean;
   created_at: string;
 }
@@ -273,6 +281,9 @@ export interface Prescription {
   medical_record?: string | null; // UUID FK
   qr_code_path: string;
   security_hash: string;
+  prescription_number?: string;
+  issued_at?: string;
+  is_dispensed?: boolean;
   status: 'pending' | 'partially_dispensed' | 'fully_dispensed';
   medicines: PrescriptionMedicine[];
   created_at: string;

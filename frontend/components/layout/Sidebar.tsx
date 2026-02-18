@@ -7,12 +7,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/lib/api';
 import type { DashboardAlert } from '@/types';
-import { 
-  FiHome, 
-  FiUser, 
-  FiActivity, 
-  FiFileText, 
-  FiShoppingBag, 
+import {
+  FiHome,
+  FiUser,
+  FiActivity,
+  FiFileText,
+  FiShoppingBag,
   FiHeart,
   FiLogOut,
   FiMenu,
@@ -25,9 +25,11 @@ import {
   FiBell,
   FiShield,
   FiDownload,
+  FiThermometer,
 } from 'react-icons/fi';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -38,6 +40,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, clearAuth } = useAuthStore();
+  const { t } = useLanguage();
 
   // Fetch unread alert count for badge (patients only)
   const { data: alerts } = useQuery<DashboardAlert[]>({
@@ -56,16 +59,17 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   };
 
   const patientLinks = [
-    { href: '/dashboard', label: 'Dashboard', icon: FiHome },
-    { href: '/dashboard/patient-card', label: 'Patient Card', icon: FiUser },
-    { href: '/dashboard/profile', label: 'My Profile', icon: FiUser },
-    { href: '/dashboard/medical-records', label: 'Medical Records', icon: FiActivity },
-    { href: '/dashboard/prescriptions', label: 'Prescriptions', icon: FiFileText },
-    { href: '/dashboard/medicines', label: 'Medicines', icon: FiShoppingBag },
-    { href: '/dashboard/adherence', label: 'Adherence', icon: FiHeart },
-    { href: '/dashboard/alerts', label: 'Alerts', icon: FiBell, badge: unreadAlertCount },
-    { href: '/dashboard/downloads', label: 'Downloads', icon: FiDownload },
-    { href: '/dashboard/security', label: 'Security', icon: FiShield },
+    { href: '/dashboard', label: t('sidebar_dashboard'), icon: FiHome },
+    { href: '/dashboard/patient-card', label: t('sidebar_patient_card'), icon: FiUser },
+    { href: '/dashboard/profile', label: t('sidebar_profile'), icon: FiUser },
+    { href: '/dashboard/medical-records', label: t('sidebar_medical_records'), icon: FiActivity },
+    { href: '/dashboard/conditions', label: t('sidebar_conditions'), icon: FiThermometer },
+    { href: '/dashboard/prescriptions', label: t('sidebar_prescriptions'), icon: FiFileText },
+    { href: '/dashboard/medicines', label: t('sidebar_medicines'), icon: FiShoppingBag },
+    { href: '/dashboard/adherence', label: t('sidebar_adherence'), icon: FiHeart },
+    { href: '/dashboard/alerts', label: t('sidebar_alerts'), icon: FiBell, badge: unreadAlertCount },
+    { href: '/dashboard/downloads', label: t('sidebar_downloads'), icon: FiDownload },
+    { href: '/dashboard/security', label: t('sidebar_security'), icon: FiShield },
   ];
 
   const doctorLinks = [
@@ -86,10 +90,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { href: '/admin/forecasts', label: 'Forecasts', icon: FiActivity },
   ];
 
-  const links = 
+  const links =
     user?.role === 'doctor' ? doctorLinks :
-    user?.role === 'admin' || user?.role === 'authority' ? adminLinks :
-    patientLinks;
+      user?.role === 'admin' || user?.role === 'authority' ? adminLinks :
+        patientLinks;
 
   return (
     <>
@@ -111,7 +115,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="flex h-full flex-col">
           {/* Header */}
           <div className="flex items-center justify-between border-b p-4">
-            <h2 className="text-xl font-bold text-primary-600">Health System</h2>
+            <h2 className="text-xl font-bold text-primary-600">{t('health_system')}</h2>
             <button
               onClick={onClose}
               className="lg:hidden text-gray-500 hover:text-gray-700"
@@ -177,7 +181,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               className="flex w-full items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
             >
               <FiLogOut className="h-5 w-5" />
-              <span>Logout</span>
+              <span>{t('sidebar_logout')}</span>
             </button>
           </div>
         </div>

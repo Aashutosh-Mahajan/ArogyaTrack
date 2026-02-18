@@ -23,41 +23,46 @@ import {
   FiRefreshCw,
 } from 'react-icons/fi';
 import Link from 'next/link';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 /* ─── Status badge config ──────────────────────────────────────── */
-const statusConfig = {
-  completed: {
-    label: 'Completed',
-    bg: 'bg-green-100',
-    text: 'text-green-700',
-    border: 'border-green-200',
-    dot: 'bg-green-500',
-  },
-  follow_up: {
-    label: 'Follow-up',
-    bg: 'bg-orange-100',
-    text: 'text-orange-700',
-    border: 'border-orange-200',
-    dot: 'bg-orange-500',
-  },
-  critical: {
-    label: 'Critical',
-    bg: 'bg-red-100',
-    text: 'text-red-700',
-    border: 'border-red-200',
-    dot: 'bg-red-500',
-  },
-} as const;
+
 
 /* ─── Single record card ───────────────────────────────────────── */
 function RecordCard({ record }: { record: RecentRecord }) {
   const [expanded, setExpanded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const { t, language } = useLanguage();
+
+  const statusConfig = {
+    completed: {
+      label: t('status_completed'),
+      bg: 'bg-green-100',
+      text: 'text-green-700',
+      border: 'border-green-200',
+      dot: 'bg-green-500',
+    },
+    follow_up: {
+      label: t('status_follow_up'),
+      bg: 'bg-orange-100',
+      text: 'text-orange-700',
+      border: 'border-orange-200',
+      dot: 'bg-orange-500',
+    },
+    critical: {
+      label: t('status_critical'),
+      bg: 'bg-red-100',
+      text: 'text-red-700',
+      border: 'border-red-200',
+      dot: 'bg-red-500',
+    },
+  } as const;
 
   const st = statusConfig[record.status];
+  const locale = language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-IN';
 
-  const visitDate = new Date(record.visit_date).toLocaleDateString('en-IN', {
+  const visitDate = new Date(record.visit_date).toLocaleDateString(locale, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -74,7 +79,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
     try {
       const disposition = isView ? 'inline' : 'attachment';
       const blob = await api.medical.downloadReport(attachmentId, disposition);
-      
+
       if (isView) {
         // Open in a new tab for viewing
         const url = window.URL.createObjectURL(blob);
@@ -161,19 +166,19 @@ function RecordCard({ record }: { record: RecentRecord }) {
               {record.tests_performed && (
                 <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md">
                   <FiClipboard className="h-3 w-3" />
-                  Tests: {record.tests_performed.split('\n')[0].slice(0, 40)}
+                  {t('tests_performed')}: {record.tests_performed.split('\n')[0].slice(0, 40)}
                   {record.tests_performed.length > 40 ? '…' : ''}
                 </span>
               )}
               {record.prescriptions_count > 0 && (
                 <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md">
                   <FiFileText className="h-3 w-3" />
-                  {record.prescriptions_count} prescription{record.prescriptions_count !== 1 ? 's' : ''}
+                  {record.prescriptions_count} {t('prescription')}
                 </span>
               )}
               {record.attachments.length > 0 && (
                 <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md">
-                  📎 {record.attachments.length} file{record.attachments.length !== 1 ? 's' : ''}
+                  📎 {record.attachments.length} {t('files')}
                 </span>
               )}
             </div>
@@ -186,7 +191,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
               size="icon"
               className="h-8 w-8 text-gray-400 hover:text-blue-600"
               onClick={() => setModalOpen(true)}
-              title="View details"
+              title={t('view')}
             >
               <FiEye className="h-4 w-4" />
             </Button>
@@ -195,7 +200,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
               size="icon"
               className="h-8 w-8 text-gray-400 hover:text-gray-600"
               onClick={() => setExpanded((prev) => !prev)}
-              title={expanded ? 'Collapse' : 'Expand'}
+              title={expanded ? t('collapse') : t('expand')}
             >
               {expanded ? (
                 <FiChevronUp className="h-4 w-4" />
@@ -213,7 +218,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
               {/* Diagnosis */}
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
-                  Diagnosis
+                  {t('diagnosis')}
                 </p>
                 <p className="text-sm text-gray-800 leading-relaxed">
                   {record.diagnosis_summary || 'N/A'}
@@ -223,10 +228,10 @@ function RecordCard({ record }: { record: RecentRecord }) {
               {/* Tests */}
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
-                  Tests Performed
+                  {t('tests_performed')}
                 </p>
                 <p className="text-sm text-gray-800 leading-relaxed">
-                  {record.tests_performed || 'None'}
+                  {record.tests_performed || t('none')}
                 </p>
               </div>
 
@@ -234,7 +239,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
               {record.prescription_text && (
                 <div className="sm:col-span-2">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
-                    Prescription
+                    {t('prescription')}
                   </p>
                   <pre className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap font-sans">
                     {record.prescription_text}
@@ -246,7 +251,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
               {record.doctor_notes && (
                 <div className="sm:col-span-2">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
-                    Doctor Notes
+                    {t('doctor_notes')}
                   </p>
                   <p className="text-sm text-gray-800 leading-relaxed italic">
                     {record.doctor_notes}
@@ -259,11 +264,11 @@ function RecordCard({ record }: { record: RecentRecord }) {
             <div className="sm:col-span-2">
               <div className="flex items-center gap-2 mb-2">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                  📂 Reports
+                  📂 {t('reports')}
                 </p>
                 {record.attachments.length > 0 && (
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">
-                    {record.attachments.length} {record.attachments.length === 1 ? 'Report' : 'Reports'}
+                    {record.attachments.length} {t('files')}
                   </span>
                 )}
               </div>
@@ -295,7 +300,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
                           onClick={() => handleDownloadReport(att.id, att.file_name, true)}
                           disabled={downloadingId === att.id}
                           className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium text-blue-600 hover:bg-blue-100 transition-colors h-auto"
-                          title="View"
+                          title={t('view')}
                         >
                           {downloadingId === att.id ? (
                             <FiRefreshCw className="h-3 w-3 animate-spin" />
@@ -309,7 +314,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
                           onClick={() => handleDownloadReport(att.id, att.file_name, false)}
                           disabled={downloadingId === att.id}
                           className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium text-gray-600 hover:bg-gray-200 transition-colors h-auto"
-                          title="Download"
+                          title={t('download')}
                         >
                           {downloadingId === att.id ? (
                             <FiRefreshCw className="h-3 w-3 animate-spin" />
@@ -322,7 +327,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-gray-400 italic">No reports uploaded for this visit</p>
+                <p className="text-xs text-gray-400 italic">{t('no_reports')}</p>
               )}
             </div>
 
@@ -335,7 +340,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
                 onClick={() => setModalOpen(true)}
               >
                 <FiDownload className="h-3.5 w-3.5" />
-                Download PDF
+                {t('download_pdf')}
               </Button>
             </div>
           </div>
@@ -354,6 +359,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
 
 /* ─── Main component ───────────────────────────────────────────── */
 export function RecentRecords() {
+  const { t } = useLanguage();
   const { data: records, isLoading, refetch, isFetching } = useQuery<RecentRecord[]>({
     queryKey: ['dashboard-recent-records'],
     queryFn: () => api.dashboard.getRecentRecords({ limit: 10 }),
@@ -366,14 +372,14 @@ export function RecentRecords() {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <CardTitle className="text-lg">Recent Medical Records</CardTitle>
+            <CardTitle className="text-lg">{t('recent_records_title')}</CardTitle>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => refetch()}
               disabled={isFetching}
               className="h-7 px-2 text-xs"
-              title="Refresh records"
+              title={t('refresh')}
             >
               <FiRefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
             </Button>
@@ -382,7 +388,7 @@ export function RecentRecords() {
             href="/dashboard/medical-records"
             className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
           >
-            View All
+            {t('view_all')}
           </Link>
         </div>
       </CardHeader>
@@ -412,9 +418,9 @@ export function RecentRecords() {
         ) : (
           <div className="text-center py-12 text-gray-500">
             <FiAlertCircle className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p className="font-medium">No medical records yet</p>
+            <p className="font-medium">{t('empty_records')}</p>
             <p className="text-sm text-gray-400 mt-1">
-              Your visit records will appear here
+              {t('empty_records_desc')}
             </p>
           </div>
         )}

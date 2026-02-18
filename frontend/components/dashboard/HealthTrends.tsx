@@ -16,6 +16,7 @@ import {
 import { api } from '@/lib/api';
 import type { HealthTrendsResponse, HealthTrendSeries } from '@/types';
 import { FiTrendingUp } from 'react-icons/fi';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 /* ── Period toggle ─────────────────────────────────────────────── */
 
@@ -61,15 +62,18 @@ function CustomTooltip({
   unit,
   metric,
 }: TooltipProps<number, string> & { unit: string; metric: string }) {
+  const { t, language } = useLanguage();
   if (!active || !payload || payload.length === 0) return null;
 
   const primary = payload.find((p) => p.dataKey === 'value');
   const secondary = payload.find((p) => p.dataKey === 'secondary_value');
 
+  const locale = language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-IN';
+
   return (
     <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl shadow-lg px-4 py-3 text-sm">
       <p className="text-gray-500 font-medium mb-1">
-        {new Date(label as string).toLocaleDateString('en-IN', {
+        {new Date(label as string).toLocaleDateString(locale, {
           day: 'numeric',
           month: 'short',
           year: 'numeric',
@@ -78,11 +82,11 @@ function CustomTooltip({
       {metric === 'blood_pressure' ? (
         <>
           <p className="text-red-600 font-semibold">
-            Systolic: {primary?.value} {unit}
+            {t('systolic')}: {primary?.value} {unit}
           </p>
           {secondary?.value != null && (
             <p className="text-orange-500 font-semibold">
-              Diastolic: {secondary.value} {unit}
+              {t('diastolic')}: {secondary.value} {unit}
             </p>
           )}
         </>
@@ -98,18 +102,21 @@ function CustomTooltip({
 /* ── Single metric chart card ──────────────────────────────────── */
 
 function MetricChart({ series }: { series: HealthTrendSeries }) {
+  const { t, language } = useLanguage();
+
   const cfg = CHART_CONFIG[series.metric] ?? {
     color: '#6b7280',
     gradient: 'from-gray-50 to-gray-100/50',
   };
 
   const hasData = series.data.length > 0;
+  const locale = language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-IN';
 
   // Format x-axis tick
   const formatDate = useCallback((val: string) => {
     const d = new Date(val);
-    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-  }, []);
+    return d.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+  }, [locale]);
 
   return (
     <div
@@ -124,7 +131,7 @@ function MetricChart({ series }: { series: HealthTrendSeries }) {
         </div>
         {hasData && (
           <span className="text-xs text-gray-400">
-            {series.data.length} reading{series.data.length !== 1 ? 's' : ''}
+            {series.data.length} {t('reading_s')}
           </span>
         )}
       </div>
@@ -163,7 +170,7 @@ function MetricChart({ series }: { series: HealthTrendSeries }) {
               <Legend
                 wrapperStyle={{ fontSize: 12 }}
                 formatter={(value: string) =>
-                  value === 'value' ? 'Systolic' : 'Diastolic'
+                  value === 'value' ? t('systolic') : t('diastolic')
                 }
               />
             )}
@@ -192,7 +199,7 @@ function MetricChart({ series }: { series: HealthTrendSeries }) {
         </ResponsiveContainer>
       ) : (
         <div className="flex items-center justify-center h-[200px] text-gray-400 text-sm">
-          No data for this period
+          {t('no_data_period')}
         </div>
       )}
     </div>
@@ -222,6 +229,7 @@ function TrendsSkeleton() {
 
 export function HealthTrends() {
   const [period, setPeriod] = useState<Period>(6);
+  const { t } = useLanguage();
 
   const {
     data: response,
@@ -253,10 +261,10 @@ export function HealthTrends() {
           </div>
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
-              Health Trends
+              {t('trends_title')}
             </h2>
             <p className="text-sm text-gray-500">
-              Track your vitals over time
+              {t('trends_subtitle')}
             </p>
           </div>
         </div>
@@ -267,11 +275,10 @@ export function HealthTrends() {
             <button
               key={opt.value}
               onClick={() => setPeriod(opt.value)}
-              className={`px-3.5 py-1.5 rounded-md text-sm font-medium transition-all ${
-                period === opt.value
+              className={`px-3.5 py-1.5 rounded-md text-sm font-medium transition-all ${period === opt.value
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
             >
               {opt.label}
             </button>
@@ -286,8 +293,8 @@ export function HealthTrends() {
         ) : isError ? (
           <div className="text-center py-10 text-gray-500">
             <FiTrendingUp className="h-10 w-10 mx-auto mb-3 text-gray-300" />
-            <p className="font-medium">Failed to load health trends</p>
-            <p className="text-sm mt-1">Please try again later.</p>
+            <p className="font-medium">{t('failed_load')}</p>
+            <p className="text-sm mt-1">{t('try_again')}</p>
           </div>
         ) : orderedTrends.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -298,9 +305,9 @@ export function HealthTrends() {
         ) : (
           <div className="text-center py-10 text-gray-500">
             <FiTrendingUp className="h-10 w-10 mx-auto mb-3 text-gray-300" />
-            <p className="font-medium">No health data yet</p>
+            <p className="font-medium">{t('empty_trends')}</p>
             <p className="text-sm mt-1">
-              Your vital readings will appear here once recorded.
+              {t('empty_trends_desc')}
             </p>
           </div>
         )}

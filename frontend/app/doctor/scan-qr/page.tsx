@@ -37,7 +37,7 @@ function ScanQRPage() {
   useEffect(() => {
     return () => {
       if (scannerRef.current?.isScanning) {
-        scannerRef.current.stop().catch(() => {});
+        scannerRef.current.stop().catch(() => { });
       }
     };
   }, []);
@@ -46,16 +46,16 @@ function ScanQRPage() {
     try {
       setCameraError(null);
       setIsScanning(true);
-      
+
       // Wait for DOM to update (React state is async)
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       // Verify the element exists before initializing scanner
       const element = document.getElementById("qr-reader");
       if (!element) {
         throw new Error("Scanner element not found. Please try again.");
       }
-      
+
       // Initialize scanner if not already done
       if (!scannerRef.current) {
         scannerRef.current = new Html5Qrcode("qr-reader");
@@ -88,7 +88,7 @@ function ScanQRPage() {
       console.error('Camera error:', error);
       setIsScanning(false);
       setIsCameraReady(false);
-      
+
       let errorMsg = 'Failed to start camera. ';
       if (error.name === 'NotAllowedError' || error.message?.includes('Permission')) {
         errorMsg += 'Please allow camera access in your browser settings.';
@@ -101,7 +101,7 @@ function ScanQRPage() {
       } else {
         errorMsg += error.message || 'Unknown error';
       }
-      
+
       setCameraError(errorMsg);
       toast.error(errorMsg);
     }
@@ -230,7 +230,7 @@ function ScanQRPage() {
               )}
 
               {!isScanning ? (
-                <Button 
+                <Button
                   onClick={startScanning}
                   className="w-full"
                   size="lg"
@@ -254,7 +254,7 @@ function ScanQRPage() {
                       </p>
                     </div>
                   )}
-                  <Button 
+                  <Button
                     onClick={stopScanning}
                     variant="destructive"
                     className="w-full"
@@ -287,8 +287,8 @@ function ScanQRPage() {
                     onChange={(e) => setManualPatientId(e.target.value.toUpperCase())}
                     className="font-mono text-sm"
                   />
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={!manualPatientId.trim() || isLoading}
                     className="whitespace-nowrap bg-blue-600"
                   >
@@ -316,7 +316,7 @@ function ScanQRPage() {
                   onChange={(e) => setManualToken(e.target.value)}
                   className="font-mono text-sm"
                 />
-                <Button 
+                <Button
                   type="submit"
                   variant="outline"
                   className="w-full"
@@ -407,7 +407,7 @@ function ScanQRPage() {
                 <FiUserPlus className="mr-2 h-5 w-5" />
                 {isAddingPatient ? 'Adding...' : '➕ Add to My Patients'}
               </Button>
-              
+
               <Button
                 onClick={() => router.push(`/doctor/patients/${patientData.patient?.id}/create-record`)}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg font-semibold"
@@ -417,14 +417,64 @@ function ScanQRPage() {
               </Button>
             </div>
 
-            {/* Critical Alerts Row */}
+            {/* Critical Alerts & Vitals Row */}
             <div className="grid gap-4 md:grid-cols-2">
+              {/* Vitals Summary */}
+              {patientData.latest_vitals && (
+                <div className="bg-white border rounded-lg p-3 shadow-sm space-y-3">
+                  <p className="font-bold text-gray-900 flex items-center">
+                    <FiActivity className="mr-2 text-blue-600" /> Current Vitals
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* BP */}
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="text-xs text-gray-500 uppercase">Blood Pressure</p>
+                      {patientData.latest_vitals.blood_pressure ? (
+                        <div>
+                          <p className="text-lg font-bold text-gray-900">
+                            {patientData.latest_vitals.blood_pressure.value} <span className="text-xs font-normal text-gray-500">{patientData.latest_vitals.blood_pressure.unit}</span>
+                          </p>
+                          {patientData.latest_vitals.blood_pressure.status !== 'normal' && (
+                            <span className={`inline-block px-1.5 py-0.5 text-[10px] rounded font-bold uppercase ${patientData.latest_vitals.blood_pressure.status === 'high' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                              }`}>
+                              {patientData.latest_vitals.blood_pressure.status}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">Not recorded</p>
+                      )}
+                    </div>
+
+                    {/* Sugar */}
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="text-xs text-gray-500 uppercase">Blood Sugar</p>
+                      {patientData.latest_vitals.blood_sugar ? (
+                        <div>
+                          <p className="text-lg font-bold text-gray-900">
+                            {patientData.latest_vitals.blood_sugar.value} <span className="text-xs font-normal text-gray-500">{patientData.latest_vitals.blood_sugar.unit}</span>
+                          </p>
+                          {patientData.latest_vitals.blood_sugar.status !== 'normal' && (
+                            <span className={`inline-block px-1.5 py-0.5 text-[10px] rounded font-bold uppercase ${patientData.latest_vitals.blood_sugar.status === 'high' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                              }`}>
+                              {patientData.latest_vitals.blood_sugar.status}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">Not recorded</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Allergies Alert */}
               {patientData.allergies && patientData.allergies.length > 0 && (
-                <div className="bg-red-100 border-2 border-red-400 rounded-lg p-3">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <div className="flex items-center space-x-2 mb-2">
                     <FiAlertTriangle className="h-5 w-5 text-red-600" />
-                    <p className="font-bold text-red-900">⚠️ Allergies</p>
+                    <p className="font-bold text-red-900">Allergies</p>
                   </div>
                   <div className="space-y-1">
                     {patientData.allergies.map((allergy: any, idx: number) => (
@@ -438,13 +488,15 @@ function ScanQRPage() {
 
               {/* Chronic Conditions */}
               {patientData.chronic_conditions && patientData.chronic_conditions.length > 0 && (
-                <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-3">
-                  <p className="font-bold text-yellow-900 mb-2">🩺 Chronic Conditions</p>
-                  <div className="space-y-1">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 md:col-span-2">
+                  <p className="font-bold text-yellow-900 mb-2 flex items-center">
+                    <FiAlertCircle className="mr-2 text-yellow-600" /> Chronic Conditions
+                  </p>
+                  <div className="flex flex-wrap gap-2">
                     {patientData.chronic_conditions.map((condition: any, idx: number) => (
-                      <p key={idx} className="text-sm text-yellow-800 font-medium">
-                        • {condition.disease_name || condition.condition_name}
-                      </p>
+                      <span key={idx} className="px-2 py-1 bg-yellow-100 text-yellow-800 text-sm font-medium rounded-full border border-yellow-200">
+                        {condition.disease_name || condition.condition_name}
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -468,41 +520,41 @@ function ScanQRPage() {
                             <p className="text-xs text-gray-500">{record.department}</p>
                           </div>
                           <p className="text-sm text-gray-500">
-                            {new Date(record.visit_date).toLocaleDateString('en-US', { 
-                              year: 'numeric', 
-                              month: 'short', 
-                              day: 'numeric' 
+                            {new Date(record.visit_date).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
                             })}
                           </p>
                         </div>
-                        
+
                         <div className="space-y-3">
                           <div>
                             <p className="text-xs font-semibold text-gray-600 uppercase mb-1">Diagnosis</p>
                             <p className="text-sm text-blue-900 font-medium">{record.diagnosis}</p>
                           </div>
-                          
+
                           {record.tests_performed && (
                             <div>
                               <p className="text-xs font-semibold text-gray-600 uppercase mb-1">Tests Performed</p>
                               <p className="text-sm text-gray-700 whitespace-pre-line">{record.tests_performed}</p>
                             </div>
                           )}
-                          
+
                           {record.prescription && (
                             <div>
                               <p className="text-xs font-semibold text-gray-600 uppercase mb-1">Prescription</p>
                               <p className="text-sm text-gray-700 whitespace-pre-line">{record.prescription}</p>
                             </div>
                           )}
-                          
+
                           {record.doctor_notes && (
                             <div className="bg-yellow-50 border-l-2 border-yellow-400 pl-3 py-2">
                               <p className="text-xs font-semibold text-yellow-800 uppercase mb-1">Doctor's Notes</p>
                               <p className="text-sm text-yellow-900">{record.doctor_notes}</p>
                             </div>
                           )}
-                          
+
                           {record.report_attachments && record.report_attachments.length > 0 && (
                             <div>
                               <p className="text-xs font-semibold text-gray-600 uppercase mb-2">📎 Attached Reports</p>
@@ -533,10 +585,10 @@ function ScanQRPage() {
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <p className="text-sm text-gray-500">
-                              {new Date(record.created_at).toLocaleDateString('en-US', { 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
+                              {new Date(record.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
                               })}
                             </p>
                             {record.doctor && (
@@ -546,13 +598,13 @@ function ScanQRPage() {
                             )}
                           </div>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <div>
                             <p className="text-xs font-semibold text-gray-600 uppercase">Symptoms</p>
                             <p className="text-sm text-gray-900">{record.symptoms || 'No symptoms recorded'}</p>
                           </div>
-                          
+
                           {record.diagnoses && record.diagnoses.length > 0 && (
                             <div>
                               <p className="text-xs font-semibold text-gray-600 uppercase">Diagnosis</p>
@@ -565,7 +617,7 @@ function ScanQRPage() {
                               </div>
                             </div>
                           )}
-                          
+
                           {record.notes && (
                             <div>
                               <p className="text-xs font-semibold text-gray-600 uppercase">Notes</p>
@@ -596,7 +648,7 @@ function ScanQRPage() {
                   </CardContent>
                 </Card>
               </summary>
-              
+
               <Card className="mt-2">
                 <CardContent className="p-4 space-y-3">
                   <div className="grid gap-3 md:grid-cols-3 text-sm">
@@ -613,7 +665,7 @@ function ScanQRPage() {
                       <p className="font-medium">{patientData.patient?.phone || 'N/A'}</p>
                     </div>
                   </div>
-                  
+
                   {patientData.patient?.address && (
                     <div>
                       <p className="text-gray-500 text-sm">Address</p>

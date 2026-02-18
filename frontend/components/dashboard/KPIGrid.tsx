@@ -13,6 +13,7 @@ import {
   FiAlertTriangle,
   FiDownload,
 } from 'react-icons/fi';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 /**
  * Inverts trend colour semantics: "up" becomes red, "down" becomes green.
@@ -31,6 +32,7 @@ function invertTrend(trend: KPITrend): KPITrend {
 }
 
 export function KPIGrid() {
+  const { t } = useLanguage();
   const { data: kpis, isLoading } = useQuery<DashboardKPIs>({
     queryKey: ['dashboard-kpis'],
     queryFn: () => api.dashboard.getKPIs(),
@@ -61,7 +63,7 @@ export function KPIGrid() {
 
   const cards = [
     {
-      title: 'Medical Records',
+      title: t('kpi_medical_records'),
       value: kpis.total_medical_records,
       icon: FiActivity,
       iconBg: 'bg-blue-50',
@@ -69,7 +71,7 @@ export function KPIGrid() {
       trend: kpis.monthly_trends.medical_records,
     },
     {
-      title: 'Active Prescriptions',
+      title: t('kpi_active_prescriptions'),
       value: kpis.active_prescriptions,
       icon: FiFileText,
       iconBg: 'bg-green-50',
@@ -77,7 +79,7 @@ export function KPIGrid() {
       trend: kpis.monthly_trends.prescriptions,
     },
     {
-      title: 'Pending Lab Reports',
+      title: t('kpi_pending_labs'),
       value: kpis.pending_lab_reports,
       icon: FiClipboard,
       iconBg: 'bg-amber-50',
@@ -86,7 +88,7 @@ export function KPIGrid() {
       trend: invertTrend(kpis.monthly_trends.lab_reports),
     },
     {
-      title: 'Adherence Rate',
+      title: t('kpi_adherence_rate'),
       value: `${Math.round(kpis.adherence_percentage)}%`,
       icon: FiHeart,
       iconBg: 'bg-rose-50',
@@ -94,7 +96,7 @@ export function KPIGrid() {
       trend: kpis.monthly_trends.adherence,
     },
     {
-      title: 'Health Alerts',
+      title: t('kpi_health_alerts'),
       value: kpis.alerts_count,
       icon: FiAlertTriangle,
       iconBg: 'bg-orange-50',
@@ -103,7 +105,7 @@ export function KPIGrid() {
       trend: invertTrend(kpis.monthly_trends.alerts),
     },
     {
-      title: 'Report Downloads',
+      title: t('kpi_downloads'),
       value: kpis.total_downloads,
       icon: FiDownload,
       iconBg: 'bg-purple-50',
