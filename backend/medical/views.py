@@ -1,7 +1,12 @@
+import os
+
+from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.utils import timezone
 from django.db.models import Q, F
 from datetime import timedelta
@@ -10,7 +15,7 @@ import re
 from accounts.permissions import IsApprovedDoctor, IsDoctorOrAdmin, IsDoctorVerified
 from patients.models import HealthCard, Profile
 
-from .models import Allergy, ChronicCondition, HealthCardValidator, HealthMetric, LabTestResult, MedicalRecord, PatientVisitRecord, DoctorPatientAccess
+from .models import Allergy, ChronicCondition, HealthCardValidator, HealthMetric, LabTestResult, MedicalRecord, PatientVisitRecord, DoctorPatientAccess, VisitReportAttachment
 from .serializers import (
     AllergySerializer,
     ChronicConditionSerializer,
@@ -18,6 +23,14 @@ from .serializers import (
     MedicalRecordSerializer,
     PatientVisitRecordSerializer,
 )
+
+# Allowed MIME types and max file size for report uploads
+ALLOWED_REPORT_TYPES = {
+    'application/pdf': '.pdf',
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+}
+MAX_REPORT_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
 class DoctorScanHealthCardView(APIView):
@@ -647,8 +660,10 @@ class CreateVisitRecordView(APIView):
     """
     Create a new visit/consultation record for a patient.
     Requires doctor to have access to the patient.
+    Accepts multipart/form-data with optional report file uploads.
     """
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def post(self, request, patient_id):
         # Check authorization - only doctors and admins can create visit records
@@ -706,7 +721,22 @@ class CreateVisitRecordView(APIView):
                 visit_date = timezone.now()
         else:
             visit_date = timezone.now()
-        
+
+        # ── Validate uploaded report files (before creating record) ──
+        report_files = request.FILES.getlist('reports')
+        if report_files:
+            for f in report_files:
+                if f.content_type not in ALLOWED_REPORT_TYPES:
+                    return Response(
+                        {"detail": f"Invalid file type: {f.name}. Only PDF, JPG, and PNG files are allowed."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                if f.size > MAX_REPORT_FILE_SIZE:
+                    return Response(
+                        {"detail": f"File too large: {f.name}. Maximum size is 10 MB."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
         # Create visit record
         visit_record = PatientVisitRecord.objects.create(
             patient=profile.user,
@@ -719,6 +749,16 @@ class CreateVisitRecordView(APIView):
             visit_date=visit_date
         )
 
+        # ── Save report attachments ──
+        for f in report_files:
+            VisitReportAttachment.objects.create(
+                visit_record=visit_record,
+                file=f,
+                file_name=f.name,
+                file_type=ALLOWED_REPORT_TYPES.get(f.content_type, ''),
+                uploaded_by=request.user,
+            )
+
         # Log the action
         from accounts.audit import AuditService
         AuditService.log_event(
@@ -729,7 +769,8 @@ class CreateVisitRecordView(APIView):
             resource_id=str(visit_record.id),
             details={
                 "patient_name": profile.name,
-                "diagnosis": visit_record.diagnosis
+                "diagnosis": visit_record.diagnosis,
+                "reports_count": len(report_files),
             },
         )
 
@@ -737,3 +778,140 @@ class CreateVisitRecordView(APIView):
             PatientVisitRecordSerializer(visit_record, context={'request': request}).data,
             status=status.HTTP_201_CREATED
         )
+
+
+class SecureReportDownloadView(APIView):
+    """
+    GET /api/doctors/reports/<attachment_id>/download/
+
+    Securely serve a report attachment file with role-based access control.
+    
+    Access Rules:
+    - Doctors: Can download reports they uploaded
+    - Patients: Can download reports linked to their own visit records
+    - Admins: Can download any report
+    - Unauthenticated users: Get 401 Unauthorized
+    - Authenticated but unauthorized users: Get 403 Forbidden
+    
+    Required Headers:
+        Authorization: Bearer <access_token>
+    
+    Query Parameters:
+        disposition: 'inline' (default) or 'attachment'
+    
+    Returns:
+        200: File with appropriate Content-Type and Content-Disposition
+        401: Unauthenticated (missing/invalid token)
+        403: Forbidden (authenticated but no access rights)
+        404: File not found
+    """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, attachment_id):
+        # Fetch the attachment or return 404
+        attachment = get_object_or_404(VisitReportAttachment, id=attachment_id)
+        visit_record = attachment.visit_record
+        user = request.user
+
+        # ══════════════════════════════════════════════════════════
+        # ROLE-BASED ACCESS CONTROL
+        # ══════════════════════════════════════════════════════════
+        
+        has_access = False
+        
+        # Rule 1: Admin has access to all reports
+        if user.role == 'admin':
+            has_access = True
+        
+        # Rule 2: Patient can download reports from their own visit records
+        elif user.role == 'patient':
+            if visit_record.patient == user:
+                has_access = True
+        
+        # Rule 3: Doctor can download reports they uploaded
+        elif user.role == 'doctor':
+            if attachment.uploaded_by == user:
+                has_access = True
+            # Alternative: Doctor can also download if they created the visit record
+            # This allows doctors to access reports from consultations they performed
+            elif hasattr(user, 'doctor_profile'):
+                # Check if this doctor created the visit record
+                doctor_name = f"Dr. {user.doctor_profile.first_name} {user.doctor_profile.last_name}".strip()
+                if visit_record.doctor_name == doctor_name:
+                    has_access = True
+        
+        # Deny access if none of the rules matched
+        if not has_access:
+            return Response(
+                {
+                    "detail": "You do not have permission to access this file.",
+                    "error": "FORBIDDEN",
+                    "message": "Access denied. You can only download reports you uploaded (doctors) or reports from your own medical records (patients)."
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # ══════════════════════════════════════════════════════════
+        # FILE VALIDATION & SERVING
+        # ══════════════════════════════════════════════════════════
+        
+        # Verify file exists on disk
+        if not attachment.file:
+            return Response(
+                {
+                    "detail": "File not found.",
+                    "error": "FILE_NOT_FOUND",
+                    "message": "The requested file reference does not exist."
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        
+        if not os.path.isfile(attachment.file.path):
+            return Response(
+                {
+                    "detail": "File not found.",
+                    "error": "FILE_NOT_FOUND",
+                    "message": "The requested file could not be found on the server."
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Determine content type from file extension
+        ext = os.path.splitext(attachment.file_name)[1].lower()
+        content_type_map = {
+            '.pdf': 'application/pdf',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif',
+            '.doc': 'application/msword',
+            '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        }
+        content_type = content_type_map.get(ext, 'application/octet-stream')
+
+        # Set Content-Disposition header (inline for viewing, attachment for downloading)
+        disposition = request.query_params.get('disposition', 'inline')
+        if disposition == 'attachment':
+            content_disposition = f'attachment; filename="{attachment.file_name}"'
+        else:
+            content_disposition = f'inline; filename="{attachment.file_name}"'
+
+        # Serve the file securely using FileResponse
+        try:
+            response = FileResponse(
+                open(attachment.file.path, 'rb'),
+                content_type=content_type,
+            )
+            response['Content-Disposition'] = content_disposition
+            response['X-Content-Type-Options'] = 'nosniff'  # Security header
+            return response
+        except IOError:
+            return Response(
+                {
+                    "detail": "File not found.",
+                    "error": "FILE_READ_ERROR",
+                    "message": "Unable to read the requested file."
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )

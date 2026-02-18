@@ -21,12 +21,9 @@ class DashboardSummarySerializer(serializers.Serializer):
     calculated_risk_score = serializers.IntegerField()
     calculated_risk_level = serializers.CharField()  # Low / Medium / High
 
-    # Emergency card data (embedded so the frontend modal can use it)
+    # Health card data
     health_id = serializers.CharField(allow_null=True)
     blood_group = serializers.CharField(allow_null=True)
-    emergency_contact_name = serializers.CharField(allow_null=True)
-    emergency_contact_phone = serializers.CharField(allow_null=True)
-    emergency_contact_relationship = serializers.CharField(allow_null=True)
 
 
 class KPITrendSerializer(serializers.Serializer):

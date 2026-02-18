@@ -23,7 +23,7 @@ from accounts.models import User
 from adherence.models import AdherenceTracker, DoseSchedule
 from dashboard.models import DashboardAlert, DownloadLog
 from medical.models import HealthMetric, LabTestResult, PatientVisitRecord, VisitReportAttachment
-from patients.models import EmergencyContact, HealthCard, PatientProfile, Profile
+from patients.models import HealthCard, PatientProfile, Profile
 from prescriptions.models import Medicine, Prescription, PrescriptionMedicine
 
 # ── Deterministic seed for reproducibility ───────────────────────
@@ -65,7 +65,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.MIGRATE_HEADING("\n━━━ Dashboard Data Seeder ━━━\n"))
 
         user, profile = self._ensure_patient(options["reset"])
-        self._seed_emergency_contact(profile)
         doctor_user = self._ensure_doctor()
         visits = self._seed_medical_records(user)
         self._seed_lab_results(user, visits)
@@ -119,7 +118,6 @@ class Command(BaseCommand):
                 "blood_group": "B+",
                 "date_of_birth": date(2001, 7, 15),
                 "phone": "+91-9876500000",
-                "emergency_contact_number": "+91-9876543210",
                 "region": "Bhubaneswar",
                 "district": "Khordha",
                 "state": "Odisha",
@@ -166,15 +164,6 @@ class Command(BaseCommand):
             doc.save()
         return doc
 
-    def _seed_emergency_contact(self, profile):
-        EmergencyContact.objects.get_or_create(
-            profile=profile,
-            name="Suman Patra",
-            defaults={
-                "phone": "+91-9876543210",
-                "relationship": "Father",
-            },
-        )
 
     # ═════════════════════════════════════════════════════════════
     #  1.  MEDICAL VISIT RECORDS  (12 visits, ~every 2 months)

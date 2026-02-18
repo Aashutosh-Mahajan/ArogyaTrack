@@ -26,7 +26,6 @@ export default function PatientSignupPage() {
     state: '',
     country: 'India',
     pincode: '',
-    emergency_contact_number: '',
     terms_accepted: false,
     consent_store_data: false,
     consent_doctor_access: false,
@@ -111,7 +110,6 @@ export default function PatientSignupPage() {
     if (!formData.district) newErrors.district = 'District is required';
     if (!formData.state) newErrors.state = 'State is required';
     if (!formData.pincode) newErrors.pincode = 'Pincode is required';
-    if (!formData.emergency_contact_number) newErrors.emergency_contact_number = 'Emergency contact is required';
     if (!formData.aadhar_id_proof) newErrors.aadhar_id_proof = 'ID proof is required';
 
     // Email validation
@@ -326,25 +324,6 @@ export default function PatientSignupPage() {
                     } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2`}
                   />
                   {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Emergency Contact <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    name="emergency_contact_number"
-                    value={formData.emergency_contact_number}
-                    onChange={handleChange}
-                    placeholder="Emergency contact number"
-                    className={`mt-1 block w-full rounded-md border shadow-sm ${
-                      errors.emergency_contact_number ? 'border-red-500' : 'border-gray-300'
-                    } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2`}
-                  />
-                  {errors.emergency_contact_number && (
-                    <p className="text-red-500 text-xs mt-1">{errors.emergency_contact_number}</p>
-                  )}
                 </div>
               </div>
             </div>

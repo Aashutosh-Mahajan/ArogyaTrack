@@ -35,13 +35,12 @@ import type {
   DashboardAlert,
   SecurityInfo,
   DownloadItem,
-  EmergencyContact,
 } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 class ApiClient {
-  private client: AxiosInstance;
+  public client: AxiosInstance; // Made public for direct access when needed
 
   constructor() {
     this.client = axios.create({
@@ -98,16 +97,16 @@ class ApiClient {
         }
 
         // Handle other errors
-        const errorMessage = error.response?.data?.detail || 
-                           error.response?.data?.message || 
-                           error.message || 
-                           'An error occurred';
-        
+        const errorMessage = error.response?.data?.detail ||
+          error.response?.data?.message ||
+          error.message ||
+          'An error occurred';
+
         // Don't show toast for registration/login/auth endpoints - they handle their own errors
         const requestUrl = error.config?.url || '';
-        const isAuthRequest = requestUrl.includes('/auth/register/') || 
-                             requestUrl.includes('/auth/login/') ||
-                             requestUrl.includes('/auth/verify-email/');
+        const isAuthRequest = requestUrl.includes('/auth/register/') ||
+          requestUrl.includes('/auth/login/') ||
+          requestUrl.includes('/auth/verify-email/');
         if (!isAuthRequest) {
           toast.error(errorMessage);
         }
@@ -183,13 +182,13 @@ export const api = {
   // Authentication
   auth: {
     sendOtp: (email: string) => apiClient.post('/auth/send-otp/', { email }),
-    verifyOtp: (email: string, otp: string) => 
+    verifyOtp: (email: string, otp: string) =>
       apiClient.post('/auth/verify-otp/', { email, otp }),
-    
+
     // Production-grade registration with file uploads
     registerPatientWithDocuments: async (data: PatientRegistrationData): Promise<RegistrationResponse> => {
       const formData = new FormData();
-      
+
       // Add all fields to FormData
       Object.entries(data).forEach(([key, value]) => {
         if (value instanceof File) {
@@ -200,7 +199,7 @@ export const api = {
           formData.append(key, String(value));
         }
       });
-      
+
       const response = await apiClient.post<RegistrationResponse>('/auth/register/patient/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -208,10 +207,10 @@ export const api = {
       });
       return response;
     },
-    
+
     registerDoctorWithDocuments: async (data: DoctorRegistrationData): Promise<RegistrationResponse> => {
       const formData = new FormData();
-      
+
       // Add all fields to FormData
       Object.entries(data).forEach(([key, value]) => {
         if (value instanceof File) {
@@ -222,7 +221,7 @@ export const api = {
           formData.append(key, String(value));
         }
       });
-      
+
       const response = await apiClient.post<RegistrationResponse>('/auth/register/doctor/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -230,7 +229,7 @@ export const api = {
       });
       return response;
     },
-    
+
     verifyEmail: (email: string, otp: string) =>
       apiClient.post('/auth/verify-email/', { email, otp }),
     login: (email: string, password: string) =>
@@ -241,7 +240,7 @@ export const api = {
       apiClient.post('/auth/password-reset/confirm/', { email, otp, new_password }),
     getCurrentUser: () => apiClient.get('/auth/me/'),
     logout: () => apiClient.post('/auth/logout/'),
-    refreshToken: (refresh: string) => 
+    refreshToken: (refresh: string) =>
       apiClient.post('/auth/token/refresh/', { refresh }),
   },
 
@@ -256,8 +255,6 @@ export const api = {
     switchProfile: (profileId: string) => apiClient.put('/patients/switch-profile/', { profile_id: profileId }),
     getHealthCard: () => apiClient.get('/patients/health-card/'),
     generateHealthCard: () => apiClient.post('/patients/health-card/'),
-    getEmergencyContacts: (profileId: string): Promise<EmergencyContact[]> => apiClient.get(`/patients/${profileId}/emergency-contacts/`),
-    addEmergencyContact: (profileId: string, data: any) => apiClient.post(`/patients/${profileId}/emergency-contacts/`, data),
     // Secure Digital Patient Card
     getPatientCard: () => apiClient.get('/patients/my-card/'),
     uploadCardPhoto: (photo: File) => {
@@ -272,31 +269,57 @@ export const api = {
     getQRImage: () =>
       apiClient.get('/patients/my-card/qr-image/', { responseType: 'blob' as any }),
     // Scan Patient QR Code or Enter Patient ID (for doctors/admins)
-    scanPatientQR: (data: { token?: string; patient_id?: string }) => 
+    scanPatientQR: (data: { token?: string; patient_id?: string }) =>
       apiClient.post('/patients/scan-qr/', data),
   },
 
   // Medical Records (backend mounts medical app at /api/doctors/)
   medical: {
-    getRecords: (params?: any): Promise<PaginatedResponse<MedicalRecord>> => 
+    getRecords: (params?: any): Promise<PaginatedResponse<MedicalRecord>> =>
       apiClient.get('/doctors/visit-records/', { params }),
-    getRecord: (id: number): Promise<MedicalRecord> => 
+    getRecord: (id: number): Promise<MedicalRecord> =>
       apiClient.get(`/doctors/visit-records/${id}/`),
-    getAllergies: (): Promise<Allergy[]> => 
+    getAllergies: (): Promise<Allergy[]> =>
       apiClient.get('/doctors/my-allergies/'),
-    getChronicConditions: (): Promise<ChronicCondition[]> => 
+    getChronicConditions: (): Promise<ChronicCondition[]> =>
       apiClient.get('/doctors/my-conditions/'),
     scanQR: (token: string) => apiClient.post('/doctors/scan-health-card/', { token }),
     scanPatientQR: (signedToken: string) => apiClient.get(`/patients/qr/${signedToken}/`),
     createRecord: (data: any) => apiClient.post('/doctors/medical-records/', data),
-    addDiagnosis: (recordId: number, data: any) => 
+    addDiagnosis: (recordId: number, data: any) =>
       apiClient.post(`/doctors/patients/${recordId}/conditions/`, data),
+    // Download report with authentication
+    downloadReport: async (attachmentId: number, disposition: string = 'attachment'): Promise<Blob> => {
+      const response = await apiClient.client.get(
+        `/doctors/reports/${attachmentId}/download/`,
+        {
+          params: { disposition },
+          responseType: 'blob',
+        }
+      );
+      return response.data;
+    },
     // My Patients Management
     getMyPatients: () => apiClient.get('/doctors/my-patients/'),
-    addPatientToMyList: (patientId: string) => 
+    addPatientToMyList: (patientId: string) =>
       apiClient.post('/doctors/my-patients/add/', { patient_id: patientId }),
-    createVisitRecord: (patientId: string, data: any) => 
-      apiClient.post(`/doctors/patients/${patientId}/visit-records/create/`, data),
+    createVisitRecord: (patientId: string, data: any, files?: File[]) => {
+      if (files && files.length > 0) {
+        const formData = new FormData();
+        Object.entries(data).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            formData.append(key, String(value));
+          }
+        });
+        files.forEach((file) => {
+          formData.append('reports', file);
+        });
+        return apiClient.post(`/doctors/patients/${patientId}/visit-records/create/`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
+      return apiClient.post(`/doctors/patients/${patientId}/visit-records/create/`, data);
+    },
     // High-Risk Patients
     getHighRiskPatients: () => apiClient.get('/doctors/high-risk-patients/'),
     // Dashboard Summary & Activity
@@ -306,53 +329,53 @@ export const api = {
 
   // Prescriptions
   prescriptions: {
-    getAll: (params?: any): Promise<PaginatedResponse<Prescription>> => 
+    getAll: (params?: any): Promise<PaginatedResponse<Prescription>> =>
       apiClient.get('/prescriptions/my-prescriptions/', { params }),
-    getById: (id: string): Promise<Prescription> => 
+    getById: (id: string): Promise<Prescription> =>
       apiClient.get(`/prescriptions/${id}/`),
     getMedicines: (params?: any): Promise<Medicine[]> =>
       apiClient.get('/prescriptions/medicines/', { params }),
     create: (data: any) => apiClient.post('/prescriptions/create/', data),
-    validateHash: (prescriptionNumber: string, hash: string) => 
+    validateHash: (prescriptionNumber: string, hash: string) =>
       apiClient.post('/prescriptions/validate-hash/', { prescription_number: prescriptionNumber, hash }),
   },
 
   // Adherence
   adherence: {
-    getTrackers: (params?: any): Promise<PaginatedResponse<AdherenceTracker>> => 
+    getTrackers: (params?: any): Promise<PaginatedResponse<AdherenceTracker>> =>
       apiClient.get('/adherence/my-trackers/', { params }),
-    getTracker: (trackerId: string): Promise<AdherenceTracker> => 
+    getTracker: (trackerId: string): Promise<AdherenceTracker> =>
       apiClient.get(`/adherence/tracker/${trackerId}/`),
     getUpcomingDoses: (): Promise<DoseSchedule[]> => apiClient.get('/adherence/upcoming-doses/'),
     getMissedDoses: (): Promise<DoseSchedule[]> => apiClient.get('/adherence/missed-doses/'),
-    markDoseTaken: (data: any) => 
+    markDoseTaken: (data: any) =>
       apiClient.post('/adherence/record-dose/', data),
   },
 
   // Surveillance
   surveillance: {
-    getDashboard: (): Promise<AdminDashboardData> => 
+    getDashboard: (): Promise<AdminDashboardData> =>
       apiClient.get('/surveillance/dashboard-overview/'),
-    
-    getHeatMap: (params?: any): Promise<HeatMapData[]> => 
+
+    getHeatMap: (params?: any): Promise<HeatMapData[]> =>
       apiClient.get<any>('/surveillance/heat-map-data/', { params }).then(res => res?.data || res || []),
-    
-    getDiseaseStats: (params?: any): Promise<DiseaseStats[]> => 
+
+    getDiseaseStats: (params?: any): Promise<DiseaseStats[]> =>
       apiClient.get<any>('/surveillance/disease-statistics/', { params }).then(res => res?.statistics || res || []),
-    
-    getRegionalComparison: (params?: any) => 
+
+    getRegionalComparison: (params?: any) =>
       apiClient.get('/surveillance/regional-comparison/', { params }),
-    
-    getRegions: (params?: any): Promise<PaginatedResponse<Region>> => 
+
+    getRegions: (params?: any): Promise<PaginatedResponse<Region>> =>
       apiClient.get('/surveillance/regions/', { params }),
-    
-    getSurveillanceData: (params?: any): Promise<PaginatedResponse<SurveillanceData>> => 
+
+    getSurveillanceData: (params?: any): Promise<PaginatedResponse<SurveillanceData>> =>
       apiClient.get('/surveillance/surveillance-data/', { params }),
-    
-    getClusters: (params?: any): Promise<PaginatedResponse<Cluster>> => 
+
+    getClusters: (params?: any): Promise<PaginatedResponse<Cluster>> =>
       apiClient.get('/surveillance/clusters/', { params }),
-    
-    getForecasts: (params?: any): Promise<PaginatedResponse<Forecast>> => 
+
+    getForecasts: (params?: any): Promise<PaginatedResponse<Forecast>> =>
       apiClient.get('/surveillance/forecasts/', { params }),
 
     getForecastChartData: (params?: { horizon?: number; disease_code?: string }): Promise<any> =>
@@ -360,20 +383,20 @@ export const api = {
 
     getAnomalies: (params?: any): Promise<PaginatedResponse<Anomaly>> =>
       apiClient.get('/surveillance/anomalies/', { params }),
-    
-    getRiskScores: (params?: any): Promise<PaginatedResponse<RiskScore>> => 
+
+    getRiskScores: (params?: any): Promise<PaginatedResponse<RiskScore>> =>
       apiClient.get('/surveillance/risk-scores/', { params }),
-    
-    getAlerts: (params?: any): Promise<PaginatedResponse<Alert>> => 
+
+    getAlerts: (params?: any): Promise<PaginatedResponse<Alert>> =>
       apiClient.get('/surveillance/alerts/', { params }),
 
     getEnvironmentalData: (params?: any): Promise<PaginatedResponse<EnvironmentalData>> =>
       apiClient.get('/surveillance/environmental-data/', { params }),
-    
-    acknowledgeAlert: (id: string, data?: any) => 
+
+    acknowledgeAlert: (id: string, data?: any) =>
       apiClient.post(`/surveillance/alerts/${id}/acknowledge/`, data || {}),
-    
-    resolveAlert: (id: string, data?: any) => 
+
+    resolveAlert: (id: string, data?: any) =>
       apiClient.post(`/surveillance/alerts/${id}/resolve/`, data || {}),
 
     escalateAlert: (id: string, data?: any) =>
@@ -432,10 +455,10 @@ export const api = {
 
   // Pharmacy
   pharmacy: {
-    scanPrescription: (qrData: string) => 
+    scanPrescription: (qrData: string) =>
       apiClient.post('/pharmacy/scan-prescription/', { qr_data: qrData }),
     dispense: (data: any) => apiClient.post('/pharmacy/dispense/', data),
-    getDispensingRecords: (params?: any) => 
+    getDispensingRecords: (params?: any) =>
       apiClient.get('/pharmacy/dispensing-records/', { params }),
   },
 

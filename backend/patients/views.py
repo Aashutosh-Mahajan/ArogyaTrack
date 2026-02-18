@@ -7,7 +7,6 @@ from rest_framework.views import APIView
 
 from .models import HealthCard, HealthCardService, Profile, PatientProfile
 from .serializers import (
-    EmergencyContactSerializer,
     HealthCardSerializer,
     PatientProfileSerializer,
     ProfileSerializer,
@@ -109,22 +108,6 @@ class SwitchProfileView(APIView):
         serializer.is_valid(raise_exception=True)
         profile = serializer.save()
         return Response({"active_profile_id": str(profile.id)}, status=status.HTTP_200_OK)
-
-
-class EmergencyContactCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, profile_id):
-        profile = get_object_or_404(Profile, id=profile_id, user=request.user)
-        contacts = profile.emergency_contacts.all()
-        return Response(EmergencyContactSerializer(contacts, many=True).data)
-
-    def post(self, request, profile_id):
-        profile = get_object_or_404(Profile, id=profile_id, user=request.user)
-        serializer = EmergencyContactSerializer(data=request.data, context={"profile": profile})
-        serializer.is_valid(raise_exception=True)
-        contact = serializer.save()
-        return Response(EmergencyContactSerializer(contact).data, status=status.HTTP_201_CREATED)
 
 
 class HealthCardDownloadView(APIView):
@@ -489,7 +472,6 @@ class ScanPatientQRView(APIView):
                     "blood_group": profile.blood_group,
                     "date_of_birth": str(profile.date_of_birth) if profile.date_of_birth else None,
                     "phone": profile.phone or None,
-                    "emergency_contact": profile.emergency_contact_number or None,
                     "address": profile.address or None,
                     "district": profile.district or None,
                     "state": profile.state or None,

@@ -7,6 +7,7 @@ import type { RecentRecord } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RecordDetailModal } from '@/components/dashboard/RecordDetailModal';
+import toast from 'react-hot-toast';
 import {
   FiActivity,
   FiChevronDown,
@@ -18,6 +19,8 @@ import {
   FiClipboard,
   FiFileText,
   FiAlertCircle,
+  FiPaperclip,
+  FiRefreshCw,
 } from 'react-icons/fi';
 import Link from 'next/link';
 
@@ -50,6 +53,7 @@ const statusConfig = {
 function RecordCard({ record }: { record: RecentRecord }) {
   const [expanded, setExpanded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
   const st = statusConfig[record.status];
 
@@ -64,14 +68,54 @@ function RecordCard({ record }: { record: RecentRecord }) {
     setModalOpen(true);
   };
 
+  // Authenticated download function
+  const handleDownloadReport = async (attachmentId: number, fileName: string, isView: boolean = false) => {
+    setDownloadingId(attachmentId);
+    try {
+      const disposition = isView ? 'inline' : 'attachment';
+      const blob = await api.medical.downloadReport(attachmentId, disposition);
+      
+      if (isView) {
+        // Open in a new tab for viewing
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        // Don't revoke immediately for viewing
+        setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+      } else {
+        // Download the file
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast.success('Report downloaded successfully');
+      }
+    } catch (error: any) {
+      console.error('Download error:', error);
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again.');
+      } else if (error.response?.status === 403) {
+        toast.error('You do not have permission to access this file.');
+      } else if (error.response?.status === 404) {
+        toast.error('File not found.');
+      } else {
+        toast.error('Failed to download report.');
+      }
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   return (
     <>
       <div
-        className={`rounded-xl border transition-all duration-200 hover:shadow-md ${
-          record.status === 'critical'
-            ? 'border-red-200 bg-red-50/30'
-            : 'border-gray-100 bg-white'
-        }`}
+        className={`rounded-xl border transition-all duration-200 hover:shadow-md ${record.status === 'critical'
+          ? 'border-red-200 bg-red-50/30'
+          : 'border-gray-100 bg-white'
+          }`}
       >
         {/* Main row */}
         <div className="p-4 flex items-start gap-4">
@@ -211,28 +255,76 @@ function RecordCard({ record }: { record: RecentRecord }) {
               )}
             </div>
 
-            {/* Attachment links */}
-            {record.attachments.length > 0 && (
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
-                  Attachments
+            {/* 📂 Reports Section */}
+            <div className="sm:col-span-2">
+              <div className="flex items-center gap-2 mb-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                  📂 Reports
                 </p>
-                <div className="flex flex-wrap gap-2">
+                {record.attachments.length > 0 && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">
+                    {record.attachments.length} {record.attachments.length === 1 ? 'Report' : 'Reports'}
+                  </span>
+                )}
+              </div>
+              {record.attachments.length > 0 ? (
+                <div className="space-y-2">
                   {record.attachments.map((att) => (
-                    <a
+                    <div
                       key={att.id}
-                      href={att.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-xs text-blue-600 font-medium transition-colors"
+                      className="flex items-center gap-3 p-2.5 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-blue-50/40 transition-colors"
                     >
-                      <FiDownload className="h-3 w-3" />
-                      {att.file_name}
-                    </a>
+                      <div className="h-8 w-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                        <FiPaperclip className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-800 truncate">
+                          {att.file_name}
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">
+                          {att.uploaded_by_name && (
+                            <span className="mr-2">👨‍⚕️ {att.uploaded_by_name}</span>
+                          )}
+                          📅 {new Date(att.uploaded_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownloadReport(att.id, att.file_name, true)}
+                          disabled={downloadingId === att.id}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium text-blue-600 hover:bg-blue-100 transition-colors h-auto"
+                          title="View"
+                        >
+                          {downloadingId === att.id ? (
+                            <FiRefreshCw className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <FiEye className="h-3 w-3" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownloadReport(att.id, att.file_name, false)}
+                          disabled={downloadingId === att.id}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium text-gray-600 hover:bg-gray-200 transition-colors h-auto"
+                          title="Download"
+                        >
+                          {downloadingId === att.id ? (
+                            <FiRefreshCw className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <FiDownload className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-xs text-gray-400 italic">No reports uploaded for this visit</p>
+              )}
+            </div>
 
             {/* Download PDF */}
             <div className="pt-1">
@@ -262,17 +354,30 @@ function RecordCard({ record }: { record: RecentRecord }) {
 
 /* ─── Main component ───────────────────────────────────────────── */
 export function RecentRecords() {
-  const { data: records, isLoading } = useQuery<RecentRecord[]>({
+  const { data: records, isLoading, refetch, isFetching } = useQuery<RecentRecord[]>({
     queryKey: ['dashboard-recent-records'],
     queryFn: () => api.dashboard.getRecentRecords({ limit: 10 }),
-    staleTime: 60_000,
+    staleTime: 10_000, // Consider data stale after 10 seconds
+    refetchInterval: 30_000, // Refetch every 30 seconds to catch new records
   });
 
   return (
     <Card className="border-0 shadow-lg">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Recent Medical Records</CardTitle>
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-lg">Recent Medical Records</CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="h-7 px-2 text-xs"
+              title="Refresh records"
+            >
+              <FiRefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
           <Link
             href="/dashboard/medical-records"
             className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"

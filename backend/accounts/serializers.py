@@ -331,7 +331,6 @@ class PatientRegistrationSerializer(serializers.Serializer):
     
     # Medical Information
     blood_group = serializers.ChoiceField(choices=['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
-    emergency_contact_number = serializers.CharField(max_length=20, required=False, allow_blank=True)
     
     # Geographic Information
     address = serializers.CharField()
@@ -417,7 +416,6 @@ class PatientRegistrationSerializer(serializers.Serializer):
         state = validated_data.pop('state', '')
         country = validated_data.pop('country', 'India')
         pincode = validated_data.pop('pincode', '')
-        emergency_contact = validated_data.pop('emergency_contact_number', '')
         
         # Consent
         terms_accepted = validated_data.pop('terms_accepted')
@@ -448,7 +446,6 @@ class PatientRegistrationSerializer(serializers.Serializer):
                 gender=gender,
                 blood_group=blood_group,
                 phone=phone,
-                emergency_contact_number=emergency_contact,
                 address=address,
                 district=district,
                 state=state,

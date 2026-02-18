@@ -7,14 +7,12 @@ import type { DashboardSummary } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { EmergencyModal } from '@/components/dashboard/EmergencyModal';
 import {
   FiShield,
   FiAlertTriangle,
   FiClock,
   FiActivity,
   FiHeart,
-  FiAlertCircle,
 } from 'react-icons/fi';
 
 function riskColor(level: string) {
@@ -44,8 +42,6 @@ function formatLastLogin(dt: string | null): string {
 }
 
 export function DashboardHeader() {
-  const [emergencyOpen, setEmergencyOpen] = useState(false);
-
   const { data: summary, isLoading } = useQuery<DashboardSummary>({
     queryKey: ['dashboard-summary'],
     queryFn: () => api.dashboard.getSummary(),
@@ -104,50 +100,35 @@ export function DashboardHeader() {
   ];
 
   return (
-    <>
-      <Card className="overflow-hidden border-0 shadow-lg">
-        {/* Top gradient bar */}
-        <div className="h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+    <Card className="overflow-hidden border-0 shadow-lg">
+      {/* Top gradient bar */}
+      <div className="h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
 
         <CardContent className="p-6">
           {/* Welcome Row */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                Welcome back, {summary.patient_name}!
-              </h1>
-              <div className="flex items-center gap-3 mt-2 flex-wrap">
-                <span className="text-sm text-gray-500 flex items-center gap-1">
-                  <FiClock className="h-3.5 w-3.5" />
-                  {summary.last_login
-                    ? `Last login: ${new Date(summary.last_login).toLocaleString('en-IN', {
-                        dateStyle: 'medium',
-                        timeStyle: 'short',
-                      })}`
-                    : 'Welcome to Health Surveillance'}
-                </span>
+          <div className="mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              Welcome back, {summary.patient_name}!
+            </h1>
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
+              <span className="text-sm text-gray-500 flex items-center gap-1">
+                <FiClock className="h-3.5 w-3.5" />
+                {summary.last_login
+                  ? `Last login: ${new Date(summary.last_login).toLocaleString('en-IN', {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                    })}`
+                  : 'Welcome to Health Surveillance'}
+              </span>
 
-                {/* Risk Badge */}
-                <span
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${risk.badge}`}
-                >
-                  <span className={`h-2 w-2 rounded-full ${risk.dot} animate-pulse`} />
-                  {summary.calculated_risk_level} Risk
-                </span>
-              </div>
+              {/* Risk Badge */}
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${risk.badge}`}
+              >
+                <span className={`h-2 w-2 rounded-full ${risk.dot} animate-pulse`} />
+                {summary.calculated_risk_level} Risk
+              </span>
             </div>
-
-            {/* Emergency Button */}
-            <Button
-              variant="destructive"
-              size="lg"
-              className="gap-2 shadow-md hover:shadow-lg transition-shadow shrink-0"
-              onClick={() => setEmergencyOpen(true)}
-            >
-              <FiAlertCircle className="h-5 w-5" />
-              <span className="hidden sm:inline">Emergency</span>
-              <span className="sm:hidden">SOS</span>
-            </Button>
           </div>
 
           {/* Health Snapshot Grid */}
@@ -171,18 +152,5 @@ export function DashboardHeader() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Emergency Modal */}
-      <EmergencyModal
-        open={emergencyOpen}
-        onOpenChange={setEmergencyOpen}
-        healthId={summary.health_id}
-        bloodGroup={summary.blood_group}
-        emergencyContactName={summary.emergency_contact_name}
-        emergencyContactPhone={summary.emergency_contact_phone}
-        emergencyContactRelationship={summary.emergency_contact_relationship}
-        patientName={summary.patient_name}
-      />
-    </>
   );
 }

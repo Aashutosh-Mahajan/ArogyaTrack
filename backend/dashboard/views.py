@@ -30,7 +30,7 @@ from rest_framework.views import APIView
 from accounts.models import Session, User
 from adherence.models import AdherenceTracker, DoseSchedule
 from medical.models import HealthMetric, LabTestResult, PatientVisitRecord, VisitReportAttachment
-from patients.models import EmergencyContact, HealthCard, Profile
+from patients.models import HealthCard, Profile
 from prescriptions.models import Prescription
 from surveillance.models import Alert
 
@@ -153,11 +153,6 @@ class DashboardSummaryView(APIView):
         # ── Blood group ──────────────────────────────────────────
         blood_group = profile.blood_group if profile else None
 
-        # ── Emergency contact ────────────────────────────────────
-        ec = None
-        if profile:
-            ec = EmergencyContact.objects.filter(profile=profile).first()
-
         # ── Alerts ───────────────────────────────────────────────
         total_alerts = 0
         if profile and profile.region:
@@ -216,9 +211,6 @@ class DashboardSummaryView(APIView):
             "calculated_risk_level": risk_level,
             "health_id": health_id,
             "blood_group": blood_group,
-            "emergency_contact_name": ec.name if ec else None,
-            "emergency_contact_phone": ec.phone if ec else None,
-            "emergency_contact_relationship": ec.relationship if ec else None,
         }
 
         serializer = DashboardSummarySerializer(data)
@@ -457,9 +449,16 @@ class RecentRecordsView(APIView):
                     "id": att.id,
                     "file_name": att.file_name,
                     "file_type": att.file_type,
-                    "file_url": request.build_absolute_uri(att.file.url)
-                    if att.file
-                    else "",
+                    "file_url": request.build_absolute_uri(
+                        f'/api/doctors/reports/{att.id}/download/'
+                    ) if att.file else "",
+                    "uploaded_by_name": (
+                        (lambda u: (
+                            f"Dr. {u.doctor_profile.first_name} {u.doctor_profile.last_name}".strip()
+                            if hasattr(u, 'doctor_profile') and f"Dr. {u.doctor_profile.first_name} {u.doctor_profile.last_name}".strip() != "Dr."
+                            else u.email
+                        ))(att.uploaded_by) if att.uploaded_by else None
+                    ),
                     "uploaded_at": att.uploaded_at,
                 }
                 for att in attachments

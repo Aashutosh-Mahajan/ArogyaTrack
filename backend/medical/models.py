@@ -147,6 +147,14 @@ class VisitReportAttachment(models.Model):
     file = models.FileField(upload_to="visit_reports/%Y/%m/")
     file_name = models.CharField(max_length=255)
     file_type = models.CharField(max_length=100, blank=True)  # e.g., "Lab Report", "Prescription", "X-Ray"
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="uploaded_reports",
+        help_text="Doctor who uploaded this report",
+    )
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

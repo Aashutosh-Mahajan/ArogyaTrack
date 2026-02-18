@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
 export default function CreateVisitRecordPage() {
   const router = useRouter();
   const params = useParams();
   const patientId = params.id as string;
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     diagnosis: "",
@@ -23,6 +24,14 @@ export default function CreateVisitRecordPage() {
   const createRecordMutation = useMutation({
     mutationFn: (data: any) => api.medical.createVisitRecord(patientId, data),
     onSuccess: () => {
+      // Invalidate all relevant queries so the patient dashboard updates
+      queryClient.invalidateQueries({ queryKey: ['dashboard-recent-records'] });
+      queryClient.invalidateQueries({ queryKey: ['medical-records-all'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-lab-monitoring'] });
+      queryClient.invalidateQueries({ queryKey: ['visit-records-list'] });
+      
       alert("✅ Visit record created successfully!");
       router.push("/doctor/my-patients");
     },

@@ -391,9 +391,6 @@ function ScanQRPage() {
                     {patientData.patient?.phone && (
                       <p className="text-sm text-gray-600">📱 {patientData.patient.phone}</p>
                     )}
-                    {patientData.patient?.emergency_contact && (
-                      <p className="text-sm text-red-600 font-medium">🚨 {patientData.patient.emergency_contact}</p>
-                    )}
                   </div>
                 </div>
               </CardContent>
@@ -614,10 +611,6 @@ function ScanQRPage() {
                     <div>
                       <p className="text-gray-500">Phone</p>
                       <p className="font-medium">{patientData.patient?.phone || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Emergency Contact</p>
-                      <p className="font-medium">{patientData.patient?.emergency_contact || 'N/A'}</p>
                     </div>
                   </div>
                   

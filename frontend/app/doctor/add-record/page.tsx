@@ -10,7 +10,11 @@ import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 import { MyPatient } from '@/types';
 import toast from 'react-hot-toast';
-import { FiSave, FiUser, FiFileText, FiCheckCircle, FiUpload, FiX } from 'react-icons/fi';
+import { FiSave, FiUser, FiFileText, FiCheckCircle, FiUpload, FiX, FiFile } from 'react-icons/fi';
+
+const ALLOWED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_REPORT_FILES = 5;
 
 const STATUS_OPTIONS = [
   { value: 'completed', label: 'Completed' },
@@ -27,7 +31,7 @@ function AddRecordPage() {
   const [prescription, setPrescription] = useState('');
   const [doctorNotes, setDoctorNotes] = useState('');
   const [visitStatus, setVisitStatus] = useState('completed');
-  const [labFile, setLabFile] = useState<File | null>(null);
+  const [reportFiles, setReportFiles] = useState<File[]>([]);
   const [visitDate, setVisitDate] = useState(
     new Date().toISOString().slice(0, 16)
   );
@@ -42,14 +46,22 @@ function AddRecordPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: Record<string, string>) =>
-      api.medical.createVisitRecord(selectedPatient, data),
+    mutationFn: (payload: { data: Record<string, string>; files: File[] }) =>
+      api.medical.createVisitRecord(selectedPatient, payload.data, payload.files),
     onSuccess: () => {
       toast.success('Visit record created successfully!');
       setSubmitted(true);
+      // Invalidate doctor queries
       queryClient.invalidateQueries({ queryKey: ['doctor-recent-records'] });
       queryClient.invalidateQueries({ queryKey: ['doctor-dashboard-summary'] });
       queryClient.invalidateQueries({ queryKey: ['doctor-recent-activity'] });
+      // Invalidate patient queries so the patient dashboard updates
+      queryClient.invalidateQueries({ queryKey: ['dashboard-recent-records'] });
+      queryClient.invalidateQueries({ queryKey: ['medical-records-all'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-lab-monitoring'] });
+      queryClient.invalidateQueries({ queryKey: ['visit-records-list'] });
     },
     onError: (err: any) => {
       toast.error(err?.message || 'Failed to create record');
@@ -78,11 +90,14 @@ function AddRecordPage() {
       .join('\n');
 
     createMutation.mutate({
-      diagnosis: diagnosis.trim(),
-      tests_performed: testsPerformed.trim(),
-      prescription: prescription.trim(),
-      doctor_notes: notesWithStatus,
-      visit_date: new Date(visitDate).toISOString(),
+      data: {
+        diagnosis: diagnosis.trim(),
+        tests_performed: testsPerformed.trim(),
+        prescription: prescription.trim(),
+        doctor_notes: notesWithStatus,
+        visit_date: new Date(visitDate).toISOString(),
+      },
+      files: reportFiles,
     });
   };
 
@@ -93,7 +108,7 @@ function AddRecordPage() {
     setPrescription('');
     setDoctorNotes('');
     setVisitStatus('completed');
-    setLabFile(null);
+    setReportFiles([]);
     setVisitDate(new Date().toISOString().slice(0, 16));
     setSubmitted(false);
   };
@@ -245,41 +260,92 @@ function AddRecordPage() {
                 />
               </div>
 
-              {/* Upload Lab File (optional) */}
+              {/* Upload Reports (optional – up to 5 files) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Upload Lab Report (optional)
+                  Upload Reports (optional)
+                  <span className="text-xs text-gray-400 ml-1">PDF, JPG, PNG – max 10 MB each</span>
                 </label>
-                {labFile ? (
-                  <div className="flex items-center gap-3 rounded-lg border border-gray-300 px-4 py-2.5 bg-gray-50">
-                    <FiFileText className="h-5 w-5 text-blue-500" />
-                    <span className="text-sm text-gray-700 flex-1 truncate">
-                      {labFile.name}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setLabFile(null)}
-                      className="text-gray-400 hover:text-red-500"
-                    >
-                      <FiX className="h-4 w-4" />
-                    </button>
+
+                {/* Selected files list */}
+                {reportFiles.length > 0 && (
+                  <div className="space-y-2 mb-3">
+                    {reportFiles.map((file, idx) => (
+                      <div
+                        key={`${file.name}-${idx}`}
+                        className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-2.5 bg-gray-50"
+                      >
+                        <FiFile className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-700 truncate">{file.name}</p>
+                          <p className="text-xs text-gray-400">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setReportFiles((prev) =>
+                              prev.filter((_, i) => i !== idx)
+                            )
+                          }
+                          className="text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <FiX className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                ) : (
+                )}
+
+                {/* Add file button */}
+                {reportFiles.length < MAX_REPORT_FILES && (
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     className="w-full flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-4 text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
                   >
                     <FiUpload className="h-5 w-5" />
-                    Click to upload PDF or image
+                    {reportFiles.length === 0
+                      ? 'Click to upload PDF or image'
+                      : `Add more files (${reportFiles.length}/${MAX_REPORT_FILES})`}
                   </button>
                 )}
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
+                  multiple
                   className="hidden"
-                  onChange={(e) => setLabFile(e.target.files?.[0] ?? null)}
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    const valid: File[] = [];
+                    for (const file of files) {
+                      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+                        toast.error(
+                          `Invalid file type: ${file.name}. Only PDF, JPG, and PNG are allowed.`
+                        );
+                        continue;
+                      }
+                      if (file.size > MAX_FILE_SIZE) {
+                        toast.error(
+                          `File too large: ${file.name}. Maximum size is 10 MB.`
+                        );
+                        continue;
+                      }
+                      valid.push(file);
+                    }
+                    setReportFiles((prev) => {
+                      const combined = [...prev, ...valid];
+                      if (combined.length > MAX_REPORT_FILES) {
+                        toast.error(`Maximum ${MAX_REPORT_FILES} files allowed.`);
+                        return combined.slice(0, MAX_REPORT_FILES);
+                      }
+                      return combined;
+                    });
+                    // Reset the input so the same file can be selected again
+                    e.target.value = '';
+                  }}
                 />
               </div>
 

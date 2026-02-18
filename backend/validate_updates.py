@@ -53,7 +53,7 @@ def validate_models():
     # Profile model
     results.append(check_model_fields(Profile, [
         'name', 'age', 'gender', 'blood_group', 'relationship',
-        'date_of_birth', 'phone', 'emergency_contact_number',
+        'date_of_birth', 'phone',
         'district', 'state', 'country', 'address', 'pincode'
     ]))
     

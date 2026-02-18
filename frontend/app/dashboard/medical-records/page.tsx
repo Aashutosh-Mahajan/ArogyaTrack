@@ -6,17 +6,20 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { withAuth } from '@/components/auth/withAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import type { PaginatedResponse, MedicalRecord, Allergy, ChronicCondition } from '@/types';
-import { FiActivity, FiCalendar, FiChevronDown, FiChevronUp, FiDownload, FiFileText } from 'react-icons/fi';
+import { FiActivity, FiCalendar, FiChevronDown, FiChevronUp, FiDownload, FiFileText, FiRefreshCw } from 'react-icons/fi';
 import { formatDate } from '@/lib/utils';
 
 function MedicalRecordsPage(): React.JSX.Element {
   const [expandedRecords, setExpandedRecords] = useState<Set<number>>(new Set());
 
-  const { data: records, isLoading } = useQuery<PaginatedResponse<MedicalRecord>>({
+  const { data: records, isLoading, refetch, isFetching } = useQuery<PaginatedResponse<MedicalRecord>>({
     queryKey: ['medical-records-all'],
     queryFn: () => api.medical.getRecords(),
+    refetchInterval: 30000, // Refetch every 30 seconds to catch new records
+    staleTime: 10000, // Consider data stale after 10 seconds
   });
 
   const { data: allergies } = useQuery<Allergy[]>({
@@ -65,11 +68,22 @@ function MedicalRecordsPage(): React.JSX.Element {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Medical Records</h1>
-          <p className="text-gray-600 mt-1">
-            Complete history of your medical consultations
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Medical Records</h1>
+            <p className="text-gray-600 mt-1">
+              Complete history of your medical consultations
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="flex items-center gap-2"
+          >
+            <FiRefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+            {isFetching ? 'Refreshing...' : 'Refresh'}
+          </Button>
         </div>
 
         {/* Allergies & Chronic Conditions */}

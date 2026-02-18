@@ -38,12 +38,11 @@ export interface Profile {
   blood_group: string;
   relationship: 'self' | 'spouse' | 'child' | 'parent' | 'other';
   region?: string;
-  
+
   // Extended fields
   date_of_birth?: string | null;
   phone?: string;
-  emergency_contact_number?: string;
-  
+
   // Geographic Information
   district?: string;
   state?: string;
@@ -52,7 +51,7 @@ export interface Profile {
   pincode?: string;
   full_address?: string;
   calculated_age?: number;
-  
+
   // Timestamps
   created_at: string;
   updated_at: string;
@@ -60,7 +59,7 @@ export interface Profile {
 
 export interface PatientProfile {
   aadhar_id_proof?: string | null;
-  
+
   // Consent & Terms
   terms_accepted: boolean;
   terms_accepted_at?: string | null;
@@ -68,10 +67,10 @@ export interface PatientProfile {
   consent_store_data_at?: string | null;
   consent_doctor_access: boolean;
   consent_doctor_access_at?: string | null;
-  
+
   // Privacy Settings
   data_sharing_enabled: boolean;
-  
+
   // Timestamps
   last_consent_update?: string | null;
   created_at: string;
@@ -135,15 +134,6 @@ export interface PatientHistoryFromQR {
     issued_at: string;
     items: Array<{ medicine_name: string }>;
   }>;
-}
-
-export interface EmergencyContact {
-  id: string; // UUID
-  name: string;
-  relationship: string;
-  phone: string;
-  created_at: string;
-}
 
 // Doctor Types
 export interface DoctorProfile {
@@ -152,35 +142,35 @@ export interface DoctorProfile {
   first_name: string;
   last_name: string;
   full_name: string;
-  
+
   // Personal Information
   date_of_birth?: string | null;
   phone: string;
-  
+
   // Professional Credentials
   medical_license: string;
   degree: 'MBBS' | 'MD' | 'MS' | 'DNB' | 'BDS' | 'BAMS' | 'BHMS' | 'BUMS' | 'Other';
   degree_other?: string;
   specialization: string;
   experience_years: number;
-  
+
   // Clinic Information
   clinic_name?: string;
   clinic_address?: string;
   consultation_fee?: number | null;
-  
+
   // Documents
   license_certificate?: string;
   degree_certificate?: string;
   government_id?: string;
-  
+
   // Verification
   approval_status: 'pending' | 'approved' | 'rejected';
   approved_by?: number | null;
   approved_at?: string | null;
   rejection_reason?: string;
   is_verified: boolean;
-  
+
   // Timestamps
   created_at: string;
   updated_at: string;
@@ -662,7 +652,7 @@ export interface PatientRegistrationData {
   // Account credentials
   email: string;
   password: string;
-  
+
   // Personal information
   first_name: string;
   last_name: string;
@@ -670,20 +660,17 @@ export interface PatientRegistrationData {
   gender: 'male' | 'female' | 'other';
   phone: string;
   blood_group: string;
-  
+
   // Address details
   address: string;
   district: string;
   state: string;
   country?: string;
   pincode: string;
-  
-  // Emergency contact
-  emergency_contact_number: string;
-  
+
   // ID proof upload
   aadhar_id_proof: File;
-  
+
   // Consent agreements (all required)
   terms_accepted: boolean;
   consent_store_data: boolean;
@@ -694,30 +681,30 @@ export interface DoctorRegistrationData {
   // Account credentials
   email: string;
   password: string;
-  
+
   // Personal information
   first_name: string;
   last_name: string;
   date_of_birth: string; // YYYY-MM-DD format
   phone: string;
-  
+
   // Professional information
   medical_license: string;
   degree: 'MBBS' | 'MD' | 'MS' | 'DNB' | 'BDS' | 'BAMS' | 'BHMS' | 'BUMS' | 'Other';
   degree_other?: string; // Required if degree === 'Other'
   specialization: string;
   experience_years: number;
-  
+
   // Clinic details
   clinic_name?: string;
   clinic_address?: string;
   consultation_fee?: number;
-  
+
   // Document uploads (all required)
   license_certificate: File;
   degree_certificate: File;
   government_id: File;
-  
+
   // Terms acceptance
   terms_accepted: boolean;
 }
@@ -765,9 +752,6 @@ export interface DashboardSummary {
   calculated_risk_level: 'Low' | 'Medium' | 'High';
   health_id: string | null;
   blood_group: string | null;
-  emergency_contact_name: string | null;
-  emergency_contact_phone: string | null;
-  emergency_contact_relationship: string | null;
 }
 
 // Recent Medical Records
@@ -776,6 +760,7 @@ export interface RecentRecordAttachment {
   file_name: string;
   file_type: string;
   file_url: string;
+  uploaded_by_name?: string;
   uploaded_at: string;
 }
 
