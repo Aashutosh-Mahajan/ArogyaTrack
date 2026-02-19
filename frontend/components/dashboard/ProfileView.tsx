@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
-import type { Profile, PatientProfile, EmergencyContact } from '@/types';
+import type { Profile, PatientProfile } from '@/types';
 import {
   FiUser, FiCalendar, FiPhone, FiMapPin, FiDroplet, FiEdit2,
   FiSave, FiX, FiShield, FiAlertCircle, FiCheckCircle, FiPlus, FiTrash2,
@@ -44,8 +44,6 @@ export function ProfileView() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Profile>>({});
-  const [addingContact, setAddingContact] = useState(false);
-  const [contactForm, setContactForm] = useState({ name: '', phone: '', relationship: '' });
 
   // ── Queries ────────────────────────────────
   const { data: profile, isLoading: loadingProfile } = useQuery<Profile>({
@@ -59,28 +57,12 @@ export function ProfileView() {
     retry: false,
   });
 
-  const { data: emergencyContacts, isLoading: loadingContacts } = useQuery<EmergencyContact[]>({
-    queryKey: ['emergency-contacts', profile?.id],
-    queryFn: () => api.patients.getEmergencyContacts(profile!.id),
-    enabled: !!profile?.id,
-  });
-
   // ── Mutations ──────────────────────────────
   const updateProfile = useMutation({
     mutationFn: (data: Partial<Profile>) => api.patients.updateProfile(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['profile'] });
       setEditing(false);
-    },
-  });
-
-  const addContact = useMutation({
-    mutationFn: (data: { name: string; phone: string; relationship: string }) =>
-      api.patients.addEmergencyContact(profile!.id, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['emergency-contacts'] });
-      setAddingContact(false);
-      setContactForm({ name: '', phone: '', relationship: '' });
     },
   });
 
@@ -96,7 +78,6 @@ export function ProfileView() {
       district: profile.district,
       state: profile.state,
       pincode: profile.pincode,
-      emergency_contact_number: profile.emergency_contact_number,
     });
     setEditing(true);
   }
@@ -191,7 +172,6 @@ export function ProfileView() {
               <InfoRow icon={FiUser} label="Gender" value={profile.gender ? profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1) : undefined} />
               <InfoRow icon={FiDroplet} label="Blood Group" value={profile.blood_group} />
               <InfoRow icon={FiPhone} label="Phone" value={profile.phone} />
-              <InfoRow icon={FiPhone} label="Emergency Contact" value={profile.emergency_contact_number} />
               <InfoRow icon={FiUser} label="Relationship" value={profile.relationship ? profile.relationship.charAt(0).toUpperCase() + profile.relationship.slice(1) : undefined} />
             </div>
           ) : (
@@ -212,10 +192,6 @@ export function ProfileView() {
               <div>
                 <label className="text-xs font-medium text-gray-600 mb-1 block">Phone</label>
                 <Input value={form.phone || ''} onChange={(e) => onChange('phone', e.target.value)} />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Emergency Contact</label>
-                <Input value={form.emergency_contact_number || ''} onChange={(e) => onChange('emergency_contact_number', e.target.value)} />
               </div>
             </div>
           )}
@@ -259,65 +235,6 @@ export function ProfileView() {
                 <Input value={form.pincode || ''} onChange={(e) => onChange('pincode', e.target.value)} />
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ── Emergency Contacts ── */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <FiAlertCircle className="h-5 w-5 text-red-500" />
-              Emergency Contacts
-            </CardTitle>
-            <Button variant="outline" size="sm" onClick={() => setAddingContact(true)} disabled={addingContact}>
-              <FiPlus className="h-4 w-4 mr-1" /> Add Contact
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {/* Add form */}
-          {addingContact && (
-            <div className="mb-4 p-4 bg-gray-50 rounded-lg border space-y-3">
-              <p className="text-sm font-medium text-gray-700">New Emergency Contact</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Input placeholder="Name" value={contactForm.name} onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })} />
-                <Input placeholder="Phone" value={contactForm.phone} onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })} />
-                <Input placeholder="Relationship" value={contactForm.relationship} onChange={(e) => setContactForm({ ...contactForm, relationship: e.target.value })} />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" size="sm" onClick={() => { setAddingContact(false); setContactForm({ name: '', phone: '', relationship: '' }); }}>
-                  Cancel
-                </Button>
-                <Button size="sm" onClick={() => addContact.mutate(contactForm)} disabled={!contactForm.name || !contactForm.phone || addContact.isPending}>
-                  {addContact.isPending ? 'Saving…' : 'Save Contact'}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Contact list */}
-          {loadingContacts ? (
-            <div className="animate-pulse space-y-3">
-              {[1, 2].map((i) => <div key={i} className="h-14 bg-gray-100 rounded-lg" />)}
-            </div>
-          ) : emergencyContacts && emergencyContacts.length > 0 ? (
-            <div className="space-y-3">
-              {emergencyContacts.map((ec) => (
-                <div key={ec.id} className="flex items-center gap-4 p-3 rounded-lg border hover:bg-gray-50 transition">
-                  <div className="bg-red-50 p-2 rounded-lg">
-                    <FiPhone className="h-4 w-4 text-red-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">{ec.name}</p>
-                    <p className="text-xs text-gray-500">{ec.relationship} &middot; {ec.phone}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-500 text-center py-4">No emergency contacts added yet.</p>
           )}
         </CardContent>
       </Card>

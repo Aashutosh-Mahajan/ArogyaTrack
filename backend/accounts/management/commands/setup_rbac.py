@@ -53,9 +53,6 @@ ROLE_PERMISSIONS: dict[str, list[str]] = {
         "patients.change_profile",
         "patients.view_profile",
         "patients.view_healthcard",
-        "patients.add_emergencycontact",
-        "patients.change_emergencycontact",
-        "patients.view_emergencycontact",
     ],
     "Admin": [
         # Full access to accounts

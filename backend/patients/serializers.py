@@ -2,7 +2,7 @@ from django.conf import settings
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import EmergencyContact, HealthCard, HealthCardService, Profile, PatientProfile
+from .models import HealthCard, HealthCardService, Profile, PatientProfile
 
 
 class PatientProfileSerializer(serializers.ModelSerializer):
@@ -30,7 +30,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = [
             "id", "patient_id", "name", "age", "gender", "blood_group", "relationship", "region",
-            "date_of_birth", "phone", "emergency_contact_number",
+            "date_of_birth", "phone",
             "district", "state", "country", "address", "pincode",
             "full_address", "calculated_age",
             "created_at", "updated_at"
@@ -50,17 +50,6 @@ class ProfileSerializer(serializers.ModelSerializer):
             user.active_profile = profile
             user.save(update_fields=["active_profile"])
         return profile
-
-
-class EmergencyContactSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EmergencyContact
-        fields = ["id", "name", "phone", "relationship", "created_at"]
-        read_only_fields = ["id", "created_at"]
-
-    def create(self, validated_data):
-        profile = self.context["profile"]
-        return EmergencyContact.objects.create(profile=profile, **validated_data)
 
 
 class HealthCardSerializer(serializers.ModelSerializer):

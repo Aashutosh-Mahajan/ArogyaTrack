@@ -1,0 +1,585 @@
+/* ── SCENE & FLIP ANIMATION ── */
+.cardContainer {
+  width: 500px;
+  height: 270px;
+  /* Condensed height */
+  margin: 0 auto;
+  position: relative;
+}
+
+.scene {
+  width: 540px;
+  height: 295px;
+  /* Condensed height */
+  perspective: 1000px;
+  cursor: pointer;
+  transform-origin: top left;
+  transform: scale(0.926);
+  /* Scales 540px to 500px */
+}
+
+.card {
+  width: 100%;
+  position: relative;
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-style: preserve-3d;
+  border-radius: 18px;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.card.isFlipped {
+  transform: rotateY(180deg);
+}
+
+.cardFace {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow:
+    0 20px 60px rgba(0, 80, 100, 0.22),
+    0 4px 16px rgba(0, 0, 0, 0.12);
+  top: 0;
+  left: 0;
+  font-family: 'DM Sans', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ══════════════════════════════
+    FRONT CARD
+══════════════════════════════ */
+.cardFront {
+  background: linear-gradient(135deg, #0a3d4f 0%, #0e6e7e 40%, #1a9aa8 75%, #22c5c5 100%);
+  z-index: 2;
+  transform: rotateY(0deg);
+}
+
+/* Circuit pattern overlay */
+.cardFront::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.07) 0%, transparent 50%),
+    repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(255, 255, 255, 0.03) 30px, rgba(255, 255, 255, 0.03) 31px),
+    repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255, 255, 255, 0.03) 30px, rgba(255, 255, 255, 0.03) 31px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ECG pulse line top right */
+.ecgLine {
+  position: absolute;
+  top: 14px;
+  right: 20px;
+  width: 160px;
+  opacity: 0.18;
+  z-index: 1;
+}
+
+/* ── FRONT HEADER ── */
+.frontHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 28px 4px;
+  /* Tightened padding */
+  position: relative;
+  z-index: 2;
+}
+
+.shieldIcon {
+  width: 38px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.shieldIcon svg {
+  width: 22px;
+  height: 22px;
+  fill: white;
+}
+
+.brandText h1 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+  line-height: 1;
+  margin: 0;
+}
+
+.brandText h1 span {
+  color: #7df0e8;
+}
+
+.brandText p {
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 500;
+  margin-top: 2px;
+  text-transform: uppercase;
+  margin-bottom: 0;
+}
+
+/* ── FRONT BODY ── */
+.frontBody {
+  background: rgba(255, 255, 255, 0.96);
+  margin: 0 12px;
+  border-radius: 10px 10px 0 0;
+  padding: 8px 16px;
+  /* Reduced vertical padding */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* Reduced gap */
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+.avatarWrap {
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #0e6e7e, #22c5c5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 3px solid #e2f7f7;
+  position: relative;
+  /* For the file input later if needed */
+}
+
+/* Ensure the image fills the avatar wrap if it's an img tag */
+.avatarWrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarWrap svg {
+  width: 50px;
+  height: 50px;
+  fill: rgba(255, 255, 255, 0.9);
+}
+
+.infoBlock {
+  flex: 1;
+}
+
+.infoBlock .name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0a3d4f;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.infoRow {
+  font-size: 13px;
+  color: #3a5a65;
+  margin-bottom: 1px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.infoRow strong {
+  color: #0a3d4f;
+  font-weight: 600;
+}
+
+.bloodDot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle at 40% 35%, #ff6b6b, #c0392b);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  flex-shrink: 0;
+}
+
+.bloodText {
+  color: #c0392b;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* QR block */
+.qrBlock {
+  width: 130px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.qrFrame {
+  width: 120px;
+  height: 120px;
+  background: #0a3d4f;
+  border-radius: 8px;
+  padding: 6px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(7, 1fr);
+  gap: 1.5px;
+  /* If replacing with real QR, we can center it */
+  align-items: center;
+  justify-items: center;
+}
+
+.qrFrame img {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  /* Slight radius to match */
+  background: white;
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  z-index: 10;
+}
+
+.qrCell {
+  background: white;
+  border-radius: 1px;
+  width: 100%;
+  height: 100%;
+}
+
+.qrCellDark {
+  background: #0a3d4f !important;
+}
+
+.qrLabel {
+  font-size: 8px;
+  font-weight: 700;
+  color: #0a3d4f;
+  letter-spacing: 0.5px;
+  text-align: center;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+/* ── ISSUE STRIP ── */
+.issueStrip {
+  background: linear-gradient(to right, #eefbfc, #d4f7f5);
+  margin: 0 12px;
+  padding: 6px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px dashed #aadbd9;
+  position: relative;
+  z-index: 2;
+}
+
+.issueStrip span {
+  font-size: 13.5px;
+  color: #2c5c68;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── EMERGENCY STRIP ── */
+.emergencyStrip {
+  background: #062b3a;
+  /* Dark Navy for contrast */
+  margin: 0 12px;
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+}
+
+.emergencyStrip .label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.emergencyStrip .number {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+
+
+
+
+
+
+/* ── FRONT FOOTER ── */
+.frontFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 28px 6px;
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
+}
+
+.helpline {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.helplineIcon {
+  width: 22px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.helplineIcon svg {
+  width: 12px;
+  height: 12px;
+  fill: white;
+}
+
+.helpline span {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.helpline strong {
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.verifiedBadge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.verifiedBadge svg {
+  width: 14px;
+  height: 14px;
+  fill: #7df0e8;
+}
+
+.verifiedBadge span {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* ══════════════════════════════
+    BACK CARD
+══════════════════════════════ */
+.cardBack {
+  background: linear-gradient(135deg, #0a3d4f 0%, #0e6e7e 40%, #1a9aa8 75%, #22c5c5 100%);
+  transform: rotateY(180deg);
+}
+
+.cardBack::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.07) 0%, transparent 50%),
+    repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(255, 255, 255, 0.03) 30px, rgba(255, 255, 255, 0.03) 31px),
+    repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255, 255, 255, 0.03) 30px, rgba(255, 255, 255, 0.03) 31px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.backHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 28px 6px;
+  /* Tightened padding */
+  position: relative;
+  z-index: 2;
+}
+
+/* ── TERMS BODY ── */
+.termsBody {
+  background: rgba(255, 255, 255, 0.96);
+  margin: 0 12px;
+  border-radius: 10px;
+  padding: 10px 18px;
+  /* Reduced vertical padding */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.termsCol h3 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0a3d4f;
+  letter-spacing: 0.5px;
+  margin-bottom: 7px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid #22c5c5;
+}
+
+.termsCol ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.termsCol ul li {
+  font-size: 10px;
+  color: #3a5a65;
+  line-height: 1.5;
+  margin-bottom: 4px;
+  padding-left: 12px;
+  position: relative;
+}
+
+.termsCol ul li::before {
+  content: '•';
+  color: #22c5c5;
+  font-size: 12px;
+  position: absolute;
+  left: 0;
+  top: -1px;
+}
+
+/* ── DISCLAIMER ── */
+.disclaimerStrip {
+  background: #0a3d4f;
+  margin: 8px 12px 0;
+  padding: 9px 16px;
+  border-radius: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+}
+
+.disclaimerStrip .discLabel {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #7df0e8;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+.disclaimerStrip p {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── BACK FOOTER ── */
+.backFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 28px 18px;
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
+}
+
+.issuer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Ashoka emblem placeholder */
+.emblem {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.issuerText {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.issuerText strong {
+  color: #fff;
+  display: block;
+  font-size: 10px;
+}
+
+/* Barcode */
+.barcodeWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.barcode {
+  display: flex;
+  gap: 1.5px;
+  height: 36px;
+  align-items: stretch;
+}
+
+.barcode .bar {
+  background: white;
+  border-radius: 0.5px;
+}
+
+.barcodeNum {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 1.5px;
+}

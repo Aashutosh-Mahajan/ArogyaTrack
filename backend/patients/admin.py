@@ -7,7 +7,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils import timezone
 
-from .models import EmergencyContact, HealthCard, Profile, PatientProfile
+from .models import HealthCard, Profile, PatientProfile
 
 
 @admin.register(Profile)
@@ -62,7 +62,6 @@ class ProfileAdmin(admin.ModelAdmin):
         ("Contact Information", {
             "fields": (
                 "phone",
-                "emergency_contact_number",
             )
         }),
         ("Address", {
@@ -244,10 +243,3 @@ class HealthCardAdmin(admin.ModelAdmin):
     search_fields = ("profile__name", "profile__user__email")
     list_filter = ("revoked_at",)
     readonly_fields = ("profile", "token", "qr_code_path", "expires_at", "created_at")
-
-
-@admin.register(EmergencyContact)
-class EmergencyContactAdmin(admin.ModelAdmin):
-    list_display = ("name", "relationship", "profile", "phone", "created_at")
-    search_fields = ("name", "profile__name", "profile__user__email", "phone")
-    readonly_fields = ("created_at",)

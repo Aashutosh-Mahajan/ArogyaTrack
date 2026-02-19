@@ -3,7 +3,6 @@ from django.urls import path
 from .views import (
     ActiveProfileView,
     CreateProfileView,
-    EmergencyContactCreateView,
     HealthCardDownloadView,
     HealthCardImageView,
     MyCardPDFView,
@@ -31,7 +30,6 @@ urlpatterns = [
     # QR Scanner
     path("scan-qr/", ScanPatientQRView.as_view(), name="scan-patient-qr"),
     # Profile-specific endpoints
-    path("<uuid:profile_id>/emergency-contacts/", EmergencyContactCreateView.as_view(), name="add-emergency-contact"),
     path("<uuid:profile_id>/health-card/", HealthCardDownloadView.as_view(), name="health-card"),
     path("<uuid:profile_id>/health-card/image/", HealthCardImageView.as_view(), name="health-card-image"),
     path("<uuid:profile_id>/health-card/revoke/", RevokeHealthCardView.as_view(), name="revoke-health-card"),

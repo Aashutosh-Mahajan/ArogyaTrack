@@ -7,6 +7,7 @@ import type { RecentRecord } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RecordDetailModal } from '@/components/dashboard/RecordDetailModal';
+import toast from 'react-hot-toast';
 import {
   FiActivity,
   FiChevronDown,
@@ -18,42 +19,50 @@ import {
   FiClipboard,
   FiFileText,
   FiAlertCircle,
+  FiPaperclip,
+  FiRefreshCw,
 } from 'react-icons/fi';
 import Link from 'next/link';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 /* ─── Status badge config ──────────────────────────────────────── */
-const statusConfig = {
-  completed: {
-    label: 'Completed',
-    bg: 'bg-green-100',
-    text: 'text-green-700',
-    border: 'border-green-200',
-    dot: 'bg-green-500',
-  },
-  follow_up: {
-    label: 'Follow-up',
-    bg: 'bg-orange-100',
-    text: 'text-orange-700',
-    border: 'border-orange-200',
-    dot: 'bg-orange-500',
-  },
-  critical: {
-    label: 'Critical',
-    bg: 'bg-red-100',
-    text: 'text-red-700',
-    border: 'border-red-200',
-    dot: 'bg-red-500',
-  },
-} as const;
+
 
 /* ─── Single record card ───────────────────────────────────────── */
 function RecordCard({ record }: { record: RecentRecord }) {
   const [expanded, setExpanded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const { t, language } = useLanguage();
+
+  const statusConfig = {
+    completed: {
+      label: t('status_completed'),
+      bg: 'bg-green-100',
+      text: 'text-green-700',
+      border: 'border-green-200',
+      dot: 'bg-green-500',
+    },
+    follow_up: {
+      label: t('status_follow_up'),
+      bg: 'bg-orange-100',
+      text: 'text-orange-700',
+      border: 'border-orange-200',
+      dot: 'bg-orange-500',
+    },
+    critical: {
+      label: t('status_critical'),
+      bg: 'bg-red-100',
+      text: 'text-red-700',
+      border: 'border-red-200',
+      dot: 'bg-red-500',
+    },
+  } as const;
 
   const st = statusConfig[record.status];
+  const locale = language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-IN';
 
-  const visitDate = new Date(record.visit_date).toLocaleDateString('en-IN', {
+  const visitDate = new Date(record.visit_date).toLocaleDateString(locale, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -64,14 +73,54 @@ function RecordCard({ record }: { record: RecentRecord }) {
     setModalOpen(true);
   };
 
+  // Authenticated download function
+  const handleDownloadReport = async (attachmentId: number, fileName: string, isView: boolean = false) => {
+    setDownloadingId(attachmentId);
+    try {
+      const disposition = isView ? 'inline' : 'attachment';
+      const blob = await api.medical.downloadReport(attachmentId, disposition);
+
+      if (isView) {
+        // Open in a new tab for viewing
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        // Don't revoke immediately for viewing
+        setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+      } else {
+        // Download the file
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast.success('Report downloaded successfully');
+      }
+    } catch (error: any) {
+      console.error('Download error:', error);
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again.');
+      } else if (error.response?.status === 403) {
+        toast.error('You do not have permission to access this file.');
+      } else if (error.response?.status === 404) {
+        toast.error('File not found.');
+      } else {
+        toast.error('Failed to download report.');
+      }
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   return (
     <>
       <div
-        className={`rounded-xl border transition-all duration-200 hover:shadow-md ${
-          record.status === 'critical'
-            ? 'border-red-200 bg-red-50/30'
-            : 'border-gray-100 bg-white'
-        }`}
+        className={`rounded-xl border transition-all duration-200 hover:shadow-md ${record.status === 'critical'
+          ? 'border-red-200 bg-red-50/30'
+          : 'border-gray-100 bg-white'
+          }`}
       >
         {/* Main row */}
         <div className="p-4 flex items-start gap-4">
@@ -117,19 +166,19 @@ function RecordCard({ record }: { record: RecentRecord }) {
               {record.tests_performed && (
                 <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md">
                   <FiClipboard className="h-3 w-3" />
-                  Tests: {record.tests_performed.split('\n')[0].slice(0, 40)}
+                  {t('tests_performed')}: {record.tests_performed.split('\n')[0].slice(0, 40)}
                   {record.tests_performed.length > 40 ? '…' : ''}
                 </span>
               )}
               {record.prescriptions_count > 0 && (
                 <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md">
                   <FiFileText className="h-3 w-3" />
-                  {record.prescriptions_count} prescription{record.prescriptions_count !== 1 ? 's' : ''}
+                  {record.prescriptions_count} {t('prescription')}
                 </span>
               )}
               {record.attachments.length > 0 && (
                 <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md">
-                  📎 {record.attachments.length} file{record.attachments.length !== 1 ? 's' : ''}
+                  📎 {record.attachments.length} {t('files')}
                 </span>
               )}
             </div>
@@ -142,7 +191,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
               size="icon"
               className="h-8 w-8 text-gray-400 hover:text-blue-600"
               onClick={() => setModalOpen(true)}
-              title="View details"
+              title={t('view')}
             >
               <FiEye className="h-4 w-4" />
             </Button>
@@ -151,7 +200,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
               size="icon"
               className="h-8 w-8 text-gray-400 hover:text-gray-600"
               onClick={() => setExpanded((prev) => !prev)}
-              title={expanded ? 'Collapse' : 'Expand'}
+              title={expanded ? t('collapse') : t('expand')}
             >
               {expanded ? (
                 <FiChevronUp className="h-4 w-4" />
@@ -169,7 +218,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
               {/* Diagnosis */}
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
-                  Diagnosis
+                  {t('diagnosis')}
                 </p>
                 <p className="text-sm text-gray-800 leading-relaxed">
                   {record.diagnosis_summary || 'N/A'}
@@ -179,10 +228,10 @@ function RecordCard({ record }: { record: RecentRecord }) {
               {/* Tests */}
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
-                  Tests Performed
+                  {t('tests_performed')}
                 </p>
                 <p className="text-sm text-gray-800 leading-relaxed">
-                  {record.tests_performed || 'None'}
+                  {record.tests_performed || t('none')}
                 </p>
               </div>
 
@@ -190,7 +239,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
               {record.prescription_text && (
                 <div className="sm:col-span-2">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
-                    Prescription
+                    {t('prescription')}
                   </p>
                   <pre className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap font-sans">
                     {record.prescription_text}
@@ -202,7 +251,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
               {record.doctor_notes && (
                 <div className="sm:col-span-2">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
-                    Doctor Notes
+                    {t('doctor_notes')}
                   </p>
                   <p className="text-sm text-gray-800 leading-relaxed italic">
                     {record.doctor_notes}
@@ -211,28 +260,76 @@ function RecordCard({ record }: { record: RecentRecord }) {
               )}
             </div>
 
-            {/* Attachment links */}
-            {record.attachments.length > 0 && (
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
-                  Attachments
+            {/* 📂 Reports Section */}
+            <div className="sm:col-span-2">
+              <div className="flex items-center gap-2 mb-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                  📂 {t('reports')}
                 </p>
-                <div className="flex flex-wrap gap-2">
+                {record.attachments.length > 0 && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">
+                    {record.attachments.length} {t('files')}
+                  </span>
+                )}
+              </div>
+              {record.attachments.length > 0 ? (
+                <div className="space-y-2">
                   {record.attachments.map((att) => (
-                    <a
+                    <div
                       key={att.id}
-                      href={att.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-xs text-blue-600 font-medium transition-colors"
+                      className="flex items-center gap-3 p-2.5 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-blue-50/40 transition-colors"
                     >
-                      <FiDownload className="h-3 w-3" />
-                      {att.file_name}
-                    </a>
+                      <div className="h-8 w-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                        <FiPaperclip className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-800 truncate">
+                          {att.file_name}
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">
+                          {att.uploaded_by_name && (
+                            <span className="mr-2">👨‍⚕️ {att.uploaded_by_name}</span>
+                          )}
+                          📅 {new Date(att.uploaded_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownloadReport(att.id, att.file_name, true)}
+                          disabled={downloadingId === att.id}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium text-blue-600 hover:bg-blue-100 transition-colors h-auto"
+                          title={t('view')}
+                        >
+                          {downloadingId === att.id ? (
+                            <FiRefreshCw className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <FiEye className="h-3 w-3" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownloadReport(att.id, att.file_name, false)}
+                          disabled={downloadingId === att.id}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium text-gray-600 hover:bg-gray-200 transition-colors h-auto"
+                          title={t('download')}
+                        >
+                          {downloadingId === att.id ? (
+                            <FiRefreshCw className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <FiDownload className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-xs text-gray-400 italic">{t('no_reports')}</p>
+              )}
+            </div>
 
             {/* Download PDF */}
             <div className="pt-1">
@@ -243,7 +340,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
                 onClick={() => setModalOpen(true)}
               >
                 <FiDownload className="h-3.5 w-3.5" />
-                Download PDF
+                {t('download_pdf')}
               </Button>
             </div>
           </div>
@@ -262,22 +359,36 @@ function RecordCard({ record }: { record: RecentRecord }) {
 
 /* ─── Main component ───────────────────────────────────────────── */
 export function RecentRecords() {
-  const { data: records, isLoading } = useQuery<RecentRecord[]>({
+  const { t } = useLanguage();
+  const { data: records, isLoading, refetch, isFetching } = useQuery<RecentRecord[]>({
     queryKey: ['dashboard-recent-records'],
     queryFn: () => api.dashboard.getRecentRecords({ limit: 10 }),
-    staleTime: 60_000,
+    staleTime: 10_000, // Consider data stale after 10 seconds
+    refetchInterval: 30_000, // Refetch every 30 seconds to catch new records
   });
 
   return (
     <Card className="border-0 shadow-lg">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Recent Medical Records</CardTitle>
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-lg">{t('recent_records_title')}</CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="h-7 px-2 text-xs"
+              title={t('refresh')}
+            >
+              <FiRefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
           <Link
             href="/dashboard/medical-records"
             className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
           >
-            View All
+            {t('view_all')}
           </Link>
         </div>
       </CardHeader>
@@ -307,9 +418,9 @@ export function RecentRecords() {
         ) : (
           <div className="text-center py-12 text-gray-500">
             <FiAlertCircle className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p className="font-medium">No medical records yet</p>
+            <p className="font-medium">{t('empty_records')}</p>
             <p className="text-sm text-gray-400 mt-1">
-              Your visit records will appear here
+              {t('empty_records_desc')}
             </p>
           </div>
         )}

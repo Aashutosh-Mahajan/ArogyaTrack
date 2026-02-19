@@ -17,6 +17,7 @@ from .views import (
     PatientOwnRecordsView,
     PatientVisitRecordDetailView,
     PatientVisitRecordsView,
+    SecureReportDownloadView,
 )
 
 urlpatterns = [
@@ -42,4 +43,6 @@ urlpatterns = [
     # Doctor-facing endpoints - Dashboard Summary & Activity
     path("dashboard-summary/", DoctorDashboardSummaryView.as_view(), name="doctor-dashboard-summary"),
     path("recent-activity/", DoctorRecentActivityView.as_view(), name="doctor-recent-activity"),
+    # Secure report download
+    path("reports/<int:attachment_id>/download/", SecureReportDownloadView.as_view(), name="secure-report-download"),
 ]

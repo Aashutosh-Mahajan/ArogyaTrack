@@ -133,6 +133,7 @@ class VisitReportAttachmentSerializer(serializers.ModelSerializer):
     Serializer for Visit Report Attachments
     """
     file_url = serializers.SerializerMethodField()
+    uploaded_by_name = serializers.SerializerMethodField()
     
     class Meta:
         model = VisitReportAttachment
@@ -142,16 +143,28 @@ class VisitReportAttachmentSerializer(serializers.ModelSerializer):
             "file_url",
             "file_name",
             "file_type",
+            "uploaded_by_name",
             "uploaded_at"
         ]
-        read_only_fields = ["id", "uploaded_at", "file_url"]
+        read_only_fields = ["id", "uploaded_at", "file_url", "uploaded_by_name"]
     
     def get_file_url(self, obj):
         request = self.context.get('request')
         if obj.file and hasattr(obj.file, 'url'):
+            # Use secure download endpoint instead of raw media URL
             if request:
-                return request.build_absolute_uri(obj.file.url)
-            return obj.file.url
+                return request.build_absolute_uri(f'/api/doctors/reports/{obj.id}/download/')
+            return f'/api/doctors/reports/{obj.id}/download/'
+        return None
+
+    def get_uploaded_by_name(self, obj):
+        if obj.uploaded_by:
+            if hasattr(obj.uploaded_by, 'doctor_profile'):
+                dp = obj.uploaded_by.doctor_profile
+                name = f"Dr. {dp.first_name} {dp.last_name}".strip()
+                if name != "Dr.":
+                    return name
+            return obj.uploaded_by.email
         return None
 
 

@@ -1,9 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Button } from '@/components/ui/button';
+import { api } from '@/lib/api';
 import type { RecentRecord } from '@/types';
+import toast from 'react-hot-toast';
 import {
   FiX,
   FiDownload,
@@ -13,6 +15,8 @@ import {
   FiFileText,
   FiActivity,
   FiPaperclip,
+  FiRefreshCw,
+  FiEye,
 } from 'react-icons/fi';
 
 interface RecordDetailModalProps {
@@ -49,6 +53,47 @@ function Section({
 
 export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailModalProps) {
   const st = statusConfig[record.status];
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+
+  // Authenticated download function
+  const handleDownloadReport = async (attachmentId: number, fileName: string, isView: boolean = false) => {
+    setDownloadingId(attachmentId);
+    try {
+      const disposition = isView ? 'inline' : 'attachment';
+      const blob = await api.medical.downloadReport(attachmentId, disposition);
+      
+      if (isView) {
+        // Open in a new tab for viewing
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+      } else {
+        // Download the file
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast.success('Report downloaded successfully');
+      }
+    } catch (error: any) {
+      console.error('Download error:', error);
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again.');
+      } else if (error.response?.status === 403) {
+        toast.error('You do not have permission to access this file.');
+      } else if (error.response?.status === 404) {
+        toast.error('File not found.');
+      } else {
+        toast.error('Failed to download report.');
+      }
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const handleDownloadPDF = () => {
     const printWindow = window.open('', '_blank');
@@ -197,26 +242,79 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
               </Section>
             )}
 
-            {/* Attachments */}
-            {record.attachments.length > 0 && (
-              <Section icon={FiPaperclip} title="Attachments">
+            {/* 📂 Reports Section */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <FiPaperclip className="h-3.5 w-3.5" />
+                Reports
+                {record.attachments.length > 0 && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 normal-case tracking-normal">
+                    {record.attachments.length} {record.attachments.length === 1 ? 'Report' : 'Reports'}
+                  </span>
+                )}
+              </div>
+              {record.attachments.length > 0 ? (
                 <div className="space-y-2">
                   {record.attachments.map((att) => (
-                    <a
+                    <div
                       key={att.id}
-                      href={att.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 p-2 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors text-sm"
+                      className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-blue-50/40 transition-colors"
                     >
-                      <FiPaperclip className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-                      <span className="truncate text-blue-600 hover:underline">{att.file_name}</span>
-                      <span className="text-gray-400 text-xs shrink-0">{att.file_type}</span>
-                    </a>
+                      <div className="h-9 w-9 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0">
+                        <FiFileText className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">
+                          📄 {att.file_name}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {att.uploaded_by_name && (
+                            <span className="mr-2">👨‍⚕️ {att.uploaded_by_name}</span>
+                          )}
+                          📅 {new Date(att.uploaded_at).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownloadReport(att.id, att.file_name, true)}
+                          disabled={downloadingId === att.id}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-blue-600 hover:bg-blue-100 transition-colors h-auto"
+                          title="View"
+                        >
+                          {downloadingId === att.id ? (
+                            <FiRefreshCw className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <>🔍 View</>
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownloadReport(att.id, att.file_name, false)}
+                          disabled={downloadingId === att.id}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors h-auto"
+                          title="Download"
+                        >
+                          {downloadingId === att.id ? (
+                            <FiRefreshCw className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <FiDownload className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </Section>
-            )}
+              ) : (
+                <p className="text-sm text-gray-400 italic py-2">No reports uploaded for this visit</p>
+              )}
+            </div>
           </div>
 
           {/* Footer */}

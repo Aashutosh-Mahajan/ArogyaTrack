@@ -84,7 +84,7 @@ class Profile(models.Model):
     # ─── New Professional Fields ───────────────────────────────────
     date_of_birth = models.DateField(null=True, blank=True, validators=[validate_patient_age])
     phone = models.CharField(max_length=20, blank=True, validators=[validate_phone_number])
-    emergency_contact_number = models.CharField(max_length=20, blank=True, validators=[validate_phone_number])
+
     
     # Geographic Information
     district = models.CharField(max_length=120, blank=True, db_index=True)
@@ -259,20 +259,6 @@ class HealthCard(models.Model):
     def is_active(self) -> bool:
         now = timezone.now()
         return self.revoked_at is None and self.expires_at > now
-
-
-class EmergencyContact(models.Model):
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="emergency_contacts")
-    name = models.CharField(max_length=120)
-    phone = models.CharField(max_length=32)
-    relationship = models.CharField(max_length=32)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["-created_at"]
-
-    def __str__(self) -> str:  # pragma: no cover
-        return f"{self.name} ({self.relationship})"
 
 
 class HealthCardService:

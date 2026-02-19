@@ -7,7 +7,6 @@ from rest_framework.views import APIView
 
 from .models import HealthCard, HealthCardService, Profile, PatientProfile
 from .serializers import (
-    EmergencyContactSerializer,
     HealthCardSerializer,
     PatientProfileSerializer,
     ProfileSerializer,
@@ -111,22 +110,6 @@ class SwitchProfileView(APIView):
         return Response({"active_profile_id": str(profile.id)}, status=status.HTTP_200_OK)
 
 
-class EmergencyContactCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, profile_id):
-        profile = get_object_or_404(Profile, id=profile_id, user=request.user)
-        contacts = profile.emergency_contacts.all()
-        return Response(EmergencyContactSerializer(contacts, many=True).data)
-
-    def post(self, request, profile_id):
-        profile = get_object_or_404(Profile, id=profile_id, user=request.user)
-        serializer = EmergencyContactSerializer(data=request.data, context={"profile": profile})
-        serializer.is_valid(raise_exception=True)
-        contact = serializer.save()
-        return Response(EmergencyContactSerializer(contact).data, status=status.HTTP_201_CREATED)
-
-
 class HealthCardDownloadView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -213,21 +196,45 @@ class MyCardView(APIView):
         if card and card.qr_code_path:
             # Convert absolute file path to relative media URL
             import os
-            media_root = str(settings.MEDIA_ROOT)  # Convert Path object to string
             try:
-                # Try to compute relative path
-                rel_path = os.path.relpath(card.qr_code_path, media_root)
-            except ValueError:
-                # Handle cross-drive paths on Windows (e.g., C: vs D:)
-                # Extract relative path by removing MEDIA_ROOT prefix if present
-                if card.qr_code_path.startswith(media_root):
-                    rel_path = card.qr_code_path[len(media_root):].lstrip(os.sep)
-                else:
-                    # Fallback: use the basename
-                    rel_path = os.path.basename(card.qr_code_path)
-            
-            media_url = settings.MEDIA_URL + rel_path.replace("\\", "/")
-            qr_code_url = request.build_absolute_uri(media_url)
+                # Check if file actually exists at the stored path
+                if not os.path.exists(card.qr_code_path):
+                    print(f"QR code file missing at: {card.qr_code_path}")
+                    raise FileNotFoundError(f"QR code file not found at {card.qr_code_path}")
+                
+                rel_path = os.path.relpath(card.qr_code_path, settings.MEDIA_ROOT)
+                media_url = settings.MEDIA_URL + rel_path.replace("\\", "/")
+                qr_code_url = request.build_absolute_uri(media_url)
+            except (ValueError, FileNotFoundError) as e:
+                # Path is on a different drive or file missing -> regenerate
+                print(f"Regenerating QR code due to error: {e}")
+                try:
+                    # Regenerate new QR code
+                    token = card.token
+                    # Ensure directory exists
+                    qr_dir = os.path.join(settings.MEDIA_ROOT, "qr_codes", "health_cards")
+                    os.makedirs(qr_dir, exist_ok=True)
+                    
+                    file_path = os.path.join(qr_dir, f"{profile.id}.png")
+                    
+                    # Call service to generate (re-using existing logic)
+                    HealthCardService.generate_qr_image(token, file_path)
+                    
+                    # Update card path
+                    card.qr_code_path = file_path
+                    card.save(update_fields=["qr_code_path"])
+                    
+                    # Now try again
+                    rel_path = os.path.relpath(card.qr_code_path, settings.MEDIA_ROOT)
+                    media_url = settings.MEDIA_URL + rel_path.replace("\\", "/")
+                    qr_code_url = request.build_absolute_uri(media_url)
+                    print(f"Regenerated QR code URL: {qr_code_url}")
+                except Exception as ex:
+                    # Failsafe: return proper error or fallback
+                    print(f"Failed to regenerate QR code path: {ex}")
+                    import traceback
+                    traceback.print_exc()
+                    qr_code_url = None
         
         profile_photo_url = None
         if profile.profile_photo:
@@ -490,6 +497,60 @@ class ScanPatientQRView(APIView):
             chronic_conditions_data = ChronicConditionSerializer(chronic_conditions, many=True).data
             prescriptions_data = PrescriptionSerializer(prescriptions, many=True).data
 
+            # Get latest vitals
+            from medical.models import HealthMetric
+            
+            latest_vitals = {
+                "blood_pressure": None,
+                "blood_sugar": None,
+            }
+
+            # Latest BP
+            bp_metric = HealthMetric.objects.filter(
+                patient=profile.user, 
+                metric_type='blood_pressure'
+            ).order_by('-recorded_at').first()
+            
+            if bp_metric:
+                systolic = bp_metric.value
+                diastolic = bp_metric.secondary_value
+                status = "normal"
+                if systolic >= 140 or (diastolic and diastolic >= 90):
+                    status = "high"
+                elif systolic < 90 or (diastolic and diastolic < 60):
+                    status = "low"
+                    
+                latest_vitals["blood_pressure"] = {
+                    "value": f"{int(systolic)}/{int(diastolic) if diastolic else '?'}",
+                    "systolic": systolic,
+                    "diastolic": diastolic,
+                    "unit": bp_metric.unit,
+                    "status": status,
+                    "recorded_at": bp_metric.recorded_at.isoformat(),
+                }
+
+            # Latest Sugar
+            sugar_metric = HealthMetric.objects.filter(
+                patient=profile.user,
+                metric_type='sugar'
+            ).order_by('-recorded_at').first()
+
+            if sugar_metric:
+                val = sugar_metric.value
+                status = "normal"
+                # Simple logic for now (assuming random/post-prandial > 200 is high)
+                if val >= 200: 
+                    status = "high"
+                elif val < 70:
+                    status = "low"
+
+                latest_vitals["blood_sugar"] = {
+                    "value": val,
+                    "unit": sugar_metric.unit,
+                    "status": status,
+                    "recorded_at": sugar_metric.recorded_at.isoformat(),
+                }
+
             return Response({
                 "success": True,
                 "patient": {
@@ -501,7 +562,6 @@ class ScanPatientQRView(APIView):
                     "blood_group": profile.blood_group,
                     "date_of_birth": str(profile.date_of_birth) if profile.date_of_birth else None,
                     "phone": profile.phone or None,
-                    "emergency_contact": profile.emergency_contact_number or None,
                     "address": profile.address or None,
                     "district": profile.district or None,
                     "state": profile.state or None,
@@ -512,6 +572,7 @@ class ScanPatientQRView(APIView):
                     "issued_at": card.created_at.isoformat(),
                     "expires_at": card.expires_at.isoformat(),
                 },
+                "latest_vitals": latest_vitals,
                 "medical_records": medical_records_data,
                 "visit_records": visit_records_data,
                 "allergies": allergies_data,
