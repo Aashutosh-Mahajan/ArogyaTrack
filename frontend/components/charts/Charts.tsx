@@ -25,21 +25,21 @@ interface ChartProps {
   color?: string;
 }
 
-export function LineChartComponent({ data, dataKey, xAxisKey, color = '#0ea5e9' }: ChartProps) {
+export function LineChartComponent({ data, dataKey, xAxisKey, color = '#1FA7A0' }: ChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey={xAxisKey} />
-        <YAxis />
-        <Tooltip />
+        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+        <XAxis dataKey={xAxisKey} tick={{ fontSize: 12 }} />
+        <YAxis tick={{ fontSize: 12 }} />
+        <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
         <Legend />
         <Line 
           type="monotone" 
           dataKey={dataKey} 
           stroke={color} 
-          strokeWidth={2}
-          dot={{ r: 4 }}
+          strokeWidth={2.5}
+          dot={{ r: 4, fill: color }}
           activeDot={{ r: 6 }}
         />
       </LineChart>
@@ -47,37 +47,43 @@ export function LineChartComponent({ data, dataKey, xAxisKey, color = '#0ea5e9' 
   );
 }
 
-export function AreaChartComponent({ data, dataKey, xAxisKey, color = '#0ea5e9' }: ChartProps) {
+export function AreaChartComponent({ data, dataKey, xAxisKey, color = '#1FA7A0' }: ChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <AreaChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey={xAxisKey} />
-        <YAxis />
-        <Tooltip />
+        <defs>
+          <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+            <stop offset="95%" stopColor={color} stopOpacity={0.05} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+        <XAxis dataKey={xAxisKey} tick={{ fontSize: 12 }} />
+        <YAxis tick={{ fontSize: 12 }} />
+        <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
         <Legend />
         <Area 
           type="monotone" 
           dataKey={dataKey} 
           stroke={color}
-          fill={color}
-          fillOpacity={0.6}
+          fill="url(#areaGradient)"
+          strokeWidth={2}
         />
       </AreaChart>
     </ResponsiveContainer>
   );
 }
 
-export function BarChartComponent({ data, dataKey, xAxisKey, color = '#0ea5e9' }: ChartProps) {
+export function BarChartComponent({ data, dataKey, xAxisKey, color = '#1FA7A0' }: ChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey={xAxisKey} />
-        <YAxis />
-        <Tooltip />
+        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+        <XAxis dataKey={xAxisKey} tick={{ fontSize: 12 }} />
+        <YAxis tick={{ fontSize: 12 }} />
+        <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
         <Legend />
-        <Bar dataKey={dataKey} fill={color} />
+        <Bar dataKey={dataKey} fill={color} radius={[8, 8, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -100,8 +106,8 @@ export function ForecastChart({ data }: ForecastChartProps) {
       <ComposedChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
         <defs>
           <linearGradient id="forecastGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#10b981" stopOpacity={0.15} />
-            <stop offset="95%" stopColor="#10b981" stopOpacity={0.02} />
+            <stop offset="5%" stopColor="#1FA7A0" stopOpacity={0.2} />
+            <stop offset="95%" stopColor="#1FA7A0" stopOpacity={0.02} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -115,7 +121,7 @@ export function ForecastChart({ data }: ForecastChartProps) {
         />
         <YAxis tick={{ fontSize: 11 }} />
         <Tooltip
-          contentStyle={{ borderRadius: '8px', fontSize: '12px' }}
+          contentStyle={{ borderRadius: '16px', fontSize: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
           formatter={(value: number, name: string) => [
             typeof value === 'number' ? value.toFixed(1) : value,
             name,
@@ -145,7 +151,7 @@ export function ForecastChart({ data }: ForecastChartProps) {
         <Line
           type="monotone"
           dataKey="lower_bound"
-          stroke="#94a3b8"
+          stroke="#8A9A9A"
           strokeWidth={1}
           strokeDasharray="4 3"
           dot={false}
@@ -156,7 +162,7 @@ export function ForecastChart({ data }: ForecastChartProps) {
         <Line
           type="monotone"
           dataKey="upper_bound"
-          stroke="#94a3b8"
+          stroke="#8A9A9A"
           strokeWidth={1}
           strokeDasharray="4 3"
           dot={false}
@@ -166,9 +172,9 @@ export function ForecastChart({ data }: ForecastChartProps) {
         <Line
           type="monotone"
           dataKey="forecast"
-          stroke="#10b981"
+          stroke="#0F5C5C"
           strokeWidth={2.5}
-          dot={data.length <= 14 ? { r: 3, fill: '#10b981' } : false}
+          dot={data.length <= 14 ? { r: 3, fill: '#0F5C5C' } : false}
           activeDot={{ r: 5 }}
           name="Forecast"
         />

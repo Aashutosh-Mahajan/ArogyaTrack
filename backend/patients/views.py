@@ -213,7 +213,19 @@ class MyCardView(APIView):
         if card and card.qr_code_path:
             # Convert absolute file path to relative media URL
             import os
-            rel_path = os.path.relpath(card.qr_code_path, settings.MEDIA_ROOT)
+            media_root = str(settings.MEDIA_ROOT)  # Convert Path object to string
+            try:
+                # Try to compute relative path
+                rel_path = os.path.relpath(card.qr_code_path, media_root)
+            except ValueError:
+                # Handle cross-drive paths on Windows (e.g., C: vs D:)
+                # Extract relative path by removing MEDIA_ROOT prefix if present
+                if card.qr_code_path.startswith(media_root):
+                    rel_path = card.qr_code_path[len(media_root):].lstrip(os.sep)
+                else:
+                    # Fallback: use the basename
+                    rel_path = os.path.basename(card.qr_code_path)
+            
             media_url = settings.MEDIA_URL + rel_path.replace("\\", "/")
             qr_code_url = request.build_absolute_uri(media_url)
         

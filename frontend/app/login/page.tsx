@@ -71,43 +71,43 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-teal-50 via-white to-section-bg p-4">
       <div className="w-full max-w-md">
-        <Card className="shadow-xl">
-          <CardHeader className="space-y-1 text-center">
-            <div className="w-14 h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+        <Card className="shadow-soft-lg border-0 rounded-3xl overflow-hidden">
+          <CardHeader className="space-y-2 text-center pt-10 pb-6">
+            <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-teal-700 to-teal-500 flex items-center justify-center shadow-soft">
               <span className="text-2xl text-white">🏥</span>
             </div>
-            <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-3xl font-bold text-heading">Welcome Back</CardTitle>
+            <CardDescription className="text-muted-text">
               Sign in to access your dashboard
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-8 pb-10">
             {/* Status messages */}
             {message === 'verified' && (
-              <div className="mb-4 flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 p-3">
-                <FiCheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <p className="text-sm text-green-800">Email verified successfully! You can now sign in.</p>
+              <div className="mb-5 flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-200 p-4">
+                <FiCheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                <p className="text-sm text-emerald-800">Email verified successfully! You can now sign in.</p>
               </div>
             )}
             {message === 'doctor_verified' && (
-              <div className="mb-4 flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 p-3">
+              <div className="mb-5 flex items-center gap-2 rounded-2xl bg-amber-50 border border-amber-200 p-4">
                 <FiClock className="w-5 h-5 text-amber-600 flex-shrink-0" />
                 <p className="text-sm text-amber-800">Email verified! Your doctor profile is under review. You&apos;ll be notified once approved.</p>
               </div>
             )}
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Email */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Email</label>
+                <label className="text-sm font-semibold text-heading">Email</label>
                 <div className="relative">
-                  <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <FiMail className="absolute left-5 top-1/2 -translate-y-1/2 text-teal-600" />
                   <Input
                     {...form.register('email')}
                     type="email"
                     placeholder="your.email@example.com"
-                    className="pl-10"
+                    className="pl-12"
                     autoComplete="email"
                   />
                 </div>
@@ -121,27 +121,27 @@ export default function LoginPage() {
               {/* Password */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Password</label>
+                  <label className="text-sm font-semibold text-heading">Password</label>
                   <Link
                     href="/forgot-password"
-                    className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    className="text-xs text-teal-600 hover:text-teal-700 font-medium transition-colors"
                   >
                     Forgot Password?
                   </Link>
                 </div>
                 <div className="relative">
-                  <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <FiLock className="absolute left-5 top-1/2 -translate-y-1/2 text-teal-600" />
                   <Input
                     {...form.register('password')}
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    className="pl-10 pr-10"
+                    className="pl-12 pr-12"
                     autoComplete="current-password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-text hover:text-teal-600 transition-colors"
                   >
                     {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
                   </button>
@@ -164,8 +164,8 @@ export default function LoginPage() {
 
               {/* Sign up link */}
               <div className="text-center text-sm">
-                <span className="text-gray-600">Don&apos;t have an account? </span>
-                <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+                <span className="text-muted-text">Don&apos;t have an account? </span>
+                <Link href="/signup" className="text-teal-600 hover:text-teal-700 font-semibold transition-colors">
                   Create Account
                 </Link>
               </div>
@@ -173,8 +173,8 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-gray-600 hover:text-gray-900">
+        <div className="mt-8 text-center">
+          <Link href="/" className="text-sm text-muted-text hover:text-teal-600 transition-colors">
             ← Back to Home
           </Link>
         </div>

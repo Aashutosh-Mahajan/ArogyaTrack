@@ -104,35 +104,35 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-full w-64 bg-white shadow-xl transition-transform duration-300 lg:translate-x-0",
+          "fixed left-0 top-0 z-50 h-full w-72 bg-white shadow-soft-lg transition-transform duration-300 ease-out lg:translate-x-0 rounded-r-3xl",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between border-b p-4">
-            <h2 className="text-xl font-bold text-primary-600">Health System</h2>
+          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+            <h2 className="text-xl font-bold bg-gradient-to-r from-teal-700 to-teal-500 bg-clip-text text-transparent">Health System</h2>
             <button
               onClick={onClose}
-              className="lg:hidden text-gray-500 hover:text-gray-700"
+              className="lg:hidden text-teal-600 hover:text-teal-800 p-2 rounded-xl hover:bg-teal-50 transition-all"
             >
-              <FiX className="h-6 w-6" />
+              <FiX className="h-5 w-5" />
             </button>
           </div>
 
           {/* User Info */}
-          <div className="border-b p-4">
-            <div className="flex items-center space-x-3">
-              <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center">
-                <span className="text-lg font-semibold text-primary-600">
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-center space-x-4">
+              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-soft">
+                <span className="text-lg font-bold text-white">
                   {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-semibold text-heading truncate">
                   {user?.first_name} {user?.last_name}
                 </p>
-                <p className="text-xs text-gray-500 capitalize">
+                <p className="text-xs text-teal-600 capitalize font-medium">
                   {user?.role}
                 </p>
               </div>
@@ -140,7 +140,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+          <nav className="flex-1 overflow-y-auto p-4 space-y-1.5">
             {links.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href;
@@ -152,16 +152,19 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   href={link.href}
                   onClick={onClose}
                   className={cn(
-                    "flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    "flex items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
                     isActive
-                      ? "bg-primary-50 text-primary-600"
-                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                      ? "bg-gradient-to-r from-teal-600 to-teal-500 text-white shadow-soft"
+                      : "text-body hover:bg-teal-50 hover:text-teal-700"
                   )}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className={cn("h-5 w-5", isActive ? "text-white" : "text-teal-600")} />
                   <span className="flex-1">{link.label}</span>
                   {badge > 0 && (
-                    <span className="ml-auto inline-flex items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+                    <span className={cn(
+                      "ml-auto inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-bold",
+                      isActive ? "bg-white/20 text-white" : "bg-red-500 text-white"
+                    )}>
                       {badge > 99 ? '99+' : badge}
                     </span>
                   )}
@@ -171,10 +174,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </nav>
 
           {/* Logout */}
-          <div className="border-t p-4">
+          <div className="p-4 border-t border-gray-100">
             <button
               onClick={handleLogout}
-              className="flex w-full items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+              className="flex w-full items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-all duration-200"
             >
               <FiLogOut className="h-5 w-5" />
               <span>Logout</span>

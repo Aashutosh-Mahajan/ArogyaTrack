@@ -12,16 +12,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-section-bg">
       <Sidebar 
         isOpen={isSidebarOpen} 
         onClose={() => setIsSidebarOpen(false)} 
       />
       
-      <div className="lg:pl-64">
+      <div className="lg:pl-72">
         <Header onMenuClick={() => setIsSidebarOpen(true)} />
         
-        <main className="p-4 lg:p-8">
+        <main className="p-6 lg:p-10">
           {children}
         </main>
       </div>

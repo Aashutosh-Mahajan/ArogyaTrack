@@ -105,20 +105,20 @@ export function DashboardHeader() {
 
   return (
     <>
-      <Card className="overflow-hidden border-0 shadow-lg">
-        {/* Top gradient bar */}
-        <div className="h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+      <Card className="overflow-hidden border-0 shadow-soft-lg rounded-3xl">
+        {/* Top gradient bar - Teal themed */}
+        <div className="h-2 bg-gradient-to-r from-teal-700 via-teal-500 to-teal-400" />
 
-        <CardContent className="p-6">
+        <CardContent className="p-8">
           {/* Welcome Row */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              <h1 className="text-2xl sm:text-3xl font-bold text-heading">
                 Welcome back, {summary.patient_name}!
               </h1>
-              <div className="flex items-center gap-3 mt-2 flex-wrap">
-                <span className="text-sm text-gray-500 flex items-center gap-1">
-                  <FiClock className="h-3.5 w-3.5" />
+              <div className="flex items-center gap-3 mt-3 flex-wrap">
+                <span className="text-sm text-muted-text flex items-center gap-1.5">
+                  <FiClock className="h-4 w-4 text-teal-600" />
                   {summary.last_login
                     ? `Last login: ${new Date(summary.last_login).toLocaleString('en-IN', {
                         dateStyle: 'medium',
@@ -129,7 +129,7 @@ export function DashboardHeader() {
 
                 {/* Risk Badge */}
                 <span
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${risk.badge}`}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${risk.badge}`}
                 >
                   <span className={`h-2 w-2 rounded-full ${risk.dot} animate-pulse`} />
                   {summary.calculated_risk_level} Risk
@@ -141,7 +141,7 @@ export function DashboardHeader() {
             <Button
               variant="destructive"
               size="lg"
-              className="gap-2 shadow-md hover:shadow-lg transition-shadow shrink-0"
+              className="gap-2 shadow-button hover:shadow-soft-lg transition-all shrink-0 rounded-pill"
               onClick={() => setEmergencyOpen(true)}
             >
               <FiAlertCircle className="h-5 w-5" />
@@ -151,19 +151,19 @@ export function DashboardHeader() {
           </div>
 
           {/* Health Snapshot Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {snapshots.map((item, i) => (
               <div
                 key={i}
-                className={`${item.bg} rounded-xl p-4 transition-transform hover:scale-[1.02]`}
+                className={`${item.bg} rounded-2xl p-5 transition-all duration-300 hover:scale-[1.02] hover:shadow-soft`}
               >
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-3">
                   <item.icon className={`h-4 w-4 ${item.color}`} />
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  <span className="text-xs font-semibold text-muted-text uppercase tracking-wide">
                     {item.label}
                   </span>
                 </div>
-                <p className={`text-xl sm:text-2xl font-bold ${item.color}`}>
+                <p className={`text-2xl sm:text-3xl font-bold ${item.color}`}>
                   {item.value}
                 </p>
               </div>

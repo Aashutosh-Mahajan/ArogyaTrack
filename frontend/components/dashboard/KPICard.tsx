@@ -55,16 +55,16 @@ export function KPICard({
   }
 
   return (
-    <Card className="group relative overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 hover:border-gray-200">
-      <CardContent className="p-5">
+    <Card className="group relative overflow-hidden border border-gray-100/50 shadow-soft hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1">
+      <CardContent className="p-6">
         {/* Top row: icon + trend */}
-        <div className="flex items-start justify-between mb-3">
-          <div className={`${iconBg} ${iconColor} p-2.5 rounded-xl transition-transform group-hover:scale-110`}>
+        <div className="flex items-start justify-between mb-4">
+          <div className={`${iconBg} ${iconColor} p-3 rounded-2xl transition-transform duration-300 group-hover:scale-110`}>
             <Icon className="h-5 w-5" />
           </div>
 
           {trend && trend.direction !== 'flat' && (
-            <div className={`flex items-center gap-1 text-xs font-medium ${trendColor}`}>
+            <div className={`flex items-center gap-1 text-xs font-semibold ${trendColor} bg-white/80 px-2 py-1 rounded-full`}>
               <TrendIcon className="h-3.5 w-3.5" />
               <span>{Math.abs(trend.change)}</span>
             </div>
@@ -72,23 +72,23 @@ export function KPICard({
         </div>
 
         {/* Main number */}
-        <p className="text-2xl font-bold text-gray-900 tracking-tight">
+        <p className="text-3xl font-bold text-heading tracking-tight">
           {value}
         </p>
 
         {/* Subtitle */}
-        <p className="text-sm text-gray-500 mt-1">{title}</p>
+        <p className="text-sm text-muted-text mt-2">{title}</p>
 
         {/* Trend label */}
         {trend && (
-          <p className={`text-xs mt-2 ${trendColor} font-medium`}>
+          <p className={`text-xs mt-3 ${trendColor} font-medium`}>
             {trendLabel(trend)}
           </p>
         )}
 
         {/* Last updated */}
         {lastUpdated && (
-          <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wider">
+          <p className="text-[10px] text-muted-text mt-3 uppercase tracking-wider">
             Updated{' '}
             {new Date(lastUpdated).toLocaleTimeString('en-IN', {
               hour: '2-digit',
