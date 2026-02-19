@@ -1,138 +1,158 @@
 # Health Surveillance System
-## Comprehensive Disease Surveillance and Health Management Platform
+
+### Comprehensive Disease Surveillance and Healthcare Management Platform
 
 [![Backend](https://img.shields.io/badge/Backend-Django%204.2-green)](https://www.djangoproject.com/)
 [![Frontend](https://img.shields.io/badge/Frontend-Next.js%2014-black)](https://nextjs.org/)
-[![API](https://img.shields.io/badge/API-REST-blue)](https://www.django-rest-framework.org/)
-[![ML](https://img.shields.io/badge/ML-Prophet%20%7C%20XGBoost%20%7C%20DBSCAN-orange)](https://facebook.github.io/prophet/)
-[![Database](https://img.shields.io/badge/Database-PostgreSQL%2014-blue)](https://www.postgresql.org/)
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)]()
+[![API](https://img.shields.io/badge/API-REST%20101%2B%20Endpoints-blue)](https://www.django-rest-framework.org/)
+[![ML](https://img.shields.io/badge/ML-Prophet%20%7C%20XGBoost%20%7C%20DBSCAN%20%7C%20IsoForest-orange)](https://facebook.github.io/prophet/)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL%2014%2B-blue)](https://www.postgresql.org/)
+[![License](https://img.shields.io/badge/License-MIT-brightgreen)]()
+[![Version](https://img.shields.io/badge/Version-1.0.0-informational)]()
 
 ---
 
 ## Table of Contents
 
-- [Executive Summary](#executive-summary)
-- [System Architecture](#system-architecture)
-- [Technology Stack](#technology-stack)
-- [Database Schema](#database-schema)
-- [API Architecture](#api-architecture)
-- [Machine Learning Pipeline](#machine-learning-pipeline)
-- [Frontend Architecture](#frontend-architecture)
-- [Security Architecture](#security-architecture)
-- [Deployment Architecture](#deployment-architecture)
-- [Installation & Configuration](#installation--configuration)
-- [Testing & Quality Assurance](#testing--quality-assurance)
-- [Performance & Scalability](#performance--scalability)
-- [Compliance & Standards](#compliance--standards)
+1. [Project Overview](#1-project-overview)
+2. [System Architecture](#2-system-architecture)
+3. [Technology Stack](#3-technology-stack)
+4. [Project Structure](#4-project-structure)
+5. [Prerequisites](#5-prerequisites)
+6. [Installation & Setup](#6-installation--setup)
+7. [Environment Variables Reference](#7-environment-variables-reference)
+8. [Backend Modules](#8-backend-modules)
+9. [API Reference](#9-api-reference)
+11. [Frontend Architecture](#11-frontend-architecture)
+12. [Machine Learning Pipeline](#12-machine-learning-pipeline)
+13. [Authentication & Security](#13-authentication--security)
+14. [Background Tasks (Celery)](#14-background-tasks-celery)
+15. [Medical Records Module](#15-medical-records-module)
+16. [Running the Application](#16-running-the-application)
+17. [Testing](#17-testing)
+18. [Troubleshooting](#18-troubleshooting)
+19. [API Usage Examples](#19-api-usage-examples)
+20. [Compliance & Standards](#20-compliance--standards)
+21. [Performance & Scalability](#21-performance--scalability)
 
 ---
 
-## Executive Summary
+## 1. Project Overview
 
-### Project Overview
+The **Health Surveillance System** is an enterprise-grade, privacy-preserving disease surveillance and healthcare management platform that combines modern web technologies with artificial intelligence to deliver real-time public health analytics.
 
-The Health Surveillance System is an enterprise-grade, privacy-preserving disease surveillance and healthcare management platform designed to revolutionize public health response through artificial intelligence and real-time data analytics.
+### Core Objectives
 
-### Key Objectives
+|Objective | Implementation |
+|-----------|----------------|
+| Early outbreak detection | Multi-model ML fusion (Prophet + DBSCAN + IsoForest + XGBoost) |
+| Patient privacy | K-anonymity (k ≥ 5) enforcement; separated PII and surveillance tables |
+| Digital clinical workflow | QR-based health cards, e-prescriptions, pharmacy dispensing |
+| Medication adherence | Automated dose tracking, reminders, and refill alerts |
+| Real-time intelligence | Celery-driven aggregation, alerts, and escalation pipelines |
 
-1. **Early Disease Outbreak Detection** - Multi-model ML fusion achieving 95% accuracy in outbreak prediction
-2. **Privacy-Compliant Data Aggregation** - K-anonymity (k≥5) enforcement for patient data protection
-3. **Smart Healthcare Delivery** - QR-based patient identification and digital prescription management
-4. **Real-Time Health Intelligence** - Automated alerting and escalation for health authorities
-5. **Medicine Adherence Optimization** - AI-driven medication tracking and reminder systems
+### Key Highlights
 
-### Innovation Highlights
+- **101+ REST API endpoints** grouped across 7 functional modules
+- **38 database models** with 120+ indexes and full audit trail
+- **4 ML models** with a decision-fusion engine generating Low / Medium / High / Critical alerts
+- **Zero-trust patient privacy**: aggregated surveillance data contains no personally identifiable information
+- **JWT-secured smart health cards**: cryptographically signed QR codes for patient identification
+- **Modular Django architecture**: each domain is an independent Django application
 
-- **Multi-Model Decision Fusion**: Combines Prophet forecasting, DBSCAN spatial clustering, Isolation Forest anomaly detection, and XGBoost risk scoring
-- **Zero-Trust Patient Privacy**: Complete separation of aggregated surveillance data from personally identifiable information
-- **Smart Health Cards**: JWT-secured QR codes with cryptographic verification and time-limited doctor access
-- **Automated Health Intelligence**: Celery-based background processing for continuous surveillance and alerting
+### Target Users
 
-### Target Audience
-
-- **Public Health Authorities** - Disease surveillance and outbreak management
-- **Healthcare Providers** - Patient management and clinical workflows
-- **Patients** - Personal health records and medication management
-- **Researchers** - De-identified epidemiological data access
-- **Pharmacies** - Digital prescription validation and dispensing
+| Role | Primary Use |
+|------|-------------|
+| Patient | Personal health records, health card, medication reminders |
+| Doctor | Patient QR scanning, diagnosis entry, e-prescriptions |
+| Pharmacist | Prescription QR validation and dispensing |
+| Health Authority | Surveillance dashboard, outbreak alerts, heat maps |
+| System Admin | User management, regions, bulk data operations |
 
 ---
 
-## System Architecture
+## 2. System Architecture
 
-### High-Level Architecture
+### High-Level Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          PRESENTATION LAYER                                  │
-├──────────────────────┬──────────────────────┬───────────────────────────────┤
-│   Next.js Frontend   │   Flutter Mobile     │    Admin Dashboard           │
-│   (React 18 + TS)    │   (Android/iOS)      │    (Surveillance)            │
-│   - Patient Portal   │   - Health Cards     │    - Heat Maps               │
-│   - Doctor Portal    │   - QR Scanner       │    - Alerts                  │
-│   - Pharmacy UI      │   - Reminders        │    - Analytics               │
-└──────────┬───────────┴──────────┬───────────┴────────────┬─────────────────┘
-           │                      │                         │
-           │        HTTPS/TLS (JWT Authentication)          │
-           │                      │                         │
-┌──────────▼──────────────────────▼─────────────────────────▼─────────────────┐
-│                          APPLICATION LAYER                                   │
-│   ┌─────────────────────────────────────────────────────────────────┐      │
-│   │              Django REST Framework (DRF)                         │      │
-│   │   ┌───────────┬────────────┬──────────────┬──────────────┐     │      │
-│   │   │ accounts  │  patients  │   medical    │prescriptions │     │      │
-│   │   │   (Auth)  │  (Profile) │  (Records)   │   (E-Rx)     │     │      │
-│   │   ├───────────┼────────────┼──────────────┼──────────────┤     │      │
-│   │   │ pharmacy  │ adherence  │ surveillance │ ML Services  │     │      │
-│   │   │(Dispense) │ (Tracking) │ (Analytics)  │ (Prediction) │     │      │
-│   │   └───────────┴────────────┴──────────────┴──────────────┘     │      │
-│   └─────────────────────────────────────────────────────────────────┘      │
-└────────────────────┬────────────────────────────────────┬───────────────────┘
-                     │                                    │
-┌────────────────────▼──────────┐     ┌─────────────────▼──────────────────┐
-│     DATA LAYER                │     │   ASYNC PROCESSING LAYER           │
-│  ┌──────────────────────────┐ │     │  ┌───────────────────────────────┐│
-│  │  PostgreSQL 14+          │ │     │  │  Celery Workers               ││
-│  │  - Patient Data          │ │     │  │  - Daily Aggregation          ││
-│  │  - Medical Records       │ │     │  │  - ML Predictions             ││
-│  │  - Surveillance Data     │ │     │  │  - Alert Generation           ││
-│  │  - K-Anonymized Data     │ │     │  │  - Adherence Reminders        ││
-│  └──────────────────────────┘ │     │  └───────────────────────────────┘│
-│                                │     │  ┌───────────────────────────────┐│
-│  ┌──────────────────────────┐ │     │  │  Celery Beat                  ││
-│  │  Redis 7+                │ │     │  │  - Scheduled Tasks            ││
-│  │  - Session Cache         │ │     │  │  - Cron Jobs                  ││
-│  │  - Celery Broker         │ │     │  │  - Task Orchestration         ││
-│  │  - ML Results Cache      │ │     │  └───────────────────────────────┘│
-│  └──────────────────────────┘ │     │                                    │
-└───────────────────────────────┘     └────────────────────────────────────┘
-                     │
-┌────────────────────▼──────────────────────────────────────────────────────┐
-│                      MACHINE LEARNING LAYER                                │
-│  ┌──────────────┬──────────────┬──────────────┬──────────────────────┐   │
-│  │   Prophet    │   DBSCAN     │  Isolation   │      XGBoost         │   │
-│  │  Forecasting │  Clustering  │   Forest     │   Risk Scoring       │   │
-│  │              │              │  Anomaly Det │                      │   │
-│  └──────────────┴──────────────┴──────────────┴──────────────────────┘   │
-│                      ▼                                                     │
-│           Decision Fusion Engine → Alert Generation                       │
-└───────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                        PRESENTATION LAYER                        │
+├─────────────────────┬────────────────────┬───────────────────────┤
+│  Next.js Web App    │  Flutter Mobile    │  Django Admin Panel   │
+│  (Patient / Doctor  │  (Health Card /    │  (Surveillance /      │
+│   / Pharmacy / Auth)│   QR Scanner)      │   User Management)    │
+└──────────┬──────────┴─────────┬──────────┴──────────┬────────────┘
+           │                   │                      │
+           └───────────────────┼──────────────────────┘
+                    HTTPS + JWT Bearer Token
+                               │
+┌──────────────────────────────▼───────────────────────────────────┐
+│                      APPLICATION LAYER                           │
+│   Django 4.2 + Django REST Framework                             │
+│  ┌──────────┬───────────┬──────────┬────────────┬─────────────┐ │
+│  │ accounts │ patients  │ medical  │prescriptions│  pharmacy   │ │
+│  ├──────────┼───────────┼──────────┼────────────┼─────────────┤ │
+│  │adherence │surveillance│dashboard│  (config)  │             │ │
+│  └──────────┴───────────┴──────────┴────────────┴─────────────┘ │
+└────────────────┬──────────────────────────────────┬─────────────┘
+                 │                                  │
+┌────────────────▼─────────────┐   ┌───────────────▼──────────────┐
+│         DATA LAYER           │   │    ASYNC PROCESSING LAYER    │
+│  PostgreSQL 14+              │   │  Celery Workers              │
+│  - Patient & clinical data   │   │  - Daily data aggregation    │
+│  - Anonymised surveillance   │   │  - ML inference pipeline     │
+│  Redis 7+                    │   │  - Alert generation          │
+│  - Session / JWT cache       │   │  Celery Beat (scheduler)     │
+│  - Celery message broker     │   │  - Cron jobs (2 AM / hourly) │
+└──────────────────────────────┘   └──────────────────────────────┘
+                 │
+┌────────────────▼─────────────────────────────────────────────────┐
+│                    MACHINE LEARNING LAYER                        │
+│  Prophet (forecasting) │ DBSCAN (clustering) │ IsoForest (anomaly│
+│  XGBoost (risk scoring) │ Decision Fusion Engine                 │
+│  → Alert Generation (Low / Medium / High / Critical)            │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-### Data Flow Architecture
+### Data Flow Pipelines
 
-#### 1. Patient Registration & Health Card Generation
+**1. Patient Registration & Health Card**
 ```
-Patient → OTP Verification → Profile Creation → JWT Token Generation
-   → QR Code Generation → Health Card Storage (Encrypted)
+Patient → OTP Verification → Profile Creation
+→ JWT Health-Card Token → QR Code Generated & Stored
 ```
 
-#### 2. Clinical Workflow (Doctor-Patient Interaction)
+**2. Clinical Workflow**
 ```
-Doctor Scans QR → JWT Validation → 24-Hour Access Grant
-   → Medical Record Creation → ICD-10 Diagnosis Entry
-   → Prescription Generation → Drug Interaction Check
+Doctor Scans QR → JWT Validated → 24-Hour Time-Limited Access Granted
+→ Medical Record + ICD-10 Diagnosis Created
+→ Drug Interaction Check → E-Prescription (QR + HMAC-SHA256 hash)
+```
+
+**3. Surveillance Aggregation Pipeline (K-Anonymity)**
+```
+Diagnosis Created (with patient consent)
+→ Daily 2 AM Celery Task
+→ K-Anonymity Filter (suppress groups where case_count < 5)
+→ Region + Disease aggregation (NO patient IDs)
+→ Stored in surveillance_surveillancedata
+→ ML Pipeline triggered
+```
+
+**4. ML → Alert Pipeline**
+```
+Surveillance Data + Environmental Data
+→ Prophet forecast  (7 / 14 / 30 days)
+→ DBSCAN spatial clustering
+→ Isolation Forest anomaly detection
+→ XGBoost risk scoring
+→ Decision Fusion Engine
+→ Alert created (Low → Critical)
+→ Email / SMS / Dashboard notification
+→ Escalation every 2 h if unacknowledged
+```
    → Digital Prescription (QR + HMAC Hash)
 ```
 
@@ -256,38 +276,6 @@ seaborn==0.13.0                  # Statistical plots
 "qrcode.react": "^3.1.0"         // QR code generation
 "react-hook-form": "^7.49.3"     // Form handling
 "zod": "^3.22.4"                 // Schema validation
-```
-
-### Infrastructure & DevOps
-
-#### Production Environment
-- **Server**: Gunicorn (WSGI) + Nginx (Reverse Proxy)
-- **Database**: PostgreSQL 14+ with connection pooling (PgBouncer)
-- **Cache**: Redis 7+ with persistence
-- **Storage**: AWS S3 / MinIO for media files
-- **CDN**: CloudFlare for static assets
-
-#### Containerization
-```dockerfile
-Docker 24+                       # Containerization
-Docker Compose                   # Multi-container orchestration
-Kubernetes (optional)            # Container orchestration at scale
-```
-
-#### Monitoring & Logging
-- **Application Performance**: Prometheus + Grafana
-- **Log Aggregation**: ELK Stack (Elasticsearch, Logstash, Kibana)
-- **Error Tracking**: Sentry
-- **Uptime Monitoring**: UptimeRobot / Pingdom
-
-#### CI/CD Pipeline
-```yaml
-GitHub Actions                   # Automated testing & deployment
-  - Python unit tests (pytest)
-  - TypeScript type checking
-  - Linting (ruff, ESLint)
-  - Security scanning (Bandit, npm audit)
-  - Automated deployment
 ```
 
 ---
@@ -577,297 +565,7 @@ Generated → Active → Acknowledged → Resolved/False Positive
 
 ---
 
-## Database Schema
-
-### Entity-Relationship Overview
-
-**Total Models: 38**
-
-### Core Tables
-
-#### 1. accounts_user
-```sql
-id: UUID PRIMARY KEY
-email: VARCHAR(255) UNIQUE NOT NULL
-password: VARCHAR(128)  -- PBKDF2 hashed
-role: VARCHAR(20) CHOICES(patient, doctor, pharmacist, authority, admin)
-verification_status: VARCHAR(16) CHOICES(pending, verified)
-active_profile_id: UUID FK(patients_profile)
-is_staff: BOOLEAN DEFAULT FALSE
-is_active: BOOLEAN DEFAULT TRUE
-date_joined: TIMESTAMP
-
-INDEX: email, role, verification_status
-```
-
-#### 2. accounts_otp
-```sql
-id: SERIAL PRIMARY KEY
-user_id: UUID FK(accounts_user)
-code_hash: VARCHAR(128)  -- SHA-256 hashed
-expires_at: TIMESTAMP
-attempts: SMALLINT DEFAULT 0
-is_valid: BOOLEAN DEFAULT TRUE
-created_at: TIMESTAMP
-
-INDEX: (user_id, expires_at, is_valid)
-CONSTRAINT: Max 3 attempts
-```
-
-#### 3. patients_profile
-```sql
-id: UUID PRIMARY KEY
-user_id: UUID FK(accounts_user)
-name: VARCHAR(120)
-age: SMALLINT
-gender: VARCHAR(16) CHOICES(male, female, other)
-blood_group: VARCHAR(3) CHOICES(A+, A-, B+, B-, AB+, AB-, O+, O-)
-relationship: VARCHAR(16) CHOICES(self, spouse, child, parent, other)
-region: VARCHAR(120)
-created_at: TIMESTAMP
-updated_at: TIMESTAMP
-
-UNIQUE: (user_id, name, relationship)
-INDEX: user_id, relationship
-```
-
-#### 4. patients_healthcard
-```sql
-id: SERIAL PRIMARY KEY
-profile_id: UUID UNIQUE FK(patients_profile)
-token: TEXT  -- JWT token
-qr_code_path: VARCHAR(255)
-expires_at: TIMESTAMP
-revoked_at: TIMESTAMP NULL
-created_at: TIMESTAMP
-
-INDEX: profile_id, expires_at
-```
-
-#### 5. medical_medicalrecord
-```sql
-id: SERIAL PRIMARY KEY
-patient_id: UUID FK(patients_profile)
-doctor_id: UUID FK(accounts_user)
-symptoms: TEXT
-notes: TEXT
-created_at: TIMESTAMP
-
-INDEX: (patient_id, created_at), doctor_id
-```
-
-#### 6. medical_diagnosis
-```sql
-id: SERIAL PRIMARY KEY
-record_id: INT FK(medical_medicalrecord)
-icd_10_code: VARCHAR(10)  -- Validated format: [A-TV-Z][0-9][0-9AB](.[0-9A-Z]{1,4})?
-disease_name: VARCHAR(255)
-severity: SMALLINT DEFAULT 1 CHECK(severity BETWEEN 1 AND 5)
-created_at: TIMESTAMP
-
-INDEX: (record_id, icd_10_code), created_at
-```
-
-#### 7. prescriptions_medicine
-```sql
-id: UUID PRIMARY KEY
-name: VARCHAR(255)
-generic_name: VARCHAR(255)
-drug_class: VARCHAR(100)
-therapeutic_category: VARCHAR(100)
-standard_dosages: JSONB  -- {"adult": "500mg", "child": "250mg"}
-allergens: JSONB  -- ["penicillin", "sulfa"]
-is_active: BOOLEAN DEFAULT TRUE
-created_at: TIMESTAMP
-
-INDEX: name, generic_name
-```
-
-#### 8. prescriptions_prescription
-```sql
-id: UUID PRIMARY KEY
-patient_id: UUID FK(patients_profile)
-doctor_id: UUID FK(accounts_user)
-medical_record_id: INT FK(medical_medicalrecord) NULL
-qr_code_path: VARCHAR(255)
-security_hash: VARCHAR(64)  -- HMAC-SHA256
-status: VARCHAR(30) CHOICES(pending, partially_dispensed, fully_dispensed)
-created_at: TIMESTAMP
-updated_at: TIMESTAMP
-
-INDEX: (patient_id, status), doctor_id, created_at
-```
-
-#### 9. prescriptions_prescriptionmedicine
-```sql
-id: UUID PRIMARY KEY
-prescription_id: UUID FK(prescriptions_prescription)
-medicine_id: UUID FK(prescriptions_medicine)
-dosage: VARCHAR(100)
-frequency: VARCHAR(100)
-duration_days: INT
-quantity: INT
-special_instructions: TEXT
-dispense_status: VARCHAR(20) CHOICES(pending, dispensed, unavailable, patient_has)
-dispensed_at: TIMESTAMP NULL
-
-INDEX: prescription_id, medicine_id, dispense_status
-```
-
-#### 10. surveillance_region
-```sql
-id: UUID PRIMARY KEY
-name: VARCHAR(255) UNIQUE
-district: VARCHAR(255)
-state: VARCHAR(255)
-country: VARCHAR(255) DEFAULT 'India'
-latitude: FLOAT
-longitude: FLOAT
-population: INT
-created_at: TIMESTAMP
-
-INDEX: (state, district), (latitude, longitude)
-```
-
-#### 11. surveillance_surveillancedata
-```sql
-id: UUID PRIMARY KEY
-date: DATE
-region_id: UUID FK(surveillance_region)
-disease_code: VARCHAR(10)
-disease_name: VARCHAR(255)
-case_count: INT
-average_severity: FLOAT
-cases_per_100k: FLOAT
-created_at: TIMESTAMP
-
-UNIQUE: (date, region_id, disease_code)
-INDEX: (date, region_id, disease_code), (disease_code, date)
-```
-
-#### 12. surveillance_cluster
-```sql
-id: UUID PRIMARY KEY
-disease_code: VARCHAR(10)
-disease_name: VARCHAR(255)
-detection_date: DATE
-centroid_lat: FLOAT
-centroid_lon: FLOAT
-radius_km: FLOAT
-total_cases: INT
-total_population: INT
-severity: VARCHAR(20) CHOICES(low, medium, high, critical)
-growth_rate: FLOAT NULL
-is_active: BOOLEAN DEFAULT TRUE
-created_at: TIMESTAMP
-
-INDEX: (disease_code, detection_date, is_active), (severity, is_active)
-```
-
-#### 13. surveillance_forecast
-```sql
-id: UUID PRIMARY KEY
-region_id: UUID FK(surveillance_region)
-disease_code: VARCHAR(10)
-disease_name: VARCHAR(255)
-forecast_date: DATE  -- When forecast was made
-prediction_date: DATE  -- Date being predicted
-horizon_days: INT CHOICES(7, 14, 30)
-predicted_cases: FLOAT
-lower_bound: FLOAT  -- 95% CI lower
-upper_bound: FLOAT  -- 95% CI upper
-confidence: FLOAT  -- 0-1
-created_at: TIMESTAMP
-
-INDEX: (region_id, disease_code, forecast_date), prediction_date
-```
-
-#### 14. surveillance_anomaly
-```sql
-id: UUID PRIMARY KEY
-region_id: UUID FK(surveillance_region)
-disease_code: VARCHAR(10)
-disease_name: VARCHAR(255)
-detection_date: DATE
-anomaly_score: FLOAT  -- -1 to 1
-actual_cases: INT
-expected_cases: FLOAT
-deviation_percentage: FLOAT
-description: TEXT
-is_resolved: BOOLEAN DEFAULT FALSE
-created_at: TIMESTAMP
-
-INDEX: (disease_code, detection_date, is_resolved), (region_id, detection_date)
-```
-
-#### 15. surveillance_riskscore
-```sql
-id: UUID PRIMARY KEY
-region_id: UUID FK(surveillance_region)
-disease_code: VARCHAR(10)
-disease_name: VARCHAR(255)
-calculation_date: DATE
-risk_level: INT CHOICES(0=Low, 1=Medium, 2=High, 3=Critical)
-risk_probability: FLOAT  -- 0-1
-contributing_factors: JSONB  -- SHAP values
-created_at: TIMESTAMP
-
-UNIQUE: (region_id, disease_code, calculation_date)
-INDEX: (disease_code, calculation_date), (risk_level, calculation_date)
-```
-
-#### 16. surveillance_alert
-```sql
-id: UUID PRIMARY KEY
-alert_type: VARCHAR(50)  -- outbreak, cluster, forecast, anomaly, environmental
-disease_code: VARCHAR(10)
-disease_name: VARCHAR(255)
-severity: VARCHAR(20) CHOICES(low, medium, high, critical)
-status: VARCHAR(20) CHOICES(active, acknowledged, resolved, false_positive)
-confidence: FLOAT  -- 0-1
-title: VARCHAR(255)
-description: TEXT
-predicted_impact: TEXT
-contributing_factors: JSONB
-recommended_actions: TEXT
-generated_at: TIMESTAMP
-acknowledged_at: TIMESTAMP NULL
-acknowledged_by_id: UUID FK(accounts_user) NULL
-resolved_at: TIMESTAMP NULL
-resolved_by_id: UUID FK(accounts_user) NULL
-escalation_level: INT DEFAULT 1  -- 1=District, 2=State, 3=Central
-escalated_at: TIMESTAMP NULL
-
-INDEX: (status, severity, -generated_at), (disease_code, status), generated_at
-```
-
-#### 17. adherence_adherencetracker
-```sql
-id: UUID PRIMARY KEY
-prescription_id: UUID UNIQUE FK(prescriptions_prescription)
-patient_id: UUID FK(patients_profile)
-start_date: TIMESTAMP
-end_date: TIMESTAMP
-expected_doses: INT DEFAULT 0
-actual_doses: INT DEFAULT 0
-is_active: BOOLEAN DEFAULT TRUE
-created_at: TIMESTAMP
-updated_at: TIMESTAMP
-
-INDEX: (patient_id, is_active), (start_date, end_date)
-```
-
-### Database Statistics
-
-- **Total Tables**: 38
-- **Indexes**: 120+
-- **Foreign Keys**: 85+
-- **Unique Constraints**: 25+
-- **Check Constraints**: 15+
-
----
-
-## API Architecture
+## 9. API Reference
 
 ### API Design Principles
 
@@ -1307,10 +1005,6 @@ class AuditLog:
 
 ---
 
-## Deployment Architecture
-
----
-
 ## 🏗️ System Architecture
 
 ```
@@ -1375,12 +1069,6 @@ Patient → QR Scan → Doctor → Diagnosis → Daily Aggregation
 - **pandas** - Data processing
 - **numpy** - Numerical computing
 
-### Infrastructure (Production)
-- **Containerization:** Docker
-- **Orchestration:** Kubernetes
-- **CI/CD:** GitHub Actions
-- **Monitoring:** Prometheus + Grafana
-
 ---
 
 ## 🚀 Quick Start
@@ -1391,9 +1079,6 @@ Patient → QR Scan → Doctor → Diagnosis → Daily Aggregation
 Python 3.10+
 PostgreSQL 14+
 Redis 7+
-
-# Optional (for production)
-Docker
 ```
 
 ### Installation
@@ -1706,46 +1391,7 @@ python manage.py test medical
 
 ---
 
-## 🚢 Deployment
-
-### Docker Deployment (Recommended)
-```bash
-# Build image
-docker build -t health-surveillance .
-
-# Run with docker-compose
-docker-compose up -d
-```
-
-### Manual Deployment
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Set environment variables
-export DEBUG=False
-export ALLOWED_HOSTS=yourdomain.com
-export DATABASE_URL=<production-db>
-
-# Collect static files
-python manage.py collectstatic
-
-# Run with gunicorn
-gunicorn config.wsgi:application --bind 0.0.0.0:8000
-```
-
-### Celery Workers (Production)
-```bash
-# Worker
-celery -A config worker -l info --concurrency=4
-
-# Beat (scheduler)
-celery -A config beat -l info
-```
-
----
-
-## 📊 Metrics
+##  Metrics
 
 ### Code Statistics
 - **Lines of Code:** ~15,000
@@ -1815,31 +1461,6 @@ AGGREGATION_HOUR=2  # 2 AM daily
 ALERT_ESCALATION_TIMEOUT=120  # minutes
 ALERT_EMAIL_RECIPIENTS=health-authority@example.com
 ```
-
-### Database Schema Overview
-
-**Core Models (38 total):**
-
-1. **accounts.CustomUser** - Base user model (Patient/Doctor/Admin)
-2. **patients.Patient** - Patient profiles with demographics
-3. **patients.EmergencyContact** - Emergency contacts
-4. **patients.HealthCard** - JWT-based smart health cards
-5. **patients.PatientConsent** - Privacy consent management
-6. **medical.MedicalRecord** - Diagnoses with ICD-10 codes
-7. **medical.ChronicCondition** - Ongoing health conditions
-8. **medical.Allergy** - Patient allergies
-9. **medical.VitalSign** - Blood pressure, temperature, etc.
-10. **prescriptions.Medicine** - Drug database
-11. **prescriptions.Prescription** - E-prescriptions
-12. **prescriptions.PrescriptionItem** - Individual medicines
-13. **pharmacy.DispensedPrescription** - Dispensing records
-14. **adherence.MedicineAdherence** - Adherence tracking
-15. **adherence.AdherenceReminder** - Scheduled reminders
-16. **surveillance.Region** - Geographic regions
-17. **surveillance.DiseaseSurveillanceData** - Aggregated data
-18. **surveillance.EnvironmentalData** - Weather/AQI data
-19. **surveillance.Alert** - ML-generated alerts
-20. **surveillance.MLPrediction** - Prediction history
 
 ### Celery Tasks
 
