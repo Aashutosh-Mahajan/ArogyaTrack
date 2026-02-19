@@ -720,6 +720,27 @@ export interface DoctorRegistrationData {
   terms_accepted: boolean;
 }
 
+export interface PharmacistRegistrationData {
+  // Account credentials
+  email: string;
+  password: string;
+
+  // Personal information
+  first_name: string;
+  last_name: string;
+
+  // Professional information
+  license_number: string;
+  degree: string;
+  pharmacy_name?: string;
+
+  // Document uploads
+  license_certificate: File;
+
+  // Terms acceptance
+  terms_accepted: boolean;
+}
+
 export interface RegistrationResponse {
   detail: string;
   user_id?: number;

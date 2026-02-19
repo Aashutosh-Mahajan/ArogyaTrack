@@ -8,28 +8,42 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import type { PaginatedResponse, MedicalRecord, Allergy, ChronicCondition } from '@/types';
-import { FiActivity, FiCalendar, FiChevronDown, FiChevronUp, FiDownload, FiFileText, FiRefreshCw } from 'react-icons/fi';
+import {
+  FiActivity,
+  FiCalendar,
+  FiChevronDown,
+  FiChevronUp,
+  FiDownload,
+  FiFileText,
+  FiRefreshCw,
+  FiAlertCircle,
+  FiClock
+} from 'react-icons/fi';
 import { formatDate } from '@/lib/utils';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 function MedicalRecordsPage(): React.JSX.Element {
+  const { t } = useLanguage();
   const [expandedRecords, setExpandedRecords] = useState<Set<number>>(new Set());
 
-  const { data: records, isLoading, refetch, isFetching } = useQuery<PaginatedResponse<MedicalRecord>>({
+  const { data: records, isLoading: isLoadingRecords, refetch, isFetching } = useQuery<PaginatedResponse<MedicalRecord>>({
     queryKey: ['medical-records-all'],
     queryFn: () => api.medical.getRecords(),
-    refetchInterval: 30000, // Refetch every 30 seconds to catch new records
-    staleTime: 10000, // Consider data stale after 10 seconds
+    refetchInterval: 30000,
+    staleTime: 10000,
   });
 
-  const { data: allergies } = useQuery<Allergy[]>({
+  const { data: allergies, isLoading: isLoadingAllergies } = useQuery<Allergy[]>({
     queryKey: ['allergies'],
     queryFn: () => api.medical.getAllergies(),
   });
 
-  const { data: chronicConditions } = useQuery<ChronicCondition[]>({
+  const { data: chronicConditions, isLoading: isLoadingConditions } = useQuery<ChronicCondition[]>({
     queryKey: ['chronic-conditions'],
     queryFn: () => api.medical.getChronicConditions(),
   });
+
+  const isLoading = isLoadingRecords || isLoadingAllergies || isLoadingConditions;
 
   const toggleRecord = (recordId: number) => {
     setExpandedRecords((prev) => {
@@ -43,239 +57,279 @@ function MedicalRecordsPage(): React.JSX.Element {
     });
   };
 
-  // Fix doctor name display (remove duplicate "Dr.")
   const formatDoctorName = (name: string) => {
     if (!name) return '';
-    // Remove duplicate "Dr." if it exists
     return name.replace(/^Dr\.\s*Dr\.\s*/i, 'Dr. ').trim();
   };
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="loading-dots">
-          <span></span>
-          <span></span>
-          <span></span>
+      <div className="space-y-6 animate-pulse">
+        <div className="flex justify-between items-center">
+          <div className="h-8 w-48 bg-slate-200 rounded"></div>
+          <div className="h-10 w-24 bg-slate-200 rounded"></div>
         </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="h-48 bg-slate-100 rounded-xl"></div>
+          <div className="h-48 bg-slate-100 rounded-xl"></div>
+        </div>
+        <div className="h-96 bg-slate-100 rounded-xl"></div>
       </div>
-
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 pb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Medical Records</h1>
-          <p className="text-gray-600 mt-1">
-            Complete history of your medical consultations
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+            {t('medical_records_page_title')}
+          </h1>
+          <p className="text-slate-500 mt-1">
+            {t('medical_records_page_subtitle')}
           </p>
         </div>
         <Button
           variant="outline"
           onClick={() => refetch()}
           disabled={isFetching}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-white/50 border-slate-200 hover:bg-slate-100 transition-colors"
         >
           <FiRefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-          {isFetching ? 'Refreshing...' : 'Refresh'}
+          {t('refresh')}
         </Button>
       </div>
 
-      {/* Allergies & Chronic Conditions */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Allergies</CardTitle>
+      {/* Top Cards: Allergies & Chronic Conditions */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Allergies Card */}
+        <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
+          <div className="h-1 bg-gradient-to-r from-rose-400 to-orange-400"></div>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-rose-50 rounded-lg">
+                <FiAlertCircle className="w-5 h-5 text-rose-600" />
+              </div>
+              <CardTitle className="text-lg">{t('allergies_title')}</CardTitle>
+            </div>
           </CardHeader>
           <CardContent>
             {allergies && allergies.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {allergies.map((allergy) => (
                   <div
                     key={allergy.id}
-                    className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-rose-50/50 border border-rose-100 rounded-xl hover:shadow-sm transition-all"
                   >
                     <div>
-                      <p className="font-medium text-gray-900">{allergy.allergen}</p>
-                      <p className="text-sm text-gray-600">{allergy.reaction_type}</p>
+                      <p className="font-semibold text-slate-800">{allergy.allergen}</p>
+                      <p className="text-xs text-rose-600 font-medium mt-0.5">{allergy.reaction_type}</p>
                     </div>
-                    <Badge variant={
-                      String(allergy.severity).toLowerCase() === 'severe' || allergy.severity === 3 ? 'destructive' :
-                        String(allergy.severity).toLowerCase() === 'moderate' || allergy.severity === 2 ? 'warning' : 'secondary'
-                    }>
+                    <Badge className={`
+                                            ${String(allergy.severity).toLowerCase() === 'severe' || allergy.severity === 3
+                        ? 'bg-rose-100 text-rose-700 hover:bg-rose-200'
+                        : String(allergy.severity).toLowerCase() === 'moderate' || allergy.severity === 2
+                          ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}
+                                            border-0 uppercase text-[10px] tracking-wider font-bold
+                                        `}>
                       {typeof allergy.severity === 'number'
-                        ? (allergy.severity === 3 ? 'High' : allergy.severity === 2 ? 'Moderate' : 'Low')
+                        ? (allergy.severity === 3 ? t('high') : allergy.severity === 2 ? t('medium') : t('low'))
                         : allergy.severity}
                     </Badge>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">No allergies recorded</p>
+              <div className="text-center py-8 text-slate-400">
+                <p>{t('no_allergies')}</p>
+              </div>
             )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Chronic Conditions</CardTitle>
+        {/* Chronic Conditions Card */}
+        <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
+          <div className="h-1 bg-gradient-to-r from-teal-400 to-blue-400"></div>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-teal-50 rounded-lg">
+                <FiClock className="w-5 h-5 text-teal-600" />
+              </div>
+              <CardTitle className="text-lg">{t('chronic_conditions')}</CardTitle>
+            </div>
           </CardHeader>
           <CardContent>
             {chronicConditions && chronicConditions.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {chronicConditions.map((condition) => (
                   <div
                     key={condition.id}
-                    className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-teal-50/50 border border-teal-100 rounded-xl hover:shadow-sm transition-all"
                   >
                     <div>
-                      <p className="font-medium text-gray-900">{condition.disease_name}</p>
-                      <p className="text-xs text-gray-500">
-                        Since {formatDate(condition.created_at)}
+                      <p className="font-semibold text-slate-800">{condition.disease_name}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {t('last_recorded')}: {formatDate(condition.created_at)}
                       </p>
                     </div>
-                    <Badge variant={
-                      condition.is_active ? 'destructive' : 'success'
-                    }>
+                    <Badge className={`
+                                            ${condition.is_active
+                        ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}
+                                            border-0 uppercase text-[10px] tracking-wider font-bold
+                                        `}>
                       {condition.is_active ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">No chronic conditions recorded</p>
+              <div className="text-center py-8 text-slate-400">
+                <p>{t('no_active_conditions')}</p>
+              </div>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Medical Records List */}
-      <Card>
+      {/* Consultation History */}
+      <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
+        <div className="h-1 bg-gradient-to-r from-indigo-400 to-cyan-400"></div>
         <CardHeader>
-          <CardTitle>Consultation History</CardTitle>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-50 rounded-lg">
+              <FiActivity className="w-5 h-5 text-indigo-600" />
+            </div>
+            <CardTitle className="text-lg">{t('consultation_history')}</CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
           {records?.results && records.results.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {records.results.map((record) => {
                 const isExpanded = expandedRecords.has(record.id);
                 return (
                   <div
                     key={record.id}
-                    className="border rounded-lg overflow-hidden hover:shadow-md transition"
+                    className="group border border-slate-100 rounded-xl overflow-hidden hover:shadow-md transition-all duration-200 bg-white"
                   >
                     {/* Collapsed Header View */}
                     <div
-                      className="p-4 cursor-pointer hover:bg-gray-50 transition"
+                      className="p-5 cursor-pointer hover:bg-slate-50/50 transition-colors"
                       onClick={() => toggleRecord(record.id)}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3 flex-1">
-                          <div className="bg-blue-100 p-2 rounded-lg">
-                            <FiActivity className="h-5 w-5 text-blue-600" />
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-4 flex-1">
+                          <div className="hidden sm:flex flex-col items-center justify-center h-12 w-12 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-xs shrink-0 border border-indigo-100">
+                            <span className="text-lg">{new Date(record.visit_date).getDate()}</span>
+                            <span className="uppercase">{new Date(record.visit_date).toLocaleDateString('en-US', { month: 'short' })}</span>
                           </div>
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <p className="font-semibold text-gray-900">
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                              <h3 className="font-bold text-slate-800 text-lg">
                                 {formatDoctorName(record.doctor_name)}
-                              </p>
-                              <Badge variant="outline">{record.department}</Badge>
+                              </h3>
+                              <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 pointer-events-none">
+                                {record.department}
+                              </Badge>
                             </div>
-                            <p className="text-sm text-gray-600 line-clamp-1">
+                            <p className="text-sm text-slate-600 font-medium line-clamp-1">
                               {record.diagnosis}
                             </p>
+                            <div className="flex sm:hidden items-center gap-2 mt-2 text-xs text-slate-400">
+                              <FiCalendar className="w-3 h-3" />
+                              {formatDate(record.visit_date)}
+                            </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-3 ml-4">
-                          <div className="flex items-center space-x-2 text-sm text-gray-500">
-                            <FiCalendar className="h-4 w-4" />
-                            <span>{formatDate(record.visit_date)}</span>
+
+                        <div className="flex items-center gap-3">
+                          <div className={`
+                                                        p-2 rounded-full transition-transform duration-300
+                                                        ${isExpanded ? 'bg-indigo-50 text-indigo-600 rotate-180' : 'text-slate-400 group-hover:bg-slate-100'}
+                                                    `}>
+                            <FiChevronDown className="h-5 w-5" />
                           </div>
-                          {isExpanded ? (
-                            <FiChevronUp className="h-5 w-5 text-gray-400" />
-                          ) : (
-                            <FiChevronDown className="h-5 w-5 text-gray-400" />
-                          )}
                         </div>
                       </div>
                     </div>
 
                     {/* Expanded Detail View */}
                     {isExpanded && (
-                      <div className="border-t bg-gray-50 p-4 space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-sm font-medium text-gray-700 mb-1">Department:</p>
-                            <p className="text-sm text-gray-900">{record.department}</p>
+                      <div className="border-t border-slate-100 bg-slate-50/50 p-5 space-y-6 animate-in slide-in-from-top-2 duration-200">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('diagnosis')}</p>
+                            <p className="text-slate-800 font-medium">{record.diagnosis}</p>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-700 mb-1">Diagnosis:</p>
-                            <p className="text-sm text-gray-900">{record.diagnosis}</p>
-                          </div>
+
+                          {record.tests_performed && (
+                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('tests_performed')}</p>
+                              <p className="text-slate-800 whitespace-pre-line leading-relaxed">
+                                {record.tests_performed}
+                              </p>
+                            </div>
+                          )}
                         </div>
 
-                        {record.tests_performed && (
-                          <div>
-                            <p className="text-sm font-medium text-gray-700 mb-1">Tests Performed:</p>
-                            <p className="text-sm text-gray-900 whitespace-pre-line bg-white p-3 rounded border">
-                              {record.tests_performed}
-                            </p>
-                          </div>
-                        )}
-
                         {record.prescription && (
-                          <div>
-                            <p className="text-sm font-medium text-gray-700 mb-1">Prescription:</p>
-                            <p className="text-sm text-gray-900 whitespace-pre-line bg-white p-3 rounded border">
+                          <div className="bg-emerald-50/30 p-4 rounded-xl border border-emerald-100">
+                            <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-2">
+                              <FiFileText className="w-3 h-3" />
+                              {t('prescription')}
+                            </p>
+                            <p className="text-slate-800 whitespace-pre-line leading-relaxed font-medium">
                               {record.prescription}
                             </p>
                           </div>
                         )}
 
                         {record.doctor_notes && (
-                          <div>
-                            <p className="text-sm font-medium text-gray-700 mb-1 flex items-center space-x-2">
-                              <FiFileText className="h-4 w-4" />
-                              <span>Doctor&apos;s Notes:</span>
+                          <div className="bg-amber-50/30 p-4 rounded-xl border border-amber-100">
+                            <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-2 flex items-center gap-2">
+                              <FiFileText className="w-3 h-3" />
+                              {t('doctor_notes')}
                             </p>
-                            <div className="bg-yellow-50 border border-yellow-200 p-3 rounded">
-                              <p className="text-sm text-gray-900 whitespace-pre-line">
-                                {record.doctor_notes}
-                              </p>
-                            </div>
+                            <p className="text-slate-700 whitespace-pre-line leading-relaxed italic">
+                              &ldquo;{record.doctor_notes}&rdquo;
+                            </p>
                           </div>
                         )}
 
                         {record.report_attachments && record.report_attachments.length > 0 && (
                           <div>
-                            <p className="text-sm font-medium text-gray-700 mb-2">
-                              Attached Reports ({record.report_attachments.length})
+                            <p className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                              {t('attached_reports')}
+                              <Badge variant="secondary" className="bg-slate-100 text-slate-600 px-1.5 h-5 min-w-[1.25rem]">
+                                {record.report_attachments.length}
+                              </Badge>
                             </p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                               {record.report_attachments.map((attachment) => (
                                 <a
                                   key={attachment.id}
                                   href={attachment.file_url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow transition group"
+                                  className="group/file flex items-center justify-between p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-400 hover:shadow-md transition-all"
                                 >
-                                  <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                    <div className="bg-blue-100 p-2 rounded group-hover:bg-blue-200 transition">
-                                      <FiFileText className="h-4 w-4 text-blue-600" />
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="p-2 bg-indigo-50 rounded-lg group-hover/file:bg-indigo-100 transition-colors">
+                                      <FiFileText className="h-4 w-4 text-indigo-600" />
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-medium text-gray-900 truncate">
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-semibold text-slate-700 truncate group-hover/file:text-indigo-700 transition-colors">
                                         {attachment.file_name}
                                       </p>
-                                      {attachment.file_type && (
-                                        <p className="text-xs text-gray-500">{attachment.file_type}</p>
-                                      )}
+                                      <p className="text-[10px] text-slate-400 uppercase font-medium mt-0.5">
+                                        {attachment.file_type || 'PDF'}
+                                      </p>
                                     </div>
                                   </div>
-                                  <FiDownload className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition flex-shrink-0 ml-2" />
+                                  <FiDownload className="h-4 w-4 text-slate-300 group-hover/file:text-indigo-600 transition-colors" />
                                 </a>
                               ))}
                             </div>
@@ -288,15 +342,17 @@ function MedicalRecordsPage(): React.JSX.Element {
               })}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              <FiActivity className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-              <p>No medical records found</p>
+            <div className="text-center py-16 text-slate-500 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+              <div className="bg-white p-4 rounded-full shadow-sm inline-block mb-4">
+                <FiActivity className="h-8 w-8 text-slate-300" />
+              </div>
+              <h3 className="font-semibold text-slate-900 text-lg mb-1">{t('empty_records')}</h3>
+              <p className="text-slate-400">{t('empty_records_desc')}</p>
             </div>
           )}
         </CardContent>
       </Card>
     </div>
-
   );
 }
 

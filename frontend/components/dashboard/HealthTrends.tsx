@@ -12,11 +12,15 @@ import {
   ResponsiveContainer,
   Legend,
   TooltipProps,
+  Area,
+  AreaChart,
 } from 'recharts';
 import { api } from '@/lib/api';
 import type { HealthTrendsResponse, HealthTrendSeries } from '@/types';
-import { FiTrendingUp } from 'react-icons/fi';
+import { FiTrendingUp, FiActivity, FiBarChart2 } from 'react-icons/fi';
 import { useLanguage } from '@/components/providers/LanguageProvider';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 /* ── Period toggle ─────────────────────────────────────────────── */
 
@@ -32,24 +36,28 @@ const PERIOD_OPTIONS: { label: string; value: Period }[] = [
 
 const CHART_CONFIG: Record<
   string,
-  { color: string; secondaryColor?: string; gradient: string }
+  { color: string; secondaryColor?: string; gradientFrom: string; gradientTo: string }
 > = {
   blood_pressure: {
     color: '#ef4444',      // red-500
     secondaryColor: '#f97316', // orange-500  (diastolic)
-    gradient: 'from-red-50 to-red-100/50',
+    gradientFrom: '#fee2e2',
+    gradientTo: '#fff',
   },
   sugar: {
     color: '#8b5cf6',      // violet-500
-    gradient: 'from-violet-50 to-violet-100/50',
+    gradientFrom: '#ede9fe',
+    gradientTo: '#fff',
   },
   weight: {
     color: '#0ea5e9',      // sky-500
-    gradient: 'from-sky-50 to-sky-100/50',
+    gradientFrom: '#e0f2fe',
+    gradientTo: '#fff',
   },
   bmi: {
     color: '#10b981',      // emerald-500
-    gradient: 'from-emerald-50 to-emerald-100/50',
+    gradientFrom: '#d1fae5',
+    gradientTo: '#fff',
   },
 };
 
@@ -71,8 +79,8 @@ function CustomTooltip({
   const locale = language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-IN';
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl shadow-lg px-4 py-3 text-sm">
-      <p className="text-gray-500 font-medium mb-1">
+    <div className="bg-white/95 backdrop-blur-sm border border-slate-200 rounded-xl shadow-xl px-4 py-3 text-xs">
+      <p className="text-slate-400 font-bold uppercase tracking-wider mb-1.5">
         {new Date(label as string).toLocaleDateString(locale, {
           day: 'numeric',
           month: 'short',
@@ -80,19 +88,22 @@ function CustomTooltip({
         })}
       </p>
       {metric === 'blood_pressure' ? (
-        <>
-          <p className="text-red-600 font-semibold">
-            {t('systolic')}: {primary?.value} {unit}
+        <div className="space-y-1">
+          <p className="text-rose-600 font-bold flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+            {t('systolic')}: {primary?.value} <span className="text-slate-400 font-normal">{unit}</span>
           </p>
           {secondary?.value != null && (
-            <p className="text-orange-500 font-semibold">
-              {t('diastolic')}: {secondary.value} {unit}
+            <p className="text-orange-500 font-bold flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+              {t('diastolic')}: {secondary.value} <span className="text-slate-400 font-normal">{unit}</span>
             </p>
           )}
-        </>
+        </div>
       ) : (
-        <p className="font-semibold" style={{ color: primary?.color }}>
-          {primary?.value} {unit}
+        <p className="font-bold flex items-center gap-2" style={{ color: primary?.color }}>
+          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: primary?.color }}></span>
+          {primary?.value} <span className="text-slate-400 font-normal">{unit}</span>
         </p>
       )}
     </div>
@@ -106,7 +117,8 @@ function MetricChart({ series }: { series: HealthTrendSeries }) {
 
   const cfg = CHART_CONFIG[series.metric] ?? {
     color: '#6b7280',
-    gradient: 'from-gray-50 to-gray-100/50',
+    gradientFrom: '#f3f4f6',
+    gradientTo: '#fff',
   };
 
   const hasData = series.data.length > 0;
@@ -120,86 +132,149 @@ function MetricChart({ series }: { series: HealthTrendSeries }) {
 
   return (
     <div
-      className={`rounded-2xl border border-gray-100 bg-gradient-to-br ${cfg.gradient} p-5 transition hover:shadow-sm`}
+      className="group relative rounded-2xl border border-slate-100 bg-white p-5 transition-all hover:shadow-md hover:border-slate-200 overflow-hidden"
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="absolute top-0 right-0 p-5 opacity-5 group-hover:opacity-10 transition-opacity">
+        <FiActivity className="w-24 h-24 text-current" style={{ color: cfg.color }} />
+      </div>
+
+      <div className="relative z-10 flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">
+          <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+            <span className="w-1 h-4 rounded-full" style={{ backgroundColor: cfg.color }}></span>
             {series.label}
           </h3>
-          <p className="text-xs text-gray-500">{series.unit}</p>
+          <p className="text-xs text-slate-500 font-medium ml-3">{series.unit}</p>
         </div>
         {hasData && (
-          <span className="text-xs text-gray-400">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">
             {series.data.length} {t('reading_s')}
           </span>
         )}
       </div>
 
       {hasData ? (
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart
-            data={series.data}
-            margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="#e5e7eb"
-              vertical={false}
-            />
-            <XAxis
-              dataKey="date"
-              tickFormatter={formatDate}
-              tick={{ fontSize: 11, fill: '#9ca3af' }}
-              axisLine={false}
-              tickLine={false}
-              minTickGap={30}
-            />
-            <YAxis
-              tick={{ fontSize: 11, fill: '#9ca3af' }}
-              axisLine={false}
-              tickLine={false}
-              width={40}
-            />
-            <Tooltip
-              content={
-                <CustomTooltip unit={series.unit} metric={series.metric} />
-              }
-            />
-            {series.metric === 'blood_pressure' && (
-              <Legend
-                wrapperStyle={{ fontSize: 12 }}
-                formatter={(value: string) =>
-                  value === 'value' ? t('systolic') : t('diastolic')
-                }
-              />
+        <div className="h-[200px] w-full relative z-10">
+          <ResponsiveContainer width="100%" height="100%">
+            {series.metric === 'blood_pressure' ? (
+              <LineChart
+                data={series.data}
+                margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#f1f5f9"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={formatDate}
+                  tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 500 }}
+                  axisLine={false}
+                  tickLine={false}
+                  minTickGap={30}
+                  dy={10}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 500 }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={30}
+                />
+                <Tooltip
+                  content={
+                    <CustomTooltip unit={series.unit} metric={series.metric} />
+                  }
+                  cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                />
+                <Legend
+                  verticalAlign="top"
+                  height={36}
+                  iconType="circle"
+                  iconSize={8}
+                  wrapperStyle={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}
+                  formatter={(value: string) =>
+                    value === 'value' ? t('systolic') : t('diastolic')
+                  }
+                />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke={cfg.color}
+                  strokeWidth={3}
+                  dot={{ r: 0, strokeWidth: 0 }}
+                  activeDot={{ r: 6, strokeWidth: 0, fill: cfg.color }}
+                  name="value"
+                  animationDuration={1500}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="secondary_value"
+                  stroke={cfg.secondaryColor}
+                  strokeWidth={3}
+                  strokeDasharray="0"
+                  dot={{ r: 0, strokeWidth: 0 }}
+                  activeDot={{ r: 6, strokeWidth: 0, fill: cfg.secondaryColor }}
+                  name="secondary_value"
+                  animationDuration={1500}
+                />
+              </LineChart>
+            ) : (
+              <AreaChart
+                data={series.data}
+                margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id={`color-${series.metric}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={cfg.color} stopOpacity={0.2} />
+                    <stop offset="95%" stopColor={cfg.color} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#f1f5f9"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={formatDate}
+                  tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 500 }}
+                  axisLine={false}
+                  tickLine={false}
+                  minTickGap={30}
+                  dy={10}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 500 }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={30}
+                  domain={['auto', 'auto']}
+                />
+                <Tooltip
+                  content={
+                    <CustomTooltip unit={series.unit} metric={series.metric} />
+                  }
+                  cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke={cfg.color}
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill={`url(#color-${series.metric})`}
+                  activeDot={{ r: 6, strokeWidth: 0, fill: cfg.color }}
+                  animationDuration={1500}
+                />
+              </AreaChart>
             )}
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke={cfg.color}
-              strokeWidth={2.5}
-              dot={{ r: 3, strokeWidth: 2, fill: '#fff' }}
-              activeDot={{ r: 5, strokeWidth: 2 }}
-              name="value"
-            />
-            {series.metric === 'blood_pressure' && (
-              <Line
-                type="monotone"
-                dataKey="secondary_value"
-                stroke={cfg.secondaryColor}
-                strokeWidth={2}
-                strokeDasharray="5 3"
-                dot={{ r: 3, strokeWidth: 2, fill: '#fff' }}
-                activeDot={{ r: 5, strokeWidth: 2 }}
-                name="secondary_value"
-              />
-            )}
-          </LineChart>
-        </ResponsiveContainer>
+          </ResponsiveContainer>
+        </div>
       ) : (
-        <div className="flex items-center justify-center h-[200px] text-gray-400 text-sm">
-          {t('no_data_period')}
+        <div className="flex flex-col items-center justify-center h-[200px] text-slate-400 text-sm bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+          <FiBarChart2 className="w-8 h-8 text-slate-300 mb-2" />
+          <p className="font-medium">{t('no_data_period')}</p>
         </div>
       )}
     </div>
@@ -214,11 +289,11 @@ function TrendsSkeleton() {
       {[...Array(4)].map((_, i) => (
         <div
           key={i}
-          className="animate-pulse rounded-2xl border border-gray-100 bg-gray-50 p-5"
+          className="animate-pulse rounded-2xl border border-slate-100 bg-white p-5"
         >
-          <div className="h-4 w-28 bg-gray-200 rounded mb-1" />
-          <div className="h-3 w-16 bg-gray-100 rounded mb-4" />
-          <div className="h-[200px] bg-gray-100 rounded-xl" />
+          <div className="h-5 w-32 bg-slate-200 rounded mb-2" />
+          <div className="h-3 w-16 bg-slate-100 rounded mb-6" />
+          <div className="h-[200px] bg-slate-100 rounded-xl" />
         </div>
       ))}
     </div>
@@ -252,66 +327,63 @@ export function HealthTrends() {
   }, [response]);
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-6 py-5 border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-teal-50">
-            <FiTrendingUp className="h-5 w-5 text-teal-600" />
+    <Card className="border-0 shadow-lg overflow-hidden">
+      <div className="h-1 bg-gradient-to-r from-teal-400 to-cyan-400"></div>
+      <CardHeader className="pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-teal-50 rounded-lg">
+              <FiTrendingUp className="w-5 h-5 text-teal-600" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">{t('trends_title')}</CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">{t('trends_subtitle')}</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              {t('trends_title')}
-            </h2>
-            <p className="text-sm text-gray-500">
-              {t('trends_subtitle')}
-            </p>
+
+          {/* Period toggle */}
+          <div className="flex items-center p-1 bg-slate-100 rounded-lg">
+            {PERIOD_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setPeriod(opt.value)}
+                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${period === opt.value
+                    ? 'bg-white text-teal-700 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                  }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
         </div>
+      </CardHeader>
 
-        {/* Period toggle */}
-        <div className="flex items-center rounded-lg border border-gray-200 bg-gray-50 p-0.5">
-          {PERIOD_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setPeriod(opt.value)}
-              className={`px-3.5 py-1.5 rounded-md text-sm font-medium transition-all ${period === opt.value
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-                }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Chart grid */}
-      <div className="p-4 sm:p-6">
+      <CardContent className="space-y-6">
         {isLoading ? (
           <TrendsSkeleton />
         ) : isError ? (
-          <div className="text-center py-10 text-gray-500">
-            <FiTrendingUp className="h-10 w-10 mx-auto mb-3 text-gray-300" />
-            <p className="font-medium">{t('failed_load')}</p>
-            <p className="text-sm mt-1">{t('try_again')}</p>
+          <div className="text-center py-12 text-slate-500 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+            <FiTrendingUp className="h-10 w-10 mx-auto mb-3 text-slate-300" />
+            <p className="font-semibold text-slate-700">{t('failed_load')}</p>
+            <p className="text-sm mt-1 text-slate-400">{t('try_again')}</p>
           </div>
         ) : orderedTrends.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {orderedTrends.map((series) => (
               <MetricChart key={series.metric} series={series} />
             ))}
           </div>
         ) : (
-          <div className="text-center py-10 text-gray-500">
-            <FiTrendingUp className="h-10 w-10 mx-auto mb-3 text-gray-300" />
-            <p className="font-medium">{t('empty_trends')}</p>
-            <p className="text-sm mt-1">
+          <div className="text-center py-12 text-slate-500 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+            <FiBarChart2 className="h-10 w-10 mx-auto mb-3 text-slate-300" />
+            <p className="font-semibold text-slate-700">{t('empty_trends')}</p>
+            <p className="text-sm mt-1 text-slate-400">
               {t('empty_trends_desc')}
             </p>
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

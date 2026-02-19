@@ -230,6 +230,28 @@ export const api = {
       return response;
     },
 
+    registerPharmacist: async (data: any): Promise<RegistrationResponse> => {
+      const formData = new FormData();
+
+      // Add all fields to FormData
+      Object.entries(data).forEach(([key, value]) => {
+        if (value instanceof File) {
+          formData.append(key, value);
+        } else if (typeof value === 'boolean') {
+          formData.append(key, value ? 'true' : 'false');
+        } else if (value !== undefined && value !== null) {
+          formData.append(key, String(value));
+        }
+      });
+
+      const response = await apiClient.post<RegistrationResponse>('/auth/register/pharmacist/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response;
+    },
+
     verifyEmail: (email: string, otp: string) =>
       apiClient.post('/auth/verify-email/', { email, otp }),
     login: (email: string, password: string) =>
@@ -457,10 +479,16 @@ export const api = {
   pharmacy: {
     scanPrescription: (qrData: string) =>
       apiClient.post('/pharmacy/scan-prescription/', { qr_data: qrData }),
-    dispense: (data: any) => apiClient.post('/pharmacy/dispense/', data),
+    dispense: (data: any) => apiClient.post('/pharmacy/dispense-medicine/', data),
     getDispensingRecords: (params?: any) =>
-      apiClient.get('/pharmacy/dispensing-records/', { params }),
+      apiClient.get('/pharmacy/dispensing-history/', { params }),
+    // Inventory
+    getInventory: (params?: any) => apiClient.get('/pharmacy/inventory/', { params }),
+    addInventory: (data: any) => apiClient.post('/pharmacy/inventory/', data),
   },
+
+  // Public Client (for custom requests)
+  client: apiClient,
 
   // Patient Dashboard
   dashboard: {

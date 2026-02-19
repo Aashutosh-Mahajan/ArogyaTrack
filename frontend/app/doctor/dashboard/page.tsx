@@ -17,8 +17,11 @@ import {
   FiAlertCircle,
   FiFileText,
   FiCamera,
+  FiClock,
+  FiCheckCircle
 } from 'react-icons/fi';
 import Link from 'next/link';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 /* ── Types ─────────────────────────────────────────── */
 
@@ -48,35 +51,14 @@ interface ActivityItem {
   severity: string;
 }
 
-/* ── KPI Skeleton ──────────────────────────────────── */
-
-function KPISkeleton() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {[...Array(4)].map((_, i) => (
-        <Card key={i}>
-          <CardContent className="p-5">
-            <div className="animate-pulse space-y-3">
-              <div className="h-4 w-24 bg-gray-200 rounded" />
-              <div className="h-8 w-16 bg-gray-200 rounded" />
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
 /* ── Risk Badge ────────────────────────────────────── */
 
 const riskColors: Record<string, string> = {
-  critical: 'bg-red-100 text-red-700',
-  high: 'bg-orange-100 text-orange-700',
-  medium: 'bg-yellow-100 text-yellow-700',
-  low: 'bg-green-100 text-green-700',
+  critical: 'bg-red-50 text-red-700 border-red-200',
+  high: 'bg-orange-50 text-orange-700 border-orange-200',
+  medium: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  low: 'bg-green-50 text-green-700 border-green-200',
 };
-
-/* ── Severity dot ──────────────────────────────────── */
 
 const severityDot: Record<string, string> = {
   critical: 'bg-red-500',
@@ -88,8 +70,10 @@ const severityDot: Record<string, string> = {
 /* ── Page ──────────────────────────────────────────── */
 
 function DoctorDashboardPage() {
+  const { t } = useLanguage();
+
   /* ── queries ─── */
-  const { data: summary, isLoading: loadingSummary } = useQuery({
+  const { data: summary, isLoading: loadingSummary, refetch: refetchSummary, isFetching: isFetchingSummary } = useQuery({
     queryKey: ['doctor-dashboard-summary'],
     queryFn: async () => {
       const res = await api.medical.getDashboardSummary();
@@ -122,32 +106,36 @@ function DoctorDashboardPage() {
   /* ── KPI cards config ─── */
   const kpiCards = [
     {
-      label: 'Total Assigned Patients',
+      label: t('total_assigned_patients'),
       value: summary?.total_patients ?? 0,
       icon: FiUsers,
       color: 'text-blue-600',
       bg: 'bg-blue-50',
+      border: 'border-blue-100'
     },
     {
-      label: 'High-Risk Patients',
+      label: t('high_risk_patients'),
       value: summary?.high_risk_count ?? 0,
       icon: FiAlertTriangle,
-      color: 'text-red-600',
-      bg: 'bg-red-50',
+      color: 'text-rose-600',
+      bg: 'bg-rose-50',
+      border: 'border-rose-100'
     },
     {
-      label: 'Pending Lab Reviews',
+      label: t('pending_lab_reviews'),
       value: summary?.pending_labs ?? 0,
       icon: FiClipboard,
       color: 'text-amber-600',
       bg: 'bg-amber-50',
+      border: 'border-amber-100'
     },
     {
-      label: 'Recent Updates',
+      label: t('recent_updates'),
       value: summary?.recent_updates ?? 0,
-      icon: FiRefreshCw,
-      color: 'text-green-600',
-      bg: 'bg-green-50',
+      icon: FiClock,
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-100'
     },
   ];
 
@@ -155,176 +143,218 @@ function DoctorDashboardPage() {
   const activityIcon = (item: ActivityItem) => {
     switch (item.type) {
       case 'abnormal_lab':
-        return <FiAlertCircle className="h-4 w-4 text-orange-500" />;
+        return <div className="p-2 rounded-full bg-orange-50 border border-orange-100"><FiAlertCircle className="h-4 w-4 text-orange-600" /></div>;
       case 'critical_visit':
-        return <FiAlertTriangle className="h-4 w-4 text-red-500" />;
+        return <div className="p-2 rounded-full bg-red-50 border border-red-100"><FiAlertTriangle className="h-4 w-4 text-red-600" /></div>;
       case 'follow_up':
-        return <FiRefreshCw className="h-4 w-4 text-yellow-600" />;
+        return <div className="p-2 rounded-full bg-yellow-50 border border-yellow-100"><FiRefreshCw className="h-4 w-4 text-yellow-600" /></div>;
       default:
-        return <FiFileText className="h-4 w-4 text-blue-500" />;
+        return <div className="p-2 rounded-full bg-blue-50 border border-blue-100"><FiFileText className="h-4 w-4 text-blue-600" /></div>;
     }
   };
 
+  if (loadingSummary) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6 animate-pulse">
+          <div className="h-8 w-64 bg-slate-200 rounded-lg mb-4"></div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-32 bg-slate-100 rounded-xl"></div>
+            ))}
+          </div>
+          <div className="h-64 bg-slate-100 rounded-xl"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-8 pb-8">
         {/* Title */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Doctor Dashboard</h1>
-            <p className="text-gray-600 mt-1">
-              Today&apos;s snapshot &amp; surveillance overview
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{t('doctor_dashboard_title')}</h1>
+            <p className="text-slate-500 mt-1">
+              {t('doctor_dashboard_subtitle')}
             </p>
           </div>
-          <Link href="/doctor/scan-qr">
-            <Button size="lg" className="gap-2">
-              <FiCamera className="h-4 w-4" />
-              Scan Patient QR
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => refetchSummary()}
+              disabled={isFetchingSummary}
+              className="bg-white/50 border-slate-200 hover:bg-slate-100"
+            >
+              <FiRefreshCw className={`h-4 w-4 mr-2 ${isFetchingSummary ? 'animate-spin' : ''}`} />
+              {t('refresh')}
             </Button>
-          </Link>
+            <Link href="/doctor/scan-qr">
+              <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white shadow-lg hover:shadow-xl transition-all rounded-full px-6">
+                <FiCamera className="h-4 w-4 mr-2" />
+                {t('scan_patient_qr')}
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* ─── A. TODAY SNAPSHOT ─── */}
-        {loadingSummary ? (
-          <KPISkeleton />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {kpiCards.map((kpi) => {
-              const Icon = kpi.icon;
-              return (
-                <Card key={kpi.label} className="hover:shadow-sm transition-shadow">
-                  <CardContent className="p-5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">{kpi.label}</p>
-                        <p className="text-3xl font-bold mt-1">{kpi.value}</p>
-                      </div>
-                      <div className={`${kpi.bg} ${kpi.color} p-3 rounded-xl`}>
-                        <Icon className="h-6 w-6" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {kpiCards.map((kpi) => {
+            const Icon = kpi.icon;
+            return (
+              <div key={kpi.label} className="group relative overflow-hidden bg-white/80 backdrop-blur-md rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300">
+                <div className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 duration-500 ${kpi.color}`}>
+                  <Icon className="w-16 h-16" />
+                </div>
+                <div className="relative z-10">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${kpi.bg} ${kpi.color} ${kpi.border} border`}>
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <p className="text-3xl font-bold text-slate-900 mb-1">{kpi.value}</p>
+                  <p className="text-sm font-medium text-slate-500">{kpi.label}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
         {/* ─── B. HIGH-RISK PATIENTS PREVIEW (top 5) ─── */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <FiAlertTriangle className="text-orange-500 h-5 w-5" />
-                High-Risk Patients
-              </CardTitle>
-              <Link
-                href="/doctor/high-risk"
-                className="text-sm font-medium text-primary-600 hover:text-primary-700 flex items-center gap-1"
-              >
-                View All <FiArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {topHighRisk.length === 0 ? (
-              <p className="text-gray-500 text-center py-6">
-                No high-risk patients detected.
-              </p>
-            ) : (
-              <div className="divide-y">
-                {topHighRisk.map((patient) => {
-                  const badge = riskColors[patient.risk_level] ?? riskColors.low;
-                  return (
-                    <div
-                      key={patient.patient_id}
-                      className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-teal-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                          {patient.name.charAt(0)}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-medium text-gray-900 truncate">
-                            {patient.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {patient.age} yrs · {patient.condition}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 flex-shrink-0 ml-3">
-                        {patient.latest_bp && (
-                          <span className="text-xs text-gray-500 hidden sm:inline">
-                            BP {patient.latest_bp}
-                          </span>
-                        )}
-                        {patient.latest_sugar && (
-                          <span className="text-xs text-gray-500 hidden sm:inline">
-                            Sugar {patient.latest_sugar}
-                          </span>
-                        )}
-                        <span
-                          className={`text-xs font-bold px-2.5 py-0.5 rounded-full uppercase ${badge}`}
-                        >
-                          {patient.risk_level}
-                        </span>
-                        <Link href={`/doctor/patients/${patient.patient_id}`}>
-                          <Button variant="outline" size="sm">
-                            View
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* ─── C. RECENT ACTIVITY FEED ─── */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FiActivity className="text-blue-500 h-5 w-5" />
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {activities.length === 0 ? (
-              <p className="text-gray-500 text-center py-6">
-                No recent activity.
-              </p>
-            ) : (
-              <div className="max-h-80 overflow-y-auto divide-y pr-1">
-                {activities.map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
-                    <div className="mt-0.5 flex-shrink-0">{activityIcon(item)}</div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-900">
-                        {item.title}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5 truncate">
-                        {item.description}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                      <span
-                        className={`h-2 w-2 rounded-full ${
-                          severityDot[item.severity] ?? 'bg-gray-400'
-                        }`}
-                      />
-                      <span className="text-xs text-gray-400 whitespace-nowrap">
-                        {new Date(item.timestamp).toLocaleDateString()}
-                      </span>
-                    </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <Card className="lg:col-span-2 border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
+            <div className="h-1 bg-gradient-to-r from-orange-400 to-rose-400"></div>
+            <CardHeader className="border-b border-slate-100/50 pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-orange-50 rounded-lg">
+                    <FiAlertTriangle className="w-5 h-5 text-orange-600" />
                   </div>
-                ))}
+                  <CardTitle className="text-lg text-slate-800">{t('high_risk_patients')}</CardTitle>
+                </div>
+                <Link
+                  href="/doctor/high-risk"
+                  className="text-sm font-semibold text-teal-600 hover:text-teal-700 flex items-center gap-1 hover:gap-2 transition-all"
+                >
+                  {t('view_all')} <FiArrowRight className="h-4 w-4" />
+                </Link>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent className="p-0">
+              {topHighRisk.length === 0 ? (
+                <div className="text-center py-12 text-slate-400">
+                  <div className="bg-slate-50 p-4 rounded-full inline-block mb-3">
+                    <FiCheckCircle className="h-8 w-8 text-emerald-400" />
+                  </div>
+                  <p>{t('no_high_risk_patients')}</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {topHighRisk.map((patient) => {
+                    const badge = riskColors[patient.risk_level] ?? riskColors.low;
+                    return (
+                      <div
+                        key={patient.patient_id}
+                        className="flex items-center justify-between p-4 hover:bg-slate-50/50 transition-colors group"
+                      >
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="relative">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-600 font-bold text-lg shadow-inner">
+                              {patient.name.charAt(0)}
+                            </div>
+                            <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center ${patient.risk_level === 'critical' ? 'bg-red-500' : 'bg-orange-500'}`}>
+                              <FiAlertTriangle className="w-2.5 h-2.5 text-white" />
+                            </div>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-bold text-slate-900 truncate group-hover:text-teal-700 transition-colors">
+                              {patient.name}
+                            </p>
+                            <p className="text-sm text-slate-500">
+                              {patient.age} yrs · <span className="font-medium text-slate-700">{patient.condition}</span>
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 ml-3">
+                          {patient.latest_bp && (
+                            <div className="hidden sm:flex flex-col items-end">
+                              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">BP</span>
+                              <span className="text-sm font-semibold text-slate-700">{patient.latest_bp}</span>
+                            </div>
+                          )}
+                          {patient.latest_sugar && (
+                            <div className="hidden sm:flex flex-col items-end">
+                              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Sugar</span>
+                              <span className="text-sm font-semibold text-slate-700">{patient.latest_sugar}</span>
+                            </div>
+                          )}
+                          <div className="flex flex-col items-end gap-2">
+                            <span
+                              className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border tracking-wider ${badge}`}
+                            >
+                              {patient.risk_level}
+                            </span>
+                            <Link href={`/doctor/patients/${patient.patient_id}`}>
+                              <Button variant="ghost" size="sm" className="h-7 text-xs hover:bg-teal-50 hover:text-teal-700">
+                                {t('view')}
+                              </Button>
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* ─── C. RECENT ACTIVITY FEED ─── */}
+          <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md h-fit">
+            <div className="h-1 bg-gradient-to-r from-blue-400 to-indigo-400"></div>
+            <CardHeader className="border-b border-slate-100/50 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <FiActivity className="w-5 h-5 text-blue-600" />
+                </div>
+                <CardTitle className="text-lg text-slate-800">{t('recent_activity')}</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {activities.length === 0 ? (
+                <div className="text-center py-8 text-slate-400">
+                  <p>{t('no_recent_activity')}</p>
+                </div>
+              ) : (
+                <div className="max-h-[500px] overflow-y-auto divide-y divide-slate-100">
+                  {activities.map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-4 p-4 hover:bg-slate-50/50 transition-colors">
+                      <div className="mt-1 flex-shrink-0">{activityIcon(item)}</div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-slate-900">
+                          {item.title}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                          {item.description}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-medium mt-2 flex items-center gap-1.5">
+                          <FiClock className="w-3 h-3" />
+                          {new Date(item.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <div className="flex items-center flex-shrink-0">
+                        <span
+                          className={`h-2.5 w-2.5 rounded-full ring-2 ring-white shadow-sm ${severityDot[item.severity] ?? 'bg-slate-300'
+                            }`}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </DashboardLayout>
   );

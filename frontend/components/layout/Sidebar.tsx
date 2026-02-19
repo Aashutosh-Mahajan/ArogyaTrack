@@ -26,6 +26,8 @@ import {
   FiShield,
   FiDownload,
   FiThermometer,
+  FiBox,
+  FiClipboard,
 } from 'react-icons/fi';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -90,10 +92,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { href: '/admin/forecasts', label: 'Forecasts', icon: FiActivity },
   ];
 
+  const pharmacistLinks = [
+    { href: '/pharmacy', label: t('sidebar_dashboard'), icon: FiHome },
+    { href: '/pharmacy/scan', label: 'Scan Prescription', icon: FiCamera },
+    { href: '/pharmacy/inventory', label: 'Manage Inventory', icon: FiBox },
+    { href: '/pharmacy/history', label: 'Dispensing History', icon: FiClipboard },
+  ];
+
   const links =
     user?.role === 'doctor' ? doctorLinks :
       user?.role === 'admin' || user?.role === 'authority' ? adminLinks :
-        patientLinks;
+        user?.role === 'pharmacist' ? pharmacistLinks :
+          patientLinks;
 
   return (
     <>
@@ -108,43 +118,53 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-full w-72 bg-white shadow-soft-lg transition-transform duration-300 ease-out lg:translate-x-0 rounded-r-3xl",
+          "fixed left-0 top-0 z-50 h-full w-72 bg-teal-900 text-white shadow-2xl transition-transform duration-300 ease-out lg:translate-x-0 rounded-r-3xl border-r border-teal-800/50",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between border-b p-4">
-            <h2 className="text-xl font-bold text-primary-600">{t('health_system')}</h2>
+          <div className="flex items-center justify-between p-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/10 p-2 rounded-lg backdrop-blur-md border border-white/10">
+                <FiActivity className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold tracking-tight text-white">{t('health_system')}</h2>
+                <p className="text-[10px] text-teal-300 uppercase tracking-widest leading-none">Govt. of India</p>
+              </div>
+            </div>
             <button
               onClick={onClose}
-              className="lg:hidden text-teal-600 hover:text-teal-800 p-2 rounded-xl hover:bg-teal-50 transition-all"
+              className="lg:hidden text-teal-300 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-all"
             >
               <FiX className="h-5 w-5" />
             </button>
           </div>
 
           {/* User Info */}
-          <div className="p-6 border-b border-gray-100">
-            <div className="flex items-center space-x-4">
-              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-soft">
-                <span className="text-lg font-bold text-white">
-                  {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
-                </span>
+          <div className="px-4 mb-2">
+            <div className="p-4 rounded-2xl bg-teal-800/50 border border-teal-700/50 flex items-center space-x-3">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg text-white font-bold text-sm">
+                {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-heading truncate">
+                <p className="text-sm font-semibold truncate text-white">
                   {user?.first_name} {user?.last_name}
                 </p>
-                <p className="text-xs text-teal-600 capitalize font-medium">
-                  {user?.role}
+                <p className="text-xs text-teal-300 capitalize font-medium">
+                  {user?.role} Access
                 </p>
               </div>
             </div>
           </div>
 
+          <div className="px-6 py-2">
+            <div className="h-px bg-gradient-to-r from-transparent via-teal-700 to-transparent"></div>
+          </div>
+
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4 space-y-1.5">
+          <nav className="flex-1 overflow-y-auto px-4 py-2 space-y-1">
             {links.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href;
@@ -156,36 +176,40 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   href={link.href}
                   onClick={onClose}
                   className={cn(
-                    "flex items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
+                    "flex items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 group relative",
                     isActive
-                      ? "bg-gradient-to-r from-teal-600 to-teal-500 text-white shadow-soft"
-                      : "text-body hover:bg-teal-50 hover:text-teal-700"
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/20"
+                      : "text-teal-100 hover:bg-white/5 hover:text-white"
                   )}
                 >
-                  <Icon className={cn("h-5 w-5", isActive ? "text-white" : "text-teal-600")} />
+                  <Icon className={cn("h-5 w-5 transition-colors", isActive ? "text-white" : "text-teal-400 group-hover:text-white")} />
                   <span className="flex-1">{link.label}</span>
                   {badge > 0 && (
                     <span className={cn(
                       "ml-auto inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-bold",
-                      isActive ? "bg-white/20 text-white" : "bg-red-500 text-white"
+                      isActive ? "bg-white/20 text-white" : "bg-rose-500 text-white shadow-sm"
                     )}>
                       {badge > 99 ? '99+' : badge}
                     </span>
                   )}
+                  {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full shadow-[0_0_10px_rgba(255,255,255,0.5)]"></div>}
                 </Link>
               );
             })}
           </nav>
 
           {/* Logout */}
-          <div className="p-4 border-t border-gray-100">
+          <div className="p-4 mt-auto">
             <button
               onClick={handleLogout}
-              className="flex w-full items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-all duration-200"
+              className="flex w-full items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-all duration-200"
             >
               <FiLogOut className="h-5 w-5" />
               <span>{t('sidebar_logout')}</span>
             </button>
+            <div className="mt-4 text-center">
+              <p className="text-[10px] text-teal-600/50 uppercase tracking-widest">Secure Connection</p>
+            </div>
           </div>
         </div>
       </aside>

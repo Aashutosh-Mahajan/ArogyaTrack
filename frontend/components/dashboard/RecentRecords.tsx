@@ -21,12 +21,10 @@ import {
   FiAlertCircle,
   FiPaperclip,
   FiRefreshCw,
+  FiFile,
 } from 'react-icons/fi';
 import Link from 'next/link';
 import { useLanguage } from '@/components/providers/LanguageProvider';
-
-/* ─── Status badge config ──────────────────────────────────────── */
-
 
 /* ─── Single record card ───────────────────────────────────────── */
 function RecordCard({ record }: { record: RecentRecord }) {
@@ -38,24 +36,24 @@ function RecordCard({ record }: { record: RecentRecord }) {
   const statusConfig = {
     completed: {
       label: t('status_completed'),
-      bg: 'bg-green-100',
-      text: 'text-green-700',
-      border: 'border-green-200',
-      dot: 'bg-green-500',
+      bg: 'bg-emerald-50',
+      text: 'text-emerald-700',
+      border: 'border-emerald-200',
+      dot: 'bg-emerald-500',
     },
     follow_up: {
       label: t('status_follow_up'),
-      bg: 'bg-orange-100',
-      text: 'text-orange-700',
-      border: 'border-orange-200',
-      dot: 'bg-orange-500',
+      bg: 'bg-amber-50',
+      text: 'text-amber-700',
+      border: 'border-amber-200',
+      dot: 'bg-amber-500',
     },
     critical: {
       label: t('status_critical'),
-      bg: 'bg-red-100',
-      text: 'text-red-700',
-      border: 'border-red-200',
-      dot: 'bg-red-500',
+      bg: 'bg-rose-50',
+      text: 'text-rose-700',
+      border: 'border-rose-200',
+      dot: 'bg-rose-500',
     },
   } as const;
 
@@ -68,12 +66,6 @@ function RecordCard({ record }: { record: RecentRecord }) {
     year: 'numeric',
   });
 
-  const handleDownloadPDF = () => {
-    // re-use the modal's print-to-PDF approach in a lightweight way
-    setModalOpen(true);
-  };
-
-  // Authenticated download function
   const handleDownloadReport = async (attachmentId: number, fileName: string, isView: boolean = false) => {
     setDownloadingId(attachmentId);
     try {
@@ -81,13 +73,10 @@ function RecordCard({ record }: { record: RecentRecord }) {
       const blob = await api.medical.downloadReport(attachmentId, disposition);
 
       if (isView) {
-        // Open in a new tab for viewing
         const url = window.URL.createObjectURL(blob);
         window.open(url, '_blank');
-        // Don't revoke immediately for viewing
         setTimeout(() => window.URL.revokeObjectURL(url), 60000);
       } else {
-        // Download the file
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -100,15 +89,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
       }
     } catch (error: any) {
       console.error('Download error:', error);
-      if (error.response?.status === 401) {
-        toast.error('Session expired. Please login again.');
-      } else if (error.response?.status === 403) {
-        toast.error('You do not have permission to access this file.');
-      } else if (error.response?.status === 404) {
-        toast.error('File not found.');
-      } else {
-        toast.error('Failed to download report.');
-      }
+      toast.error('Failed to download report.');
     } finally {
       setDownloadingId(null);
     }
@@ -117,79 +98,72 @@ function RecordCard({ record }: { record: RecentRecord }) {
   return (
     <>
       <div
-        className={`rounded-xl border transition-all duration-200 hover:shadow-md ${record.status === 'critical'
-          ? 'border-red-200 bg-red-50/30'
-          : 'border-gray-100 bg-white'
+        className={`group relative overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-lg ${record.status === 'critical'
+            ? 'border-rose-100 bg-rose-50/20'
+            : 'border-slate-100 bg-white hover:border-slate-200'
           }`}
       >
         {/* Main row */}
-        <div className="p-4 flex items-start gap-4">
+        <div className="p-5 flex items-start gap-5">
           {/* Left icon */}
-          <div className="hidden sm:flex bg-blue-50 text-blue-600 rounded-xl p-2.5 mt-0.5 shrink-0">
-            <FiActivity className="h-5 w-5" />
+          <div className={`hidden sm:flex rounded-2xl p-3 shrink-0 transition-colors ${record.status === 'critical' ? 'bg-rose-100 text-rose-600' : 'bg-blue-50 text-blue-600'
+            }`}>
+            <FiActivity className="h-6 w-6" />
           </div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
             {/* Top line */}
-            <div className="flex items-start justify-between gap-2 flex-wrap">
+            <div className="flex items-start justify-between gap-3 mb-2">
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">
+                <p className="text-base font-bold text-slate-800 truncate">
                   {record.diagnosis_summary}
                 </p>
-                <div className="flex items-center gap-2 mt-1 flex-wrap text-xs text-gray-500">
-                  <span className="inline-flex items-center gap-1">
-                    <FiUser className="h-3 w-3" />
+                <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 font-medium">
+                  <span className="inline-flex items-center gap-1.5">
+                    <FiUser className="h-3.5 w-3.5" />
                     Dr. {record.doctor_name}
                   </span>
-                  <span className="text-gray-300">•</span>
-                  <span>{record.department}</span>
-                  <span className="text-gray-300">•</span>
-                  <span className="inline-flex items-center gap-1">
-                    <FiCalendar className="h-3 w-3" />
-                    {visitDate}, {record.visit_time}
+                  <span className="text-slate-300">•</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <FiCalendar className="h-3.5 w-3.5" />
+                    {visitDate}
                   </span>
                 </div>
               </div>
 
               {/* Status badge */}
               <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border shrink-0 ${st.bg} ${st.text} ${st.border}`}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border shrink-0 ${st.bg} ${st.text} ${st.border}`}
               >
-                <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
+                <span className={`h-1.5 w-1.5 rounded-full ${st.dot} animate-pulse`} />
                 {st.label}
               </span>
             </div>
 
             {/* Summary pills */}
-            <div className="flex items-center gap-3 mt-2.5 flex-wrap">
+            <div className="flex items-center gap-2 mt-3 flex-wrap">
               {record.tests_performed && (
-                <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md">
-                  <FiClipboard className="h-3 w-3" />
-                  {t('tests_performed')}: {record.tests_performed.split('\n')[0].slice(0, 40)}
-                  {record.tests_performed.length > 40 ? '…' : ''}
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-600 bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg">
+                  <FiClipboard className="h-3.5 w-3.5 text-slate-400" />
+                  {record.tests_performed.split('\n')[0].slice(0, 30)}...
                 </span>
               )}
               {record.prescriptions_count > 0 && (
-                <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md">
-                  <FiFileText className="h-3 w-3" />
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-600 bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg">
+                  <FiFileText className="h-3.5 w-3.5 text-slate-400" />
                   {record.prescriptions_count} {t('prescription')}
-                </span>
-              )}
-              {record.attachments.length > 0 && (
-                <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md">
-                  📎 {record.attachments.length} {t('files')}
                 </span>
               )}
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex flex-col sm:flex-row items-center gap-1 shrink-0 ml-2">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-gray-400 hover:text-blue-600"
+              className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50"
               onClick={() => setModalOpen(true)}
               title={t('view')}
             >
@@ -198,7 +172,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-gray-400 hover:text-gray-600"
+              className="h-8 w-8 text-slate-400 hover:text-slate-700 hover:bg-slate-100"
               onClick={() => setExpanded((prev) => !prev)}
               title={expanded ? t('collapse') : t('expand')}
             >
@@ -213,24 +187,24 @@ function RecordCard({ record }: { record: RecentRecord }) {
 
         {/* Expanded section */}
         {expanded && (
-          <div className="px-4 pb-4 pt-0 border-t border-gray-100 space-y-3 animate-in slide-in-from-top-2 duration-200">
-            <div className="pt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="px-5 pb-5 pt-0 mt-1 border-t border-slate-50 bg-slate-50/30 space-y-4 animate-in slide-in-from-top-2 duration-300">
+            <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Diagnosis */}
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                   {t('diagnosis')}
                 </p>
-                <p className="text-sm text-gray-800 leading-relaxed">
+                <p className="text-sm text-slate-700 leading-relaxed font-medium">
                   {record.diagnosis_summary || 'N/A'}
                 </p>
               </div>
 
               {/* Tests */}
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                   {t('tests_performed')}
                 </p>
-                <p className="text-sm text-gray-800 leading-relaxed">
+                <p className="text-sm text-slate-700 leading-relaxed font-medium">
                   {record.tests_performed || t('none')}
                 </p>
               </div>
@@ -238,116 +212,95 @@ function RecordCard({ record }: { record: RecentRecord }) {
               {/* Prescription */}
               {record.prescription_text && (
                 <div className="sm:col-span-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
-                    {t('prescription')}
-                  </p>
-                  <pre className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap font-sans">
-                    {record.prescription_text}
-                  </pre>
-                </div>
-              )}
-
-              {/* Doctor Notes */}
-              {record.doctor_notes && (
-                <div className="sm:col-span-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
-                    {t('doctor_notes')}
-                  </p>
-                  <p className="text-sm text-gray-800 leading-relaxed italic">
-                    {record.doctor_notes}
-                  </p>
+                  <div className="bg-white border border-slate-100 rounded-xl p-3 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-2">
+                      <FiFileText className="w-3 h-3" />
+                      {t('prescription')}
+                    </p>
+                    <pre className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap font-sans">
+                      {record.prescription_text}
+                    </pre>
+                  </div>
                 </div>
               )}
             </div>
 
             {/* 📂 Reports Section */}
             <div className="sm:col-span-2">
-              <div className="flex items-center gap-2 mb-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                  📂 {t('reports')}
+              <div className="flex items-center gap-2 mb-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  {t('reports')}
                 </p>
                 {record.attachments.length > 0 && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">
-                    {record.attachments.length} {t('files')}
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600">
+                    {record.attachments.length}
                   </span>
                 )}
               </div>
+
               {record.attachments.length > 0 ? (
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {record.attachments.map((att) => (
                     <div
                       key={att.id}
-                      className="flex items-center gap-3 p-2.5 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-blue-50/40 transition-colors"
+                      className="group flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-white hover:border-blue-200 hover:shadow-sm transition-all"
                     >
-                      <div className="h-8 w-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
-                        <FiPaperclip className="h-4 w-4" />
+                      <div className="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                        <FiFile className="h-5 w-5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-800 truncate">
+                        <p className="text-xs font-semibold text-slate-700 truncate">
                           {att.file_name}
                         </p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">
-                          {att.uploaded_by_name && (
-                            <span className="mr-2">👨‍⚕️ {att.uploaded_by_name}</span>
-                          )}
-                          📅 {new Date(att.uploaded_at).toLocaleDateString()}
+                        <p className="text-[10px] text-slate-400 mt-0.5 lowercase">
+                          {att.file_type.split('/')[1] || 'file'} • {new Date(att.uploaded_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={() => handleDownloadReport(att.id, att.file_name, true)}
                           disabled={downloadingId === att.id}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium text-blue-600 hover:bg-blue-100 transition-colors h-auto"
+                          className="h-8 w-8 text-blue-600 hover:bg-blue-50"
                           title={t('view')}
                         >
-                          {downloadingId === att.id ? (
-                            <FiRefreshCw className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <FiEye className="h-3 w-3" />
-                          )}
+                          <FiEye className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={() => handleDownloadReport(att.id, att.file_name, false)}
                           disabled={downloadingId === att.id}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium text-gray-600 hover:bg-gray-200 transition-colors h-auto"
+                          className="h-8 w-8 text-slate-500 hover:bg-slate-100"
                           title={t('download')}
                         >
-                          {downloadingId === att.id ? (
-                            <FiRefreshCw className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <FiDownload className="h-3 w-3" />
-                          )}
+                          <FiDownload className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-gray-400 italic">{t('no_reports')}</p>
+                <div className="text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                  <p className="text-xs text-slate-400 italic">{t('no_reports')}</p>
+                </div>
               )}
             </div>
 
-            {/* Download PDF */}
-            <div className="pt-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 text-xs"
-                onClick={() => setModalOpen(true)}
-              >
-                <FiDownload className="h-3.5 w-3.5" />
-                {t('download_pdf')}
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full sm:w-auto gap-2 text-xs font-medium"
+              onClick={() => setModalOpen(true)}
+            >
+              <FiDownload className="h-3.5 w-3.5" />
+              {t('download_pdf')}
+            </Button>
           </div>
         )}
       </div>
 
-      {/* Detail modal */}
       <RecordDetailModal
         open={modalOpen}
         onOpenChange={setModalOpen}
@@ -363,52 +316,58 @@ export function RecentRecords() {
   const { data: records, isLoading, refetch, isFetching } = useQuery<RecentRecord[]>({
     queryKey: ['dashboard-recent-records'],
     queryFn: () => api.dashboard.getRecentRecords({ limit: 10 }),
-    staleTime: 10_000, // Consider data stale after 10 seconds
-    refetchInterval: 30_000, // Refetch every 30 seconds to catch new records
+    staleTime: 10_000,
+    refetchInterval: 30_000,
   });
 
   return (
-    <Card className="border-0 shadow-lg">
+    <Card className="border-0 shadow-lg overflow-hidden">
+      <div className="h-1 bg-gradient-to-r from-blue-400 to-indigo-400"></div>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <CardTitle className="text-lg">{t('recent_records_title')}</CardTitle>
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <FiActivity className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">{t('recent_records_title')}</CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">Latest medical history and checkups</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => refetch()}
               disabled={isFetching}
-              className="h-7 px-2 text-xs"
+              className="h-8 w-8 text-slate-400 hover:text-blue-600"
               title={t('refresh')}
             >
               <FiRefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
             </Button>
+            <Link href="/dashboard/medical-records">
+              <Button variant="outline" size="sm" className="hidden sm:flex text-xs h-8">
+                {t('view_all')}
+              </Button>
+            </Link>
           </div>
-          <Link
-            href="/dashboard/medical-records"
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
-          >
-            {t('view_all')}
-          </Link>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4">
         {isLoading ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="animate-pulse rounded-xl border border-gray-100 p-4"
+                className="animate-pulse rounded-2xl border border-slate-100 p-5 bg-white"
               >
                 <div className="flex gap-4">
-                  <div className="hidden sm:block h-10 w-10 bg-gray-200 rounded-xl" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 w-48 bg-gray-200 rounded" />
-                    <div className="h-3 w-64 bg-gray-100 rounded" />
-                    <div className="h-3 w-32 bg-gray-100 rounded" />
+                  <div className="hidden sm:block h-12 w-12 bg-slate-100 rounded-xl" />
+                  <div className="flex-1 space-y-3">
+                    <div className="h-4 w-1/3 bg-slate-200 rounded" />
+                    <div className="h-3 w-1/2 bg-slate-100 rounded" />
                   </div>
-                  <div className="h-6 w-20 bg-gray-100 rounded-full" />
                 </div>
               </div>
             ))}
@@ -416,10 +375,12 @@ export function RecentRecords() {
         ) : records && records.length > 0 ? (
           records.map((record) => <RecordCard key={record.id} record={record} />)
         ) : (
-          <div className="text-center py-12 text-gray-500">
-            <FiAlertCircle className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p className="font-medium">{t('empty_records')}</p>
-            <p className="text-sm text-gray-400 mt-1">
+          <div className="text-center py-16 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+            <div className="bg-white p-4 rounded-full shadow-sm inline-block mb-4">
+              <FiFileText className="h-8 w-8 text-slate-300" />
+            </div>
+            <p className="font-semibold text-slate-600">{t('empty_records')}</p>
+            <p className="text-sm text-slate-400 mt-1 max-w-xs mx-auto">
               {t('empty_records_desc')}
             </p>
           </div>

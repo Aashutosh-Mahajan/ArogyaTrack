@@ -46,3 +46,34 @@ class DispensingRecord(models.Model):
 
     def __str__(self):
         return f"{self.prescription_medicine.medicine.name} - {self.status}"
+
+
+class PharmacyInventory(models.Model):
+    """Inventory management for pharmacies."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    pharmacy = models.ForeignKey(Pharmacy, on_delete=models.CASCADE, related_name="inventory")
+    medicine = models.ForeignKey("prescriptions.Medicine", on_delete=models.CASCADE, related_name="pharmacy_inventory")
+    
+    # Stock details
+    quantity_in_stock = models.PositiveIntegerField(default=0)
+    low_stock_threshold = models.PositiveIntegerField(default=10)
+    
+    # Pricing
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Batch & Expiry
+    batch_number = models.CharField(max_length=50, blank=True)
+    expiry_date = models.DateField(null=True, blank=True)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["medicine__name"]
+        indexes = [
+            models.Index(fields=["pharmacy", "medicine"]),
+            models.Index(fields=["expiry_date"]),
+        ]
+
+    def __str__(self):
+        return f"{self.medicine.name} ({self.quantity_in_stock})"

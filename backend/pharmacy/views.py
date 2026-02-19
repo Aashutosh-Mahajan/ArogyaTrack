@@ -3,8 +3,8 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import DispensingRecord, Pharmacy
-from .serializers import DispenseMedicineSerializer, DispensingRecordSerializer, PharmacySerializer, ScanPrescriptionSerializer
+from .models import DispensingRecord, Pharmacy, PharmacyInventory
+from .serializers import DispenseMedicineSerializer, DispensingRecordSerializer, PharmacySerializer, PharmacyInventorySerializer, ScanPrescriptionSerializer
 
 
 class ScanPrescriptionView(APIView):
@@ -43,7 +43,10 @@ class DispensingHistoryView(APIView):
 
     def get(self, request):
         # Get pharmacy for current user
-        pharmacy = get_object_or_404(Pharmacy, owner=request.user, is_active=True)
+        try:
+            pharmacy = Pharmacy.objects.get(owner=request.user, is_active=True)
+        except Pharmacy.DoesNotExist:
+            return Response([])
 
         records = DispensingRecord.objects.filter(pharmacy=pharmacy).order_by("-dispensed_at")[:100]
 
@@ -57,4 +60,37 @@ class PharmacyDetailView(APIView):
 
     def get(self, request):
         pharmacy = get_object_or_404(Pharmacy, owner=request.user)
-        return Response(PharmacySerializer(pharmacy).data)
+
+class PharmacyInventoryView(APIView):
+    """
+    Manage pharmacy inventory.
+    GET: List all items or filter by low stock.
+    POST: Add new item.
+    """
+    
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_pharmacy(self, request):
+        return get_object_or_404(Pharmacy, owner=request.user)
+
+    def get(self, request):
+        try:
+            pharmacy = Pharmacy.objects.get(owner=request.user)
+        except Pharmacy.DoesNotExist:
+            return Response([])
+
+        queryset = PharmacyInventory.objects.filter(pharmacy=pharmacy)
+        
+        # Filter: Low Stock
+        if request.query_params.get("low_stock") == "true":
+            from django.db.models import F
+            queryset = queryset.filter(quantity_in_stock__lte=F("low_stock_threshold"))
+            
+        return Response(PharmacyInventorySerializer(queryset, many=True).data)
+
+    def post(self, request):
+        pharmacy = self.get_pharmacy(request)
+        serializer = PharmacyInventorySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(pharmacy=pharmacy)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

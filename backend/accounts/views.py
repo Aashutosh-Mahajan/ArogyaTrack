@@ -10,14 +10,15 @@ from .serializers import (
     SendOTPSerializer,
     VerifyOTPSerializer,
     DoctorRegistrationSerializer,
-    PatientRegistrationSerializer,
-    PasswordLoginSerializer,
-    PasswordResetRequestSerializer,
-    PasswordResetConfirmSerializer,
     EmailVerificationSerializer,
-    DoctorProfileSerializer,
-    DoctorApprovalSerializer,
+    PasswordLoginSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
+    PatientRegistrationSerializer,
+    SendOTPSerializer,
     UserListSerializer,
+    VerifyOTPSerializer,
+    PharmacistRegistrationSerializer,
 )
 
 
@@ -243,6 +244,26 @@ class DoctorApprovalView(APIView):
         serializer.is_valid(raise_exception=True)
         profile = serializer.update(doctor_profile, serializer.validated_data)
         return Response(DoctorProfileSerializer(profile).data)
+
+
+class PharmacistRegistrationView(APIView):
+    """
+    Register a new pharmacist.
+    """
+    
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request):
+        serializer = PharmacistRegistrationSerializer(data=request.data)
+        if not serializer.is_valid():
+            print("Pharmacist Registration Errors:", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user = serializer.save()
+        
+        return Response({
+            "message": "Registration successful. Please check your email for verification code.",
+            "email": user.email
+        }, status=status.HTTP_201_CREATED)
 
 
 class AdminUserListView(APIView):

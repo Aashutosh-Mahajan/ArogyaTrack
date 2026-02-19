@@ -79,6 +79,8 @@ class VerifyOTPSerializer(serializers.Serializer):
                 "id": user.id,
                 "email": user.email,
                 "role": user.role,
+                "first_name": user.get_first_name(),
+                "last_name": user.get_last_name(),
                 "verification_status": user.verification_status,
             },
             "access": str(refresh.access_token),
@@ -543,6 +545,8 @@ class PasswordLoginSerializer(serializers.Serializer):
             "user": {
                 "id": user.id,
                 "email": user.email,
+                "first_name": user.get_first_name(),
+                "last_name": user.get_last_name(),
                 "role": user.role,
                 "verification_status": user.verification_status,
             },
@@ -671,3 +675,111 @@ class UserListSerializer(serializers.ModelSerializer):
             "is_active", "is_staff", "date_joined",
         ]
         read_only_fields = fields
+
+class PharmacistRegistrationSerializer(serializers.Serializer):
+    """Production-grade pharmacist registration."""
+    
+    # Personal Information
+    email = serializers.EmailField()
+    password = serializers.CharField(min_length=8, write_only=True)
+    first_name = serializers.CharField(max_length=100) # Optional, strictly speaking, as User doesn't have names, but useful for profile
+    last_name = serializers.CharField(max_length=100) # Optional
+    
+    # Professional Information
+    license_number = serializers.CharField(max_length=50)
+    degree = serializers.CharField(max_length=100)
+    pharmacy_name = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    
+    # Documents
+    license_certificate = serializers.FileField()
+    
+    # Terms
+    terms_accepted = serializers.BooleanField()
+
+    def validate_email(self, value):
+        value = value.lower()
+        existing = User.objects.filter(email=value).first()
+        if existing:
+            if existing.verification_status == User.VerificationStatus.VERIFIED:
+                raise serializers.ValidationError("Email already registered")
+            existing.delete()
+        return value
+    
+    def validate_password(self, value):
+        """Validate password strength."""
+        from patients.validators import validate_strong_password
+        try:
+            validate_strong_password(value)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+        return value
+    
+    def validate_license_number(self, value):
+        """Check uniqueness."""
+        from accounts.models import PharmacistProfile
+        if PharmacistProfile.objects.filter(license_number=value).exists():
+            raise serializers.ValidationError("This license number is already registered")
+        return value
+
+    def validate(self, attrs):
+        if not attrs.get('terms_accepted'):
+            raise serializers.ValidationError({"terms_accepted": "You must accept the terms and conditions"})
+        return attrs
+
+    def create(self, validated_data):
+        from django.db import transaction
+        from accounts.models import PharmacistProfile
+        
+        password = validated_data.pop('password')
+        email = validated_data['email']
+        
+        # Profile data
+        license_number = validated_data['license_number']
+        degree = validated_data['degree']
+        pharmacy_name = validated_data.get('pharmacy_name', '')
+        license_cert = validated_data['license_certificate']
+        
+        with transaction.atomic():
+            # Create User
+            user = User.objects.create(
+                email=email,
+                role=User.Role.PHARMACIST,
+                verification_status=User.VerificationStatus.PENDING,
+            )
+            user.set_password(password)
+            user.save()
+
+            # Assign to Pharmacist group
+            _assign_group(user, 'Pharmacist')
+
+            # Create PharmacistProfile
+            profile = PharmacistProfile.objects.create(
+                user=user,
+                first_name=validated_data['first_name'],
+                last_name=validated_data['last_name'],
+                license_number=license_number,
+                degree=degree,
+                pharmacy_name=pharmacy_name,
+                license_certificate=license_cert,
+                approval_status=PharmacistProfile.ApprovalStatus.PENDING,
+            )
+            
+            # Log registration
+            AuditService.log_event(
+                event_type="user_registration",
+                action="pharmacist_registration",
+                user=user,
+                details={
+                    "license_number": license_number,
+                    "status": "pending_approval"
+                }
+            )
+            
+            # Send OTP
+            try:
+                OTPService.issue_otp(user)
+            except Exception:
+                import logging
+                logging.getLogger(__name__).warning(f"Failed to send OTP email to {user.email}")
+        
+        return user

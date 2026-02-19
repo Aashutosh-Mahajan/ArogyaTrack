@@ -55,6 +55,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Role(models.TextChoices):
         PATIENT = "patient", "Patient"
         DOCTOR = "doctor", "Doctor"
+        PHARMACIST = "pharmacist", "Pharmacist"
         ADMIN = "admin", "Admin"
 
     email = models.EmailField(unique=True)
@@ -97,6 +98,35 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def is_admin(self) -> bool:
         return self.role == self.Role.ADMIN
+
+    def get_first_name(self) -> str:
+        """Get first name from relevant profile."""
+        if self.role == self.Role.PHARMACIST:
+            p = getattr(self, "pharmacist_profile", None)
+            return p.first_name if p else ""
+        if self.role == self.Role.DOCTOR:
+            p = getattr(self, "doctor_profile", None)
+            return p.first_name if p else ""
+        if self.role == self.Role.PATIENT:
+            p = getattr(self, "active_profile", None)
+            if p and p.name:
+                return p.name.split(" ")[0]
+        return ""
+
+    def get_last_name(self) -> str:
+        """Get last name from relevant profile."""
+        if self.role == self.Role.PHARMACIST:
+            p = getattr(self, "pharmacist_profile", None)
+            return p.last_name if p else ""
+        if self.role == self.Role.DOCTOR:
+            p = getattr(self, "doctor_profile", None)
+            return p.last_name if p else ""
+        if self.role == self.Role.PATIENT:
+            p = getattr(self, "active_profile", None)
+            if p and p.name:
+                parts = p.name.split(" ")
+                return " ".join(parts[1:]) if len(parts) > 1 else ""
+        return ""
 
     @property
     def is_approved_doctor(self) -> bool:
@@ -413,3 +443,55 @@ class SessionService:
     @staticmethod
     def invalidate_expired() -> int:
         return Session.objects.filter(expires_at__lt=timezone.now()).delete()[0]
+
+
+class PharmacistProfile(models.Model):
+    """
+    Profile for pharmacists with verification fields.
+    """
+    
+    class ApprovalStatus(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="pharmacist_profile")
+    first_name = models.CharField(max_length=100, blank=True)
+    last_name = models.CharField(max_length=100, blank=True)
+    license_number = models.CharField(
+        max_length=50,
+        unique=True,
+        db_index=True,
+        help_text="Pharmacy Council Registration Number"
+    )
+    degree = models.CharField(max_length=100, help_text="B.Pharm, M.Pharm, Pharm.D, etc.")
+    pharmacy_name = models.CharField(max_length=200, blank=True) # Optional, can be linked to Pharmacy model later
+    
+    # Documents
+    license_certificate = models.FileField(
+        upload_to="pharmacist/licenses/",
+        blank=True,
+        help_text="Pharmacy license certificate"
+    )
+
+    # Verification
+    approval_status = models.CharField(
+        max_length=16,
+        choices=ApprovalStatus.choices,
+        default=ApprovalStatus.PENDING,
+        db_index=True
+    )
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="approved_pharmacists"
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Pharmacist {self.user.email} ({self.approval_status})"

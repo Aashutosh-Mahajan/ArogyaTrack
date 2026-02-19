@@ -39,62 +39,51 @@ export function KPICard({
   trend,
   lastUpdated,
 }: KPICardProps) {
-  // Decide trend colour — positive is green except for alerts & pending labs where up = bad
-  const negativeTrendKeys = false; // parent will decide color via props
   let trendColor = 'text-gray-500';
   let TrendIcon = FiMinus;
+  let TrendBg = 'bg-gray-100';
 
   if (trend) {
     if (trend.direction === 'up') {
       trendColor = 'text-green-600';
+      TrendBg = 'bg-green-100';
       TrendIcon = FiTrendingUp;
     } else if (trend.direction === 'down') {
       trendColor = 'text-red-600';
+      TrendBg = 'bg-red-100';
       TrendIcon = FiTrendingDown;
     }
   }
 
   return (
-    <Card className="group relative overflow-hidden border border-gray-100/50 shadow-soft hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1">
-      <CardContent className="p-6">
-        {/* Top row: icon + trend */}
+    <Card className="group relative overflow-hidden backdrop-blur-md bg-white/60 border border-white/40 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+      <CardContent className="p-5">
         <div className="flex items-start justify-between mb-4">
-          <div className={`${iconBg} ${iconColor} p-3 rounded-2xl transition-transform duration-300 group-hover:scale-110`}>
+          <div className={`${iconBg} ${iconColor} p-3 rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-110`}>
             <Icon className="h-5 w-5" />
           </div>
 
           {trend && trend.direction !== 'flat' && (
-            <div className={`flex items-center gap-1 text-xs font-semibold ${trendColor} bg-white/80 px-2 py-1 rounded-full`}>
-              <TrendIcon className="h-3.5 w-3.5" />
-              <span>{Math.abs(trend.change)}</span>
+            <div className={`flex items-center gap-1 text-[10px] font-bold ${trendColor} ${TrendBg} px-2 py-1 rounded-full uppercase tracking-wide`}>
+              <TrendIcon className="h-3 w-3" />
+              <span>{Math.abs(trend.change)}%</span>
             </div>
           )}
         </div>
 
-        {/* Main number */}
-        <p className="text-3xl font-bold text-heading tracking-tight">
-          {value}
-        </p>
+        <div className="space-y-1">
+          <p className="text-3xl font-display font-bold text-slate-800 tracking-tight">
+            {value}
+          </p>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
+        </div>
 
-        {/* Subtitle */}
-        <p className="text-sm text-muted-text mt-2">{title}</p>
-
-        {/* Trend label */}
         {trend && (
-          <p className={`text-xs mt-3 ${trendColor} font-medium`}>
-            {trendLabel(trend)}
-          </p>
-        )}
-
-        {/* Last updated */}
-        {lastUpdated && (
-          <p className="text-[10px] text-muted-text mt-3 uppercase tracking-wider">
-            Updated{' '}
-            {new Date(lastUpdated).toLocaleTimeString('en-IN', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </p>
+          <div className="mt-4 pt-3 border-t border-slate-100">
+            <p className={`text-xs ${trendColor} font-medium flex items-center gap-1`}>
+              <span className="opacity-70">vs last month</span>
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>

@@ -47,8 +47,8 @@ function ForecastsPage(): React.JSX.Element {
     .map((f) => ({
       date: new Date(f.prediction_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       forecast: Math.round(f.predicted_cases),
-      lowerBound: Math.round(f.lower_bound),
-      upperBound: Math.round(f.upper_bound),
+      lower_bound: Math.round(f.lower_bound),
+      upper_bound: Math.round(f.upper_bound),
       actual: 0,
     })) || [];
 

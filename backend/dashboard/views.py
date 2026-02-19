@@ -139,7 +139,7 @@ class DashboardSummaryView(APIView):
             user=user, relationship="self"
         ).first()
 
-        patient_name = profile.name if profile else user.email
+        patient_name = profile.name if (profile and profile.name) else (user.get_first_name() or user.email)
 
         # ── Health card (ID) ─────────────────────────────────────
         health_id = None

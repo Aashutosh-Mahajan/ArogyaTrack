@@ -6,8 +6,8 @@ import { Providers } from './providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Health Surveillance System',
-  description: 'Comprehensive Health Surveillance and Management System',
+  title: 'ArogyaTrack - National Health Surveillance',
+  description: 'Advanced Public Health Surveillance and Management System | Government of India',
 };
 
 export default function RootLayout({

@@ -10,19 +10,15 @@ import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 import { MyPatient } from '@/types';
 import toast from 'react-hot-toast';
-import { FiSave, FiUser, FiFileText, FiCheckCircle, FiUpload, FiX, FiFile } from 'react-icons/fi';
+import { FiSave, FiUser, FiFileText, FiCheckCircle, FiUpload, FiX, FiFile, FiCalendar, FiActivity, FiEdit3 } from 'react-icons/fi';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 const ALLOWED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const MAX_REPORT_FILES = 5;
 
-const STATUS_OPTIONS = [
-  { value: 'completed', label: 'Completed' },
-  { value: 'follow_up', label: 'Follow-up Required' },
-  { value: 'critical', label: 'Critical' },
-];
-
 function AddRecordPage() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedPatient, setSelectedPatient] = useState('');
@@ -37,6 +33,12 @@ function AddRecordPage() {
   );
   const [submitted, setSubmitted] = useState(false);
 
+  const STATUS_OPTIONS = [
+    { value: 'completed', label: t('status_completed') },
+    { value: 'follow_up', label: t('status_follow_up') },
+    { value: 'critical', label: t('status_critical') },
+  ];
+
   const { data: patientsData, isLoading: loadingPatients } = useQuery({
     queryKey: ['myPatients'],
     queryFn: async () => {
@@ -49,37 +51,30 @@ function AddRecordPage() {
     mutationFn: (payload: { data: Record<string, string>; files: File[] }) =>
       api.medical.createVisitRecord(selectedPatient, payload.data, payload.files),
     onSuccess: () => {
-      toast.success('Visit record created successfully!');
+      toast.success(t('record_saved_success'));
       setSubmitted(true);
-      // Invalidate doctor queries
+      // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ['doctor-recent-records'] });
       queryClient.invalidateQueries({ queryKey: ['doctor-dashboard-summary'] });
       queryClient.invalidateQueries({ queryKey: ['doctor-recent-activity'] });
-      // Invalidate patient queries so the patient dashboard updates
-      queryClient.invalidateQueries({ queryKey: ['dashboard-recent-records'] });
-      queryClient.invalidateQueries({ queryKey: ['medical-records-all'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-lab-monitoring'] });
-      queryClient.invalidateQueries({ queryKey: ['visit-records-list'] });
+      queryClient.invalidateQueries({ queryKey: ['myPatients'] });
     },
     onError: (err: any) => {
-      toast.error(err?.message || 'Failed to create record');
+      toast.error(err?.message || t('failed_load'));
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPatient) {
-      toast.error('Please select a patient');
+      toast.error(t('select_patient'));
       return;
     }
     if (!diagnosis.trim()) {
-      toast.error('Diagnosis is required');
+      toast.error(t('diagnosis') + ' is required'); // Simplified check
       return;
     }
 
-    // Include status in doctor_notes so backend can reference it
     const statusLabel =
       STATUS_OPTIONS.find((s) => s.value === visitStatus)?.label ?? visitStatus;
     const notesWithStatus = [
@@ -117,21 +112,25 @@ function AddRecordPage() {
     return (
       <DashboardLayout>
         <div className="max-w-2xl mx-auto mt-12 text-center space-y-6">
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-10">
-            <FiCheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Record Created Successfully!
-            </h2>
-            <p className="text-gray-600 mb-6">
-              The visit record has been saved to the patient&apos;s file.
-            </p>
-            <div className="flex justify-center gap-4">
-              <Button onClick={resetForm} variant="default" size="lg">
-                <FiFileText className="mr-2 h-4 w-4" />
-                Create Another Record
-              </Button>
-            </div>
-          </div>
+          <Card className="bg-emerald-50/50 border border-emerald-100 shadow-xl shadow-emerald-50/50 backdrop-blur-md">
+            <CardContent className="p-12">
+              <div className="bg-emerald-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                <FiCheckCircle className="h-12 w-12 text-emerald-600" />
+              </div>
+              <h2 className="text-3xl font-bold text-slate-900 mb-3">
+                {t('record_saved_success')}
+              </h2>
+              <p className="text-slate-600 mb-8 max-w-md mx-auto text-lg">
+                {t('record_saved_desc')}
+              </p>
+              <div className="flex justify-center gap-4">
+                <Button onClick={resetForm} size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200">
+                  <FiFileText className="mr-2 h-5 w-5" />
+                  {t('create_another')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </DashboardLayout>
     );
@@ -139,146 +138,183 @@ function AddRecordPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-3xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Add / Update Record
+      <div className="max-w-4xl mx-auto space-y-8 pb-12">
+        <div className="text-center sm:text-left">
+          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
+            <span className="p-2 bg-blue-100 rounded-lg text-blue-600">
+              <FiEdit3 className="h-8 w-8" />
+            </span>
+            {t('add_record_title')}
           </h1>
-          <p className="text-gray-600 mt-1">
-            Create a new consultation or visit record for a patient
+          <p className="text-slate-500 mt-2 text-lg">
+            {t('add_record_subtitle')}
           </p>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FiUser className="h-5 w-5" />
-                Patient &amp; Visit Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              {/* Patient selector */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Select Patient <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={selectedPatient}
-                  onChange={(e) => setSelectedPatient(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                  required
-                >
-                  <option value="">
-                    {loadingPatients
-                      ? 'Loading patients…'
-                      : '-- Choose a patient --'}
-                  </option>
-                  {patientsData?.results?.map((p) => (
-                    <option key={p.patient_id} value={p.patient_id}>
-                      {p.name} ({p.unique_patient_id}) – {p.age} yrs, {p.gender}
-                    </option>
-                  ))}
-                </select>
-                {patientsData?.count === 0 && (
-                  <p className="text-xs text-amber-600 mt-1">
-                    No patients in your list. Scan a QR code first.
-                  </p>
-                )}
-              </div>
+          <div className="grid gap-8">
+            {/* Patient & Date Section */}
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
+                <CardTitle className="flex items-center gap-2 text-xl text-slate-800">
+                  <FiUser className="h-5 w-5 text-blue-500" />
+                  {t('visit_details')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 grid gap-6 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700 block">
+                    {t('select_patient')} <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={selectedPatient}
+                      onChange={(e) => setSelectedPatient(e.target.value)}
+                      className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none"
+                      required
+                    >
+                      <option value="">
+                        {loadingPatients ? t('loading') : t('choose_patient')}
+                      </option>
+                      {patientsData?.results?.map((p) => (
+                        <option key={p.patient_id} value={p.patient_id}>
+                          {p.name} ({p.unique_patient_id}) – {p.age} yrs
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"> <path fillRule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" /> </svg>
+                    </div>
+                  </div>
+                </div>
 
-              {/* Visit date */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Visit Date &amp; Time
-                </label>
-                <Input
-                  type="datetime-local"
-                  value={visitDate}
-                  onChange={(e) => setVisitDate(e.target.value)}
-                />
-              </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700 block">
+                    {t('visit_date')}
+                  </label>
+                  <div className="relative">
+                    <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      type="datetime-local"
+                      value={visitDate}
+                      onChange={(e) => setVisitDate(e.target.value)}
+                      className="pl-10 h-12 rounded-xl border-slate-200 focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Diagnosis */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Diagnosis <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={diagnosis}
-                  onChange={(e) => setDiagnosis(e.target.value)}
-                  rows={3}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g. Upper respiratory tract infection, mild dehydration…"
-                  required
-                />
-              </div>
+            {/* Clinical Details */}
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
+                <CardTitle className="flex items-center gap-2 text-xl text-slate-800">
+                  <FiActivity className="h-5 w-5 text-emerald-500" />
+                  Clinical Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700 block">
+                    {t('diagnosis')} <span className="text-rose-500">*</span>
+                  </label>
+                  <textarea
+                    value={diagnosis}
+                    onChange={(e) => setDiagnosis(e.target.value)}
+                    rows={2}
+                    className="w-full rounded-xl border border-slate-200 p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
+                    placeholder="e.g. Acute Viral Fever"
+                    required
+                  />
+                </div>
 
-              {/* Prescription */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Prescription
-                </label>
-                <textarea
-                  value={prescription}
-                  onChange={(e) => setPrescription(e.target.value)}
-                  rows={3}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g. Tab Paracetamol 500 mg – 1 TDS × 5 days…"
-                />
-              </div>
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700 block">
+                      {t('prescription')}
+                    </label>
+                    <textarea
+                      value={prescription}
+                      onChange={(e) => setPrescription(e.target.value)}
+                      rows={4}
+                      className="w-full rounded-xl border border-slate-200 p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
+                      placeholder="e.g. Tab Paracetamol 500mg"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700 block">
+                      {t('tests_performed')}
+                    </label>
+                    <textarea
+                      value={testsPerformed}
+                      onChange={(e) => setTestsPerformed(e.target.value)}
+                      rows={4}
+                      className="w-full rounded-xl border border-slate-200 p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
+                      placeholder="e.g. CBC, Widal"
+                    />
+                  </div>
+                </div>
 
-              {/* Status Dropdown */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
-                <select
-                  value={visitStatus}
-                  onChange={(e) => setVisitStatus(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                >
-                  {STATUS_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700 block">
+                    {t('doctor_notes')}
+                  </label>
+                  <textarea
+                    value={doctorNotes}
+                    onChange={(e) => setDoctorNotes(e.target.value)}
+                    rows={3}
+                    className="w-full rounded-xl border border-slate-200 p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
+                    placeholder="Additional observation notes..."
+                  />
+                </div>
 
-              {/* Tests Performed */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tests Performed
-                </label>
-                <textarea
-                  value={testsPerformed}
-                  onChange={(e) => setTestsPerformed(e.target.value)}
-                  rows={2}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g. CBC, Chest X-ray, Blood sugar (fasting)…"
-                />
-              </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700 block">
+                    {t('status')}
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={visitStatus}
+                      onChange={(e) => setVisitStatus(e.target.value)}
+                      className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all appearance-none"
+                    >
+                      {STATUS_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"> <path fillRule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" /> </svg>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Upload Reports (optional – up to 5 files) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Upload Reports (optional)
-                  <span className="text-xs text-gray-400 ml-1">PDF, JPG, PNG – max 10 MB each</span>
-                </label>
-
-                {/* Selected files list */}
+            {/* File Upload */}
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
+                <CardTitle className="flex items-center gap-2 text-xl text-slate-800">
+                  <FiFileText className="h-5 w-5 text-purple-500" />
+                  {t('upload_reports')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
                 {reportFiles.length > 0 && (
-                  <div className="space-y-2 mb-3">
+                  <div className="grid gap-3 mb-4 sm:grid-cols-2">
                     {reportFiles.map((file, idx) => (
                       <div
                         key={`${file.name}-${idx}`}
-                        className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-2.5 bg-gray-50"
+                        className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 bg-slate-50 transition-all hover:border-purple-200 hover:bg-purple-50/50"
                       >
-                        <FiFile className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                        <div className="h-10 w-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <FiFile className="h-5 w-5 text-purple-600" />
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-700 truncate">{file.name}</p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-sm font-medium text-slate-700 truncate">{file.name}</p>
+                          <p className="text-xs text-slate-500">
                             {(file.size / 1024 / 1024).toFixed(2)} MB
                           </p>
                         </div>
@@ -289,7 +325,7 @@ function AddRecordPage() {
                               prev.filter((_, i) => i !== idx)
                             )
                           }
-                          className="text-gray-400 hover:text-red-500 transition-colors"
+                          className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-full transition-colors"
                         >
                           <FiX className="h-4 w-4" />
                         </button>
@@ -298,18 +334,23 @@ function AddRecordPage() {
                   </div>
                 )}
 
-                {/* Add file button */}
                 {reportFiles.length < MAX_REPORT_FILES && (
-                  <button
-                    type="button"
+                  <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-4 text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
+                    className="group cursor-pointer border-2 border-dashed border-slate-300 rounded-xl p-8 transition-all hover:border-purple-400 hover:bg-purple-50/30 flex flex-col items-center justify-center text-center space-y-3"
                   >
-                    <FiUpload className="h-5 w-5" />
-                    {reportFiles.length === 0
-                      ? 'Click to upload PDF or image'
-                      : `Add more files (${reportFiles.length}/${MAX_REPORT_FILES})`}
-                  </button>
+                    <div className="h-12 w-12 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
+                      <FiUpload className="h-6 w-6 text-slate-400 group-hover:text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-slate-700 font-medium group-hover:text-purple-700 transition-colors">
+                        {reportFiles.length === 0 ? t('click_upload') : t('add_more_files')}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {t('upload_reports_desc')}
+                      </p>
+                    </div>
+                  </div>
                 )}
                 <input
                   ref={fileInputRef}
@@ -320,76 +361,44 @@ function AddRecordPage() {
                   onChange={(e) => {
                     const files = Array.from(e.target.files || []);
                     const valid: File[] = [];
-                    for (const file of files) {
-                      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+                    files.forEach(file => {
+                      if (ALLOWED_FILE_TYPES.includes(file.type) && file.size <= MAX_FILE_SIZE) {
+                        valid.push(file);
+                      } else {
                         toast.error(
-                          `Invalid file type: ${file.name}. Only PDF, JPG, and PNG are allowed.`
+                          !ALLOWED_FILE_TYPES.includes(file.type) ? `Invalid Type: ${file.name}` : `Too Large: ${file.name}`
                         );
-                        continue;
                       }
-                      if (file.size > MAX_FILE_SIZE) {
-                        toast.error(
-                          `File too large: ${file.name}. Maximum size is 10 MB.`
-                        );
-                        continue;
-                      }
-                      valid.push(file);
-                    }
-                    setReportFiles((prev) => {
-                      const combined = [...prev, ...valid];
-                      if (combined.length > MAX_REPORT_FILES) {
-                        toast.error(`Maximum ${MAX_REPORT_FILES} files allowed.`);
-                        return combined.slice(0, MAX_REPORT_FILES);
-                      }
-                      return combined;
                     });
-                    // Reset the input so the same file can be selected again
+                    setReportFiles(prev => [...prev, ...valid].slice(0, MAX_REPORT_FILES));
                     e.target.value = '';
                   }}
                 />
-              </div>
+              </CardContent>
+            </Card>
 
-              {/* Doctor Notes */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Doctor Notes
-                </label>
-                <textarea
-                  value={doctorNotes}
-                  onChange={(e) => setDoctorNotes(e.target.value)}
-                  rows={2}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Any additional clinical notes, follow-up instructions…"
-                />
-              </div>
-
-              {/* Submit */}
-              <div className="pt-2">
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="w-full"
-                  disabled={
-                    createMutation.isPending ||
-                    !selectedPatient ||
-                    !diagnosis.trim()
-                  }
-                >
-                  {createMutation.isPending ? (
-                    <>
-                      <span className="animate-spin mr-2">⏳</span>
-                      Saving…
-                    </>
-                  ) : (
-                    <>
-                      <FiSave className="mr-2 h-5 w-5" />
-                      Save Visit Record
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Submit Button */}
+            <div className="pt-4 pb-12">
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={createMutation.isPending || !selectedPatient || !diagnosis.trim()}
+              >
+                {createMutation.isPending ? (
+                  <>
+                    <span className="animate-spin mr-2">⏳</span>
+                    {t('saving')}
+                  </>
+                ) : (
+                  <>
+                    <FiSave className="mr-2 h-5 w-5" />
+                    {t('save_record')}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </form>
       </div>
     </DashboardLayout>

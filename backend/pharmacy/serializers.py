@@ -3,7 +3,7 @@ from rest_framework import serializers
 from prescriptions.models import Prescription, PrescriptionMedicine, PrescriptionService
 from adherence.services import AdherenceService
 
-from .models import DispensingRecord, Pharmacy
+from .models import DispensingRecord, Pharmacy, PharmacyInventory
 
 
 class PharmacySerializer(serializers.ModelSerializer):
@@ -176,3 +176,24 @@ class DispensingRecordSerializer(serializers.ModelSerializer):
             "dispensed_at",
         ]
         read_only_fields = ["id", "dispensed_at"]
+
+
+class PharmacyInventorySerializer(serializers.ModelSerializer):
+    medicine_name = serializers.CharField(source="medicine.name", read_only=True)
+    medicine_generic = serializers.CharField(source="medicine.generic_name", read_only=True)
+    
+    class Meta:
+        model = PharmacyInventory
+        fields = [
+            "id",
+            "medicine",
+            "medicine_name",
+            "medicine_generic",
+            "quantity_in_stock",
+            "low_stock_threshold",
+            "unit_price",
+            "batch_number",
+            "expiry_date",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "updated_at"]

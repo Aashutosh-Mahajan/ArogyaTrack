@@ -3,7 +3,8 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FiUser, FiBriefcase, FiAward, FiArrowRight } from 'react-icons/fi';
+import { FiUser, FiBriefcase, FiAward, FiArrowRight, FiActivity, FiShield } from 'react-icons/fi';
+import { motion } from 'framer-motion';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -11,48 +12,73 @@ export default function SignupPage() {
   const roleCards = [
     {
       id: 'patient',
-      label: 'Patient',
-      icon: <FiUser className="w-12 h-12" />,
-      desc: 'Access medical records, prescriptions & health tracking',
-      color: 'from-blue-500 to-blue-600',
-      hoverColor: 'hover:from-blue-600 hover:to-blue-700',
+      label: 'Citizen / Patient',
+      icon: <FiUser className="w-10 h-10" />,
+      desc: 'Access personal health records, recipes & immunization history.',
+      color: 'bg-blue-50 text-blue-600 border-blue-200 hover:border-blue-400',
+      iconBg: 'bg-blue-100',
       path: '/signup/patient',
     },
     {
       id: 'doctor',
-      label: 'Doctor',
-      icon: <FiBriefcase className="w-12 h-12" />,
-      desc: 'Manage patients, write prescriptions & medical records',
-      color: 'from-emerald-500 to-emerald-600',
-      hoverColor: 'hover:from-emerald-600 hover:to-emerald-700',
+      label: 'Medical Officer',
+      icon: <FiBriefcase className="w-10 h-10" />,
+      desc: 'Manage patient queues, issue digital prescriptions & update records.',
+      color: 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:border-emerald-400',
+      iconBg: 'bg-emerald-100',
       path: '/signup/doctor',
     },
     {
       id: 'pharmacy',
-      label: 'Pharmacy',
-      icon: <FiAward className="w-12 h-12" />,
-      desc: 'Scan prescriptions, dispense medicine & track inventory',
-      color: 'from-purple-500 to-purple-600',
-      hoverColor: 'hover:from-purple-600 hover:to-purple-700',
-      path: '#', // TODO: Create pharmacy signup page
-      comingSoon: true,
+      label: 'Pharmacist',
+      icon: <FiAward className="w-10 h-10" />,
+      desc: 'Verify digital prescriptions, manage inventory & dispensing.',
+      color: 'bg-purple-50 text-purple-600 border-purple-200 hover:border-purple-400',
+      iconBg: 'bg-purple-100',
+      path: '/signup/pharmacist',
+      comingSoon: false,
     },
   ];
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
-      <div className="w-full max-w-5xl">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">Create Your Account</h1>
-          <p className="text-lg text-gray-600">Choose your role to get started</p>
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden font-sans selection:bg-teal-100">
+      {/* Background Decor */}
+      <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-teal-900 to-slate-50 -z-10" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-teal-500/20 rounded-full blur-[128px] -translate-y-1/2 translate-x-1/2 -z-10" />
+
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        {/* Header Branding */}
+        <div className="flex flex-col items-center justify-center mb-16 text-center">
+          <Link href="/" className="inline-flex items-center gap-3 mb-6 group">
+            <div className="bg-white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20 shadow-lg group-hover:bg-white/20 transition-all">
+              <FiActivity className="w-6 h-6 text-emerald-300" />
+            </div>
+            <div className="text-left">
+              <span className="text-2xl font-display font-bold text-white block leading-none tracking-tight">ArogyaTrack</span>
+              <span className="text-[10px] text-teal-200 uppercase tracking-widest block leading-none mt-1">Govt. of India</span>
+            </div>
+          </Link>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-white space-y-4 max-w-2xl"
+          >
+            <h1 className="text-4xl md:text-5xl font-display font-bold">Register on the Network</h1>
+            <p className="text-lg text-teal-100/90 font-light">
+              Join the unified national health interface. Select your role to begin the registration process.
+            </p>
+          </motion.div>
         </div>
 
         {/* Role Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {roleCards.map((role) => (
-            <button
+        <div className="grid md:grid-cols-3 gap-6 mb-12">
+          {roleCards.map((role, i) => (
+            <motion.button
               key={role.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
               onClick={() => {
                 if (!role.comingSoon) {
                   router.push(role.path);
@@ -60,96 +86,60 @@ export default function SignupPage() {
               }}
               disabled={role.comingSoon}
               className={`
-                relative group p-8 rounded-2xl bg-white shadow-lg 
-                transition-all duration-300 transform hover:scale-105 hover:shadow-xl
-                ${role.comingSoon ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
+                relative group text-left p-8 rounded-[2rem] bg-white border shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1
+                ${role.comingSoon ? 'opacity-70 grayscale' : role.color}
               `}
             >
-              {/* Gradient Background on Hover */}
-              <div className={`
-                absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-10 
-                transition-opacity duration-300 bg-gradient-to-br ${role.color}
-                ${role.comingSoon ? '' : ''}
-              `} />
-
-              {/* Icon */}
-              <div className={`
-                w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center
-                bg-gradient-to-br ${role.color} text-white
-                transform transition-transform group-hover:scale-110
-              `}>
+              <div className={`w-16 h-16 rounded-2xl ${role.iconBg} flex items-center justify-center mb-6 transition-transform group-hover:scale-110`}>
                 {role.icon}
               </div>
 
-              {/* Title */}
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">{role.label}</h2>
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">{role.label}</h3>
+              <p className="text-slate-500 mb-8 min-h-[3rem] leading-relaxed">
+                {role.desc}
+              </p>
 
-              {/* Description */}
-              <p className="text-gray-600 text-sm mb-6 min-h-[3rem]">{role.desc}</p>
-
-              {/* CTA */}
-              {role.comingSoon ? (
-                <div className="inline-flex items-center text-sm font-medium text-gray-500">
-                  Coming Soon
-                </div>
-              ) : (
-                <div className={`
-                  inline-flex items-center text-sm font-medium 
-                  bg-gradient-to-r ${role.color} bg-clip-text text-transparent
-                  group-hover:translate-x-1 transition-transform
-                `}>
-                  Get Started
-                  <FiArrowRight className={`ml-2 text-current`} style={{
-                    color: role.color.includes('blue') ? '#3b82f6' :
-                           role.color.includes('emerald') ? '#10b981' : '#a855f7'
-                  }} />
-                </div>
-              )}
-
-              {/* Coming Soon Badge */}
-              {role.comingSoon && (
-                <div className="absolute top-4 right-4 bg-gray-200 text-gray-700 text-xs font-semibold px-3 py-1 rounded-full">
-                  Soon
-                </div>
-              )}
-            </button>
+              <div className="flex items-center justify-between mt-auto">
+                {role.comingSoon ? (
+                  <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                    Coming Soon
+                  </span>
+                ) : (
+                  <span className="text-sm font-bold flex items-center gap-2 group-hover:gap-3 transition-all">
+                    Proceed <FiArrowRight />
+                  </span>
+                )}
+              </div>
+            </motion.button>
           ))}
         </div>
 
-        {/* Features Banner */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            <div>
-              <div className="text-3xl mb-2">🔒</div>
-              <h3 className="font-semibold text-gray-900 mb-1">Secure & HIPAA Compliant</h3>
-              <p className="text-sm text-gray-600">Your data is encrypted and protected</p>
+        {/* Features / Footer */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="text-center space-y-8"
+        >
+          <div className="inline-flex flex-wrap justify-center gap-6 md:gap-12 text-sm font-medium text-slate-500">
+            <div className="flex items-center gap-2">
+              <FiShield className="text-emerald-600" /> HIPAA Compliant
             </div>
-            <div>
-              <div className="text-3xl mb-2">⚡</div>
-              <h3 className="font-semibold text-gray-900 mb-1">Fast Approval</h3>
-              <p className="text-sm text-gray-600">Doctor accounts reviewed in 24-48 hours</p>
+            <div className="flex items-center gap-2">
+              <FiShield className="text-emerald-600" /> ISO 27001 Certified
             </div>
-            <div>
-              <div className="text-3xl mb-2">🎯</div>
-              <h3 className="font-semibold text-gray-900 mb-1">Professional Standards</h3>
-              <p className="text-sm text-gray-600">Production-grade healthcare system</p>
+            <div className="flex items-center gap-2">
+              <FiShield className="text-emerald-600" /> 256-bit SSL Security
             </div>
           </div>
-        </div>
 
-        {/* Footer Links */}
-        <div className="text-center text-sm">
-          <span className="text-gray-600">Already have an account? </span>
-          <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">
-            Sign In
-          </Link>
-        </div>
-
-        <div className="mt-4 text-center">
-          <Link href="/" className="text-sm text-gray-600 hover:text-gray-900 hover:underline">
-            ← Back to Home
-          </Link>
-        </div>
+          <p className="text-slate-500">
+            Already have an account?{' '}
+            <Link href="/login" className="text-teal-700 font-bold hover:underline">
+              Official Login
+            </Link>
+          </p>
+        </motion.div>
       </div>
     </div>
   );

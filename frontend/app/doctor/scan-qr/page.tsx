@@ -9,11 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
-import { FiCamera, FiX, FiUser, FiActivity, FiAlertTriangle, FiAlertCircle, FiUserPlus } from 'react-icons/fi';
+import { FiCamera, FiX, FiUser, FiActivity, FiAlertTriangle, FiAlertCircle, FiUserPlus, FiSearch, FiCreditCard } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 function ScanQRPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [isScanning, setIsScanning] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -38,6 +40,7 @@ function ScanQRPage() {
     return () => {
       if (scannerRef.current?.isScanning) {
         scannerRef.current.stop().catch(() => { });
+        scannerRef.current.clear();
       }
     };
   }, []);
@@ -111,6 +114,7 @@ function ScanQRPage() {
     try {
       if (scannerRef.current?.isScanning) {
         await scannerRef.current.stop();
+        scannerRef.current.clear();
       }
     } catch (error) {
       console.error('Error stopping scanner:', error);
@@ -127,7 +131,7 @@ function ScanQRPage() {
       // Use the new patients API endpoint that verifies QR tokens
       const response = await api.patients.scanPatientQR({ token: scannedData });
       setPatientData(response);
-      toast.success('Patient data loaded successfully');
+      toast.success(t('patient_data_loaded'));
     } catch (error: any) {
       console.error('QR Scan Error:', error);
       const errorMessage = error.response?.data?.detail || 'Failed to scan QR code';
@@ -145,7 +149,7 @@ function ScanQRPage() {
       try {
         const response = await api.patients.scanPatientQR({ token: manualToken });
         setPatientData(response);
-        toast.success('Patient data loaded successfully');
+        toast.success(t('patient_data_loaded'));
       } catch (error: any) {
         toast.error(error.response?.data?.detail || 'Failed to access records');
       } finally {
@@ -161,7 +165,7 @@ function ScanQRPage() {
       try {
         const response = await api.patients.scanPatientQR({ patient_id: manualPatientId.trim() });
         setPatientData(response);
-        toast.success('Patient found and records loaded');
+        toast.success(t('patient_data_loaded'));
       } catch (error: any) {
         toast.error(error.response?.data?.detail || 'Patient not found');
       } finally {
@@ -173,7 +177,6 @@ function ScanQRPage() {
   const handleAddToMyPatients = async () => {
     if (!patientData?.patient?.id) {
       toast.error('Patient ID not found in response');
-      console.error('Patient data:', patientData);
       return;
     }
 
@@ -195,201 +198,233 @@ function ScanQRPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-5xl mx-auto space-y-8 pb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Scan Patient QR</h1>
-          <p className="text-gray-600 mt-1">
-            Scan patient health card to access medical records
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{t('scan_qr_title')}</h1>
+          <p className="text-slate-500 mt-1">
+            {t('scan_qr_subtitle')}
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* QR Scanner */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Camera Scanner</CardTitle>
-              <CardDescription>
-                Use your camera to scan the patient's health card QR code
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Camera Error Message */}
-              {cameraError && !isScanning && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <div className="flex items-start space-x-3">
-                    <FiAlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-red-900">Camera Access Error</p>
-                      <p className="text-sm text-red-700 mt-1">{cameraError}</p>
-                      <p className="text-xs text-red-600 mt-2">
-                        💡 Tip: Check browser permissions and ensure you're using HTTPS or localhost
-                      </p>
-                    </div>
+        {!patientData && (
+          <div className="grid gap-8 md:grid-cols-2">
+            {/* QR Scanner */}
+            <Card className="border-0 shadow-xl overflow-hidden bg-white/80 backdrop-blur-md flex flex-col h-full">
+              <div className="h-1 bg-gradient-to-r from-teal-400 to-blue-400"></div>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-teal-50 rounded-lg">
+                    <FiCamera className="w-5 h-5 text-teal-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">{t('camera_scanner')}</CardTitle>
+                    <CardDescription>{t('camera_scanner_desc')}</CardDescription>
                   </div>
                 </div>
-              )}
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col">
+                {/* Camera Error Message */}
+                {cameraError && !isScanning && (
+                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-start space-x-3">
+                      <FiAlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-red-900">{t('camera_access_error')}</p>
+                        <p className="text-sm text-red-700 mt-1">{cameraError}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-              {!isScanning ? (
-                <Button
-                  onClick={startScanning}
-                  className="w-full"
-                  size="lg"
-                >
-                  <FiCamera className="mr-2" />
-                  Start Camera Scanner
-                </Button>
-              ) : (
-                <div className="space-y-4">
-                  {!isCameraReady && (
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
-                      <div className="loading-dots"><span></span><span></span><span></span></div>
-                      <p className="text-sm text-blue-700 mt-2">Requesting camera access...</p>
+                <div className="flex-1 flex flex-col justify-center min-h-[300px]">
+                  {!isScanning ? (
+                    <div className="text-center space-y-4">
+                      <div className="w-24 h-24 mx-auto bg-slate-100 rounded-full flex items-center justify-center">
+                        <FiCamera className="w-10 h-10 text-slate-400" />
+                      </div>
+                      <Button
+                        onClick={startScanning}
+                        size="lg"
+                        className="bg-teal-600 hover:bg-teal-700 text-white rounded-full px-8 shadow-lg hover:shadow-xl transition-all"
+                      >
+                        {t('start_camera')}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 w-full">
+                      {!isCameraReady && (
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center animate-pulse">
+                          <p className="text-sm text-blue-700">Initializing camera...</p>
+                        </div>
+                      )}
+                      <div className="relative rounded-xl overflow-hidden bg-black shadow-inner aspect-square max-w-sm mx-auto">
+                        <div id="qr-reader" className="w-[100%] h-full object-cover"></div>
+                        {isCameraReady && <div className="absolute inset-0 border-2 border-teal-400/50 animate-pulse pointer-events-none"></div>}
+                      </div>
+                      {isCameraReady && (
+                        <p className="text-sm text-center text-teal-600 font-medium">
+                          {t('camera_active')}
+                        </p>
+                      )}
+                      <Button
+                        onClick={stopScanning}
+                        variant="destructive"
+                        className="w-full rounded-full"
+                      >
+                        <FiX className="mr-2" />
+                        {t('stop_scanner')}
+                      </Button>
                     </div>
                   )}
-                  <div id="qr-reader" className="w-full rounded-lg overflow-hidden bg-black"></div>
-                  {isCameraReady && (
-                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <p className="text-sm text-green-800 text-center">
-                        📷 Camera active - Point at QR code to scan
-                      </p>
-                    </div>
-                  )}
-                  <Button
-                    onClick={stopScanning}
-                    variant="destructive"
-                    className="w-full"
-                  >
-                    <FiX className="mr-2" />
-                    Stop Scanner
-                  </Button>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Manual Entry */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Manual Entry</CardTitle>
-              <CardDescription>
-                Access records using Patient ID or Token
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Option 1: Patient ID */}
-              <form onSubmit={handlePatientIdSubmit} className="space-y-3">
-                <label className="text-sm font-medium text-gray-700">Universal Patient ID</label>
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    placeholder="e.g. HS-2026-4F6509"
-                    value={manualPatientId}
-                    onChange={(e) => setManualPatientId(e.target.value.toUpperCase())}
-                    className="font-mono text-sm"
-                  />
+            {/* Manual Entry */}
+            <Card className="border-0 shadow-xl overflow-hidden bg-white/80 backdrop-blur-md flex flex-col h-full">
+              <div className="h-1 bg-gradient-to-r from-indigo-400 to-purple-400"></div>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-50 rounded-lg">
+                    <FiSearch className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">{t('manual_entry')}</CardTitle>
+                    <CardDescription>{t('manual_entry_desc')}</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6 flex-1">
+                {/* Option 1: Patient ID */}
+                <form onSubmit={handlePatientIdSubmit} className="space-y-3">
+                  <label className="text-sm font-semibold text-slate-700">{t('universal_patient_id')}</label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <FiUser className="absolute left-3 top-3 text-slate-400" />
+                      <Input
+                        type="text"
+                        placeholder="e.g. HS-202X-XXXXX"
+                        value={manualPatientId}
+                        onChange={(e) => setManualPatientId(e.target.value.toUpperCase())}
+                        className="pl-10 font-mono text-sm uppercase"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={!manualPatientId.trim() || isLoading}
+                      className="bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      {t('find_patient')}
+                    </Button>
+                  </div>
+                </form>
+
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-slate-200" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-slate-400 font-medium">Or use token</span>
+                  </div>
+                </div>
+
+                {/* Option 2: JWT Token */}
+                <form onSubmit={handleManualSubmit} className="space-y-3">
+                  <label className="text-sm font-semibold text-slate-700">{t('digital_token')}</label>
+                  <div className="relative">
+                    <FiCreditCard className="absolute left-3 top-3 text-slate-400" />
+                    <Input
+                      type="text"
+                      placeholder="Paste long JWT token here"
+                      value={manualToken}
+                      onChange={(e) => setManualToken(e.target.value)}
+                      className="pl-10 font-mono text-sm"
+                    />
+                  </div>
                   <Button
                     type="submit"
-                    disabled={!manualPatientId.trim() || isLoading}
-                    className="whitespace-nowrap bg-blue-600"
+                    variant="outline"
+                    className="w-full border-slate-200 hover:bg-slate-50 text-slate-700"
+                    disabled={!manualToken.trim() || isLoading}
                   >
-                    Find Patient
+                    {isLoading ? t('loading') : t('access_via_token')}
                   </Button>
-                </div>
-              </form>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500">Or use token</span>
-                </div>
-              </div>
-
-              {/* Option 2: JWT Token */}
-              <form onSubmit={handleManualSubmit} className="space-y-3">
-                <label className="text-sm font-medium text-gray-700">Digital Token</label>
-                <Input
-                  type="text"
-                  placeholder="Paste long JWT token here"
-                  value={manualToken}
-                  onChange={(e) => setManualToken(e.target.value)}
-                  className="font-mono text-sm"
-                />
-                <Button
-                  type="submit"
-                  variant="outline"
-                  className="w-full"
-                  disabled={!manualToken.trim() || isLoading}
-                >
-                  {isLoading ? 'Loading...' : 'Access via Token'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Patient Data Display */}
         {patientData && (
-          <div className="space-y-4">
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Action Bar - Clear/Scan Another */}
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-3 print:hidden">
               <Button
                 onClick={() => setPatientData(null)}
                 variant="outline"
-                className="border-red-300 text-red-700 hover:bg-red-50"
+                className="border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
               >
-                <FiX className="mr-2" />Clear Patient Data
+                <FiX className="mr-2" /> {t('clear_patient_data')}
               </Button>
               <Button
-                onClick={startScanning}
+                onClick={() => { setPatientData(null); setTimeout(startScanning, 100); }}
                 variant="outline"
-                className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800"
               >
-                <FiCamera className="mr-2" />Scan Another QR
+                <FiCamera className="mr-2" /> {t('scan_another')}
               </Button>
             </div>
 
             {/* Compact Patient Info Box */}
-            <Card className="border-green-200 bg-gradient-to-r from-green-50 to-blue-50">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    {patientData.patient?.profile_photo_url && (
+            <Card className="border-0 shadow-lg bg-gradient-to-r from-teal-50 to-blue-50 overflow-hidden">
+              <div className="absolute top-0 right-0 p-3 opacity-5">
+                <FiUser className="w-32 h-32" />
+              </div>
+              <CardContent className="p-6 relative z-10">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="flex items-center gap-5">
+                    {patientData.patient?.profile_photo_url ? (
                       <img
                         src={patientData.patient.profile_photo_url}
                         alt="Patient"
-                        className="w-16 h-16 rounded-full object-cover border-2 border-green-300"
+                        className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
                       />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center text-teal-600 text-2xl font-bold shadow-md border-4 border-teal-100">
+                        {patientData.patient?.name?.charAt(0) || 'P'}
+                      </div>
                     )}
                     <div className="space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <FiUser className="h-5 w-5 text-blue-600" />
-                        <p className="text-xl font-bold text-gray-900">
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-bold text-slate-900">
                           {patientData.patient?.name || `${patientData.profile?.user?.first_name || ''} ${patientData.profile?.user?.last_name || ''}`}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600">
-                        <span className="font-mono font-medium">
-                          {patientData.patient?.unique_patient_id || 'N/A'}
+                        </h2>
+                        <span className="px-2 py-0.5 rounded-full bg-white/60 text-xs font-mono text-slate-500 border border-slate-200/50">
+                          {patientData.patient?.unique_patient_id || 'ID N/A'}
                         </span>
-                        <span>•</span>
-                        <span className="flex items-center space-x-1">
-                          <FiActivity className="h-4 w-4 text-red-600" />
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600">
+                        <span className="flex items-center gap-1.5">
+                          <FiActivity className="h-4 w-4 text-rose-500" />
                           <span className="font-semibold">{patientData.patient?.blood_group || patientData.profile?.blood_group || 'N/A'}</span>
                         </span>
-                        <span>•</span>
+                        <span className="text-slate-300">•</span>
                         <span>
-                          {patientData.patient?.age || '—'} years • {patientData.patient?.gender || patientData.profile?.gender || '—'}
+                          {patientData.patient?.age || '—'} yrs
                         </span>
-                        <span>•</span>
+                        <span className="text-slate-300">•</span>
+                        <span>{patientData.patient?.gender || patientData.profile?.gender || '—'}</span>
+                        <span className="text-slate-300">•</span>
                         <span>{patientData.patient?.district || 'N/A'}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="text-right space-y-1">
+                  <div className="flex flex-col gap-2">
                     {patientData.patient?.phone && (
-                      <p className="text-sm text-gray-600">📱 {patientData.patient.phone}</p>
+                      <div className="bg-white/60 px-3 py-1.5 rounded-lg text-sm text-slate-700 font-medium">
+                        📱 {patientData.patient.phone}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -401,125 +436,143 @@ function ScanQRPage() {
               <Button
                 onClick={handleAddToMyPatients}
                 disabled={isAddingPatient}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg font-semibold"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-6 text-lg font-semibold shadow-md hover:shadow-lg transition-all"
                 size="lg"
               >
                 <FiUserPlus className="mr-2 h-5 w-5" />
-                {isAddingPatient ? 'Adding...' : '➕ Add to My Patients'}
+                {isAddingPatient ? 'Adding...' : t('add_to_my_patients')}
               </Button>
 
               <Button
                 onClick={() => router.push(`/doctor/patients/${patientData.patient?.id}/create-record`)}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg font-semibold"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-6 text-lg font-semibold shadow-md hover:shadow-lg transition-all"
                 size="lg"
               >
-                📋 Create Visit Record
+                <FiActivity className="mr-2 h-5 w-5" />
+                {t('create_visit_record')}
               </Button>
             </div>
 
             {/* Critical Alerts & Vitals Row */}
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2">
               {/* Vitals Summary */}
               {patientData.latest_vitals && (
-                <div className="bg-white border rounded-lg p-3 shadow-sm space-y-3">
-                  <p className="font-bold text-gray-900 flex items-center">
-                    <FiActivity className="mr-2 text-blue-600" /> Current Vitals
-                  </p>
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* BP */}
-                    <div className="bg-gray-50 p-2 rounded">
-                      <p className="text-xs text-gray-500 uppercase">Blood Pressure</p>
-                      {patientData.latest_vitals.blood_pressure ? (
-                        <div>
-                          <p className="text-lg font-bold text-gray-900">
-                            {patientData.latest_vitals.blood_pressure.value} <span className="text-xs font-normal text-gray-500">{patientData.latest_vitals.blood_pressure.unit}</span>
-                          </p>
-                          {patientData.latest_vitals.blood_pressure.status !== 'normal' && (
-                            <span className={`inline-block px-1.5 py-0.5 text-[10px] rounded font-bold uppercase ${patientData.latest_vitals.blood_pressure.status === 'high' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-                              }`}>
-                              {patientData.latest_vitals.blood_pressure.status}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-400 italic">Not recorded</p>
-                      )}
-                    </div>
+                <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <FiActivity className="text-teal-600" /> {t('current_vitals')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* BP */}
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Blood Pressure</p>
+                        {patientData.latest_vitals.blood_pressure ? (
+                          <div className="mt-1">
+                            <p className="text-xl font-bold text-slate-900">
+                              {patientData.latest_vitals.blood_pressure.value} <span className="text-sm font-normal text-slate-400">{patientData.latest_vitals.blood_pressure.unit}</span>
+                            </p>
+                            {patientData.latest_vitals.blood_pressure.status !== 'normal' && (
+                              <span className={`inline-block mt-1 px-2 py-0.5 text-[10px] rounded-full font-bold uppercase ${patientData.latest_vitals.blood_pressure.status === 'high' ? 'bg-rose-100 text-rose-700' : 'bg-blue-100 text-blue-700'
+                                }`}>
+                                {patientData.latest_vitals.blood_pressure.status}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-slate-400 italic mt-1">Not recorded</p>
+                        )}
+                      </div>
 
-                    {/* Sugar */}
-                    <div className="bg-gray-50 p-2 rounded">
-                      <p className="text-xs text-gray-500 uppercase">Blood Sugar</p>
-                      {patientData.latest_vitals.blood_sugar ? (
-                        <div>
-                          <p className="text-lg font-bold text-gray-900">
-                            {patientData.latest_vitals.blood_sugar.value} <span className="text-xs font-normal text-gray-500">{patientData.latest_vitals.blood_sugar.unit}</span>
-                          </p>
-                          {patientData.latest_vitals.blood_sugar.status !== 'normal' && (
-                            <span className={`inline-block px-1.5 py-0.5 text-[10px] rounded font-bold uppercase ${patientData.latest_vitals.blood_sugar.status === 'high' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-                              }`}>
-                              {patientData.latest_vitals.blood_sugar.status}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-400 italic">Not recorded</p>
-                      )}
+                      {/* Sugar */}
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Blood Sugar</p>
+                        {patientData.latest_vitals.blood_sugar ? (
+                          <div className="mt-1">
+                            <p className="text-xl font-bold text-slate-900">
+                              {patientData.latest_vitals.blood_sugar.value} <span className="text-sm font-normal text-slate-400">{patientData.latest_vitals.blood_sugar.unit}</span>
+                            </p>
+                            {patientData.latest_vitals.blood_sugar.status !== 'normal' && (
+                              <span className={`inline-block mt-1 px-2 py-0.5 text-[10px] rounded-full font-bold uppercase ${patientData.latest_vitals.blood_sugar.status === 'high' ? 'bg-rose-100 text-rose-700' : 'bg-blue-100 text-blue-700'
+                                }`}>
+                                {patientData.latest_vitals.blood_sugar.status}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-slate-400 italic mt-1">Not recorded</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               )}
 
               {/* Allergies Alert */}
               {patientData.allergies && patientData.allergies.length > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <FiAlertTriangle className="h-5 w-5 text-red-600" />
-                    <p className="font-bold text-red-900">Allergies</p>
-                  </div>
-                  <div className="space-y-1">
-                    {patientData.allergies.map((allergy: any, idx: number) => (
-                      <p key={idx} className="text-sm text-red-800 font-medium">
-                        • {allergy.allergen} — {allergy.reaction_type}
-                      </p>
-                    ))}
-                  </div>
-                </div>
+                <Card className="border-0 shadow-lg bg-rose-50/50 backdrop-blur-md border-rose-100">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2 text-rose-700">
+                      <FiAlertTriangle className="h-5 w-5" /> {t('allergies_title')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {patientData.allergies.map((allergy: any, idx: number) => (
+                        <div key={idx} className="flex items-center gap-2 bg-white/60 p-2 rounded-lg border border-rose-100/50">
+                          <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
+                          <p className="text-sm text-rose-800 font-medium">
+                            {allergy.allergen} — <span className="text-rose-600">{allergy.reaction_type}</span>
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               )}
 
               {/* Chronic Conditions */}
               {patientData.chronic_conditions && patientData.chronic_conditions.length > 0 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 md:col-span-2">
-                  <p className="font-bold text-yellow-900 mb-2 flex items-center">
-                    <FiAlertCircle className="mr-2 text-yellow-600" /> Chronic Conditions
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {patientData.chronic_conditions.map((condition: any, idx: number) => (
-                      <span key={idx} className="px-2 py-1 bg-yellow-100 text-yellow-800 text-sm font-medium rounded-full border border-yellow-200">
-                        {condition.disease_name || condition.condition_name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+                <Card className="border-0 shadow-lg bg-amber-50/50 backdrop-blur-md border-amber-100 md:col-span-2">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2 text-amber-700">
+                      <FiAlertCircle className="h-5 w-5" /> {t('chronic_conditions')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {patientData.chronic_conditions.map((condition: any, idx: number) => (
+                        <span key={idx} className="px-3 py-1.5 bg-white/80 text-amber-800 text-sm font-semibold rounded-full border border-amber-200 shadow-sm">
+                          {condition.disease_name || condition.condition_name}
+                        </span>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               )}
             </div>
 
             {/* Medical Records - Prominent Display */}
-            <Card>
-              <CardHeader className="bg-blue-50">
-                <CardTitle className="text-blue-900">📋 Medical Records & Consultation History</CardTitle>
+            <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
+              <div className="h-1 bg-gradient-to-r from-blue-400 to-indigo-400"></div>
+              <CardHeader className="border-b border-slate-100">
+                <CardTitle className="text-slate-800 flex items-center gap-2">
+                  <span className="text-2xl">📋</span> {t('medical_records_history')}
+                </CardTitle>
               </CardHeader>
-              <CardContent className="pt-4">
+              <CardContent className="pt-6 bg-slate-50/30">
                 {/* Visit Records (New Model - More Detailed) */}
                 {patientData.visit_records && patientData.visit_records.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {patientData.visit_records.map((record: any) => (
-                      <div key={record.id} className="border-l-4 border-blue-500 bg-gray-50 rounded-r-lg p-4 hover:bg-gray-100 transition">
-                        <div className="flex justify-between items-start mb-3">
+                      <div key={record.id} className="relative pl-6 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-blue-200 hover:before:bg-blue-500 before:transition-colors bg-white p-6 rounded-r-xl shadow-sm border border-slate-100 hover:shadow-md transition-all">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-2">
                           <div>
-                            <p className="font-semibold text-gray-900">Dr. {record.doctor_name}</p>
-                            <p className="text-xs text-gray-500">{record.department}</p>
+                            <p className="font-bold text-lg text-slate-800">Dr. {record.doctor_name}</p>
+                            <p className="text-sm text-slate-500 font-medium bg-slate-100 inline-block px-2 py-0.5 rounded mt-1">{record.department}</p>
                           </div>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-slate-400 font-medium">
                             {new Date(record.visit_date).toLocaleDateString('en-US', {
                               year: 'numeric',
                               month: 'short',
@@ -528,36 +581,36 @@ function ScanQRPage() {
                           </p>
                         </div>
 
-                        <div className="space-y-3">
-                          <div>
-                            <p className="text-xs font-semibold text-gray-600 uppercase mb-1">Diagnosis</p>
-                            <p className="text-sm text-blue-900 font-medium">{record.diagnosis}</p>
+                        <div className="space-y-4">
+                          <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100/50">
+                            <p className="text-xs font-bold text-blue-600 uppercase mb-1 tracking-wider">{t('diagnosis')}</p>
+                            <p className="text-sm text-slate-800 font-medium leading-relaxed">{record.diagnosis}</p>
                           </div>
 
                           {record.tests_performed && (
                             <div>
-                              <p className="text-xs font-semibold text-gray-600 uppercase mb-1">Tests Performed</p>
-                              <p className="text-sm text-gray-700 whitespace-pre-line">{record.tests_performed}</p>
+                              <p className="text-xs font-bold text-slate-500 uppercase mb-1 tracking-wider">{t('tests_performed')}</p>
+                              <p className="text-sm text-slate-700 whitespace-pre-line leading-relaxed">{record.tests_performed}</p>
                             </div>
                           )}
 
                           {record.prescription && (
-                            <div>
-                              <p className="text-xs font-semibold text-gray-600 uppercase mb-1">Prescription</p>
-                              <p className="text-sm text-gray-700 whitespace-pre-line">{record.prescription}</p>
+                            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                              <p className="text-xs font-bold text-slate-500 uppercase mb-1 tracking-wider">{t('prescription')}</p>
+                              <p className="text-sm text-slate-700 whitespace-pre-line font-mono text-xs">{record.prescription}</p>
                             </div>
                           )}
 
                           {record.doctor_notes && (
-                            <div className="bg-yellow-50 border-l-2 border-yellow-400 pl-3 py-2">
-                              <p className="text-xs font-semibold text-yellow-800 uppercase mb-1">Doctor's Notes</p>
-                              <p className="text-sm text-yellow-900">{record.doctor_notes}</p>
+                            <div className="bg-amber-50/50 border-l-2 border-amber-300 pl-3 py-2">
+                              <p className="text-xs font-bold text-amber-700 uppercase mb-1 tracking-wider">{t('doctor_notes')}</p>
+                              <p className="text-sm text-amber-900 italic">"{record.doctor_notes}"</p>
                             </div>
                           )}
 
                           {record.report_attachments && record.report_attachments.length > 0 && (
-                            <div>
-                              <p className="text-xs font-semibold text-gray-600 uppercase mb-2">📎 Attached Reports</p>
+                            <div className="pt-2">
+                              <p className="text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">📎 {t('attached_reports')}</p>
                               <div className="flex flex-wrap gap-2">
                                 {record.report_attachments.map((attachment: any) => (
                                   <a
@@ -565,7 +618,7 @@ function ScanQRPage() {
                                     href={attachment.file_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition"
+                                    className="text-xs bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 border border-transparent transition-all flex items-center gap-1.5 font-medium"
                                   >
                                     📄 {attachment.file_name}
                                   </a>
@@ -579,12 +632,12 @@ function ScanQRPage() {
                   </div>
                 ) : patientData.medical_records && patientData.medical_records.length > 0 ? (
                   // Fallback to old medical records format
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {patientData.medical_records.map((record: any) => (
-                      <div key={record.id} className="border-l-4 border-blue-500 bg-gray-50 rounded-r-lg p-4 hover:bg-gray-100 transition">
+                      <div key={record.id} className="relative pl-6 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-slate-300 hover:before:bg-slate-500 before:transition-colors bg-white p-6 rounded-r-xl shadow-sm border border-slate-100 hover:shadow-md transition-all">
                         <div className="flex justify-between items-start mb-2">
                           <div>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-slate-400 font-medium mb-1">
                               {new Date(record.created_at).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'long',
@@ -592,26 +645,26 @@ function ScanQRPage() {
                               })}
                             </p>
                             {record.doctor && (
-                              <p className="text-xs text-gray-400">
+                              <p className="text-sm text-slate-700 font-semibold">
                                 Consulted: {record.doctor.first_name} {record.doctor.last_name}
                               </p>
                             )}
                           </div>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-3 mt-4">
                           <div>
-                            <p className="text-xs font-semibold text-gray-600 uppercase">Symptoms</p>
-                            <p className="text-sm text-gray-900">{record.symptoms || 'No symptoms recorded'}</p>
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">Symptoms</p>
+                            <p className="text-sm text-slate-800">{record.symptoms || 'No symptoms recorded'}</p>
                           </div>
 
                           {record.diagnoses && record.diagnoses.length > 0 && (
                             <div>
-                              <p className="text-xs font-semibold text-gray-600 uppercase">Diagnosis</p>
+                              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">Diagnosis</p>
                               <div className="space-y-1">
                                 {record.diagnoses.map((d: any, idx: number) => (
-                                  <p key={idx} className="text-sm text-blue-900 font-medium">
-                                    • {d.disease_name} <span className="text-gray-500">({d.icd_10_code})</span>
+                                  <p key={idx} className="text-sm text-indigo-700 font-medium bg-indigo-50 inline-block px-2 py-0.5 rounded mr-2">
+                                    {d.disease_name} <span className="text-indigo-400">({d.icd_10_code})</span>
                                   </p>
                                 ))}
                               </div>
@@ -619,9 +672,8 @@ function ScanQRPage() {
                           )}
 
                           {record.notes && (
-                            <div>
-                              <p className="text-xs font-semibold text-gray-600 uppercase">Notes</p>
-                              <p className="text-sm text-gray-700">{record.notes}</p>
+                            <div className="text-sm text-slate-600 italic border-l-2 border-slate-200 pl-2">
+                              {record.notes}
                             </div>
                           )}
                         </div>
@@ -629,81 +681,28 @@ function ScanQRPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No medical records available</p>
+                  <div className="text-center py-12 text-slate-400">
+                    <p>{t('empty_records') || 'No medical records available'}</p>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Additional Details - Collapsible */}
-            <details className="group">
-              <summary className="cursor-pointer list-none">
-                <Card className="hover:shadow-md transition">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <p className="font-semibold text-gray-700">📄 Additional Patient Details</p>
-                      <span className="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </summary>
-
-              <Card className="mt-2">
-                <CardContent className="p-4 space-y-3">
-                  <div className="grid gap-3 md:grid-cols-3 text-sm">
-                    <div>
-                      <p className="text-gray-500">Date of Birth</p>
-                      <p className="font-medium">
-                        {patientData.patient?.date_of_birth
-                          ? new Date(patientData.patient.date_of_birth).toLocaleDateString()
-                          : 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Phone</p>
-                      <p className="font-medium">{patientData.patient?.phone || 'N/A'}</p>
-                    </div>
-                  </div>
-
-                  {patientData.patient?.address && (
-                    <div>
-                      <p className="text-gray-500 text-sm">Address</p>
-                      <p className="font-medium text-sm">{patientData.patient.address}</p>
-                      {patientData.patient?.state && (
-                        <p className="text-sm text-gray-500">
-                          {patientData.patient.state}{patientData.patient?.pincode && ` - ${patientData.patient.pincode}`}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {patientData.card_info && (
-                    <div className="border-t pt-3">
-                      <p className="text-gray-500 text-sm mb-1">Health Card</p>
-                      <div className="flex gap-4 text-sm">
-                        <span>Issued: {new Date(patientData.card_info.issued_at).toLocaleDateString()}</span>
-                        <span>Expires: {new Date(patientData.card_info.expires_at).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </details>
-
             {/* Prescriptions */}
             {patientData.prescriptions && patientData.prescriptions.length > 0 && (
-              <Card>
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md">
                 <CardHeader>
-                  <CardTitle>💊 Recent Prescriptions</CardTitle>
+                  <CardTitle className="text-slate-800 flex items-center gap-2">
+                    💊 {t('recent_prescriptions')}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {patientData.prescriptions.slice(0, 5).map((rx: any) => (
-                      <div key={rx.id} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded border-b last:border-0">
-                        <p className="text-sm font-mono font-medium">{rx.prescription_number}</p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(rx.issued_at).toLocaleDateString()}
+                      <div key={rx.id} className="flex justify-between items-center py-3 px-4 bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-300 transition-colors">
+                        <p className="text-sm font-mono font-medium text-slate-700">{rx.prescription_number}</p>
+                        <p className="text-xs text-slate-500">
+                          {t('issued')}: {new Date(rx.issued_at).toLocaleDateString()}
                         </p>
                       </div>
                     ))}
@@ -711,17 +710,6 @@ function ScanQRPage() {
                 </CardContent>
               </Card>
             )}
-
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setPatientData(null)}
-                variant="outline"
-                className="flex-1"
-              >
-                Scan Another Patient
-              </Button>
-            </div>
           </div>
         )}
       </div>
