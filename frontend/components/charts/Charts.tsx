@@ -34,10 +34,10 @@ export function LineChartComponent({ data, dataKey, xAxisKey, color = '#1FA7A0' 
         <YAxis tick={{ fontSize: 12 }} />
         <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
         <Legend />
-        <Line 
-          type="monotone" 
-          dataKey={dataKey} 
-          stroke={color} 
+        <Line
+          type="monotone"
+          dataKey={dataKey}
+          stroke={color}
           strokeWidth={2.5}
           dot={{ r: 4, fill: color }}
           activeDot={{ r: 6 }}
@@ -62,9 +62,9 @@ export function AreaChartComponent({ data, dataKey, xAxisKey, color = '#1FA7A0' 
         <YAxis tick={{ fontSize: 12 }} />
         <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
         <Legend />
-        <Area 
-          type="monotone" 
-          dataKey={dataKey} 
+        <Area
+          type="monotone"
+          dataKey={dataKey}
           stroke={color}
           fill="url(#areaGradient)"
           strokeWidth={2}
@@ -114,10 +114,11 @@ export function ForecastChart({ data }: ForecastChartProps) {
         <XAxis
           dataKey="date"
           tick={{ fontSize: 11 }}
-          interval={data.length > 14 ? Math.floor(data.length / 7) : 0}
-          angle={data.length > 14 ? -35 : 0}
-          textAnchor={data.length > 14 ? 'end' : 'middle'}
-          height={data.length > 14 ? 50 : 30}
+          allowDuplicatedCategory={false}
+          interval={data.length > 21 ? Math.floor(data.length / 7) : data.length > 14 ? 2 : 0}
+          angle={data.length > 10 ? -35 : 0}
+          textAnchor={data.length > 10 ? 'end' : 'middle'}
+          height={data.length > 10 ? 55 : 30}
         />
         <YAxis tick={{ fontSize: 11 }} />
         <Tooltip

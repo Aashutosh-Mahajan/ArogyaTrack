@@ -27,12 +27,11 @@ export function KPIGrid() {
         {[...Array(3)].map((_, i) => (
           <div
             key={i}
-            className="animate-pulse bg-white rounded-xl border border-gray-100 p-5"
+            className="stat-card animate-pulse"
           >
-            <div className="h-10 w-10 bg-gray-200 rounded-xl mb-3" />
-            <div className="h-7 w-16 bg-gray-200 rounded mb-2" />
-            <div className="h-4 w-24 bg-gray-100 rounded mb-2" />
-            <div className="h-3 w-20 bg-gray-100 rounded" />
+            <div className="icon-wrap bg-[rgba(16,185,129,0.05)]" />
+            <div className="h-7 w-16 bg-[#0B0F19] rounded mb-2 mt-2" />
+            <div className="h-3 w-20 bg-[#0B0F19] rounded" />
           </div>
         ))}
       </div>
