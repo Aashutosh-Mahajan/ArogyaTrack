@@ -810,16 +810,10 @@ export interface KPITrend {
 export interface DashboardKPIs {
   total_medical_records: number;
   active_prescriptions: number;
-  pending_lab_reports: number;
-  adherence_percentage: number;
-  alerts_count: number;
   total_downloads: number;
   monthly_trends: {
     medical_records: KPITrend;
     prescriptions: KPITrend;
-    lab_reports: KPITrend;
-    adherence: KPITrend;
-    alerts: KPITrend;
     downloads: KPITrend;
   };
   last_updated: string;

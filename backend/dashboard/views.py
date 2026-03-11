@@ -243,9 +243,6 @@ class DashboardKPIView(APIView):
     Returns KPI summary cards for the logged-in patient:
     - total_medical_records
     - active_prescriptions
-    - pending_lab_reports
-    - adherence_percentage
-    - alerts_count
     - total_downloads
     - monthly_trends (current 30d vs previous 30d)
     """
@@ -294,74 +291,6 @@ class DashboardKPIView(APIView):
                 created_at__lt=thirty_days_ago,
             ).count()
 
-        # ── Pending lab reports ──────────────────────────────────
-        # Visit records that have tests listed but no report attachments
-        pending_lab_reports = 0
-        labs_current = 0
-        labs_previous = 0
-
-        records_with_tests = all_records.exclude(
-            tests_performed=""
-        ).exclude(tests_performed__isnull=True)
-
-        for vr in records_with_tests:
-            has_attachment = VisitReportAttachment.objects.filter(
-                visit_record=vr,
-                file_type__icontains="lab",
-            ).exists()
-            if not has_attachment:
-                pending_lab_reports += 1
-                if vr.visit_date >= thirty_days_ago:
-                    labs_current += 1
-                elif vr.visit_date >= sixty_days_ago:
-                    labs_previous += 1
-
-        # ── Adherence percentage ─────────────────────────────────
-        adherence_pct = 0.0
-        adherence_current = 0
-        adherence_previous = 0
-        if profile:
-            trackers = AdherenceTracker.objects.filter(
-                patient=profile, is_active=True
-            )
-            if trackers.exists():
-                total_expected = sum(t.expected_doses for t in trackers)
-                total_actual = sum(t.actual_doses for t in trackers)
-                if total_expected > 0:
-                    adherence_pct = round(
-                        (total_actual / total_expected) * 100, 1
-                    )
-
-            # Doses taken in current vs previous window
-            adherence_current = DoseSchedule.objects.filter(
-                tracker__patient=profile,
-                scheduled_time__gte=thirty_days_ago,
-                is_taken=True,
-            ).count()
-            adherence_previous = DoseSchedule.objects.filter(
-                tracker__patient=profile,
-                scheduled_time__gte=sixty_days_ago,
-                scheduled_time__lt=thirty_days_ago,
-                is_taken=True,
-            ).count()
-
-        # ── Alerts count ─────────────────────────────────────────
-        alerts_count = 0
-        alerts_current = 0
-        alerts_previous = 0
-        if profile and profile.region:
-            region_alerts = Alert.objects.filter(
-                affected_regions__name__iexact=profile.region,
-            ).distinct()
-            alerts_count = region_alerts.filter(status="active").count()
-            alerts_current = region_alerts.filter(
-                generated_at__gte=thirty_days_ago,
-            ).count()
-            alerts_previous = region_alerts.filter(
-                generated_at__gte=sixty_days_ago,
-                generated_at__lt=thirty_days_ago,
-            ).count()
-
         # ── Total downloads (report attachments) ─────────────────
         all_attachments = VisitReportAttachment.objects.filter(
             visit_record__patient=user,
@@ -379,16 +308,10 @@ class DashboardKPIView(APIView):
         data = {
             "total_medical_records": total_medical_records,
             "active_prescriptions": active_prescriptions,
-            "pending_lab_reports": pending_lab_reports,
-            "adherence_percentage": adherence_pct,
-            "alerts_count": alerts_count,
             "total_downloads": total_downloads,
             "monthly_trends": {
                 "medical_records": _make_trend(records_current, records_previous),
                 "prescriptions": _make_trend(prescriptions_current, prescriptions_previous),
-                "lab_reports": _make_trend(labs_current, labs_previous),
-                "adherence": _make_trend(adherence_current, adherence_previous),
-                "alerts": _make_trend(alerts_current, alerts_previous),
                 "downloads": _make_trend(downloads_current, downloads_previous),
             },
             "last_updated": now,
