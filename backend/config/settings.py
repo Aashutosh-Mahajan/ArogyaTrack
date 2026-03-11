@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "adherence",
     "surveillance",
     "dashboard",
+    "cdss",
 ]
 
 MIDDLEWARE = [

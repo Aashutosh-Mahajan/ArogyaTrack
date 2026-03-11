@@ -346,6 +346,7 @@ class PatientRegistrationSerializer(serializers.Serializer):
     terms_accepted = serializers.BooleanField()
     consent_store_data = serializers.BooleanField()
     consent_doctor_access = serializers.BooleanField()
+    abha_verified = serializers.BooleanField(required=False, default=False)  # NEW: ABHA FEATURE
 
     def validate_email(self, value):
         value = value.lower()
@@ -424,13 +425,14 @@ class PatientRegistrationSerializer(serializers.Serializer):
         consent_store_data = validated_data.pop('consent_store_data')
         consent_doctor_access = validated_data.pop('consent_doctor_access')
         aadhar_id_proof = validated_data.pop('aadhar_id_proof', None)
+        abha_verified = validated_data.pop('abha_verified', False)  # NEW: ABHA FEATURE
         
         with transaction.atomic():
             # Create User
             user = User.objects.create(
                 email=email,
                 role=User.Role.PATIENT,
-                verification_status=User.VerificationStatus.PENDING
+                verification_status=User.VerificationStatus.VERIFIED if abha_verified else User.VerificationStatus.PENDING  # NEW: ABHA FEATURE
             )
             user.set_password(password)
             user.save()
