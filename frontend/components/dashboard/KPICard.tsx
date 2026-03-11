@@ -56,36 +56,20 @@ export function KPICard({
   }
 
   return (
-    <Card className="group relative overflow-hidden backdrop-blur-md bg-white/60 border border-white/40 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between mb-4">
-          <div className={`${iconBg} ${iconColor} p-3 rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-110`}>
-            <Icon className="h-5 w-5" />
-          </div>
-
-          {trend && trend.direction !== 'flat' && (
-            <div className={`flex items-center gap-1 text-[10px] font-bold ${trendColor} ${TrendBg} px-2 py-1 rounded-full uppercase tracking-wide`}>
-              <TrendIcon className="h-3 w-3" />
-              <span>{Math.abs(trend.change)}%</span>
-            </div>
-          )}
+    <div className="stat-card">
+      <div className="flex justify-between items-start">
+        <div className="icon-wrap">
+          <Icon className="h-5 w-5" />
         </div>
-
-        <div className="space-y-1">
-          <p className="text-3xl font-display font-bold text-slate-800 tracking-tight">
-            {value}
-          </p>
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
-        </div>
-
-        {trend && (
-          <div className="mt-4 pt-3 border-t border-slate-100">
-            <p className={`text-xs ${trendColor} font-medium flex items-center gap-1`}>
-              <span className="opacity-70">vs last month</span>
-            </p>
+        {trend && trend.direction !== 'flat' && (
+          <div className={`trend ${trend.direction === 'up' ? 'trend-up' : 'trend-down'}`}>
+            <TrendIcon className="h-3 w-3" />
+            <span>{Math.abs(trend.change)}%</span>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+      <div className="number">{value}</div>
+      <div className="label">{title}</div>
+    </div>
   );
 }

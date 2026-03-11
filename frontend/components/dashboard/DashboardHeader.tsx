@@ -62,85 +62,14 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
   const displayName = user?.first_name || summary.patient_name?.split(' ')[0] || 'User';
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-900 to-teal-800 text-white shadow-xl p-6 sm:p-10">
-      {/* Background Decor */}
-      <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-teal-500/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-60 h-60 bg-emerald-500/20 rounded-full blur-3xl"></div>
-
-      <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-
-        {/* Left: greeting */}
-        <div className="text-center md:text-left space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-medium text-teal-100 mb-2">
-            <FiShield className="w-3.5 h-3.5" />
-            National Health ID: {summary.health_id?.slice(0, 12) || 'XXXX-XXXX'}
-          </div>
-          <h1 className="text-3xl md:text-4xl font-display font-bold">
-            {t('welcome_back')}, {displayName}
-          </h1>
-          <p className="text-teal-100/80 max-w-md">
-            Your health surveillance metrics are being monitored in real-time.
-            System status is <span className="text-white font-semibold">Nominal</span>.
-          </p>
-        </div>
-
-        {/* Right: Health Score Ring */}
-        <div className="flex items-center gap-8">
-          <div className="flex flex-col items-center">
-            <div className="relative w-40 h-40 flex items-center justify-center">
-              {/* Ring SVG */}
-              <svg className="transform -rotate-90 w-40 h-40" viewBox="0 0 160 160">
-                <circle
-                  cx="80"
-                  cy="80"
-                  r={radius}
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  fill="transparent"
-                  className="text-teal-900/50"
-                />
-                <circle
-                  cx="80"
-                  cy="80"
-                  r={radius}
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  fill="transparent"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  className="text-emerald-400 transition-all duration-1000 ease-out"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center">
-                <span className="text-4xl font-bold">{healthScore}</span>
-              </div>
-            </div>
-            <span className="text-xs uppercase tracking-wider text-teal-200 mt-1">Health Score</span>
-          </div>
-
-          <div className="hidden sm:flex flex-col gap-3">
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-              <div className="p-2 rounded-lg bg-teal-500/20">
-                <FiActivity className="w-5 h-5 text-teal-200" />
-              </div>
-              <div>
-                <p className="text-xs text-teal-200">Risk Level</p>
-                <p className="font-semibold text-white">{summary.calculated_risk_level}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-              <div className="p-2 rounded-lg bg-teal-500/20">
-                <FiHeart className="w-5 h-5 text-teal-200" />
-              </div>
-              <div>
-                <p className="text-xs text-teal-200">Adherence</p>
-                <p className="font-semibold text-white">{Math.round(summary.adherence_percentage)}%</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
+    <div className="flex justify-between items-center mb-[24px]">
+      <div className="section-header !mb-0">
+        <div className="bar" />
+        <h2 className="text-xl">{t('welcome_back')}, {displayName}</h2>
+      </div>
+      <div className="hidden sm:flex text-sm font-semibold text-[#D1D5DB] bg-[#0B0F19] border border-[rgba(16,185,129,0.2)] px-4 py-2 rounded-lg items-center gap-2">
+        <FiShield className="w-4 h-4 text-[#10B981]" />
+        National Health ID: {summary.health_id?.slice(0, 12) || 'XXXX-XXXX'}
       </div>
     </div>
   );
