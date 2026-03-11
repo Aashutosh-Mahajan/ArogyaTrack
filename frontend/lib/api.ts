@@ -532,6 +532,8 @@ export const api = {
       apiClient.get(`/dashboard/download/${fileId}/`, { params: { type }, responseType: 'blob' }),
     downloadAll: (): Promise<Blob> =>
       apiClient.get('/dashboard/download-all/', { responseType: 'blob' }),
+    logDownload: (data: { file_type: string; file_id?: number; file_name: string }): Promise<{ detail: string }> =>
+      apiClient.post('/dashboard/log-download/', data),
   },
 
   // CDSS (Clinical Decision Support)

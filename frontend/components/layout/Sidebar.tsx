@@ -66,7 +66,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { href: '/dashboard/profile', label: t('sidebar_profile'), icon: FiUser },
     { href: '/dashboard/medical-records', label: t('sidebar_medical_records'), icon: FiActivity },
     { href: '/dashboard/conditions', label: t('sidebar_conditions'), icon: FiThermometer },
-    { href: '/dashboard/prescriptions', label: t('sidebar_prescriptions'), icon: FiFileText },
     { href: '/dashboard/medicines', label: t('sidebar_medicines'), icon: FiShoppingBag },
     { href: '/dashboard/adherence', label: t('sidebar_adherence'), icon: FiHeart },
     { href: '/dashboard/alerts', label: t('sidebar_alerts'), icon: FiBell, badge: unreadAlertCount },

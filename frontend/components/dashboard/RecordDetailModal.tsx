@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import type { RecentRecord } from '@/types';
@@ -54,6 +55,7 @@ function Section({
 export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailModalProps) {
   const st = statusConfig[record.status];
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
   // Authenticated download function
   const handleDownloadReport = async (attachmentId: number, fileName: string, isView: boolean = false) => {
@@ -78,6 +80,16 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
         toast.success('Report downloaded successfully');
+
+        // Log the download and refresh KPIs
+        api.dashboard.logDownload({
+          file_type: 'visit_attachment',
+          file_id: attachmentId,
+          file_name: fileName,
+        }).then(() => {
+          queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] });
+          queryClient.invalidateQueries({ queryKey: ['dashboard-downloads'] });
+        }).catch(() => {});
       }
     } catch (error: any) {
       console.error('Download error:', error);
@@ -152,6 +164,16 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
     printWindow.document.close();
     printWindow.focus();
     setTimeout(() => printWindow.print(), 300);
+
+    // Log the download and refresh KPI counts
+    api.dashboard.logDownload({
+      file_type: 'medical_record',
+      file_id: record.id,
+      file_name: `Visit_Record_${visitDate}.pdf`,
+    }).then(() => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-downloads'] });
+    }).catch(() => {});
   };
 
   return (

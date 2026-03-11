@@ -57,6 +57,7 @@ export function KPIGrid() {
       iconBg: 'bg-green-50',
       iconColor: 'text-green-600',
       trend: kpis.monthly_trends.prescriptions,
+      href: '/dashboard/prescriptions',
     },
     {
       title: t('kpi_downloads'),

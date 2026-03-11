@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import type { RecentRecord } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +32,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const { t, language } = useLanguage();
+  const queryClient = useQueryClient();
 
   const statusConfig = {
     completed: {
@@ -86,6 +87,16 @@ function RecordCard({ record }: { record: RecentRecord }) {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
         toast.success('Report downloaded successfully');
+
+        // Log the download and refresh KPIs
+        api.dashboard.logDownload({
+          file_type: 'visit_attachment',
+          file_id: attachmentId,
+          file_name: fileName,
+        }).then(() => {
+          queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] });
+          queryClient.invalidateQueries({ queryKey: ['dashboard-downloads'] });
+        }).catch(() => {});
       }
     } catch (error: any) {
       console.error('Download error:', error);
