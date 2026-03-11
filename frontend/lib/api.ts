@@ -35,6 +35,7 @@ import type {
   DashboardAlert,
   SecurityInfo,
   DownloadItem,
+  DayWiseComparisonResponse,
 } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -414,6 +415,9 @@ export const api = {
 
     getEnvironmentalData: (params?: any): Promise<PaginatedResponse<EnvironmentalData>> =>
       apiClient.get('/surveillance/environmental-data/', { params }),
+
+    getDayWiseComparison: (params?: { disease_code?: string; state?: string; district?: string; region_id?: string }): Promise<DayWiseComparisonResponse> =>
+      apiClient.get('/surveillance/daywise-comparison/', { params }),
 
     acknowledgeAlert: (id: string, data?: any) =>
       apiClient.post(`/surveillance/alerts/${id}/acknowledge/`, data || {}),
