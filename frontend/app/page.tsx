@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   FiActivity,
@@ -174,13 +175,8 @@ export default function Home() {
                   <p className="text-2xl font-bold text-purple-700">98.2%</p>
                 </div>
               </div>
-              <div className="h-40 bg-gray-100 rounded-xl relative overflow-hidden">
-                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-primary/20 to-transparent" />
-                {/* Decorative Line */}
-                <svg className="absolute bottom-0 w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
-                  <path d="M0 40 Q 25 20, 50 30 T 100 10 V 40 H 0 Z" fill="rgba(15, 92, 92, 0.2)" />
-                  <path d="M0 40 Q 25 25, 50 35 T 100 15" fill="none" stroke="#0F5C5C" strokeWidth="0.5" />
-                </svg>
+              <div className="h-40 rounded-xl relative overflow-hidden">
+                <Image src="/image.png" alt="Health chart" fill className="object-cover object-top rounded-xl" />
               </div>
             </div>
 

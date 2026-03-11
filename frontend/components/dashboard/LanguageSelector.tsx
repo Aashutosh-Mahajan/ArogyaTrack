@@ -8,6 +8,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Globe } from 'lucide-react';
 import { useLanguage } from '@/components/providers/LanguageProvider';
 
 export function LanguageSelector() {
@@ -15,7 +16,8 @@ export function LanguageSelector() {
 
     return (
         <Select value={language} onValueChange={(val: any) => setLanguage(val)}>
-            <SelectTrigger className="w-[120px] bg-white/90 backdrop-blur-sm border-gray-200 shadow-sm">
+            <SelectTrigger className="w-[140px] bg-white/90 backdrop-blur-sm border-gray-200 shadow-sm">
+                <Globe className="h-4 w-4 text-gray-500" />
                 <SelectValue placeholder="Language" />
             </SelectTrigger>
             <SelectContent>

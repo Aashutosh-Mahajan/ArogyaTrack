@@ -55,7 +55,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
   const risk = riskColor(summary.calculated_risk_level);
   const healthScore = 100 - (summary.calculated_risk_score * 10); // Example calculation
   const startAngle = 0;
-  const radius = 36;
+  const radius = 50;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (healthScore / 100) * circumference;
 
@@ -86,35 +86,37 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
 
         {/* Right: Health Score Ring */}
         <div className="flex items-center gap-8">
-          <div className="relative w-32 h-32 flex items-center justify-center">
-            {/* Ring SVG */}
-            <svg className="transform -rotate-90 w-32 h-32">
-              <circle
-                cx="64"
-                cy="64"
-                r={radius}
-                stroke="currentColor"
-                strokeWidth="8"
-                fill="transparent"
-                className="text-teal-900/50"
-              />
-              <circle
-                cx="64"
-                cy="64"
-                r={radius}
-                stroke="currentColor"
-                strokeWidth="8"
-                fill="transparent"
-                strokeDasharray={circumference}
-                strokeDashoffset={strokeDashoffset}
-                className="text-emerald-400 transition-all duration-1000 ease-out"
-                strokeLinecap="round"
-              />
-            </svg>
-            <div className="absolute flex flex-col items-center">
-              <span className="text-3xl font-bold">{healthScore}</span>
-              <span className="text-[10px] uppercase tracking-wider text-teal-200">Health Score</span>
+          <div className="flex flex-col items-center">
+            <div className="relative w-40 h-40 flex items-center justify-center">
+              {/* Ring SVG */}
+              <svg className="transform -rotate-90 w-40 h-40" viewBox="0 0 160 160">
+                <circle
+                  cx="80"
+                  cy="80"
+                  r={radius}
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="transparent"
+                  className="text-teal-900/50"
+                />
+                <circle
+                  cx="80"
+                  cy="80"
+                  r={radius}
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="transparent"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  className="text-emerald-400 transition-all duration-1000 ease-out"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute flex flex-col items-center">
+                <span className="text-4xl font-bold">{healthScore}</span>
+              </div>
             </div>
+            <span className="text-xs uppercase tracking-wider text-teal-200 mt-1">Health Score</span>
           </div>
 
           <div className="hidden sm:flex flex-col gap-3">
