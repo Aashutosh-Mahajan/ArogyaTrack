@@ -85,7 +85,7 @@ class CreatePrescriptionView(APIView):
 class PrescriptionDetailView(APIView):
     """Get prescription details."""
 
-    permission_classes = [permissions.IsAuthenticated, IsDoctorVerified]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, prescription_id):
         prescription = get_object_or_404(Prescription, id=prescription_id)
@@ -97,7 +97,7 @@ class PrescriptionDetailView(APIView):
         elif user.is_doctor:
             if prescription.doctor_id != user.id:
                 return Response({"detail": "You do not have access to this prescription"}, status=status.HTTP_403_FORBIDDEN)
-        # Admins can view any prescription
+        # Pharmacists and Admins can view any prescription
 
         return Response(PrescriptionSerializer(prescription).data)
 
