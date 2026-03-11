@@ -1,3 +1,6 @@
+// Re-export CDSS types
+export type { CDSSResult, CDSSDiagnosis, CDSSDrugAlert, CDSSTest, CDSSLabInsight, CDSSWarning, CDSSRiskLevel } from './cdss';
+
 // User & Authentication Types
 export interface User {
   id: number;

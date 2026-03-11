@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { PatientRegistrationData } from '@/types';
 import toast from 'react-hot-toast';
+import { verifyAbhaId } from '@/lib/abhaApi'; // NEW: ABHA FEATURE
 
 export default function PatientSignupPage() {
   const router = useRouter();
@@ -32,6 +33,12 @@ export default function PatientSignupPage() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // NEW: ABHA FEATURE - state for ABHA lookup
+  const [abhaId, setAbhaId] = useState(''); // NEW: ABHA FEATURE
+  const [abhaStatus, setAbhaStatus] = useState<'idle' | 'verified' | 'not_found'>('idle'); // NEW: ABHA FEATURE
+  const [abhaHidden, setAbhaHidden] = useState(false); // NEW: ABHA FEATURE
+  const [abhaVerifying, setAbhaVerifying] = useState(false); // NEW: ABHA FEATURE
 
   const calculatePasswordStrength = (password: string): 'weak' | 'medium' | 'strong' => {
     let strength = 0;
@@ -110,7 +117,7 @@ export default function PatientSignupPage() {
     if (!formData.district) newErrors.district = 'District is required';
     if (!formData.state) newErrors.state = 'State is required';
     if (!formData.pincode) newErrors.pincode = 'Pincode is required';
-    if (!formData.aadhar_id_proof) newErrors.aadhar_id_proof = 'ID proof is required';
+    if (!formData.aadhar_id_proof && abhaStatus !== 'verified') newErrors.aadhar_id_proof = 'ID proof is required'; // NEW: ABHA FEATURE - skip aadhar when ABHA verified
 
     // Email validation
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -147,9 +154,14 @@ export default function PatientSignupPage() {
     setLoading(true);
 
     try {
-      const response = await api.auth.registerPatientWithDocuments(formData as PatientRegistrationData);
-      toast.success('Registration successful! Please verify your email.');
-      router.push(`/verify-email?email=${encodeURIComponent(formData.email || '')}&role=patient`);
+      const submitData = { ...formData, abha_verified: abhaStatus === 'verified' }; // NEW: ABHA FEATURE
+      const response = await api.auth.registerPatientWithDocuments(submitData as PatientRegistrationData);
+      toast.success('Registration successful!' + (abhaStatus === 'verified' ? '' : ' Please verify your email.')); // NEW: ABHA FEATURE
+      if (abhaStatus === 'verified') { // NEW: ABHA FEATURE
+        router.push('/login'); // NEW: ABHA FEATURE - skip email verification for ABHA verified users
+      } else { // NEW: ABHA FEATURE
+        router.push(`/verify-email?email=${encodeURIComponent(formData.email || '')}&role=patient`);
+      } // NEW: ABHA FEATURE
     } catch (error: any) {
       console.error('Registration error:', error);
       console.error('Response data:', error.response?.data);
@@ -173,6 +185,41 @@ export default function PatientSignupPage() {
     }
   };
 
+  // NEW: ABHA FEATURE - handle ABHA ID verification and autofill
+  const handleAbhaVerify = () => { // NEW: ABHA FEATURE
+    if (!abhaId.trim()) { // NEW: ABHA FEATURE
+      toast.error('Please enter an ABHA ID'); // NEW: ABHA FEATURE
+      return; // NEW: ABHA FEATURE
+    } // NEW: ABHA FEATURE
+    setAbhaVerifying(true); // NEW: ABHA FEATURE
+    const result = verifyAbhaId(abhaId); // NEW: ABHA FEATURE
+    if (result.success && result.patient) { // NEW: ABHA FEATURE
+      const p = result.patient; // NEW: ABHA FEATURE
+      const nameParts = p.name.split(' '); // NEW: ABHA FEATURE
+      const firstName = nameParts[0] || ''; // NEW: ABHA FEATURE
+      const lastName = nameParts.slice(1).join(' ') || ''; // NEW: ABHA FEATURE
+      setFormData((prev) => ({ // NEW: ABHA FEATURE
+        ...prev, // NEW: ABHA FEATURE
+        first_name: firstName, // NEW: ABHA FEATURE
+        last_name: lastName, // NEW: ABHA FEATURE
+        date_of_birth: p.date_of_birth || '', // NEW: ABHA FEATURE
+        gender: p.gender.toLowerCase() as 'male' | 'female' | 'other', // NEW: ABHA FEATURE
+        blood_group: p.blood_group, // NEW: ABHA FEATURE
+        phone: p.phone, // NEW: ABHA FEATURE
+        email: p.email || '', // NEW: ABHA FEATURE
+        address: p.address || '', // NEW: ABHA FEATURE
+        district: p.district || '', // NEW: ABHA FEATURE
+        state: p.state || '', // NEW: ABHA FEATURE
+        pincode: p.pincode || '', // NEW: ABHA FEATURE
+      })); // NEW: ABHA FEATURE
+      setAbhaStatus('verified'); // NEW: ABHA FEATURE
+      toast.success('ABHA ID verified! Fields auto-filled.'); // NEW: ABHA FEATURE
+    } else { // NEW: ABHA FEATURE
+      setAbhaStatus('not_found'); // NEW: ABHA FEATURE
+    } // NEW: ABHA FEATURE
+    setAbhaVerifying(false); // NEW: ABHA FEATURE
+  }; // NEW: ABHA FEATURE
+
   const getPasswordStrengthColor = () => {
     switch (passwordStrength) {
       case 'weak': return 'bg-red-500';
@@ -194,6 +241,49 @@ export default function PatientSignupPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* NEW: ABHA FEATURE - ABHA ID Lookup Section */}
+            {!abhaHidden && ( // NEW: ABHA FEATURE
+              <div className="bg-blue-50 rounded-lg p-6 border border-blue-200"> {/* NEW: ABHA FEATURE */}
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">ABHA ID Verification</h2> {/* NEW: ABHA FEATURE */}
+                <p className="text-sm text-gray-500 mb-4">Enter your ABHA ID to auto-fill your details</p> {/* NEW: ABHA FEATURE */}
+                <div className="flex gap-3 items-start"> {/* NEW: ABHA FEATURE */}
+                  <div className="flex-1"> {/* NEW: ABHA FEATURE */}
+                    <input // NEW: ABHA FEATURE
+                      type="text" // NEW: ABHA FEATURE
+                      value={abhaId} // NEW: ABHA FEATURE
+                      onChange={(e) => { setAbhaId(e.target.value); setAbhaStatus('idle'); }} // NEW: ABHA FEATURE
+                      placeholder="e.g. 12-3456-7890-1234" // NEW: ABHA FEATURE
+                      className="block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2" // NEW: ABHA FEATURE
+                    /> {/* NEW: ABHA FEATURE */}
+                  </div> {/* NEW: ABHA FEATURE */}
+                  <button // NEW: ABHA FEATURE
+                    type="button" // NEW: ABHA FEATURE
+                    onClick={handleAbhaVerify} // NEW: ABHA FEATURE
+                    disabled={abhaVerifying} // NEW: ABHA FEATURE
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 font-medium transition-colors whitespace-nowrap" // NEW: ABHA FEATURE
+                  > {/* NEW: ABHA FEATURE */}
+                    {abhaVerifying ? 'Verifying...' : 'Verify & Autofill'} {/* NEW: ABHA FEATURE */}
+                  </button> {/* NEW: ABHA FEATURE */}
+                </div> {/* NEW: ABHA FEATURE */}
+                {abhaStatus === 'verified' && ( // NEW: ABHA FEATURE
+                  <p className="mt-2 text-green-600 font-medium text-sm">✓ ABHA Verified</p> // NEW: ABHA FEATURE
+                )} {/* NEW: ABHA FEATURE */}
+                {abhaStatus === 'not_found' && ( // NEW: ABHA FEATURE
+                  <p className="mt-2 text-red-600 font-medium text-sm">✗ ABHA ID not found — fill manually below</p> // NEW: ABHA FEATURE
+                )} {/* NEW: ABHA FEATURE */}
+                <p className="mt-2 text-xs text-gray-400"> {/* NEW: ABHA FEATURE */}
+                  Don&apos;t have ABHA ID?{' '} {/* NEW: ABHA FEATURE */}
+                  <button // NEW: ABHA FEATURE
+                    type="button" // NEW: ABHA FEATURE
+                    onClick={() => setAbhaHidden(true)} // NEW: ABHA FEATURE
+                    className="text-indigo-600 hover:underline" // NEW: ABHA FEATURE
+                  > {/* NEW: ABHA FEATURE */}
+                    Skip and fill manually {/* NEW: ABHA FEATURE */}
+                  </button> {/* NEW: ABHA FEATURE */}
+                </p> {/* NEW: ABHA FEATURE */}
+              </div> // NEW: ABHA FEATURE
+            )} {/* NEW: ABHA FEATURE */}
+
             {/* Personal Information */}
             <div className="bg-gray-50 rounded-lg p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Personal Information</h2>
@@ -209,7 +299,7 @@ export default function PatientSignupPage() {
                     onChange={handleChange}
                     className={`mt-1 block w-full rounded-md border shadow-sm ${
                       errors.first_name ? 'border-red-500' : 'border-gray-300'
-                    } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2`}
+                    } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 ${abhaStatus === 'verified' ? 'bg-gray-100' : ''}`} // NEW: ABHA FEATURE - grey bg when autofilled
                   />
                   {errors.first_name && <p className="text-red-500 text-xs mt-1">{errors.first_name}</p>}
                 </div>
@@ -225,7 +315,7 @@ export default function PatientSignupPage() {
                     onChange={handleChange}
                     className={`mt-1 block w-full rounded-md border shadow-sm ${
                       errors.last_name ? 'border-red-500' : 'border-gray-300'
-                    } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2`}
+                    } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 ${abhaStatus === 'verified' ? 'bg-gray-100' : ''}`} // NEW: ABHA FEATURE - grey bg when autofilled
                   />
                   {errors.last_name && <p className="text-red-500 text-xs mt-1">{errors.last_name}</p>}
                 </div>
@@ -241,7 +331,7 @@ export default function PatientSignupPage() {
                     onChange={handleChange}
                     className={`mt-1 block w-full rounded-md border shadow-sm ${
                       errors.date_of_birth ? 'border-red-500' : 'border-gray-300'
-                    } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2`}
+                    } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 ${abhaStatus === 'verified' ? 'bg-gray-100' : ''}`} // NEW: ABHA FEATURE - grey bg when autofilled
                   />
                   {errors.date_of_birth && <p className="text-red-500 text-xs mt-1">{errors.date_of_birth}</p>}
                 </div>
@@ -254,7 +344,7 @@ export default function PatientSignupPage() {
                     name="gender"
                     value={formData.gender}
                     onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2"
+                    className={`mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 ${abhaStatus === 'verified' ? 'bg-gray-100' : ''}`} // NEW: ABHA FEATURE - grey bg when autofilled
                   >
                     <option value="male">Male</option>
                     <option value="female">Female</option>
@@ -272,7 +362,7 @@ export default function PatientSignupPage() {
                     onChange={handleChange}
                     className={`mt-1 block w-full rounded-md border shadow-sm ${
                       errors.blood_group ? 'border-red-500' : 'border-gray-300'
-                    } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2`}
+                    } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 ${abhaStatus === 'verified' ? 'bg-gray-100' : ''}`} // NEW: ABHA FEATURE - grey bg when autofilled
                   >
                     <option value="">Select Blood Group</option>
                     <option value="A+">A+</option>
@@ -304,7 +394,7 @@ export default function PatientSignupPage() {
                     onChange={handleChange}
                     className={`mt-1 block w-full rounded-md border shadow-sm ${
                       errors.email ? 'border-red-500' : 'border-gray-300'
-                    } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2`}
+                    } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 ${abhaStatus === 'verified' ? 'bg-gray-100' : ''}`} // NEW: ABHA FEATURE - grey bg when autofilled
                   />
                   {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                 </div>
@@ -321,7 +411,7 @@ export default function PatientSignupPage() {
                     placeholder="10-digit mobile number"
                     className={`mt-1 block w-full rounded-md border shadow-sm ${
                       errors.phone ? 'border-red-500' : 'border-gray-300'
-                    } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2`}
+                    } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 ${abhaStatus === 'verified' ? 'bg-gray-100' : ''}`} // NEW: ABHA FEATURE - grey bg when autofilled
                   />
                   {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                 </div>
@@ -343,7 +433,7 @@ export default function PatientSignupPage() {
                     rows={2}
                     className={`mt-1 block w-full rounded-md border shadow-sm ${
                       errors.address ? 'border-red-500' : 'border-gray-300'
-                    } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2`}
+                    } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 ${abhaStatus === 'verified' ? 'bg-gray-100' : ''}`} // NEW: ABHA FEATURE - grey bg when autofilled
                   />
                   {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
                 </div>
@@ -360,7 +450,7 @@ export default function PatientSignupPage() {
                       onChange={handleChange}
                       className={`mt-1 block w-full rounded-md border shadow-sm ${
                         errors.district ? 'border-red-500' : 'border-gray-300'
-                      } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2`}
+                      } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 ${abhaStatus === 'verified' ? 'bg-gray-100' : ''}`} // NEW: ABHA FEATURE - grey bg when autofilled
                     />
                     {errors.district && <p className="text-red-500 text-xs mt-1">{errors.district}</p>}
                   </div>
@@ -376,7 +466,7 @@ export default function PatientSignupPage() {
                       onChange={handleChange}
                       className={`mt-1 block w-full rounded-md border shadow-sm ${
                         errors.state ? 'border-red-500' : 'border-gray-300'
-                      } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2`}
+                      } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 ${abhaStatus === 'verified' ? 'bg-gray-100' : ''}`} // NEW: ABHA FEATURE - grey bg when autofilled
                     />
                     {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
                   </div>
@@ -393,7 +483,7 @@ export default function PatientSignupPage() {
                       maxLength={6}
                       className={`mt-1 block w-full rounded-md border shadow-sm ${
                         errors.pincode ? 'border-red-500' : 'border-gray-300'
-                      } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2`}
+                      } focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 ${abhaStatus === 'verified' ? 'bg-gray-100' : ''}`} // NEW: ABHA FEATURE - grey bg when autofilled
                     />
                     {errors.pincode && <p className="text-red-500 text-xs mt-1">{errors.pincode}</p>}
                   </div>

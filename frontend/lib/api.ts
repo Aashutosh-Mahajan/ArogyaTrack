@@ -36,6 +36,7 @@ import type {
   SecurityInfo,
   DownloadItem,
   DayWiseComparisonResponse,
+  CDSSResult,
 } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -529,6 +530,12 @@ export const api = {
       apiClient.get(`/dashboard/download/${fileId}/`, { params: { type }, responseType: 'blob' }),
     downloadAll: (): Promise<Blob> =>
       apiClient.get('/dashboard/download-all/', { responseType: 'blob' }),
+  },
+
+  // CDSS (Clinical Decision Support)
+  cdss: {
+    analyze: (patientId: string, currentSymptoms: string): Promise<CDSSResult> =>
+      apiClient.post('/cdss/analyze/', { patient_id: patientId, current_symptoms: currentSymptoms }),
   },
 };
 
