@@ -65,6 +65,7 @@ export function KPIGrid() {
       iconBg: 'bg-purple-50',
       iconColor: 'text-purple-600',
       trend: kpis.monthly_trends.downloads,
+      href: '/dashboard/downloads',
     },
   ];
 
@@ -80,6 +81,7 @@ export function KPIGrid() {
           iconColor={card.iconColor}
           trend={card.trend}
           lastUpdated={kpis.last_updated}
+          href={'href' in card ? card.href : undefined}
         />
       ))}
     </div>

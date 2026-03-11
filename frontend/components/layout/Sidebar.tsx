@@ -70,7 +70,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { href: '/dashboard/medicines', label: t('sidebar_medicines'), icon: FiShoppingBag },
     { href: '/dashboard/adherence', label: t('sidebar_adherence'), icon: FiHeart },
     { href: '/dashboard/alerts', label: t('sidebar_alerts'), icon: FiBell, badge: unreadAlertCount },
-    { href: '/dashboard/downloads', label: t('sidebar_downloads'), icon: FiDownload },
     { href: '/dashboard/security', label: t('sidebar_security'), icon: FiShield },
   ];
 
