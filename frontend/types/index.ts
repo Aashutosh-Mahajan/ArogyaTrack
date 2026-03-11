@@ -582,6 +582,53 @@ export interface HeatMapData {
   risk_level: string;
 }
 
+// Day-Wise Comparison Types
+export type TrendType = 'rapid_increase' | 'gradual_increase' | 'stable' | 'gradual_decrease' | 'rapid_decrease';
+
+export interface DayData {
+  date: string;
+  cases: number;
+  severity: number;
+}
+
+export interface DayWiseRegionComparison {
+  disease_code: string;
+  disease_name: string;
+  region_id: string;
+  region_name: string;
+  district: string;
+  state: string;
+  trend: TrendType;
+  total_cases_7d: number;
+  peak_cases: number;
+  min_cases: number;
+  today_cases: number;
+  day_data: DayData[];
+}
+
+export interface DayTotalEntry {
+  date: string;
+  cases: number;
+}
+
+export interface DiseaseDaySummary {
+  disease_code: string;
+  disease_name: string;
+  trend: TrendType;
+  total_cases_7d: number;
+  today_cases: number;
+  regions_affected: number;
+  day_totals: DayTotalEntry[];
+}
+
+export interface DayWiseComparisonResponse {
+  reference_date: string;
+  dates: string[];
+  available_states: string[];
+  disease_summaries: DiseaseDaySummary[];
+  comparisons: DayWiseRegionComparison[];
+}
+
 // ML Model Types (v5.0 aligned)
 export interface MLModelInfo {
   name: string;
