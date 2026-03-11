@@ -64,9 +64,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl glass-morphism rounded-full px-6 py-3 flex justify-between items-center shadow-soft">
           <div className="flex items-center space-x-3">
             <div className="bg-primary/10 p-2 rounded-full">
-              <img src="/emblem.png" alt="Gov" className="w-5 h-5 object-contain opacity-80" onError={(e) => e.currentTarget.style.display = 'none'} />
-              {/* Fallback icon if image fails */}
-              <FiActivity className="w-5 h-5 text-primary" style={{ display: 'none' }} />
+              <FiActivity className="w-5 h-5 text-primary" />
             </div>
             <div>
               <span className="text-xl font-display font-bold text-gradient block leading-none">ArogyaTrack</span>
@@ -300,7 +298,7 @@ export default function Home() {
                 </Button>
               </Link>
               <Link href="/contact">
-                <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 hover:text-white w-full sm:w-auto h-14 text-lg px-8">
+                <Button size="lg" variant="outline" className="bg-transparent border-white/30 text-white hover:bg-white/10 hover:text-white w-full sm:w-auto h-14 text-lg px-8">
                   Contact Support
                 </Button>
               </Link>

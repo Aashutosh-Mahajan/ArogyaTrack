@@ -43,29 +43,28 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-hidden font-sans selection:bg-teal-100">
       {/* Background Decor */}
-      <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-teal-900 to-slate-50 -z-10" />
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-teal-500/20 rounded-full blur-[128px] -translate-y-1/2 translate-x-1/2 -z-10" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-teal-500/10 rounded-full blur-[128px] -translate-y-1/2 translate-x-1/2 -z-10" />
 
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header Branding */}
         <div className="flex flex-col items-center justify-center mb-16 text-center">
           <Link href="/" className="inline-flex items-center gap-3 mb-6 group">
-            <div className="bg-white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20 shadow-lg group-hover:bg-white/20 transition-all">
-              <FiActivity className="w-6 h-6 text-emerald-300" />
+            <div className="bg-teal-50 p-2.5 rounded-xl border border-teal-100 shadow-sm group-hover:bg-teal-100 transition-all">
+              <FiActivity className="w-6 h-6 text-teal-600" />
             </div>
             <div className="text-left">
-              <span className="text-2xl font-display font-bold text-white block leading-none tracking-tight">ArogyaTrack</span>
-              <span className="text-[10px] text-teal-200 uppercase tracking-widest block leading-none mt-1">Govt. of India</span>
+              <span className="text-2xl font-display font-bold text-teal-700 block leading-none tracking-tight">ArogyaTrack</span>
+              <span className="text-[10px] text-teal-500 uppercase tracking-widest block leading-none mt-1">Govt. of India</span>
             </div>
           </Link>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-white space-y-4 max-w-2xl"
+            className="space-y-4 max-w-2xl"
           >
-            <h1 className="text-4xl md:text-5xl font-display font-bold">Register on the Network</h1>
-            <p className="text-lg text-teal-100/90 font-light">
+            <h1 className="text-4xl md:text-5xl font-display font-bold text-teal-800">Register on the Network</h1>
+            <p className="text-lg text-teal-600 font-medium">
               Join the unified national health interface. Select your role to begin the registration process.
             </p>
           </motion.div>
