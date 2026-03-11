@@ -1,0 +1,59 @@
+{
+  "data_type": "production_surveillance_data",
+  "created_date": "2026-03-11T12:42:16.152286",
+  "parameters": {
+    "n_regions": 35,
+    "n_diseases": 15,
+    "n_days": 365,
+    "start_date": "2024-01-01",
+    "end_date": "2024-12-30",
+    "seed": 42
+  },
+  "files": {
+    "regions": "regions.csv",
+    "disease_surveillance_historical": "disease_surveillance_historical.csv",
+    "environmental_data": "environmental_data.csv"
+  },
+  "statistics": {
+    "n_regions": 35,
+    "n_diseases": 15,
+    "n_surveillance_records": 191625,
+    "n_environmental_records": 12775,
+    "n_outbreak_events": 23,
+    "outbreak_record_percentage": 2.09,
+    "date_range": "2024-01-01 to 2024-12-30",
+    "diseases": [
+      "A90",
+      "U07.1",
+      "B50.0",
+      "A00.9",
+      "J10.1",
+      "J18.9",
+      "B05",
+      "A09",
+      "J45.9",
+      "I10",
+      "E11",
+      "K29.7",
+      "A39.9",
+      "B16",
+      "A37.9"
+    ],
+    "states": [
+      "West Bengal",
+      "Delhi",
+      "Uttar Pradesh",
+      "Telangana",
+      "Kerala",
+      "Madhya Pradesh",
+      "Bihar",
+      "Maharashtra",
+      "Assam",
+      "Chandigarh",
+      "Karnataka",
+      "Rajasthan",
+      "Tamil Nadu",
+      "Gujarat"
+    ]
+  }
+}
