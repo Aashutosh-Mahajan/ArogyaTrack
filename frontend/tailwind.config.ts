@@ -19,8 +19,8 @@ const config: Config = {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         display: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
-        syne: ['Syne', 'sans-serif'],
-        dm: ['DM Sans', 'Inter', 'system-ui', 'sans-serif'],
+        syne: ['var(--font-syne)', 'Syne', 'sans-serif'],
+        dm: ['var(--font-dm)', 'DM Sans', 'Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
