@@ -1,0 +1,22 @@
+[
+  "rm_4",
+  "rm_8",
+  "rstd_8",
+  "rmax_4",
+  "rmin_4",
+  "diff_1",
+  "diff_2",
+  "month",
+  "quarter",
+  "week",
+  "is_monsoon",
+  "is_winter",
+  "temperature_celsius",
+  "rainfall_mm",
+  "aqi",
+  "humidity_percent",
+  "temperature_celsius_lag1",
+  "rainfall_mm_lag1",
+  "aqi_lag1",
+  "humidity_percent_lag1"
+]

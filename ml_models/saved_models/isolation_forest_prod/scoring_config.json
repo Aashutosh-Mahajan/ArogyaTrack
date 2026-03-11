@@ -1,0 +1,8 @@
+{
+  "method": "corrected_gb",
+  "alpha": 0.15,
+  "raw_if_roc": 0.6787678806370782,
+  "corrected_roc": 0.8927766394374377,
+  "blended_roc": 0.8897026210186496,
+  "corrector_type": "GradientBoostingClassifier"
+}

@@ -1,0 +1,36 @@
+region_id,region_name,region_type,city,state,latitude,longitude,population,area_sq_km,hospital_count,sanitation_index,urban_rural
+1,Andheri_West,ward,Mumbai,Maharashtra,19.1357,72.8262,650000,18.5,12,6.5,urban
+2,Borivali,ward,Mumbai,Maharashtra,19.2304,72.8569,800000,25.0,8,5.8,urban
+3,Thane,district,Thane,Maharashtra,19.2183,72.9781,1841488,147.0,15,5.5,urban
+4,Pune_City,ward,Pune,Maharashtra,18.5204,73.8567,3124458,331.0,20,7.0,urban
+5,Nagpur,district,Nagpur,Maharashtra,21.1458,79.0882,2405421,228.0,18,5.2,urban
+6,Nashik,district,Nashik,Maharashtra,19.9975,73.7898,1486053,264.0,10,5.0,urban
+7,Koramangala,ward,Bangalore,Karnataka,12.9352,77.6245,180000,6.5,6,7.2,urban
+8,Whitefield,ward,Bangalore,Karnataka,12.9698,77.75,250000,12.0,5,6.8,urban
+9,Mysore,district,Mysore,Karnataka,12.2958,76.6394,920550,128.0,10,6.0,urban
+10,Hubli,district,Hubli,Karnataka,15.3647,75.124,943857,202.0,8,5.3,urban
+11,Dwarka,ward,Delhi,Delhi,28.5921,77.046,700000,56.0,7,6.0,urban
+12,Rohini,ward,Delhi,Delhi,28.7495,77.0736,1500000,42.0,12,5.5,urban
+13,Saket,ward,Delhi,Delhi,28.5244,77.2066,300000,8.0,5,7.0,urban
+14,Karol_Bagh,ward,Delhi,Delhi,28.6519,77.1909,400000,10.0,6,5.0,urban
+15,T_Nagar,ward,Chennai,Tamil Nadu,13.0418,80.2341,400000,9.0,8,6.5,urban
+16,Velachery,ward,Chennai,Tamil Nadu,12.9759,80.2209,350000,12.0,5,6.0,urban
+17,Coimbatore,district,Coimbatore,Tamil Nadu,11.0168,76.9558,1061447,107.0,14,6.8,urban
+18,Madurai,district,Madurai,Tamil Nadu,9.9252,78.1198,1017865,148.0,11,5.5,urban
+19,Salt_Lake_City,ward,Kolkata,West Bengal,22.5843,88.4175,280000,12.0,4,6.0,urban
+20,Howrah,district,Howrah,West Bengal,22.5958,88.2636,1077075,63.0,9,4.8,urban
+21,Ahmedabad,district,Ahmedabad,Gujarat,23.0225,72.5714,5577940,464.0,25,6.2,urban
+22,Surat,district,Surat,Gujarat,21.1702,72.8311,4467797,327.0,20,6.0,urban
+23,Jaipur,district,Jaipur,Rajasthan,26.9124,75.7873,3046163,467.0,18,5.5,urban
+24,Jodhpur,district,Jodhpur,Rajasthan,26.2389,73.0243,1033918,321.0,8,4.5,semi-urban
+25,Lucknow,district,Lucknow,Uttar Pradesh,26.8467,80.9462,2817105,350.0,16,5.0,urban
+26,Noida,ward,Noida,Uttar Pradesh,28.5355,77.391,637272,203.0,8,6.5,urban
+27,Varanasi,district,Varanasi,Uttar Pradesh,25.3176,82.9739,1201815,82.0,10,4.2,urban
+28,Hyderabad,district,Hyderabad,Telangana,17.385,78.4867,6809970,650.0,30,6.8,urban
+29,Secunderabad,ward,Secunderabad,Telangana,17.4399,78.4983,520000,25.0,7,6.3,urban
+30,Kochi,district,Kochi,Kerala,9.9312,76.2673,677381,94.0,12,7.5,urban
+31,Thiruvananthapuram,district,Thiruvananthapuram,Kerala,8.5241,76.9366,957730,215.0,14,7.8,urban
+32,Bhopal,district,Bhopal,Madhya Pradesh,23.2599,77.4126,1798218,286.0,12,5.2,urban
+33,Patna,district,Patna,Bihar,25.6093,85.1376,1684222,136.0,10,4.0,urban
+34,Chandigarh,district,Chandigarh,Chandigarh,30.7333,76.7794,1055450,114.0,10,7.5,urban
+35,Guwahati,district,Guwahati,Assam,26.1445,91.7362,968000,216.0,8,5.0,semi-urban

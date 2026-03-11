@@ -1,0 +1,46 @@
+{
+  "model": "DBSCAN v5.0",
+  "silhouette_score": 0.6832619002399047,
+  "n_clusters": 3,
+  "best_eps": 3.0,
+  "best_min_samples": 2,
+  "noise_count": 3,
+  "noise_pct": 0.006,
+  "n_hotspot_clusters": 2,
+  "n_hotspot_regions": 17,
+  "cluster_profiles": {
+    "0": {
+      "n_regions": 15,
+      "avg_outbreak_rate": 0.1108656749358514,
+      "avg_cases": 17.992331041178854,
+      "avg_latitude": 19.526223666666667,
+      "avg_longitude": 77.15761446666667,
+      "avg_population": 3358608.7333333334,
+      "avg_cases_per_capita": 0.5213181803789556,
+      "avg_monsoon_ratio": 0.5280632220406988
+    },
+    "1": {
+      "n_regions": 2,
+      "avg_outbreak_rate": 0.11467697916086542,
+      "avg_cases": 25.732978781987985,
+      "avg_latitude": 24.928456500000003,
+      "avg_longitude": 75.0377555,
+      "avg_population": 4737494.5,
+      "avg_cases_per_capita": 0.5322047172061763,
+      "avg_monsoon_ratio": 0.5188324677510339
+    },
+    "2": {
+      "n_regions": 480,
+      "avg_outbreak_rate": 0.0485152194991552,
+      "avg_cases": 3.1629773752799566,
+      "avg_latitude": 21.186721318750003,
+      "avg_longitude": 78.70727486458333,
+      "avg_population": 573741.2395833334,
+      "avg_cases_per_capita": 0.48674325169321797,
+      "avg_monsoon_ratio": 0.45701694197167053
+    }
+  },
+  "calinski_harabasz": 171.37867013410906,
+  "davies_bouldin": 0.7323704440318517,
+  "timestamp": "2026-02-14T18:34:33.066705"
+}

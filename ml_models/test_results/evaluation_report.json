@@ -1,0 +1,6 @@
+{
+  "forecast_r2": -273.2319180131718,
+  "outbreak_f1": 0.44417026526835285,
+  "xgboost_v3_f1": 0.44417026526835285,
+  "dbscan_silhouette": null
+}

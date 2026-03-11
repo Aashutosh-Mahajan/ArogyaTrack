@@ -1,0 +1,25 @@
+
+ISOLATION FOREST ANOMALY DETECTOR v4.0  -  Training Summary
+=======================================================
+Model:        sklearn.ensemble.IsolationForest
+Spec:         15.2 - Anomaly Detection
+Purpose:      Detect sudden abnormal spikes in disease surveillance
+Features:     30 (rolling statistical features)
+Contamination:0.0200
+Threshold:    0.0750 (decision_function)
+
+Dataset:
+  Train: 3,283,890 (458,889 outbreaks)
+  Val:   823,921 (116,072 outbreaks)
+
+Performance (tuned threshold):
+  Precision:     0.5469
+  Recall:        0.6338
+  F1-Score:      0.5871
+  ROC-AUC:       0.8730
+  Balanced Acc:  0.7738
+
+Performance (default threshold):
+  Precision:     0.7168
+  Recall:        0.3110
+  F1-Score:      0.4338

@@ -1,0 +1,344 @@
+{
+  "test_date": "2026-02-14T15:28:28.483704",
+  "n_scenarios": 8,
+  "summary_scores": {
+    "forecast": {
+      "r2": -5.421986530474199,
+      "mape": 32.370918986715
+    },
+    "isolation_forest": {
+      "f1": 0.49161001421456374,
+      "auc": 0.8961693908798821
+    },
+    "xgboost_v3": {
+      "f1": 0.2589281460325934,
+      "auc": 0.8252171800958561,
+      "latency": 0.0038890838623046875
+    },
+    "dbscan": {
+      "silhouette": 0.21202811570239197
+    }
+  },
+  "detailed_results": [
+    {
+      "scenario": "Seasonal_Wave",
+      "metadata": {
+        "scenario": "seasonal_wave",
+        "pattern": "Realistic monsoon dengue - 15x spike June-Sept is NORMAL, not outbreak",
+        "expected_behavior": "Models should learn seasonal baseline, not flag monsoon as outbreak"
+      },
+      "data_stats": {
+        "n_records": 73000,
+        "n_regions": 200,
+        "outbreak_rate": 0.010917808219178083
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 21.35171232876712,
+        "r2": -0.6268477514802362,
+        "mape": 160.82721124469245,
+        "n_train": 292,
+        "n_test": 73
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "f1": 0.09266333627191693,
+        "roc_auc": 0.8105064881003938,
+        "n_test": 67400
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.030799475753604193,
+        "roc_auc": 0.7176301108732788,
+        "n_test": 67400,
+        "inference_latency_ms": 0.0019989013671875
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 1,
+        "n_noise": 195,
+        "silhouette": 0.0
+      }
+    },
+    {
+      "scenario": "Pandemic_Spread",
+      "metadata": {
+        "scenario": "pandemic_spread",
+        "pattern": "Geographic spread: Metro\u2192Tier2\u2192Rural over 120 days",
+        "expected_behavior": "Models should detect early metro signals, predict tier-2/3 spread"
+      },
+      "data_stats": {
+        "n_records": 70080,
+        "n_regions": 192,
+        "outbreak_rate": 0.285259703196347
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 0.011792645140246975,
+        "r2": -41.43389392793494,
+        "mape": 0.10720520775897395,
+        "n_train": 292,
+        "n_test": 73
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "f1": 0.6093760772147535,
+        "roc_auc": 0.9549195172890136,
+        "n_test": 64704
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.37709277501030003,
+        "roc_auc": 0.9019284172238116,
+        "n_test": 64704,
+        "inference_latency_ms": 0.0030014514923095703
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 7,
+        "n_noise": 136,
+        "silhouette": 0.7172683971636556
+      }
+    },
+    {
+      "scenario": "Urban_Rural_Disparity",
+      "metadata": {
+        "scenario": "urban_rural_disparity",
+        "pattern": "Urban: real-time 95% capture, Rural: 7-day lag 40% capture",
+        "expected_behavior": "Models should have wider uncertainty for rural, detect lag"
+      },
+      "data_stats": {
+        "n_records": 17650,
+        "n_regions": 100,
+        "outbreak_rate": 0.12317280453257791
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 0.6285714285714293,
+        "r2": -0.8210006976580875,
+        "mape": 6.570872080225916,
+        "n_train": 144,
+        "n_test": 36
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "f1": 0.7834469786033388,
+        "roc_auc": 0.9785759468958571,
+        "n_test": 14850
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.39284667253004985,
+        "roc_auc": 0.9091598934654164,
+        "n_test": 14850,
+        "inference_latency_ms": 0.0029976367950439453
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 5,
+        "n_noise": 74,
+        "silhouette": 0.7387764676683187
+      }
+    },
+    {
+      "scenario": "Delayed_Reporting",
+      "metadata": {
+        "scenario": "delayed_reporting",
+        "pattern": "No weekend reporting, Monday batch updates",
+        "expected_behavior": "Models should smooth Monday spikes, detect true patterns"
+      },
+      "data_stats": {
+        "n_records": 6400,
+        "n_regions": 50,
+        "outbreak_rate": 0.11234375
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 16.552197802197803,
+        "r2": -0.07817412364310816,
+        "mape": 32.16673941497634,
+        "n_train": 102,
+        "n_test": 26
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "f1": 0.39486356340288925,
+        "roc_auc": 0.7882107041289798,
+        "n_test": 5000
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.21923076923076923,
+        "roc_auc": 0.7716992257854405,
+        "n_test": 5000,
+        "inference_latency_ms": 0.003000497817993164
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 0,
+        "n_noise": 50,
+        "silhouette": 0.0
+      }
+    },
+    {
+      "scenario": "Superspreader_Event",
+      "metadata": {
+        "scenario": "superspreader_event",
+        "pattern": "Day 30 wedding \u2192 15 regions spike simultaneously days 31-45",
+        "expected_behavior": "DBSCAN should detect geographic cluster, early warning"
+      },
+      "data_stats": {
+        "n_records": 9000,
+        "n_regions": 100,
+        "outbreak_rate": 0.028444444444444446
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 0.660873015873016,
+        "r2": -0.024829742829073354,
+        "mape": 4.680579916120934,
+        "n_train": 72,
+        "n_test": 18
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "f1": 0.40747330960854095,
+        "roc_auc": 0.9479122854979811,
+        "n_test": 6200
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.15613382899628253,
+        "roc_auc": 0.7952655776833784,
+        "n_test": 6200,
+        "inference_latency_ms": 0.005998134613037109
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 0,
+        "n_noise": 100,
+        "silhouette": 0.0
+      }
+    },
+    {
+      "scenario": "Data_Entry_Errors",
+      "metadata": {
+        "scenario": "data_entry_errors",
+        "pattern": "2% typos, 1% duplicates, 5% date errors, 0.5% region errors",
+        "expected_behavior": "Models should be robust to outliers and noise"
+      },
+      "data_stats": {
+        "n_records": 9090,
+        "n_regions": 50,
+        "outbreak_rate": 0.11815181518151815
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 34.27322264923101,
+        "r2": -0.09453235615541655,
+        "mape": 50.145911821820235,
+        "n_train": 144,
+        "n_test": 37
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "f1": 0.3530005042864347,
+        "roc_auc": 0.8520468561268691,
+        "n_test": 7690
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.3883495145631068,
+        "roc_auc": 0.9415590247407221,
+        "n_test": 7690,
+        "inference_latency_ms": 0.004999637603759766
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 0,
+        "n_noise": 50,
+        "silhouette": 0.0
+      }
+    },
+    {
+      "scenario": "Production_Scale_Small",
+      "metadata": {
+        "scenario": "production_scale",
+        "pattern": "200 regions, 365 days, 553,752 total records",
+        "expected_behavior": "Models should handle scale: memory < 4GB, inference < 200ms/region"
+      },
+      "data_stats": {
+        "n_records": 553752,
+        "n_regions": 200,
+        "outbreak_rate": 0.12045464395613921
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 0.700922413146698,
+        "r2": -0.20954140064308646,
+        "mape": 3.1844887257085954,
+        "n_train": 292,
+        "n_test": 73
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "f1": 0.6460628900859503,
+        "roc_auc": 0.9182935266139112,
+        "n_test": 548152
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.25159289195837853,
+        "roc_auc": 0.7815365445520386,
+        "n_test": 548152,
+        "inference_latency_ms": 0.004999399185180664
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 0,
+        "n_noise": 200,
+        "silhouette": 0.0
+      }
+    },
+    {
+      "scenario": "Production_Scale_Large",
+      "metadata": {
+        "scenario": "production_scale",
+        "pattern": "1000 regions, 1460 days, 11,050,507 total records",
+        "expected_behavior": "Models should handle scale: memory < 4GB, inference < 200ms/region"
+      },
+      "data_stats": {
+        "n_records": 11050507,
+        "n_regions": 1000,
+        "outbreak_rate": 0.11998535451812302
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 0.2771874656440626,
+        "r2": -0.0870722434496467,
+        "mape": 1.2843434824165418,
+        "n_train": 1168,
+        "n_test": 292
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "f1": 0.6459934542426857,
+        "roc_auc": 0.9188898023860512,
+        "n_test": 11022507
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "f1": 0.2553792402182564,
+        "roc_auc": 0.782958646442763,
+        "n_test": 11022507,
+        "inference_latency_ms": 0.004117012023925781
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 43,
+        "n_noise": 168,
+        "silhouette": 0.2401800607871614
+      }
+    }
+  ]
+}

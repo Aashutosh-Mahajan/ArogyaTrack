@@ -1,0 +1,15 @@
+[
+  "latitude",
+  "longitude",
+  "mean_cases",
+  "max_cases",
+  "outbreak_rate",
+  "population_log",
+  "cases_per_capita",
+  "case_variability",
+  "monsoon_ratio",
+  "outbreak_severity",
+  "sanitation_index",
+  "hospital_count",
+  "pop_density_log"
+]

@@ -1,0 +1,373 @@
+{
+  "test_date": "2026-02-14 15:00:16",
+  "n_scenarios": 6,
+  "summary": {
+    "forecast": {
+      "overall_score": 0,
+      "grade": "F",
+      "r2_mean": -0.05658942892134944,
+      "r2_std": 1.065285763779638,
+      "r2_min": -2.3904983862915503,
+      "mape_mean": 5.708064893860065,
+      "n_passed": 6,
+      "n_total": 6
+    },
+    "isolation_forest": {
+      "overall_score": 0.8586056866508002,
+      "grade": "A-",
+      "auc_mean": 0.935899944060389,
+      "auc_std": 0.008732378952316659,
+      "auc_min": 0.9229383924074409,
+      "f1_mean": 0.6782524193617597,
+      "f1_min": 0.6539196940726577,
+      "n_passed": 6,
+      "n_total": 6
+    },
+    "xgboost_v3": {
+      "overall_score": 0.6916822955994602,
+      "grade": "C+",
+      "auc_mean": 0.9516530869987884,
+      "auc_std": 0.008378416171785478,
+      "auc_min": 0.9348489836672553,
+      "f1_mean": 0.431711504200132,
+      "f1_min": 0.3547941420281846,
+      "n_passed": 6,
+      "n_total": 6
+    },
+    "dbscan": {
+      "overall_score": 0.8912458036957224,
+      "grade": "A-",
+      "silhouette_mean": 0.8912458036957224,
+      "silhouette_std": 0.06207468798155265,
+      "silhouette_min": 0.7741864090295185,
+      "n_passed": 6,
+      "n_total": 6
+    }
+  },
+  "detailed_results": [
+    {
+      "scenario": "Baseline",
+      "params": {
+        "name": "Baseline",
+        "regions": 50,
+        "days": 365,
+        "outbreak_rate": 0.14,
+        "noise": false,
+        "missing": 0.0
+      },
+      "data_stats": {
+        "n_records": 137933,
+        "n_regions": 50,
+        "n_days": 365,
+        "actual_outbreak_rate": 0.12176926478797677
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 1.033418725315135,
+        "rmse": 1.2795587923300777,
+        "r2": 0.517892915797751,
+        "mape": 4.092379943089072,
+        "n_train": 263,
+        "n_test": 88
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "accuracy": 0.9202097661371244,
+        "precision": 0.6525765105937745,
+        "recall": 0.7457404196807557,
+        "f1": 0.6960549076502427,
+        "roc_auc": 0.9403683480916856,
+        "n_test": 136533,
+        "outbreak_rate": 0.12251250613404818
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "accuracy": 0.668431807694843,
+        "precision": 0.269654760559743,
+        "recall": 0.9988043283314402,
+        "f1": 0.42466066798840935,
+        "roc_auc": 0.9348489836672553,
+        "n_test": 136533,
+        "outbreak_rate": 0.12251250613404818
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 4,
+        "n_noise": 42,
+        "noise_pct": 84.0,
+        "silhouette": 0.9189258725680004,
+        "n_regions": 50
+      }
+    },
+    {
+      "scenario": "Small_Scale",
+      "params": {
+        "name": "Small_Scale",
+        "regions": 10,
+        "days": 90,
+        "outbreak_rate": 0.12,
+        "noise": false,
+        "missing": 0.0
+      },
+      "data_stats": {
+        "n_records": 6900,
+        "n_regions": 10,
+        "n_days": 90,
+        "actual_outbreak_rate": 0.0944927536231884
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 1.058486270729674,
+        "rmse": 1.2997940349381263,
+        "r2": 0.5017358484455845,
+        "mape": 4.907080770287684,
+        "n_train": 57,
+        "n_test": 19
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "accuracy": 0.91797583081571,
+        "precision": 0.5533980582524272,
+        "recall": 0.7990654205607477,
+        "f1": 0.6539196940726577,
+        "roc_auc": 0.9467340789540883,
+        "n_test": 6620,
+        "outbreak_rate": 0.09697885196374623
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "accuracy": 0.6472809667673716,
+        "precision": 0.2156533422908969,
+        "recall": 1.0,
+        "f1": 0.3547941420281846,
+        "roc_auc": 0.9553676304289144,
+        "n_test": 6620,
+        "outbreak_rate": 0.09697885196374623
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 2,
+        "n_noise": 6,
+        "noise_pct": 60.0,
+        "silhouette": 0.8601457934455786,
+        "n_regions": 10
+      }
+    },
+    {
+      "scenario": "High_Outbreak",
+      "params": {
+        "name": "High_Outbreak",
+        "regions": 50,
+        "days": 180,
+        "outbreak_rate": 0.25,
+        "noise": false,
+        "missing": 0.0
+      },
+      "data_stats": {
+        "n_records": 68243,
+        "n_regions": 50,
+        "n_days": 180,
+        "actual_outbreak_rate": 0.17134358102662545
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 3.5523553353938526,
+        "rmse": 4.129483293012544,
+        "r2": -2.3904983862915503,
+        "mape": 10.358371996996574,
+        "n_train": 124,
+        "n_test": 42
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "accuracy": 0.8978501862573494,
+        "precision": 0.7561444753152383,
+        "recall": 0.6088452934090518,
+        "f1": 0.6745471877979028,
+        "roc_auc": 0.9229383924074409,
+        "n_test": 66843,
+        "outbreak_rate": 0.17387011354966114
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "accuracy": 0.6865939589785018,
+        "precision": 0.35675891513345825,
+        "recall": 0.9993976940285665,
+        "f1": 0.5258154326716313,
+        "roc_auc": 0.9554469381678936,
+        "n_test": 66843,
+        "outbreak_rate": 0.17387011354966114
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 5,
+        "n_noise": 39,
+        "noise_pct": 78.0,
+        "silhouette": 0.9356273965101863,
+        "n_regions": 50
+      }
+    },
+    {
+      "scenario": "Noisy_Data",
+      "params": {
+        "name": "Noisy_Data",
+        "regions": 50,
+        "days": 180,
+        "outbreak_rate": 0.14,
+        "noise": true,
+        "missing": 0.0
+      },
+      "data_stats": {
+        "n_records": 68007,
+        "n_regions": 50,
+        "n_days": 180,
+        "actual_outbreak_rate": 0.11101798344288089
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 1.8571247622131188,
+        "rmse": 2.466768195744167,
+        "r2": 0.5902727436973352,
+        "mape": 6.833457071608644,
+        "n_train": 124,
+        "n_test": 42
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "accuracy": 0.9193328028585585,
+        "precision": 0.6143699731903485,
+        "recall": 0.763256061817213,
+        "f1": 0.6807676311567941,
+        "roc_auc": 0.9418049673333306,
+        "n_test": 66607,
+        "outbreak_rate": 0.11269085831819478
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "accuracy": 0.6556518083684898,
+        "precision": 0.24651728216585622,
+        "recall": 0.9996003197442046,
+        "f1": 0.3954983922829582,
+        "roc_auc": 0.9499207873285587,
+        "n_test": 66607,
+        "outbreak_rate": 0.11269085831819478
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 2,
+        "n_noise": 44,
+        "noise_pct": 88.0,
+        "silhouette": 0.9668322801556878,
+        "n_regions": 50
+      }
+    },
+    {
+      "scenario": "Missing_15pct",
+      "params": {
+        "name": "Missing_15pct",
+        "regions": 50,
+        "days": 180,
+        "outbreak_rate": 0.14,
+        "noise": false,
+        "missing": 0.15
+      },
+      "data_stats": {
+        "n_records": 68158,
+        "n_regions": 50,
+        "n_days": 180,
+        "actual_outbreak_rate": 0.11383843422635641
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 1.2656401775317345,
+        "rmse": 1.5438582951759072,
+        "r2": 0.4926452520978015,
+        "mape": 4.526996736054474,
+        "n_train": 124,
+        "n_test": 42
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "accuracy": 0.9180472752329308,
+        "precision": 0.6195163706398459,
+        "recall": 0.7514600908500974,
+        "f1": 0.6791390534279514,
+        "roc_auc": 0.9382310875876709,
+        "n_test": 66758,
+        "outbreak_rate": 0.11541687887593996
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "accuracy": 0.6543934809311244,
+        "precision": 0.2502681444404719,
+        "recall": 0.9993510707332901,
+        "f1": 0.4002911208151383,
+        "roc_auc": 0.9523292833229925,
+        "n_test": 66758,
+        "outbreak_rate": 0.11541687887593996
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 7,
+        "n_noise": 36,
+        "noise_pct": 72.0,
+        "silhouette": 0.891757070465362,
+        "n_regions": 50
+      }
+    },
+    {
+      "scenario": "Combined_Stress",
+      "params": {
+        "name": "Combined_Stress",
+        "regions": 40,
+        "days": 120,
+        "outbreak_rate": 0.2,
+        "noise": true,
+        "missing": 0.1
+      },
+      "data_stats": {
+        "n_records": 36279,
+        "n_regions": 40,
+        "n_days": 120,
+        "actual_outbreak_rate": 0.15408362964800573
+      },
+      "forecast": {
+        "status": "OK",
+        "mae": 0.8923195633357608,
+        "rmse": 1.086991324838162,
+        "r2": -0.0515849472750185,
+        "mape": 3.5301028451239476,
+        "n_train": 79,
+        "n_test": 27
+      },
+      "isolation_forest": {
+        "status": "OK",
+        "accuracy": 0.906311328536079,
+        "precision": 0.7278082470038595,
+        "recall": 0.6471013184034676,
+        "f1": 0.6850860420650096,
+        "roc_auc": 0.9253227899881168,
+        "n_test": 35159,
+        "outbreak_rate": 0.1574845700958503
+      },
+      "xgboost_v3": {
+        "status": "OK",
+        "accuracy": 0.6714923632640292,
+        "precision": 0.3239238653001464,
+        "recall": 0.9989163807115766,
+        "f1": 0.4892092694144702,
+        "roc_auc": 0.9620048990771165,
+        "n_test": 35159,
+        "outbreak_rate": 0.1574845700958503
+      },
+      "dbscan": {
+        "status": "OK",
+        "n_clusters": 2,
+        "n_noise": 30,
+        "noise_pct": 75.0,
+        "silhouette": 0.7741864090295185,
+        "n_regions": 40
+      }
+    }
+  ]
+}

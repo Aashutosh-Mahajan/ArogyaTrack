@@ -1,0 +1,50 @@
+{
+  "model": "Isolation Forest Anomaly Detector v4.0",
+  "spec": "15.2 - Anomaly Detection",
+  "description": "Detects sudden abnormal spikes using rolling statistical features",
+  "timestamp": "2026-02-14T14:31:46.337259",
+  "configuration": {
+    "n_estimators": 500,
+    "max_samples": "8192",
+    "max_features": 0.8,
+    "bootstrap": true,
+    "contamination": 0.02,
+    "threshold": 0.07500000000000051
+  },
+  "dataset": {
+    "train_size": 3283890,
+    "val_size": 823921,
+    "train_outbreak_rate": 0.13973945534107415,
+    "val_outbreak_rate": 0.14087758413731413,
+    "features_count": 30,
+    "split_date": "2024-03-13"
+  },
+  "performance": {
+    "precision": 0.5468784846637624,
+    "recall": 0.6337876490454201,
+    "f1_score": 0.5871343629035476,
+    "roc_auc": 0.8729699532229507
+  },
+  "feature_importance": {
+    "cases_rm_14": 0.06559183009650864,
+    "cases_rm_7": 0.06121265760984921,
+    "cases_rm_28": 0.06075944630547695,
+    "cases_rstd_14": 0.0562808985147376,
+    "cases_rstd_28": 0.05502683190604018,
+    "cases_rstd_7": 0.05441377840636962,
+    "sanitation_index": 0.053686071484599404,
+    "cases_rmax_14": 0.053365873244244716,
+    "dev_7": 0.0469237225289732,
+    "cases_rmax_28": 0.04652406318697876,
+    "cases_rmax_7": 0.04581333601765302,
+    "case_count": 0.04501148102435497,
+    "dev_28": 0.04492682809149421,
+    "dev_14": 0.042667311428096676,
+    "water_quality_index": 0.04125921273070068,
+    "growth_14": 0.03769176810958878,
+    "growth_7": 0.035808846803868845,
+    "growth_21": 0.035019075389824045,
+    "cases_lag_14": 0.01688715741685058,
+    "env_risk": 0.016867140212727488
+  }
+}

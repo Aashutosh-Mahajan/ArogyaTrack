@@ -1,0 +1,80 @@
+{
+  "model_performance": {
+    "f1_score": 0.9469657810400083,
+    "roc_auc": 0.9985842698352808
+  },
+  "risk_summary": {
+    "total_regions": 1536,
+    "high_risk_regions": 0,
+    "high_risk_percentage": 0.0,
+    "avg_outbreak_probability": 0.07974191393038875
+  },
+  "risk_distribution": {
+    "critical": 0,
+    "high": 0,
+    "medium": 207,
+    "low": 1329
+  },
+  "top_10_high_risk_regions": [
+    {
+      "region_id": 1313,
+      "outbreak_probability": 0.14285714285714285,
+      "total_cases": 902,
+      "avg_severity": 2.384857142857143
+    },
+    {
+      "region_id": 1507,
+      "outbreak_probability": 0.14285714285714285,
+      "total_cases": 483,
+      "avg_severity": 2.3575396825396826
+    },
+    {
+      "region_id": 961,
+      "outbreak_probability": 0.1402439024390244,
+      "total_cases": 950,
+      "avg_severity": 2.3742682926829266
+    },
+    {
+      "region_id": 1057,
+      "outbreak_probability": 0.13989637305699482,
+      "total_cases": 960,
+      "avg_severity": 2.398238341968912
+    },
+    {
+      "region_id": 1499,
+      "outbreak_probability": 0.13953488372093023,
+      "total_cases": 527,
+      "avg_severity": 2.387984496124031
+    },
+    {
+      "region_id": 968,
+      "outbreak_probability": 0.13636363636363635,
+      "total_cases": 693,
+      "avg_severity": 2.382077922077922
+    },
+    {
+      "region_id": 42,
+      "outbreak_probability": 0.13569321533923304,
+      "total_cases": 12647,
+      "avg_severity": 2.3471386430678463
+    },
+    {
+      "region_id": 998,
+      "outbreak_probability": 0.135678391959799,
+      "total_cases": 1289,
+      "avg_severity": 2.4391959798994973
+    },
+    {
+      "region_id": 1450,
+      "outbreak_probability": 0.13432835820895522,
+      "total_cases": 507,
+      "avg_severity": 2.409925373134328
+    },
+    {
+      "region_id": 891,
+      "outbreak_probability": 0.13333333333333333,
+      "total_cases": 872,
+      "avg_severity": 2.3922666666666665
+    }
+  ]
+}

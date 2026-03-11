@@ -1,0 +1,23 @@
+{
+  "data_type": "dummy_datasets",
+  "created_date": "2026-02-14T01:36:10.917266",
+  "parameters": {
+    "n_regions": 5,
+    "n_days": 365,
+    "start_date": "2020-01-01",
+    "seed": 42
+  },
+  "files": {
+    "regions": "regions.csv",
+    "disease_surveillance_historical": "disease_surveillance_historical.csv",
+    "environmental_data": "environmental_data.csv"
+  },
+  "statistics": {
+    "n_regions": 5,
+    "n_days": 365,
+    "n_surveillance_records": 9125,
+    "n_environmental_records": 1825,
+    "date_range": "2020-01-01 to 2020-12-30",
+    "outbreak_percentage": 30.76
+  }
+}
