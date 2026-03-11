@@ -197,7 +197,6 @@ export function Sidebar() {
   const { nav, roleLabel } = getRoleInfo(pathname || '');
 
   const isActive = (href: string) => {
-    // Exact match for root dashboard pages
     if (href === '/dashboard' || href === '/admin' || href === '/pharmacy') {
       return pathname === href;
     }

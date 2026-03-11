@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import type { KPITrend } from '@/types';
-import { FiTrendingUp, FiTrendingDown, FiMinus } from 'react-icons/fi';
+import { FiTrendingUp, FiTrendingDown, FiMinus, FiChevronRight } from 'react-icons/fi';
 import type { IconType } from 'react-icons';
 
 interface KPICardProps {
@@ -21,6 +22,8 @@ interface KPICardProps {
   trend?: KPITrend;
   /** ISO timestamp for last-updated footer */
   lastUpdated?: string;
+  /** Optional link for the title */
+  href?: string;
 }
 
 function trendLabel(trend: KPITrend): string {
@@ -38,6 +41,7 @@ export function KPICard({
   iconColor,
   trend,
   lastUpdated,
+  href,
 }: KPICardProps) {
   let trendColor = 'text-gray-500';
   let TrendIcon = FiMinus;
@@ -56,20 +60,45 @@ export function KPICard({
   }
 
   return (
-    <div className="stat-card">
-      <div className="flex justify-between items-start">
-        <div className="icon-wrap">
-          <Icon className="h-5 w-5" />
+    <Card
+      className="group relative overflow-hidden backdrop-blur-md bg-white/60 border border-white/40 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full"
+    >
+      <CardContent className="p-5 flex flex-col h-full">
+        <div className="flex items-start justify-between mb-4">
+          <div className={`${iconBg} ${iconColor} p-3 rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-110`}>
+            <Icon className="h-5 w-5" />
+          </div>
+
+          <div className="flex items-center gap-2">
+            {trend && trend.direction !== 'flat' && (
+              <div className={`flex items-center gap-1 text-[10px] font-bold ${trendColor} ${TrendBg} px-2 py-1 rounded-full uppercase tracking-wide`}>
+                <TrendIcon className="h-3 w-3" />
+                <span>{Math.abs(trend.change)}%</span>
+              </div>
+            )}
+            {href && (
+              <Link href={href} className="text-slate-400 hover:text-primary-600 transition-colors" aria-label={title}>
+                <FiChevronRight className="h-5 w-5" />
+              </Link>
+            )}
+          </div>
         </div>
-        {trend && trend.direction !== 'flat' && (
-          <div className={`trend ${trend.direction === 'up' ? 'trend-up' : 'trend-down'}`}>
-            <TrendIcon className="h-3 w-3" />
-            <span>{Math.abs(trend.change)}%</span>
+
+        <div className="space-y-1 flex-1">
+          <p className="text-3xl font-display font-bold text-slate-800 tracking-tight">
+            {value}
+          </p>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
+        </div>
+
+        {trend && (
+          <div className="mt-4 pt-3 border-t border-slate-100">
+            <p className={`text-xs ${trendColor} font-medium flex items-center gap-1`}>
+              <span className="opacity-70">vs last month</span>
+            </p>
           </div>
         )}
-      </div>
-      <div className="number">{value}</div>
-      <div className="label">{title}</div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

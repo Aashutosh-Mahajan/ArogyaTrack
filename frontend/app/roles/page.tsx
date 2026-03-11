@@ -11,7 +11,7 @@ const roles = [
     pill: 'Personal Healthcare',
     pillColor: '#4DD4CC',
     pillBg: 'rgba(77,212,204,0.15)',
-    href: '/signup/patient',
+    href: '/patient/signin',
     icon: 'user',
     badge: null,
   },
@@ -21,7 +21,7 @@ const roles = [
     pill: 'Requires Verification',
     pillColor: '#f59e0b',
     pillBg: 'rgba(245,158,11,0.15)',
-    href: '/signup/doctor',
+    href: '/doctor/signin',
     icon: 'stethoscope',
     badge: { text: '⚠️ Admin Verified', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
   },
@@ -31,7 +31,7 @@ const roles = [
     pill: 'Licensed Pharmacy',
     pillColor: '#4DD4CC',
     pillBg: 'rgba(77,212,204,0.15)',
-    href: '/signup/pharmacist',
+    href: '/pharmacist/signin',
     icon: 'pill',
     badge: null,
   },
@@ -82,7 +82,7 @@ function ShieldCheckIcon() {
 
 function ArrowRightIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor">
+    <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor" style={{ strokeWidth: 0 }}>
       <path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69l-58.35-58.34a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z" />
     </svg>
   );
@@ -99,7 +99,7 @@ const iconMap: Record<string, React.FC> = {
 const ecgPath = 'M0,12 L40,12 L45,12 L50,2 L55,22 L60,0 L65,20 L70,12 L110,12 L150,12 L155,12 L160,2 L165,22 L170,0 L175,20 L180,12 L220,12 L260,12';
 
 /* ── Page ─────────────────────────────────────────── */
-export default function SignupPage() {
+export default function RoleSelectorPage() {
   return (
     <div
       className="min-h-screen flex flex-col overflow-hidden relative"
@@ -227,6 +227,7 @@ export default function SignupPage() {
 
       {/* Footer */}
       <div className="relative z-10 text-center pt-10 pb-5 mt-auto">
+        {/* ECG decoration */}
         <div className="flex justify-center mb-4 opacity-20">
           <svg viewBox="0 0 260 24" className="w-48 h-5" preserveAspectRatio="none">
             <path d={ecgPath} fill="none" stroke="#4DD4CC" strokeWidth="1.5" />
