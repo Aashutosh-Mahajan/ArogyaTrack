@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArogyaTrack | Govt. of India Public Health Intelligence</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="index.css">
+    
+    <!-- Icons (Phosphor) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container container">
+            <div class="nav-left">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                        </svg>
+                    </div>
+                    <div class="logo-text">
+                        <span class="logo-title">ArogyaTrack</span>
+                        <span class="logo-badge">GOVT. OF INDIA</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="nav-links">
+                <a href="#home">Home</a>
+                <a href="#features">Features</a>
+                <a href="#surveillance">Surveillance</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+            </div>
+            
+            <div class="nav-actions">
+                <a href="#" class="btn btn-ghost">Login</a>
+                <a href="#" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="hero" id="home">
+        <div class="hero-bg-overlay"></div>
+        <div class="hero-glow"></div>
+        <div class="container hero-container">
+            <!-- Left Content -->
+            <div class="hero-content fade-up-element">
+                <div class="live-badge">
+                    <span class="pulsing-dot"></span>
+                    Live Disease Surveillance Active
+                </div>
+                
+                <h1 class="hero-heading">
+                    Protecting <span class="text-gradient">India's</span><br>
+                    Public Health<br>
+                    Intelligence
+                </h1>
+                
+                <p class="hero-subtitle">
+                    An enterprise-grade disease surveillance platform combining AI-powered outbreak detection, digital health records, and real-time public health intelligence — protecting 1.4 billion people.
+                </p>
+                
+                <div class="hero-ctas">
+                    <a href="#" class="btn btn-primary btn-large">Get Started &rarr;</a>
+                    <a href="#" class="btn btn-outline-white btn-large">View Live Dashboard</a>
+                </div>
+                
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" data-target="1.4">0</span><span class="stat-suffix">B+</span>
+                        <span class="stat-label">Citizens Protected</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-target="500">0</span><span class="stat-suffix">+</span>
+                        <span class="stat-label">Districts Monitored</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-target="99.9">0</span><span class="stat-suffix">%</span>
+                        <span class="stat-label">Uptime</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Visual -->
+            <div class="hero-visual fade-up-element delay-200">
+                <div class="floating-alert red-alert float-anim">
+                    <i class="ph-fill ph-warning-circle"></i> Outbreak Alert &mdash; Delhi NCR
+                </div>
+                
+                <div class="dashboard-mockup float-anim-delayed">
+                    <div class="mockup-topbar">
+                        <div class="dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="system-badge">SYSTEM NOMINAL</div>
+                    </div>
+                    <div class="mockup-body">
+                        <div class="health-score">
+                            <svg viewBox="0 0 36 36" class="circular-chart green">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="94, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <div class="score-text">94</div>
+                        </div>
+                        
+                        <div class="sparklines">
+                            <div class="sparkline-item">
+                                <div class="spark-label">Infection Rate</div>
+                                <div class="spark-chart up"></div>
+                            </div>
+                            <div class="sparkline-item">
+                                <div class="spark-label">Recovery Rate</div>
+                                <div class="spark-chart down"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mini-stats">
+                            <div class="mini-pill">AI Models: 4/4</div>
+                            <div class="mini-pill">Nodes: 50A</div>
+                            <div class="mini-pill">Sync: Live</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="floating-alert green-alert float-anim-slow">
+                    <i class="ph-fill ph-check-circle"></i> 2,847 Records Updated
+                </div>
+            </div>
+        </div>
+        <div class="ecg-line"></div>
+    </section>
+
+    <!-- MARQUEE STATS BAR -->
+    <div class="marquee-section">
+        <div class="marquee-content" id="marquee">
+            <!-- Items injected by JS for infinite scroll -->
+        </div>
+    </div>
+
+    <!-- WHAT IS AROGYATRACK -->
+    <section class="about-section" id="about">
+        <div class="container fade-up-element">
+            <div class="section-header">
+                <span class="section-label">ABOUT THE PLATFORM</span>
+                <h2 class="section-heading">One Platform. Complete Health Intelligence.</h2>
+                <p class="section-subtitle">A modern Government of India initiative to digitize health records and proactively prevent disease outbreaks across the nation.</p>
+            </div>
+            
+            <div class="features-3col">
+                <div class="feature-card">
+                    <div class="icon-wrapper"><i class="ph-fill ph-magnifying-glass"></i></div>
+                    <h3>Early Outbreak Detection</h3>
+                    <p>AI detects disease spikes before they become epidemics.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-wrapper"><i class="ph-fill ph-lock-key"></i></div>
+                    <h3>Privacy-First Architecture</h3>
+                    <p>K-anonymity ensures no patient can ever be identified.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-wrapper"><i class="ph-fill ph-lightning"></i></div>
+                    <h3>Real-Time Intelligence</h3>
+                    <p>Live data from 500+ districts updated every hour.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- KEY FEATURES BENTO GRID -->
+    <section class="bento-section" id="features">
+        <div class="container fade-up-element">
+            <div class="section-header align-left">
+                <span class="section-label">FEATURES</span>
+                <h2 class="section-heading text-white">Everything the healthcare system needs</h2>
+            </div>
+            
+            <div class="bento-grid">
+                <!-- Large Card -->
+                <div class="bento-card bento-large">
+                    <div class="bento-content">
+                        <span class="bento-badge">4 ML Models</span>
+                        <h3>AI-Powered Disease Surveillance</h3>
+                        <p>Prophet forecasting + DBSCAN clustering dynamically maps spreading patterns.</p>
+                    </div>
+                    <div class="bento-visual">
+                        <div class="abstract-chart">
+                            <div class="bar h-1"></div>
+                            <div class="bar h-3"></div>
+                            <div class="bar h-2"></div>
+                            <div class="bar h-5 highlight"></div>
+                            <div class="bar h-4"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Medium Card 1 -->
+                <div class="bento-card bento-medium top-right">
+                    <div class="bento-content">
+                        <h3>Smart QR Health Cards</h3>
+                        <p>JWT-encoded, cryptographically signed universal IDs.</p>
+                    </div>
+                    <div class="bento-visual qr-visual">
+                        <i class="ph ph-qr-code"></i>
+                    </div>
+                </div>
+
+                <!-- Medium Card 2 -->
+                <div class="bento-card bento-medium mid-right">
+                    <div class="bento-content">
+                        <h3>E-Prescription System</h3>
+                        <p>HMAC-SHA256 secured, with automated drug interaction checks.</p>
+                    </div>
+                    <div class="bento-visual rx-visual">
+                        <i class="ph ph-prescription"></i>
+                    </div>
+                </div>
+
+                <!-- Small Card -->
+                <div class="bento-card bento-small bottom-right">
+                    <h3>Multi-Role Access</h3>
+                    <div class="role-icons">
+                        <i class="ph-fill ph-user" title="Patient"></i>
+                        <i class="ph-fill ph-stethoscope" title="Doctor"></i>
+                        <i class="ph-fill ph-pill" title="Pharmacist"></i>
+                        <i class="ph-fill ph-shield-check" title="Admin"></i>
+                    </div>
+                </div>
+
+                <!-- Wide Card -->
+                <div class="bento-card bento-wide fade-up-element">
+                    <div class="bento-content-wide">
+                        <div class="text-content">
+                            <h3>Real-time Environmental Correlation</h3>
+                            <p>Correlates Temperature, Humidity, Rainfall, and AQI with localized disease risks.</p>
+                        </div>
+                        <div class="visual-content env-chart">
+                            <div class="env-item"><span class="label">AQI</span><div class="track"><div class="fill" style="width:70%; background: #fbbf24;"></div></div></div>
+                            <div class="env-item"><span class="label">TEMP</span><div class="track"><div class="fill" style="width:85%; background: #ef4444;"></div></div></div>
+                            <div class="env-item"><span class="label">RISK</span><div class="track"><div class="fill" style="width:80%; background: #15803d;"></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="how-it-works" id="surveillance-flow">
+        <div class="container fade-up-element">
+            <h2 class="section-heading centered">From Registration to Outbreak Prevention</h2>
+            
+            <div class="steps-flow">
+                <!-- Line connecting steps -->
+                <div class="connecting-line"></div>
+                
+                <div class="step-card fade-up-element delay-100">
+                    <div class="step-number">1</div>
+                    <div class="step-icon"><i class="ph-fill ph-user-plus"></i></div>
+                    <h3>Patient Registers</h3>
+                    <p>Secure registration with QR health card generation.</p>
+                </div>
+                
+                <div class="step-arrow"><i class="ph-bold ph-arrow-right"></i></div>
+                
+                <div class="step-card fade-up-element delay-200">
+                    <div class="step-number">2</div>
+                    <div class="step-icon"><i class="ph-fill ph-stethoscope"></i></div>
+                    <h3>Doctor Consults</h3>
+                    <p>Time-limited QR access, e-prescriptions with drug safety checks.</p>
+                </div>
+
+                <div class="step-arrow"><i class="ph-bold ph-arrow-right"></i></div>
+                
+                <div class="step-card fade-up-element delay-300">
+                    <div class="step-number">3</div>
+                    <div class="step-icon"><i class="ph-fill ph-database"></i></div>
+                    <h3>Data Aggregates</h3>
+                    <p>K-anonymous data flows into surveillance pipeline.</p>
+                </div>
+
+                <div class="step-arrow"><i class="ph-bold ph-arrow-right"></i></div>
+                
+                <div class="step-card fade-up-element delay-400">
+                    <div class="step-number">4</div>
+                    <div class="step-icon"><i class="ph-fill ph-brain"></i></div>
+                    <h3>AI Detects Outbreaks</h3>
+                    <p>ML models forecast, cluster and alert health authorities in real-time.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ML INTELLIGENCE -->
+    <section class="ml-section">
+        <div class="container fade-up-element">
+            <h2 class="section-heading text-white centered">Powered by 4 AI Models</h2>
+            
+            <div class="ml-grid">
+                <div class="ml-card accent-green">
+                    <div class="ml-icon">📈</div>
+                    <h3>Prophet Forecasting</h3>
+                    <p>7, 14, 30 day forecasts, 95% confidence intervals.</p>
+                </div>
+                <div class="ml-card accent-mint">
+                    <div class="ml-icon">🗺️</div>
+                    <h3>DBSCAN Clustering</h3>
+                    <p>Geographic hotspot detection, 50km radius tracking.</p>
+                </div>
+                <div class="ml-card accent-cyan">
+                    <div class="ml-icon">🔍</div>
+                    <h3>Isolation Forest</h3>
+                    <p>Anomaly detection, flags unusual health data patterns.</p>
+                </div>
+                <div class="ml-card accent-sage">
+                    <div class="ml-icon">⚡</div>
+                    <h3>XGBoost Risk Scoring</h3>
+                    <p>20+ features, environmental + demographic combination.</p>
+                </div>
+            </div>
+            
+            <div class="fusion-engine fade-up-element">
+                <p>Decision Fusion Engine combines all 4 models</p>
+                <div class="underline-glow"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ROLE BASED ACCESS -->
+    <section class="roles-section">
+        <div class="container fade-up-element">
+            <h2 class="section-heading centered">Built for Every Healthcare Stakeholder</h2>
+            
+            <div class="roles-grid">
+                <div class="role-card border-green">
+                    <div class="role-header">
+                        <i class="ph-fill ph-user-circle"></i>
+                        <h3>Patient</h3>
+                    </div>
+                    <ul class="role-features">
+                        <li>View health records</li>
+                        <li>Family profiles</li>
+                        <li>Medication reminders</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline-role">Login as Patient</a>
+                </div>
+                
+                <div class="role-card border-emerald">
+                    <div class="role-header">
+                        <i class="ph-fill ph-stethoscope"></i>
+                        <h3>Doctor</h3>
+                    </div>
+                    <ul class="role-features">
+                        <li>QR patient lookup</li>
+                        <li>E-prescriptions</li>
+                        <li>Drug interaction alerts</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline-role">Login as Doctor</a>
+                </div>
+                
+                <div class="role-card border-teal">
+                    <div class="role-header">
+                        <i class="ph-fill ph-pill"></i>
+                        <h3>Pharmacist</h3>
+                    </div>
+                    <ul class="role-features">
+                        <li>Prescription validation</li>
+                        <li>Inventory tracking</li>
+                        <li>Dispensing workflow</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline-role">Login as Pharmacist</a>
+                </div>
+                
+                <div class="role-card border-sage">
+                    <div class="role-header">
+                        <i class="ph-fill ph-shield-check"></i>
+                        <h3>Admin</h3>
+                    </div>
+                    <ul class="role-features">
+                        <li>Surveillance dashboard</li>
+                        <li>ML outbreak alerts</li>
+                        <li>Regional analytics</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline-role">Login as Admin</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECURITY -->
+    <section class="security-section">
+        <div class="container fade-up-element">
+            <div class="section-header centered">
+                <h2 class="section-heading text-white">Enterprise-Grade Security</h2>
+            </div>
+            
+            <div class="security-grid">
+                <div class="security-badge">
+                    <span class="sec-icon">🔒</span>
+                    <span class="sec-text">HIPAA Ready</span>
+                </div>
+                <div class="security-badge">
+                    <span class="sec-icon">📋</span>
+                    <span class="sec-text">ICD-10 Coded</span>
+                </div>
+                <div class="security-badge">
+                    <span class="sec-icon">🛡️</span>
+                    <span class="sec-text">K-Anonymity (k&ge;5)</span>
+                </div>
+                <div class="security-badge">
+                    <span class="sec-icon">🔐</span>
+                    <span class="sec-text">JWT + HMAC-SHA256</span>
+                </div>
+                <div class="security-badge">
+                    <span class="sec-icon">📱</span>
+                    <span class="sec-text">2FA Support</span>
+                </div>
+                <div class="security-badge">
+                    <span class="sec-icon">✅</span>
+                    <span class="sec-text">Full Audit Trail</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer" id="contact">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <div class="logo-icon white">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                            </svg>
+                        </div>
+                        <div class="logo-text">
+                            <span class="logo-title text-white">ArogyaTrack</span>
+                        </div>
+                    </div>
+                    <p class="brand-tagline">Advanced Public Health Intelligence Platform for a safer, healthier nation.</p>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Platform</h4>
+                    <a href="#">Surveillance</a>
+                    <a href="#">AI Engine</a>
+                    <a href="#">Security</a>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>For Providers</h4>
+                    <a href="#">Doctors</a>
+                    <a href="#">Pharmacists</a>
+                    <a href="#">Clinics</a>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Data Protection</a>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="copyright">
+                    &copy; 2026 ArogyaTrack &mdash; Government of India, Ministry of Health &amp; Family Welfare
+                </div>
+                <div class="social-icons">
+                    <a href="#"><i class="ph-fill ph-twitter-logo"></i></a>
+                    <a href="#"><i class="ph-fill ph-linkedin-logo"></i></a>
+                    <a href="#"><i class="ph-fill ph-github-logo"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="index.js"></script>
+</body>
+</html>
