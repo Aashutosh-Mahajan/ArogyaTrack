@@ -9,17 +9,19 @@ import toast from 'react-hot-toast';
 
 interface Prescription {
     id: string;
-    prescription_number: string;
-    doctor_name: string;
     patient_name: string;
-    issued_at: string;
+    doctor_name: string;
+    created_at: string;
     status: string;
     medicines: {
-        id: string; // prescription_medicine_id
+        id: string;
         medicine_name: string;
+        medicine_generic?: string;
         dosage: string;
-        duration: string;
+        frequency: string;
+        duration_days: number;
         quantity: number;
+        special_instructions?: string;
         dispense_status: 'pending' | 'dispensed' | 'unavailable' | 'patient_has';
     }[];
 }
@@ -32,11 +34,6 @@ function DispensePage() {
     const [dispensing, setDispensing] = useState<string | null>(null);
 
     useEffect(() => {
-        // In a real app, we'd fetch the prescription by ID or use the scan result context
-        // For now, let's assume we can fetch it or mock it if the API isn't ready
-        // api.prescriptions.getById(params.id as string)...
-
-        // Mocking for now as the getById might not return the exact structure or might be restricted
         const fetchPrescription = async () => {
             try {
                 const res = await api.prescriptions.getById(params.id as string);
@@ -44,7 +41,7 @@ function DispensePage() {
             } catch (error) {
                 console.error('Failed to load prescription:', error);
                 toast.error('Failed to load prescription details');
-                // router.push('/pharmacy/scan');
+                router.push('/pharmacy/scan');
             } finally {
                 setLoading(false);
             }
@@ -111,11 +108,11 @@ function DispensePage() {
             <div className="max-w-4xl mx-auto">
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                     {/* Header */}
-                    <div className="bg-purple-600 p-6 text-white">
+                    <div className="bg-teal-600 p-6 text-white">
                         <div className="flex justify-between items-start">
                             <div>
-                                <h1 className="text-2xl font-bold">Prescription #{prescription.prescription_number}</h1>
-                                <p className="opacity-90 mt-1">Dr. {prescription.doctor_name} • {new Date(prescription.issued_at).toLocaleDateString()}</p>
+                                <h1 className="text-2xl font-bold">Prescription</h1>
+                                <p className="opacity-90 mt-1">Dr. {prescription.doctor_name} &bull; {new Date(prescription.created_at).toLocaleDateString()}</p>
                             </div>
                             <div className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
                                 Patient: {prescription.patient_name}
@@ -132,13 +129,17 @@ function DispensePage() {
 
                         <div className="space-y-4">
                             {prescription.medicines.map((med) => (
-                                <div key={med.id} className="border border-gray-200 rounded-xl p-4 hover:border-purple-100 transition">
+                                <div key={med.id} className="border border-gray-200 rounded-xl p-4 hover:border-teal-100 transition">
                                     <div className="flex flex-col md:flex-row justify-between gap-4">
                                         <div className="flex-1">
                                             <h3 className="font-bold text-gray-900 text-lg">{med.medicine_name}</h3>
+                                            {med.medicine_generic && (
+                                                <p className="text-xs text-gray-400">{med.medicine_generic}</p>
+                                            )}
                                             <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
                                                 <span className="bg-gray-100 px-2 py-1 rounded">Dosage: {med.dosage}</span>
-                                                <span className="bg-gray-100 px-2 py-1 rounded">Duration: {med.duration}</span>
+                                                <span className="bg-gray-100 px-2 py-1 rounded">{med.frequency}</span>
+                                                <span className="bg-gray-100 px-2 py-1 rounded">{med.duration_days} days</span>
                                                 <span className="bg-gray-100 px-2 py-1 rounded">Qty: {med.quantity}</span>
                                             </div>
                                         </div>

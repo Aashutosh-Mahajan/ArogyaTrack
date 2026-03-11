@@ -9,23 +9,14 @@ import {
     FiClipboard,
     FiShoppingCart,
     FiActivity,
-    FiAlertCircle,
 } from 'react-icons/fi';
 
 export function PharmacyKPIGrid() {
-    // Fetch dispensing history to calculate stats
-    const { data: dispensingHistory, isLoading: isLoadingHistory } = useQuery<any>({
-        queryKey: ['pharmacy-dispensing-history'],
-        queryFn: () => api.pharmacy.getDispensingRecords({ limit: 100 }), // Fetch manageable amount for stats
+    const { data: stats, isLoading } = useQuery<any>({
+        queryKey: ['pharmacy-dashboard-stats'],
+        queryFn: () => api.pharmacy.getDashboardStats(),
+        staleTime: 30000,
     });
-
-    // Fetch inventory to check low stock
-    const { data: inventory, isLoading: isLoadingInventory } = useQuery<any>({
-        queryKey: ['pharmacy-inventory'],
-        queryFn: () => api.pharmacy.getInventory({ limit: 1000 }),
-    });
-
-    const isLoading = isLoadingHistory || isLoadingInventory;
 
     if (isLoading) {
         return (
@@ -40,21 +31,10 @@ export function PharmacyKPIGrid() {
         );
     }
 
-    // Calculate stats with hardcoded dummy data for demonstration
-    const totalDispensed = dispensingHistory?.count || 124;
-
-    // Calculate today's sales (mock calculation based on recent records if needed, or count)
-    const today = new Date().toISOString().split('T')[0];
-    const actualTodayDispensed = dispensingHistory?.results?.filter((r: any) =>
-        r.dispensed_at?.startsWith(today)
-    ).length || 0;
-    const todayDispensed = actualTodayDispensed || 18;
-
-    // Calculate low stock items (threshold < 10 for example)
-    const actualLowStockCount = inventory?.results?.filter((item: any) =>
-        item.stock < 20 // Assuming 20 is low stock threshold
-    ).length || 0;
-    const lowStockCount = actualLowStockCount || 3;
+    const totalDispensed = stats?.total_dispensed ?? 0;
+    const todayDispensed = stats?.today_dispensed ?? 0;
+    const lowStockCount = stats?.low_stock_count ?? 0;
+    const pendingRequests = stats?.pending_prescriptions ?? 0;
 
     const cards = [
         {
@@ -63,7 +43,6 @@ export function PharmacyKPIGrid() {
             icon: FiShoppingCart,
             iconBg: 'bg-blue-50',
             iconColor: 'text-blue-600',
-            trend: { value: 12, direction: 'up' as const, label: 'vs last month', current: 12, previous: 0, change: 12 },
         },
         {
             title: "Today's Activity",
@@ -71,7 +50,6 @@ export function PharmacyKPIGrid() {
             icon: FiActivity,
             iconBg: 'bg-green-50',
             iconColor: 'text-green-600',
-            trend: { value: 5, direction: 'up' as const, label: 'vs yesterday', current: 5, previous: 0, change: 5 },
         },
         {
             title: 'Low Stock Items',
@@ -79,15 +57,16 @@ export function PharmacyKPIGrid() {
             icon: FiBox,
             iconBg: 'bg-red-50',
             iconColor: 'text-red-600',
-            trend: lowStockCount > 0 ? { value: lowStockCount, direction: 'down' as const, label: 'Needs attention', current: lowStockCount, previous: 0, change: 0 } : undefined,
+            trend: lowStockCount > 0
+                ? { value: lowStockCount, direction: 'down' as const, label: 'Needs attention', current: lowStockCount, previous: 0, change: 0 }
+                : undefined,
         },
         {
             title: 'Pending Requests',
-            value: 5,
+            value: pendingRequests,
             icon: FiClipboard,
             iconBg: 'bg-orange-50',
             iconColor: 'text-orange-600',
-            trend: { value: 2, direction: 'up' as const, label: 'Needs processing', current: 5, previous: 3, change: 2 },
         },
     ];
 

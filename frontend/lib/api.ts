@@ -479,9 +479,12 @@ export const api = {
   pharmacy: {
     scanPrescription: (qrData: string) =>
       apiClient.post('/pharmacy/scan-prescription/', { qr_data: qrData }),
+    scanPatient: (data: { token?: string; patient_id?: string }) =>
+      apiClient.post('/pharmacy/scan-patient/', data),
     dispense: (data: any) => apiClient.post('/pharmacy/dispense-medicine/', data),
     getDispensingRecords: (params?: any) =>
       apiClient.get('/pharmacy/dispensing-history/', { params }),
+    getDashboardStats: () => apiClient.get('/pharmacy/dashboard-stats/'),
     // Inventory
     getInventory: (params?: any) => apiClient.get('/pharmacy/inventory/', { params }),
     addInventory: (data: any) => apiClient.post('/pharmacy/inventory/', data),
