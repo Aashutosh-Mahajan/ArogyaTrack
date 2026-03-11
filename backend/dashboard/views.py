@@ -291,17 +291,15 @@ class DashboardKPIView(APIView):
                 created_at__lt=thirty_days_ago,
             ).count()
 
-        # ── Total downloads (report attachments) ─────────────────
-        all_attachments = VisitReportAttachment.objects.filter(
-            visit_record__patient=user,
-        )
-        total_downloads = all_attachments.count()
-        downloads_current = all_attachments.filter(
-            uploaded_at__gte=thirty_days_ago,
+        # ── Total downloads (from DownloadLog) ──────────────────
+        all_downloads = DownloadLog.objects.filter(user=user)
+        total_downloads = all_downloads.count()
+        downloads_current = all_downloads.filter(
+            downloaded_at__gte=thirty_days_ago,
         ).count()
-        downloads_previous = all_attachments.filter(
-            uploaded_at__gte=sixty_days_ago,
-            uploaded_at__lt=thirty_days_ago,
+        downloads_previous = all_downloads.filter(
+            downloaded_at__gte=sixty_days_ago,
+            downloaded_at__lt=thirty_days_ago,
         ).count()
 
         # ── Build response ───────────────────────────────────────
@@ -904,10 +902,46 @@ class Toggle2FAView(APIView):
 # DOWNLOAD CENTER
 # ═══════════════════════════════════════════════════════════════════
 
+
+class LogDownloadView(APIView):
+    """
+    POST /api/dashboard/log-download/
+    Logs a client-side PDF generation download (e.g. print-to-PDF).
+    Body: { "file_type": "medical_record", "file_id": 123, "file_name": "..." }
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    ALLOWED_TYPES = {t.value for t in DownloadLog.FileType}
+
+    def post(self, request):
+        user = request.user
+        file_type = request.data.get("file_type", "medical_record")
+        file_id = request.data.get("file_id")
+        file_name = request.data.get("file_name", "")
+
+        if file_type not in self.ALLOWED_TYPES:
+            return Response(
+                {"detail": "Invalid file_type."},
+                status=drf_status.HTTP_400_BAD_REQUEST,
+            )
+
+        DownloadLog.objects.create(
+            user=user,
+            file_type=file_type,
+            file_id=file_id,
+            file_name=file_name[:255],
+            ip_address=_get_client_ip(request),
+        )
+        return Response({"detail": "Download logged."}, status=drf_status.HTTP_201_CREATED)
+
+
 class DownloadListView(APIView):
     """
     GET /api/dashboard/downloads/
     Returns all downloadable files belonging to the logged-in user.
+    Includes visit records (as client-generated PDFs), file attachments,
+    and lab reports.
     """
 
     permission_classes = [IsAuthenticated]
@@ -916,7 +950,36 @@ class DownloadListView(APIView):
         user = request.user
         items = []
 
-        # 1) Visit Report Attachments
+        # 1) Visit Records (each can be downloaded as a PDF)
+        visit_records = PatientVisitRecord.objects.filter(
+            patient=user,
+        ).order_by("-visit_date")
+
+        for vr in visit_records:
+            visit_date = vr.visit_date.strftime("%d %b %Y") if vr.visit_date else ""
+            items.append({
+                "id": vr.id,
+                "type": "medical_record",
+                "type_label": "Medical Record",
+                "title": f"{vr.diagnosis or 'Visit Record'} – {visit_date}",
+                "visit_info": f"Dr. {vr.doctor_name} – {vr.department}",
+                "created_at": (vr.visit_date or vr.created_at).isoformat(),
+                "file_url": None,  # generated client-side
+                "record_data": {
+                    "id": vr.id,
+                    "visit_date": vr.visit_date.isoformat() if vr.visit_date else "",
+                    "visit_time": "",
+                    "doctor_name": vr.doctor_name or "",
+                    "department": vr.department or "",
+                    "diagnosis_summary": vr.diagnosis or "",
+                    "tests_performed": vr.tests_performed or "",
+                    "prescription_text": vr.prescription or "",
+                    "doctor_notes": vr.doctor_notes or "",
+                    "status": "completed",
+                },
+            })
+
+        # 2) Visit Report Attachments
         attachments = VisitReportAttachment.objects.filter(
             visit_record__patient=user,
         ).select_related("visit_record")
@@ -932,7 +995,7 @@ class DownloadListView(APIView):
                 "file_url": att.file.url if att.file else None,
             })
 
-        # 2) Lab Report files
+        # 3) Lab Report files
         lab_reports = LabTestResult.objects.filter(
             patient=user,
         ).exclude(report_file="")

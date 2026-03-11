@@ -921,10 +921,22 @@ export interface SecurityInfo {
 // Download Center
 export interface DownloadItem {
   id: number;
-  type: 'visit_attachment' | 'lab_report';
+  type: 'visit_attachment' | 'lab_report' | 'medical_record';
   type_label: string;
   title: string;
   visit_info: string;
   created_at: string;
   file_url: string | null;
+  record_data?: {
+    id: number;
+    visit_date: string;
+    visit_time: string;
+    doctor_name: string;
+    department: string;
+    diagnosis_summary: string;
+    tests_performed: string;
+    prescription_text: string;
+    doctor_notes: string;
+    status: string;
+  };
 }
