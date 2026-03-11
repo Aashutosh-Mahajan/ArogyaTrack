@@ -605,7 +605,12 @@ function ScanQRPage() {
                           {record.prescription && (
                             <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                               <p className="text-xs font-bold text-slate-500 uppercase mb-1 tracking-wider">{t('prescription')}</p>
-                              <p className="text-sm text-slate-700 whitespace-pre-line font-mono text-xs">{record.prescription}</p>
+                              <ul className="list-disc list-inside space-y-1 text-sm text-slate-700 text-xs">
+                                {record.prescription.split(',').map((item: string, i: number) => {
+                                  const trimmed = item.trim().replace(/\.+$/, '');
+                                  return trimmed ? <li key={i}>{trimmed}</li> : null;
+                                })}
+                              </ul>
                             </div>
                           )}
 

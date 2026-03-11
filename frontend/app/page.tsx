@@ -1,28 +1,60 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Link from 'next/link';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import {
-  FiActivity,
-  FiShield,
-  FiUsers,
-  FiBarChart,
-  FiMapPin,
-  FiTrendingUp,
-  FiCheckCircle,
-  FiArrowRight,
-  FiMenu
-} from 'react-icons/fi';
+import { motion, useScroll, useTransform, useInView } from 'framer-motion';
+
+/* ───────────────────────── helpers ───────────────────────── */
+
+function useCountUp(end: number, duration = 2000, trigger = false) {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    if (!trigger) return;
+    let start = 0;
+    const step = end / (duration / 16);
+    const id = setInterval(() => {
+      start += step;
+      if (start >= end) { setVal(end); clearInterval(id); }
+      else setVal(Math.floor(start));
+    }, 16);
+    return () => clearInterval(id);
+  }, [end, duration, trigger]);
+  return val;
+}
+
+function SectionReveal({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-80px' });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 40 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay, ease: [.22, 1, .36, 1] }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
+/* ───── inline SVGs ───── */
+const EcgLine = ({ className = '' }: { className?: string }) => (
+  <svg viewBox="0 0 1200 60" fill="none" className={className} preserveAspectRatio="none">
+    <path d="M0 30 L200 30 L230 10 L260 50 L290 5 L320 55 L350 30 L1200 30" stroke="currentColor" strokeWidth="2" fill="none" />
+  </svg>
+);
+
+const LogoIcon = () => (
+  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#2ECB71] to-[#1F9D6B] flex items-center justify-center flex-shrink-0">
+    <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12h4l3-9 4 18 3-9h4" />
+    </svg>
+  </div>
+);
+
+/* ───────────────────────── MAIN ───────────────────────── */
 
 export default function Home() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -33,298 +65,483 @@ export default function Home() {
     }
   }, [isAuthenticated, user, router]);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   if (isAuthenticated) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="loading-dots text-primary">
-          <span></span><span></span><span></span>
-        </div>
+      <div className="flex h-screen items-center justify-center bg-[#185E59]">
+        <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin" />
       </div>
     );
   }
 
-  const fadeIn = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.5 }
-  };
+  /* ─── animation variants ─── */
+  const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.12, duration: 0.6, ease: [.22, 1, .36, 1] } }) };
 
-  const stagger = {
-    animate: {
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
+  const marqueeItems = [
+    '🏥 Active Hospitals: 2,847',
+    '👨\u200D⚕️ Verified Doctors: 12,500+',
+    '💊 Prescriptions Issued: 8.2M',
+    '🦠 Diseases Tracked: 847',
+    '📊 Daily Reports: 45,000+',
+    '⚡ Avg Response Time: 2.3 hrs',
+  ];
 
   return (
-    <div className="min-h-screen bg-background font-sans selection:bg-primary/20">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-4 py-4 md:px-8">
-        <div className="mx-auto max-w-7xl glass-morphism rounded-full px-6 py-3 flex justify-between items-center shadow-soft">
-          <div className="flex items-center space-x-3">
-            <div className="bg-primary/10 p-2 rounded-full">
-              <FiActivity className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <span className="text-xl font-display font-bold text-gradient block leading-none">ArogyaTrack</span>
-              <span className="text-[10px] text-muted-foreground uppercase tracking-widest block leading-none mt-0.5">Govt. of India</span>
-            </div>
-          </div>
+    <div className="min-h-screen bg-white font-dm selection:bg-emerald-200/40 overflow-x-hidden">
 
-          <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-muted-foreground">
-            <Link href="#features" className="hover:text-primary transition-colors">Services</Link>
-            <Link href="#about" className="hover:text-primary transition-colors">About Mission</Link>
-            <Link href="#contact" className="hover:text-primary transition-colors">Contact</Link>
+      {/* ═══════════════════ NAVBAR ═══════════════════ */}
+      <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-xl shadow-md border-b border-[#D9E5E3]' : 'bg-white border-b border-[#D9E5E3]'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <LogoIcon />
+            <div className="leading-none">
+              <span className="font-syne font-extrabold text-lg text-[#185E59] block">ArogyaTrack</span>
+              <span className="text-[9px] font-semibold tracking-[0.2em] text-emerald-600 uppercase block mt-0.5">Govt. of India</span>
+            </div>
+          </Link>
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+            {['Home', 'Features', 'Surveillance', 'About', 'Contact'].map(l => (
+              <Link key={l} href={`#${l.toLowerCase()}`} className="hover:text-[#185E59] transition-colors">{l}</Link>
+            ))}
           </div>
-
-          <div className="flex items-center space-x-4">
-            <Link href="/login" className="hidden md:block">
-              <Button variant="ghost" className="text-muted-foreground hover:text-primary">Official Login</Button>
+          <div className="flex items-center gap-3">
+            <Link href="/login">
+              <button className="hidden sm:inline-flex px-5 py-2 rounded-lg text-sm font-semibold text-[#185E59] border border-[#185E59]/30 hover:bg-[#185E59]/5 transition-all">Login</button>
             </Link>
             <Link href="/signup">
-              <Button className="rounded-full shadow-lg hover:shadow-primary/25 transition-all">Register Facility</Button>
+              <button className="px-5 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-[#2ECB71] to-[#1F9D6B] shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.03] transition-all">Get Started</button>
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 md:pt-48 md:pb-32 px-4 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-radial from-teal-50/50 to-transparent -z-10 blur-3xl opacity-50 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-1/3 h-2/3 bg-gradient-radial from-blue-50/50 to-transparent -z-10 blur-3xl opacity-50 pointer-events-none" />
+      {/* ═══════════════════ HERO ═══════════════════ */}
+      <section id="home" className="relative min-h-screen flex items-center pt-16 bg-[#185E59] overflow-hidden">
+        {/* dot grid overlay */}
+        <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
+        {/* radial glow */}
+        <div className="absolute top-1/2 right-0 w-[700px] h-[700px] -translate-y-1/2 translate-x-1/4 rounded-full bg-emerald-400/15 blur-[120px] pointer-events-none" />
+        {/* ecg line at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 text-emerald-500/10 h-16">
+          <EcgLine className="w-full h-full" />
+        </div>
 
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-          <motion.div
-            initial="initial"
-            animate="animate"
-            variants={stagger}
-            className="text-left space-y-8"
-          >
-            <motion.div variants={fadeIn}>
-              <span className="px-4 py-1.5 rounded-full bg-orange-50 text-orange-700 border border-orange-100/50 text-sm font-semibold tracking-wide uppercase flex items-center w-fit gap-2">
-                <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
-                National Digital Health Mission
-              </span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid lg:grid-cols-[55%_45%] gap-12 items-center py-20 lg:py-0">
+          {/* LEFT */}
+          <motion.div initial="hidden" animate="visible" className="relative z-10 space-y-8">
+            <motion.div custom={0} variants={fadeUp} className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-emerald-500/15 border border-emerald-400/20">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-emerald-300 text-sm font-medium">Live Disease Surveillance Active</span>
             </motion.div>
 
-            <motion.h1 variants={fadeIn} className="text-5xl md:text-7xl font-display font-bold leading-tight text-foreground">
-              Securing India's <br />
-              <span className="text-gradient">Health Future</span> <br />
+            <motion.h1 custom={1} variants={fadeUp} className="font-syne font-extrabold text-5xl sm:text-6xl lg:text-[4.25rem] leading-[1.08] text-white">
+              Protecting{' '}
+              <span className="bg-gradient-to-r from-[#2ECB71] to-[#5EEEAD] bg-clip-text text-transparent">India&apos;s</span>
+              <br />Public Health
+              <br />Intelligence
             </motion.h1>
 
-            <motion.p variants={fadeIn} className="text-xl text-muted-foreground max-w-lg leading-relaxed">
-              A unified national platform for real-time disease surveillance, resource management, and predictive healthcare analytics.
+            <motion.p custom={2} variants={fadeUp} className="text-white/60 text-lg sm:text-xl max-w-xl leading-relaxed">
+              An enterprise-grade disease surveillance platform combining AI-powered outbreak detection, digital health records, and real-time public health intelligence — protecting 1.4 billion people.
             </motion.p>
 
-            <motion.div variants={fadeIn} className="flex flex-wrap gap-4 pt-4">
+            <motion.div custom={3} variants={fadeUp} className="flex flex-wrap gap-4 pt-2">
               <Link href="/signup">
-                <Button size="lg" className="h-14 px-8 text-lg shadow-xl shadow-primary/20 hover:shadow-primary/40 btn-lift">
-                  Access Portal <FiArrowRight className="ml-2" />
-                </Button>
+                <button className="group px-7 py-3.5 rounded-xl text-base font-bold text-white bg-gradient-to-r from-[#2ECB71] to-[#1F9D6B] shadow-xl shadow-emerald-600/30 hover:shadow-emerald-500/50 hover:scale-[1.03] transition-all flex items-center gap-2">
+                  Get Started <span className="group-hover:translate-x-1 transition-transform">→</span>
+                </button>
               </Link>
-              <Link href="#status">
-                <Button size="lg" variant="outline" className="h-14 px-8 text-lg border-2 hover:bg-accent/50">
-                  Public Dashboard
-                </Button>
+              <Link href="#features">
+                <button className="px-7 py-3.5 rounded-xl text-base font-bold text-white border border-white/25 hover:bg-white/10 transition-all">
+                  View Live Dashboard
+                </button>
               </Link>
             </motion.div>
 
-            <motion.div variants={fadeIn} className="flex items-center gap-8 pt-8 opacity-80">
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className={`w-10 h-10 rounded-full border-2 border-background bg-gray-200 flex items-center justify-center text-xs font-bold ${i === 4 ? 'bg-primary text-white' : ''}`}>
-                    {i === 4 ? '+' : ''}
-                  </div>
-                ))}
-              </div>
-              <div className="text-sm font-medium">
-                <p className="text-foreground">Connected Hospitals</p>
-                <p className="text-muted-foreground">Pan-India Network</p>
-              </div>
+            <motion.div custom={4} variants={fadeUp} className="flex flex-wrap gap-8 pt-6">
+              {[{ n: '1.4B+', l: 'Citizens Protected' }, { n: '500+', l: 'Districts Monitored' }, { n: '99.9%', l: 'Uptime' }].map(s => (
+                <div key={s.l}>
+                  <p className="font-syne font-extrabold text-2xl text-emerald-400">{s.n}</p>
+                  <p className="text-white/50 text-sm mt-0.5">{s.l}</p>
+                </div>
+              ))}
             </motion.div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative hidden md:block"
-          >
-            <div className="relative z-10 bg-white rounded-[2.5rem] shadow-2xl p-6 border border-gray-100 rotate-2 hover:rotate-0 transition-transform duration-500">
-              {/* Mock Dashboard UI */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white to-gray-50 rounded-[2.5rem] -z-10" />
-              <div className="flex justify-between items-center mb-6">
+          {/* RIGHT — dashboard mockup */}
+          <motion.div initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1, delay: 0.4, ease: [.22, 1, .36, 1] }} className="relative hidden lg:block">
+            {/* glow behind card */}
+            <div className="absolute inset-0 bg-emerald-500/10 rounded-[30px] blur-[60px] scale-90" />
+
+            {/* main card */}
+            <div className="relative bg-[#1F6F6A] rounded-[20px] border border-emerald-400/20 p-6 shadow-2xl">
+              {/* topbar dots */}
+              <div className="flex gap-2 mb-5">
+                <span className="w-3 h-3 rounded-full bg-red-400/70" /><span className="w-3 h-3 rounded-full bg-yellow-400/70" /><span className="w-3 h-3 rounded-full bg-green-400/70" />
+              </div>
+              {/* health score ring */}
+              <div className="flex items-center gap-6 mb-6">
+                <div className="relative w-24 h-24 flex-shrink-0">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="#2a8a7e" strokeWidth="8" />
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="url(#ring-grad)" strokeWidth="8" strokeDasharray={`${94 * 2.64} ${(100 - 94) * 2.64}`} strokeLinecap="round" />
+                    <defs><linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#2ECB71" /><stop offset="100%" stopColor="#5EEEAD" /></linearGradient></defs>
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center font-syne font-extrabold text-2xl text-white">94</span>
+                </div>
                 <div>
-                  <h3 className="text-lg font-bold">National Status</h3>
-                  <p className="text-sm text-gray-500">Real-time Aggregation</p>
-                </div>
-                <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-600 animate-pulse"></span> Live
+                  <p className="text-emerald-300 text-xs font-semibold uppercase tracking-wider">Health Score</p>
+                  <p className="text-white/50 text-xs mt-1">National composite index</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-blue-50/50 p-4 rounded-2xl">
-                  <p className="text-sm text-gray-500 mb-1">Total Screenings</p>
-                  <p className="text-2xl font-bold text-blue-700">1.2Cr+</p>
-                </div>
-                <div className="bg-purple-50/50 p-4 rounded-2xl">
-                  <p className="text-sm text-gray-500 mb-1">Recovery Rate</p>
-                  <p className="text-2xl font-bold text-purple-700">98.2%</p>
-                </div>
+              {/* sparklines */}
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                {[{ label: 'Cases Trend', color: '#2ECB71' }, { label: 'Recovery Rate', color: '#5EEEAD' }].map((c, i) => (
+                  <div key={i} className="bg-[#18605b] rounded-xl p-3">
+                    <p className="text-white/40 text-[11px] mb-2">{c.label}</p>
+                    <svg viewBox="0 0 120 30" className="w-full h-8">
+                      <polyline fill="none" stroke={c.color} strokeWidth="2" strokeLinecap="round" points={i === 0 ? '0,25 15,20 30,22 45,12 60,18 75,8 90,15 105,5 120,10' : '0,20 15,18 30,12 45,15 60,8 75,10 90,5 105,8 120,3'} />
+                    </svg>
+                  </div>
+                ))}
               </div>
-              <div className="h-40 rounded-xl relative overflow-hidden">
-                <Image src="/image.png" alt="Health chart" fill className="object-cover object-top rounded-xl" />
+              {/* stat pills */}
+              <div className="flex gap-3 mb-4">
+                {[{ v: '12.5K', l: 'Active' }, { v: '847', l: 'Tracked' }, { v: '99.2%', l: 'Accuracy' }].map(p => (
+                  <div key={p.l} className="flex-1 bg-[#18605b] rounded-xl px-3 py-2.5 text-center">
+                    <p className="text-white font-bold text-sm">{p.v}</p>
+                    <p className="text-white/40 text-[10px]">{p.l}</p>
+                  </div>
+                ))}
+              </div>
+              {/* nominal badge */}
+              <div className="flex justify-center">
+                <span className="px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold tracking-wider">● SYSTEM NOMINAL</span>
               </div>
             </div>
 
-            {/* Floating Elements */}
-            <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-6 -right-6 bg-white p-4 rounded-2xl shadow-xl border border-gray-50 z-20"
-            >
-              <div className="flex items-center gap-3">
-                <div className="bg-green-100 p-2 rounded-full">
-                  <FiShield className="text-green-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Security Level</p>
-                  <p className="font-bold text-green-600">Tier-4 GovCloud</p>
-                </div>
-              </div>
+            {/* floating alert top-right */}
+            <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} className="absolute -top-5 -right-5 bg-red-500/90 backdrop-blur-sm text-white px-4 py-2.5 rounded-2xl shadow-xl border border-red-400/40 z-20">
+              <p className="text-xs font-bold">🚨 Outbreak Alert</p>
+              <p className="text-[10px] text-white/80">Delhi NCR — Dengue spike</p>
+            </motion.div>
+
+            {/* floating update bottom-left */}
+            <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }} className="absolute -bottom-4 -left-4 bg-emerald-500/90 backdrop-blur-sm text-white px-4 py-2.5 rounded-2xl shadow-xl border border-emerald-400/40 z-20">
+              <p className="text-xs font-bold">✅ 2,847 Records Updated</p>
+              <p className="text-[10px] text-white/80">Last sync 3 min ago</p>
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section id="features" className="py-24 px-4 bg-secondary/5 relative">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-4xl font-display font-bold mb-4">Integrated Health Infrastructure</h2>
-            <p className="text-muted-foreground text-lg">
-              Empowering the nation with a unified, transparent, and efficient digital health ecosystem.
-            </p>
-          </div>
+      {/* ═══════════════════ MARQUEE STATS BAR ═══════════════════ */}
+      <div className="bg-[#1F6F6A] py-4 overflow-hidden">
+        <div className="marquee-track flex gap-12 whitespace-nowrap text-white/90 text-sm font-medium">
+          {[...marqueeItems, ...marqueeItems].map((item, i) => (
+            <span key={i} className="flex-shrink-0">{item}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* ═══════════════════ ABOUT PLATFORM ═══════════════════ */}
+      <section id="about" className="py-28 px-4 bg-white">
+        <div className="max-w-6xl mx-auto text-center">
+          <SectionReveal>
+            <p className="text-emerald-600 text-sm font-bold tracking-[0.2em] uppercase mb-4">About the Platform</p>
+            <h2 className="font-syne font-extrabold text-4xl sm:text-5xl text-[#185E59] mb-5">One Platform. Complete Health Intelligence.</h2>
+            <p className="text-gray-500 text-lg max-w-2xl mx-auto mb-16">A Government of India initiative to unify disease surveillance, health record management, and outbreak prevention under a single intelligent platform.</p>
+          </SectionReveal>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              {
-                icon: FiActivity,
-                title: "National Surveillance",
-                desc: "Real-time monitoring of disease vectors across districts and states using advanced telemetry.",
-                color: "text-blue-600",
-                bg: "bg-blue-50"
-              },
-              {
-                icon: FiShield,
-                title: "Data Sovereignty",
-                desc: "End-to-end encrypted patient data stored securely within national borders.",
-                color: "text-purple-600",
-                bg: "bg-purple-50"
-              },
-              {
-                icon: FiTrendingUp,
-                title: "Predictive AI Models",
-                desc: "Government-approved algorithms for early outbreak detection and resource allocation.",
-                color: "text-amber-600",
-                bg: "bg-amber-50"
-              },
-              {
-                icon: FiMapPin,
-                title: "Geo-Spatial Mapping",
-                desc: "District-level granularity for heatmap generation and hotspot identification.",
-                color: "text-rose-600",
-                bg: "bg-rose-50"
-              },
-              {
-                icon: FiUsers,
-                title: "Unified Stakeholders",
-                desc: "Connecting Doctors, Pharmacists, and District Admins on a single secure platform.",
-                color: "text-emerald-600",
-                bg: "bg-emerald-50"
-              },
-              {
-                icon: FiBarChart,
-                title: "Policy Analytics",
-                desc: "Actionable insights for policymakers to draft effective public health strategies.",
-                color: "text-cyan-600",
-                bg: "bg-cyan-50"
-              },
-            ].map((feature, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -5 }}
-              >
-                <Card className="h-full border-none shadow-soft hover:shadow-card-hover transition-all duration-300">
-                  <CardHeader>
-                    <div className={`w-14 h-14 ${feature.bg} rounded-2xl flex items-center justify-center mb-4 transition-colors`}>
-                      <feature.icon className={`w-7 h-7 ${feature.color}`} />
-                    </div>
-                    <CardTitle className="text-xl mb-2">{feature.title}</CardTitle>
-                    <CardDescription className="text-base leading-relaxed">
-                      {feature.desc}
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </motion.div>
+              { icon: '🔍', title: 'Early Outbreak Detection', desc: 'AI detects disease spikes before they become epidemics using real-time data from 500+ districts.' },
+              { icon: '🔐', title: 'Privacy-First Architecture', desc: 'K-anonymity ensures no individual patient can ever be identified in surveillance datasets.' },
+              { icon: '⚡', title: 'Real-Time Intelligence', desc: 'Live data from 500+ districts processed and updated every hour for instant situational awareness.' },
+            ].map((c, i) => (
+              <SectionReveal key={i} delay={i * 0.15}>
+                <div className="bg-white border border-gray-100 rounded-2xl p-8 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-center h-full">
+                  <span className="text-4xl block mb-4">{c.icon}</span>
+                  <h3 className="font-syne font-bold text-xl text-[#185E59] mb-3">{c.title}</h3>
+                  <p className="text-gray-500 leading-relaxed">{c.desc}</p>
+                </div>
+              </SectionReveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 px-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="bg-primary rounded-[3rem] p-12 md:p-20 text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl" />
+      {/* ═══════════════════ KEY FEATURES (dark bento) ═══════════════════ */}
+      <section id="features" className="py-28 px-4 bg-[#185E59]">
+        <div className="max-w-6xl mx-auto">
+          <SectionReveal>
+            <p className="text-emerald-400 text-sm font-bold tracking-[0.2em] uppercase mb-4 text-center">Features</p>
+            <h2 className="font-syne font-extrabold text-4xl sm:text-5xl text-white text-center mb-16">Everything the healthcare system needs</h2>
+          </SectionReveal>
 
-            <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-6 relative z-10">
-              Partner with the Mission
-            </h2>
-            <p className="text-white/80 text-lg md:text-xl max-w-2xl mx-auto mb-10 relative z-10">
-              Join the National Digital Health Mission to build a healthier, safer India.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
-              <Link href="/signup">
-                <Button size="lg" className="bg-white text-primary hover:bg-gray-100 border-none shadow-lg w-full sm:w-auto h-14 text-lg px-8">
-                  Register Facility
-                </Button>
-              </Link>
-              <Link href="/contact">
-                <Button size="lg" variant="outline" className="bg-transparent border-white/30 text-white hover:bg-white/10 hover:text-white w-full sm:w-auto h-14 text-lg px-8">
-                  Contact Support
-                </Button>
-              </Link>
-            </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* LARGE — AI Surveillance (spans 2 rows) */}
+            <SectionReveal delay={0} className="lg:row-span-2">
+              <div className="h-full bg-[#1F6F6A] border border-emerald-500/20 rounded-2xl p-7 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold w-fit mb-5">4 ML Models</span>
+                <h3 className="font-syne font-bold text-2xl text-white mb-3">AI-Powered Disease Surveillance</h3>
+                <p className="text-white/50 mb-6 leading-relaxed">Prophet forecasting, DBSCAN geographic clustering, Isolation Forest anomaly detection, and XGBoost risk scoring — fused into a single decision engine.</p>
+                {/* mini chart visual */}
+                <div className="mt-auto bg-[#18605b] rounded-xl p-4">
+                  <div className="flex justify-between text-[10px] text-white/40 mb-2"><span>JAN</span><span>FEB</span><span>MAR</span><span>APR</span><span>MAY</span><span>JUN</span></div>
+                  <svg viewBox="0 0 200 60" className="w-full h-16">
+                    <defs><linearGradient id="cg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#2ECB71" stopOpacity="0.4" /><stop offset="100%" stopColor="#2ECB71" stopOpacity="0" /></linearGradient></defs>
+                    <path d="M0,50 L33,40 L66,45 L100,25 L133,30 L166,15 L200,20 L200,60 L0,60Z" fill="url(#cg1)" />
+                    <polyline fill="none" stroke="#2ECB71" strokeWidth="2.5" strokeLinecap="round" points="0,50 33,40 66,45 100,25 133,30 166,15 200,20" />
+                  </svg>
+                </div>
+              </div>
+            </SectionReveal>
+
+            {/* Smart QR */}
+            <SectionReveal delay={0.1}>
+              <div className="bg-[#1F6F6A] border border-emerald-500/20 rounded-2xl p-7 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300 h-full">
+                <h3 className="font-syne font-bold text-xl text-white mb-2">Smart QR Health Cards</h3>
+                <p className="text-white/50 text-sm mb-5">JWT-encoded, cryptographically signed QR codes for instant secure patient identification.</p>
+                <div className="bg-[#18605b] rounded-xl p-5 flex items-center justify-center">
+                  <div className="w-20 h-20 bg-white rounded-lg p-1.5">
+                    <div className="w-full h-full grid grid-cols-5 grid-rows-5 gap-0.5">
+                      {Array.from({ length: 25 }).map((_, i) => <div key={i} className={`rounded-[1px] ${[0,1,2,4,5,6,8,10,12,14,16,18,20,22,23,24].includes(i) ? 'bg-[#185E59]' : 'bg-gray-200'}`} />)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </SectionReveal>
+
+            {/* E-Prescription */}
+            <SectionReveal delay={0.15}>
+              <div className="bg-[#1F6F6A] border border-emerald-500/20 rounded-2xl p-7 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300 h-full">
+                <h3 className="font-syne font-bold text-xl text-white mb-2">E-Prescription System</h3>
+                <p className="text-white/50 text-sm mb-5">HMAC-SHA256 secured prescriptions with automated drug interaction checking.</p>
+                <div className="bg-[#18605b] rounded-xl p-4 space-y-2">
+                  {['Tab Paracetamol 500mg', 'Syp Amoxicillin 250mg', 'Cap Omeprazole 20mg'].map((rx, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs text-white/60">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />{rx}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </SectionReveal>
+
+            {/* Multi-Role */}
+            <SectionReveal delay={0.2}>
+              <div className="bg-[#1F6F6A] border border-emerald-500/20 rounded-2xl p-7 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300 h-full">
+                <h3 className="font-syne font-bold text-xl text-white mb-4">Multi-Role Access</h3>
+                <div className="flex gap-3 flex-wrap">
+                  {[{ emoji: '🧑‍⚕️', label: 'Patient' }, { emoji: '👨‍⚕️', label: 'Doctor' }, { emoji: '💊', label: 'Pharmacist' }, { emoji: '🛡️', label: 'Admin' }].map(r => (
+                    <span key={r.label} className="px-3 py-2 bg-[#18605b] rounded-xl text-xs text-white/70 flex items-center gap-1.5">
+                      <span className="text-base">{r.emoji}</span>{r.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </SectionReveal>
+
+            {/* Environmental Correlation — full width */}
+            <SectionReveal delay={0.25} className="lg:col-span-3">
+              <div className="bg-[#1F6F6A] border border-emerald-500/20 rounded-2xl p-7 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300">
+                <div className="flex flex-col md:flex-row md:items-center gap-6">
+                  <div className="flex-1">
+                    <h3 className="font-syne font-bold text-xl text-white mb-2">Real-time Environmental Correlation</h3>
+                    <p className="text-white/50 text-sm">Temperature, Humidity, Rainfall, and AQI correlated with disease outbreaks for predictive intelligence.</p>
+                  </div>
+                  <div className="flex gap-3">
+                    {[{ label: 'Temp', v: 34, color: '#ef4444' }, { label: 'Humidity', v: 72, color: '#3b82f6' }, { label: 'Rainfall', v: 45, color: '#8b5cf6' }, { label: 'AQI', v: 88, color: '#f59e0b' }].map(b => (
+                      <div key={b.label} className="text-center">
+                        <div className="w-10 bg-[#18605b] rounded-full overflow-hidden h-24 flex flex-col justify-end mx-auto mb-1.5">
+                          <div className="rounded-full transition-all duration-700" style={{ height: `${b.v}%`, backgroundColor: b.color }} />
+                        </div>
+                        <p className="text-[10px] text-white/40">{b.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </SectionReveal>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t bg-white py-12 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center space-x-3">
-            <div className="bg-primary/10 p-2 rounded-full">
-              <FiActivity className="w-5 h-5 text-primary" />
+      {/* ═══════════════════ HOW IT WORKS ═══════════════════ */}
+      <section className="py-28 px-4 bg-[#EEF3F2]">
+        <div className="max-w-6xl mx-auto">
+          <SectionReveal>
+            <h2 className="font-syne font-extrabold text-4xl sm:text-5xl text-[#185E59] text-center mb-20">From Registration to Outbreak Prevention</h2>
+          </SectionReveal>
+          <div className="grid md:grid-cols-4 gap-0 relative">
+            {/* connecting line */}
+            <div className="hidden md:block absolute top-10 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-400" />
+            {[
+              { step: '1', title: 'Patient Registers', desc: 'Secure registration with QR health card generation for instant identification.' },
+              { step: '2', title: 'Doctor Consults', desc: 'Time-limited QR access, e-prescriptions with drug safety checks.' },
+              { step: '3', title: 'Data Aggregates', desc: 'K-anonymous data flows into the surveillance pipeline automatically.' },
+              { step: '4', title: 'AI Detects Outbreaks', desc: 'ML models forecast, cluster, and alert health authorities in real-time.' },
+            ].map((s, i) => (
+              <SectionReveal key={i} delay={i * 0.15}>
+                <div className="flex flex-col items-center text-center px-4 relative">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#2ECB71] to-[#1F9D6B] flex items-center justify-center text-white font-syne font-extrabold text-lg shadow-lg shadow-emerald-500/30 relative z-10 mb-5">
+                    {s.step}
+                  </div>
+                  <h3 className="font-syne font-bold text-lg text-[#185E59] mb-2">{s.title}</h3>
+                  <p className="text-gray-500 text-sm leading-relaxed">{s.desc}</p>
+                </div>
+              </SectionReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════ ML INTELLIGENCE ═══════════════════ */}
+      <section id="surveillance" className="py-28 px-4 bg-[#185E59]">
+        <div className="max-w-6xl mx-auto">
+          <SectionReveal>
+            <h2 className="font-syne font-extrabold text-4xl sm:text-5xl text-white text-center mb-5">Powered by 4 AI Models</h2>
+            <p className="text-white/40 text-center mb-16 max-w-2xl mx-auto">Our Decision Fusion Engine combines four specialized machine learning models for comprehensive outbreak intelligence.</p>
+          </SectionReveal>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
+            {[
+              { emoji: '📈', title: 'Prophet Forecasting', desc: '7, 14, 30 day forecasts with 95% confidence intervals', accent: 'from-emerald-400 to-emerald-500', border: 'border-emerald-400/30' },
+              { emoji: '🗺️', title: 'DBSCAN Clustering', desc: 'Geographic hotspot detection with 50km radius analysis', accent: 'from-teal-300 to-teal-400', border: 'border-teal-400/30' },
+              { emoji: '🔍', title: 'Isolation Forest', desc: 'Anomaly detection that flags unusual outbreak patterns', accent: 'from-cyan-300 to-cyan-400', border: 'border-cyan-400/30' },
+              { emoji: '⚡', title: 'XGBoost Risk Scoring', desc: '20+ features including environmental and demographic data', accent: 'from-lime-300 to-lime-400', border: 'border-lime-400/30' },
+            ].map((m, i) => (
+              <SectionReveal key={i} delay={i * 0.1}>
+                <div className={`bg-[#1F6F6A] ${m.border} border rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full`}>
+                  <span className="text-3xl block mb-4">{m.emoji}</span>
+                  <h3 className="font-syne font-bold text-lg text-white mb-2">{m.title}</h3>
+                  <p className="text-white/50 text-sm leading-relaxed">{m.desc}</p>
+                  <div className={`h-1 w-12 rounded-full bg-gradient-to-r ${m.accent} mt-4`} />
+                </div>
+              </SectionReveal>
+            ))}
+          </div>
+          <SectionReveal>
+            <p className="text-center text-white/60 text-base">
+              <span className="border-b-2 border-emerald-400 pb-1 text-white font-semibold">Decision Fusion Engine</span> combines all 4 models for unified risk assessment
+            </p>
+          </SectionReveal>
+        </div>
+      </section>
+
+      {/* ═══════════════════ ROLE BASED ACCESS ═══════════════════ */}
+      <section className="py-28 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <SectionReveal>
+            <h2 className="font-syne font-extrabold text-4xl sm:text-5xl text-[#185E59] text-center mb-16">Built for Every Healthcare Stakeholder</h2>
+          </SectionReveal>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { role: 'Patient', color: '#5FB3AC', features: ['View health records', 'Family profiles', 'Medication reminders'], link: '/login' },
+              { role: 'Doctor', color: '#4DA6A0', features: ['QR patient lookup', 'E-prescriptions', 'Drug interaction alerts'], link: '/login' },
+              { role: 'Pharmacist', color: '#3D9A95', features: ['Prescription validation', 'Inventory management', 'Dispensing workflow'], link: '/login' },
+              { role: 'Admin', color: '#79C2BD', features: ['Surveillance dashboard', 'ML alerts', 'Regional analytics'], link: '/login' },
+            ].map((r, i) => (
+              <SectionReveal key={i} delay={i * 0.1}>
+                <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
+                  <div className="h-1.5" style={{ backgroundColor: r.color }} />
+                  <div className="p-6 flex-1 flex flex-col">
+                    <h3 className="font-syne font-bold text-xl text-[#185E59] mb-4">{r.role}</h3>
+                    <ul className="space-y-2.5 flex-1 mb-6">
+                      {r.features.map(f => (
+                        <li key={f} className="flex items-center gap-2 text-sm text-gray-500">
+                          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: r.color }} />{f}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link href={r.link}>
+                      <button className="w-full py-2.5 rounded-xl text-sm font-semibold border-2 hover:text-white transition-all" style={{ borderColor: r.color, color: r.color }} onMouseEnter={e => { e.currentTarget.style.backgroundColor = r.color; e.currentTarget.style.color = '#fff'; }} onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = r.color; }}>
+                        Login as {r.role}
+                      </button>
+                    </Link>
+                  </div>
+                </div>
+              </SectionReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════ SECURITY ═══════════════════ */}
+      <section className="py-28 px-4 bg-gradient-to-b from-[#1F6F6A] to-[#185E59]">
+        <div className="max-w-5xl mx-auto text-center">
+          <SectionReveal>
+            <h2 className="font-syne font-extrabold text-4xl sm:text-5xl text-white mb-16">Enterprise-Grade Security</h2>
+          </SectionReveal>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {[
+              { icon: '🔒', label: 'HIPAA Ready' },
+              { icon: '📋', label: 'ICD-10 Coded' },
+              { icon: '🛡️', label: 'K-Anonymity (k≥5)' },
+              { icon: '🔐', label: 'JWT + HMAC-SHA256' },
+              { icon: '📱', label: '2FA Support' },
+              { icon: '✅', label: 'Full Audit Trail' },
+            ].map((s, i) => (
+              <SectionReveal key={i} delay={i * 0.08}>
+                <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl px-5 py-6 hover:bg-white/15 transition-all">
+                  <span className="text-3xl block mb-3">{s.icon}</span>
+                  <p className="text-white font-semibold text-sm">{s.label}</p>
+                </div>
+              </SectionReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════ FOOTER ═══════════════════ */}
+      <footer id="contact" className="bg-[#185E59] border-t border-emerald-500/10 pt-16 pb-8 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-5 gap-12 mb-12">
+            {/* logo col */}
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-2.5 mb-4">
+                <LogoIcon />
+                <div className="leading-none">
+                  <span className="font-syne font-extrabold text-lg text-white block">ArogyaTrack</span>
+                  <span className="text-[9px] font-semibold tracking-[0.2em] text-emerald-400 uppercase block mt-0.5">Govt. of India</span>
+                </div>
+              </div>
+              <p className="text-white/40 text-sm leading-relaxed max-w-xs">Enterprise-grade public health surveillance and healthcare management platform for the nation.</p>
             </div>
-            <div>
-              <span className="text-lg font-bold text-foreground block leading-none">ArogyaTrack</span>
-              <span className="text-[10px] text-muted-foreground uppercase tracking-widest block leading-none mt-0.5">Govt. of India</span>
+            {/* link cols */}
+            {[
+              { heading: 'Platform', links: ['Features', 'Surveillance', 'Security', 'API Docs'] },
+              { heading: 'For Doctors', links: ['E-Prescriptions', 'Patient Lookup', 'Drug Alerts', 'CDSS'] },
+              { heading: 'Legal', links: ['Privacy Policy', 'Terms of Use', 'Data Policy', 'Grievance'] },
+            ].map(col => (
+              <div key={col.heading}>
+                <p className="text-white font-semibold text-sm mb-4">{col.heading}</p>
+                <ul className="space-y-2.5">
+                  {col.links.map(l => (
+                    <li key={l}><Link href="#" className="text-white/40 text-sm hover:text-emerald-400 transition-colors">{l}</Link></li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          {/* bottom bar */}
+          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-white/30 text-sm text-center md:text-left">© 2026 ArogyaTrack — Government of India · Ministry of Health &amp; Family Welfare</p>
+            <div className="flex gap-4">
+              {['M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.416 22 12c0-5.523-4.477-10-10-10z',
+                'M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z',
+                'M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z M4 2a2 2 0 100 4 2 2 0 000-4z',
+              ].map((d, i) => (
+                <a key={i} href="#" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-emerald-500/30 transition-colors">
+                  <svg className="w-4 h-4 text-white/50" fill="currentColor" viewBox="0 0 24 24"><path d={d} /></svg>
+                </a>
+              ))}
             </div>
           </div>
-          <div className="flex gap-8 text-sm text-muted-foreground">
-            <Link href="#" className="hover:text-primary">Privacy Policy</Link>
-            <Link href="#" className="hover:text-primary">Terms of Use</Link>
-            <Link href="#" className="hover:text-primary">Grievance Redressal</Link>
-          </div>
-          <p className="text-sm text-muted-foreground">© 2026 Ministry of Health. All rights reserved.</p>
         </div>
       </footer>
     </div>

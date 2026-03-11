@@ -143,7 +143,7 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
           </div>
           <div class="section"><div class="section-title">Diagnosis</div><div class="section-body">${record.diagnosis_summary}</div></div>
           <div class="section"><div class="section-title">Tests Performed</div><div class="section-body">${record.tests_performed || 'None recorded'}</div></div>
-          <div class="section"><div class="section-title">Prescription</div><div class="section-body">${record.prescription_text || 'None'}</div></div>
+          <div class="section"><div class="section-title">Prescription</div><div class="section-body">${record.prescription_text ? record.prescription_text.split(',').map((s: string) => s.trim().replace(/\.+$/, '')).filter(Boolean).join('<br/>') : 'None'}</div></div>
           ${record.doctor_notes ? `<div class="section"><div class="section-title">Doctor Notes</div><div class="section-body">${record.doctor_notes}</div></div>` : ''}
           <div class="footer">Generated from Health Surveillance Platform</div>
         </body>
@@ -232,7 +232,12 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
 
             {record.prescription_text && (
               <Section icon={FiFileText} title="Prescription">
-                <pre className="whitespace-pre-wrap font-sans">{record.prescription_text}</pre>
+                <ul className="list-disc list-inside space-y-1">
+                  {record.prescription_text.split(',').map((item: string, i: number) => {
+                    const trimmed = item.trim().replace(/\.+$/, '');
+                    return trimmed ? <li key={i}>{trimmed}</li> : null;
+                  })}
+                </ul>
               </Section>
             )}
 

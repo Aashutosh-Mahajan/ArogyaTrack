@@ -281,9 +281,12 @@ function MedicalRecordsPage(): React.JSX.Element {
                               <FiFileText className="w-3 h-3" />
                               {t('prescription')}
                             </p>
-                            <p className="text-slate-800 whitespace-pre-line leading-relaxed font-medium">
-                              {record.prescription}
-                            </p>
+                            <ul className="list-disc list-inside space-y-1 text-slate-800 leading-relaxed font-medium">
+                              {record.prescription.split(',').map((item: string, i: number) => {
+                                const trimmed = item.trim().replace(/\.+$/, '');
+                                return trimmed ? <li key={i}>{trimmed}</li> : null;
+                              })}
+                            </ul>
                           </div>
                         )}
 

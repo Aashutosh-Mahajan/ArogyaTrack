@@ -217,9 +217,12 @@ function RecordCard({ record }: { record: RecentRecord }) {
                       <FiFileText className="w-3 h-3" />
                       {t('prescription')}
                     </p>
-                    <pre className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap font-sans">
-                      {record.prescription_text}
-                    </pre>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-slate-600 leading-relaxed">
+                      {record.prescription_text.split(',').map((item: string, i: number) => {
+                        const trimmed = item.trim().replace(/\.+$/, '');
+                        return trimmed ? <li key={i}>{trimmed}</li> : null;
+                      })}
+                    </ul>
                   </div>
                 </div>
               )}

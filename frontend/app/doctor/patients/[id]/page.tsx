@@ -194,9 +194,12 @@ function PatientDetailsPage() {
                                                     <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
                                                         {t('treatment_label')}
                                                     </h4>
-                                                    <p className="text-gray-700 text-sm whitespace-pre-line">
-                                                        {record.prescription}
-                                                    </p>
+                                                    <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
+                                                        {record.prescription.split(',').map((item: string, i: number) => {
+                                                            const trimmed = item.trim().replace(/\.+$/, '');
+                                                            return trimmed ? <li key={i}>{trimmed}</li> : null;
+                                                        })}
+                                                    </ul>
                                                 </div>
                                             )}
 
