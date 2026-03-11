@@ -8,10 +8,13 @@ import toast from 'react-hot-toast';
 import { verifyAbhaId } from '@/lib/abhaApi';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiArrowRight, FiArrowLeft, FiCheckCircle, FiUser, FiMail, FiPhone, FiMapPin, FiLock, FiEye, FiEyeOff, FiUploadCloud, FiX, FiHeart, FiActivity } from 'react-icons/fi';
+import { FiArrowRight, FiArrowLeft, FiCheckCircle, FiUser, FiMail, FiPhone, FiMapPin, FiLock, FiEye, FiEyeOff, FiUploadCloud, FiX, FiHeart, FiActivity, FiPlus } from 'react-icons/fi';
 import MultiStepProgress from '@/components/auth/MultiStepProgress';
 
-const STEPS = ['Personal Info', 'Contact & Address', 'Security & Upload'];
+const STEPS = ['Personal Info', 'Medical History', 'Contact & Address', 'Security & Upload'];
+
+const CONDITION_OPTIONS = ['Diabetes', 'Hypertension', 'Heart Disease', 'Asthma', 'Thyroid Disorder', 'Kidney Disease', 'Liver Disease', 'Cancer', 'None'];
+const ALLERGY_OPTIONS = ['Penicillin', 'Aspirin', 'Sulfa Drugs', 'NSAIDs', 'Latex', 'Peanuts', 'Shellfish', 'None'];
 
 export default function PatientRegisterPage() {
   const router = useRouter();
@@ -47,6 +50,14 @@ export default function PatientRegisterPage() {
   const [abhaStatus, setAbhaStatus] = useState<'idle' | 'verified' | 'not_found'>('idle');
   const [abhaHidden, setAbhaHidden] = useState(false);
   const [abhaVerifying, setAbhaVerifying] = useState(false);
+
+  // Medical history
+  const [conditions, setConditions] = useState<string[]>([]);
+  const [customCondition, setCustomCondition] = useState('');
+  const [allergies, setAllergies] = useState<string[]>([]);
+  const [customAllergy, setCustomAllergy] = useState('');
+  const [pastSurgeries, setPastSurgeries] = useState('');
+  const [currentMedications, setCurrentMedications] = useState('');
 
   const calcStrength = (p: string): 'weak' | 'medium' | 'strong' => {
     let s = 0;
@@ -118,6 +129,8 @@ export default function PatientRegisterPage() {
       if (!formData.date_of_birth) e.date_of_birth = 'Required';
       if (!formData.blood_group) e.blood_group = 'Required';
     } else if (step === 1) {
+      // Medical history - no required fields, all optional
+    } else if (step === 2) {
       if (!formData.email) e.email = 'Required';
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) e.email = 'Invalid email';
       if (!formData.phone) e.phone = 'Required';
@@ -126,7 +139,7 @@ export default function PatientRegisterPage() {
       if (!formData.district) e.district = 'Required';
       if (!formData.state) e.state = 'Required';
       if (!formData.pincode) e.pincode = 'Required';
-    } else if (step === 2) {
+    } else if (step === 3) {
       if (!formData.password) e.password = 'Required';
       else if (formData.password.length < 8) e.password = 'Min 8 characters';
       if (!formData.aadhar_id_proof && abhaStatus !== 'verified') e.aadhar_id_proof = 'ID proof required';
@@ -146,7 +159,14 @@ export default function PatientRegisterPage() {
     if (!validateStep()) { toast.error('Fix errors before submitting'); return; }
     setLoading(true);
     try {
-      const submitData = { ...formData, abha_verified: abhaStatus === 'verified' };
+      const submitData = {
+        ...formData,
+        abha_verified: abhaStatus === 'verified',
+        existing_conditions: conditions.join(', '),
+        known_allergies: allergies.join(', '),
+        past_surgeries: pastSurgeries,
+        current_medications: currentMedications,
+      };
       await api.auth.registerPatientWithDocuments(submitData as PatientRegistrationData);
       toast.success('Registration successful!');
       if (abhaStatus === 'verified') {
@@ -283,8 +303,121 @@ export default function PatientRegisterPage() {
                 </motion.div>
               )}
 
-              {/* ── Step 2: Contact & Address ── */}
+              {/* ── Step 2: Medical History ── */}
               {step === 1 && (
+                <motion.div key="s1med" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                  <h3 className="text-lg font-bold text-slate-900">Help doctors understand you better</h3>
+
+                  {/* Existing Medical Conditions */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-800 mb-2">Existing Medical Conditions</label>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {CONDITION_OPTIONS.map((opt) => {
+                        const active = conditions.includes(opt);
+                        return (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => {
+                              if (opt === 'None') { setConditions(active ? [] : ['None']); return; }
+                              if (conditions.includes('None')) setConditions((c) => c.filter((x) => x !== 'None'));
+                              setConditions((c) => active ? c.filter((x) => x !== opt) : [...c, opt]);
+                            }}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                              active ? 'bg-teal-600 text-white border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={customCondition}
+                        onChange={(e) => setCustomCondition(e.target.value)}
+                        placeholder="Add custom condition..."
+                        className="flex-1 h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm focus:border-teal-500"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') { e.preventDefault(); if (customCondition.trim()) { setConditions((c) => [...c, customCondition.trim()]); setCustomCondition(''); } }
+                        }}
+                      />
+                      <button type="button" onClick={() => { if (customCondition.trim()) { setConditions((c) => [...c, customCondition.trim()]); setCustomCondition(''); } }} className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100">
+                        <FiPlus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Known Allergies */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-800 mb-2">Known Allergies</label>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {ALLERGY_OPTIONS.map((opt) => {
+                        const active = allergies.includes(opt);
+                        return (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => {
+                              if (opt === 'None') { setAllergies(active ? [] : ['None']); return; }
+                              if (allergies.includes('None')) setAllergies((a) => a.filter((x) => x !== 'None'));
+                              setAllergies((a) => active ? a.filter((x) => x !== opt) : [...a, opt]);
+                            }}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                              active ? 'bg-teal-600 text-white border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={customAllergy}
+                        onChange={(e) => setCustomAllergy(e.target.value)}
+                        placeholder="Add custom allergy..."
+                        className="flex-1 h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm focus:border-teal-500"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') { e.preventDefault(); if (customAllergy.trim()) { setAllergies((a) => [...a, customAllergy.trim()]); setCustomAllergy(''); } }
+                        }}
+                      />
+                      <button type="button" onClick={() => { if (customAllergy.trim()) { setAllergies((a) => [...a, customAllergy.trim()]); setCustomAllergy(''); } }} className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100">
+                        <FiPlus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Past Surgeries */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-800 mb-2">Past Surgeries / Hospitalizations</label>
+                    <textarea
+                      value={pastSurgeries}
+                      onChange={(e) => setPastSurgeries(e.target.value)}
+                      rows={3}
+                      placeholder="E.g. Appendectomy 2019, Hospitalized for pneumonia 2022..."
+                      className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-teal-500 focus:ring-teal-500/20"
+                    />
+                  </div>
+
+                  {/* Current Medications */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-800 mb-2">Current Medications</label>
+                    <textarea
+                      value={currentMedications}
+                      onChange={(e) => setCurrentMedications(e.target.value)}
+                      rows={2}
+                      placeholder="E.g. Metformin 500mg twice daily, Amlodipine 5mg once daily..."
+                      className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-teal-500 focus:ring-teal-500/20"
+                    />
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ── Step 3: Contact & Address ── */}
+              {step === 2 && (
                 <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -331,8 +464,8 @@ export default function PatientRegisterPage() {
                 </motion.div>
               )}
 
-              {/* ── Step 3: Security & Upload ── */}
-              {step === 2 && (
+              {/* ── Step 4: Security & Upload ── */}
+              {step === 3 && (
                 <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
                   <div>
                     <label className="block text-sm font-medium text-slate-700">Password <span className="text-red-500">*</span></label>
