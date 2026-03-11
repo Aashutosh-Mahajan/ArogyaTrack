@@ -249,6 +249,7 @@ class MyCardView(APIView):
             "district": profile.district or "",
             "gender": profile.gender,
             "qr_code_url": qr_code_url,
+            "token": card.token if card else None,
             "profile_photo_url": profile_photo_url,
         })
 
@@ -409,6 +410,8 @@ class ScanPatientQRView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        import jwt as pyjwt
+
         # Check authorization - only doctors and admins can scan
         if request.user.role not in ["doctor", "admin"]:
             return Response(
@@ -432,22 +435,29 @@ class ScanPatientQRView(APIView):
                 profile = Profile.objects.select_related("user", "health_card").get(patient_id=patient_id_input)
             else:
                 # Decode the JWT token
-                import jwt
-                from django.conf import settings
-
-                payload = jwt.decode(
-                    token, settings.SIMPLE_JWT.get("SIGNING_KEY"), algorithms=[settings.SIMPLE_JWT.get("ALGORITHM", "HS256")]
-                )
-
-                patient_id = payload.get("patient_id")
-                if not patient_id:
-                    return Response(
-                        {"detail": "Invalid QR code format."},
-                        status=status.HTTP_400_BAD_REQUEST,
+                try:
+                    payload = pyjwt.decode(
+                        token, settings.SIMPLE_JWT.get("SIGNING_KEY"), algorithms=[settings.SIMPLE_JWT.get("ALGORITHM", "HS256")]
                     )
-
-                # Get the profile and health card
-                profile = Profile.objects.select_related("user", "health_card").get(id=patient_id)
+                    patient_id = payload.get("patient_id")
+                    if not patient_id:
+                        raise pyjwt.InvalidTokenError("No patient_id in token")
+                    profile = Profile.objects.select_related("user", "health_card").get(id=patient_id)
+                except (pyjwt.InvalidTokenError, Profile.DoesNotExist):
+                    # Fallback: look up health card by matching the raw token string
+                    try:
+                        card_match = HealthCard.objects.select_related("profile__user", "profile__health_card").get(token=token)
+                        if not card_match.is_active():
+                            return Response(
+                                {"detail": "This health card has expired or been revoked."},
+                                status=status.HTTP_410_GONE,
+                            )
+                        profile = card_match.profile
+                    except HealthCard.DoesNotExist:
+                        return Response(
+                            {"detail": "Invalid QR code."},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
 
             card = profile.health_card
 
@@ -514,18 +524,18 @@ class ScanPatientQRView(APIView):
             if bp_metric:
                 systolic = bp_metric.value
                 diastolic = bp_metric.secondary_value
-                status = "normal"
+                bp_status = "normal"
                 if systolic >= 140 or (diastolic and diastolic >= 90):
-                    status = "high"
+                    bp_status = "high"
                 elif systolic < 90 or (diastolic and diastolic < 60):
-                    status = "low"
+                    bp_status = "low"
                     
                 latest_vitals["blood_pressure"] = {
                     "value": f"{int(systolic)}/{int(diastolic) if diastolic else '?'}",
                     "systolic": systolic,
                     "diastolic": diastolic,
                     "unit": bp_metric.unit,
-                    "status": status,
+                    "status": bp_status,
                     "recorded_at": bp_metric.recorded_at.isoformat(),
                 }
 
@@ -537,17 +547,17 @@ class ScanPatientQRView(APIView):
 
             if sugar_metric:
                 val = sugar_metric.value
-                status = "normal"
+                sugar_status = "normal"
                 # Simple logic for now (assuming random/post-prandial > 200 is high)
                 if val >= 200: 
-                    status = "high"
+                    sugar_status = "high"
                 elif val < 70:
-                    status = "low"
+                    sugar_status = "low"
 
                 latest_vitals["blood_sugar"] = {
                     "value": val,
                     "unit": sugar_metric.unit,
-                    "status": status,
+                    "status": sugar_status,
                     "recorded_at": sugar_metric.recorded_at.isoformat(),
                 }
 
@@ -580,16 +590,6 @@ class ScanPatientQRView(APIView):
                 "prescriptions": prescriptions_data,
             })
 
-        except jwt.ExpiredSignatureError:
-            return Response(
-                {"detail": "This QR code has expired."},
-                status=status.HTTP_410_GONE,
-            )
-        except jwt.InvalidTokenError:
-            return Response(
-                {"detail": "Invalid QR code."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except Profile.DoesNotExist:
             return Response(
                 {"detail": "Patient not found."},
