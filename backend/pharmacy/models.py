@@ -12,6 +12,7 @@ class Pharmacy(models.Model):
     name = models.CharField(max_length=255)
     license_number = models.CharField(max_length=100, unique=True)
     address = models.TextField()
+    district = models.CharField(max_length=120, blank=True, db_index=True)
     phone = models.CharField(max_length=20)
     email = models.EmailField()
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="pharmacies")
@@ -21,6 +22,9 @@ class Pharmacy(models.Model):
     class Meta:
         ordering = ["name"]
         verbose_name_plural = "Pharmacies"
+        indexes = [
+            models.Index(fields=["district"]),
+        ]
 
     def __str__(self):
         return self.name

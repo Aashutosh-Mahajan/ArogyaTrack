@@ -359,6 +359,7 @@ export const api = {
     getMedicines: (params?: any): Promise<Medicine[]> =>
       apiClient.get('/prescriptions/medicines/', { params }),
     create: (data: any) => apiClient.post('/prescriptions/create/', data),
+    validate: (data: any) => apiClient.post('/prescriptions/validate/', data),
     validateHash: (prescriptionNumber: string, hash: string) =>
       apiClient.post('/prescriptions/validate-hash/', { prescription_number: prescriptionNumber, hash }),
   },
@@ -492,6 +493,7 @@ export const api = {
     // Inventory
     getInventory: (params?: any) => apiClient.get('/pharmacy/inventory/', { params }),
     addInventory: (data: any) => apiClient.post('/pharmacy/inventory/', data),
+    list: (params?: any) => apiClient.get('/pharmacy/list/', { params }),
   },
 
   // Public Client (for custom requests)

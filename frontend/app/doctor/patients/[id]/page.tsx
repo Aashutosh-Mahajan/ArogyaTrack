@@ -110,14 +110,24 @@ function PatientDetailsPage() {
                             <span className="flex items-center gap-1"><FiMapPin className="h-4 w-4" /> {patient.district}</span>
                         </div>
                     </div>
-                    <Button
-                        onClick={() => router.push(`/doctor/patients/${patientId}/create-record`)}
-                        size="lg"
-                        className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200"
-                    >
-                        <FiPlus className="mr-2 h-5 w-5" />
-                        {t('create_new_record_short')}
-                    </Button>
+                    <div className="flex gap-3">
+                        <Button
+                            onClick={() => router.push(`/doctor/patients/${patientId}/create-prescription`)}
+                            size="lg"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200"
+                        >
+                            <FiPlus className="mr-2 h-5 w-5" />
+                            Create Prescription
+                        </Button>
+                        <Button
+                            onClick={() => router.push(`/doctor/patients/${patientId}/create-record`)}
+                            size="lg"
+                            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200"
+                        >
+                            <FiPlus className="mr-2 h-5 w-5" />
+                            {t('create_new_record_short')}
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Medical History Section */}

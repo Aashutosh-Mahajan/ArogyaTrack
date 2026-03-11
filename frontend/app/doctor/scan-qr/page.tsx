@@ -432,7 +432,7 @@ function ScanQRPage() {
             </Card>
 
             {/* Action Buttons */}
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <Button
                 onClick={handleAddToMyPatients}
                 disabled={isAddingPatient}
@@ -441,6 +441,14 @@ function ScanQRPage() {
               >
                 <FiUserPlus className="mr-2 h-5 w-5" />
                 {isAddingPatient ? 'Adding...' : t('add_to_my_patients')}
+              </Button>
+
+              <Button
+                onClick={() => router.push(`/doctor/patients/${patientData.patient?.id}/create-prescription`)}
+                className="w-full bg-violet-600 hover:bg-violet-700 text-white py-6 text-lg font-semibold shadow-md hover:shadow-lg transition-all"
+                size="lg"
+              >
+                💊 Create Prescription
               </Button>
 
               <Button

@@ -194,3 +194,35 @@ class CheckAllergiesSerializer(serializers.Serializer):
         patient = self.context["patient_profile"]
         medicine_ids = self.validated_data["medicine_ids"]
         return PrescriptionService.check_patient_allergies(patient, medicine_ids)
+
+
+class ValidatePrescriptionMedicineInputSerializer(serializers.Serializer):
+    """Single medicine entry in the validation request."""
+    medicine_id = serializers.UUIDField()
+    dosage = serializers.CharField(max_length=100)
+    frequency = serializers.CharField(max_length=100)
+    duration_days = serializers.IntegerField(required=False, min_value=1, default=7)
+
+
+class ValidatePrescriptionSerializer(serializers.Serializer):
+    """Validate prescription payload before AI agent call."""
+
+    patient_id = serializers.UUIDField()
+    pharmacy_id = serializers.UUIDField(required=False, allow_null=True, default=None)
+    medicines = ValidatePrescriptionMedicineInputSerializer(many=True)
+
+    def validate_patient_id(self, value):
+        try:
+            Profile.objects.get(id=value)
+        except Profile.DoesNotExist:
+            raise serializers.ValidationError("Patient not found")
+        return value
+
+    def validate_medicines(self, value):
+        if not value:
+            raise serializers.ValidationError("At least one medicine is required")
+        medicine_ids = [m["medicine_id"] for m in value]
+        existing = Medicine.objects.filter(id__in=medicine_ids, is_active=True).count()
+        if existing != len(medicine_ids):
+            raise serializers.ValidationError("One or more medicines are invalid or inactive")
+        return value
