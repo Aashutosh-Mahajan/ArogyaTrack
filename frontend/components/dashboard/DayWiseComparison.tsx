@@ -215,7 +215,7 @@ export function DayWiseComparison() {
 
   return (
     <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-md overflow-hidden">
-      <div className="h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+      
       <CardHeader className="bg-slate-50/50 border-b border-slate-100">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>

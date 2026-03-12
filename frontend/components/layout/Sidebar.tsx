@@ -232,7 +232,10 @@ export function Sidebar() {
       background: '#081c19',
       display: 'flex',
       flexDirection: 'column',
-      position: 'relative',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      zIndex: 50,
       overflow: 'hidden',
     }}>
       {/* ── Ambient glows ── */}
