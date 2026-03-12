@@ -168,7 +168,7 @@ class DispenseMedicineView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        # Get pharmacy for current user (if pharmacist owns a pharmacy)
+        # Get pharmacy for current user (if one exists)
         pharmacy = Pharmacy.objects.filter(owner=request.user, is_active=True).first()
 
         serializer = DispenseMedicineSerializer(data=request.data, context={"request": request, "pharmacy": pharmacy})

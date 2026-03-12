@@ -332,105 +332,87 @@ function PatientDashboard(): React.JSX.Element {
       </div>
 
       {/* ═══ SECTION 3 — CHARTS ═══ */}
-      <div className="f3">
+      <div className="f3" style={{ display: 'flex', gap: 20 }}>
 
-        {/* Vitals Trend */}
+        {/* Blood Pressure */}
         <div style={{
           background: '#fff', borderRadius: 18, padding: '24px 28px',
           boxShadow: '0 2px 10px rgba(47,58,58,0.06)',
-          maxWidth: 680, width: '100%',
+          flex: 1, minWidth: 0,
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <div>
-              <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: '#2F3A3A', fontSize: 15 }}>
-                Vitals Trend
-              </div>
-              <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 11, marginTop: 2 }}>
-                Last 6 months
-              </div>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: '#2F3A3A', fontSize: 15 }}>
+              Blood Pressure
             </div>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button
-                onClick={() => setActiveTab('bp')}
-                style={{
-                  padding: '6px 16px', borderRadius: 20, border: 'none', cursor: 'pointer',
-                  fontSize: 12, fontWeight: 600, transition: 'all 0.2s',
-                  background: activeTab === 'bp' ? '#1F6F6A' : '#F3F4F6',
-                  color: activeTab === 'bp' ? '#fff' : '#6B7C7C',
-                }}
-              >
-                Blood Pressure
-              </button>
-              <button
-                onClick={() => setActiveTab('sugar')}
-                style={{
-                  padding: '6px 16px', borderRadius: 20, border: 'none', cursor: 'pointer',
-                  fontSize: 12, fontWeight: 600, transition: 'all 0.2s',
-                  background: activeTab === 'sugar' ? '#1F6F6A' : '#F3F4F6',
-                  color: activeTab === 'sugar' ? '#fff' : '#6B7C7C',
-                }}
-              >
-                Blood Sugar
-              </button>
+            <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 11, marginTop: 2 }}>
+              Last 6 months
             </div>
           </div>
+          <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 11, color: '#6B7C7C' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ width: 10, height: 3, background: '#1F6F6A', borderRadius: 2 }} /> Systolic
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ width: 10, height: 3, background: '#4ade80', borderRadius: 2 }} /> Diastolic
+            </span>
+          </div>
+          <ResponsiveContainer width="100%" height={200}>
+            <ComposedChart data={bpData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+              <defs>
+                <linearGradient id="bpGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#1F6F6A" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="#1F6F6A" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} interval={0} />
+              <YAxis domain={[60, 170]} tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={32} />
+              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E8EDED', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
+              <Area type="monotone" dataKey="systolic" stroke="#1F6F6A" strokeWidth={2} fill="url(#bpGrad)" dot={{ fill: '#1F6F6A', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
+              <Line type="monotone" dataKey="diastolic" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
 
-          {activeTab === 'bp' ? (
-            <>
-              <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 11, color: '#6B7C7C' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ width: 10, height: 3, background: '#1F6F6A', borderRadius: 2 }} /> Systolic
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ width: 10, height: 3, background: '#4ade80', borderRadius: 2 }} /> Diastolic
-                </span>
-              </div>
-              <ResponsiveContainer width="100%" height={200}>
-                <ComposedChart data={bpData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="bpGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#1F6F6A" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#1F6F6A" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} interval={0} />
-                  <YAxis domain={[60, 170]} tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={32} />
-                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E8EDED', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
-                  <Area type="monotone" dataKey="systolic" stroke="#1F6F6A" strokeWidth={2} fill="url(#bpGrad)" dot={{ fill: '#1F6F6A', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
-                  <Line type="monotone" dataKey="diastolic" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </>
-          ) : (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{
-                  background: 'rgba(31,111,106,0.08)', color: '#1F6F6A',
-                  fontSize: 10, fontWeight: 700,
-                  padding: '3px 10px', borderRadius: 999,
-                }}>
-                  ↓ Improving trend
-                </span>
-                <span style={{ color: '#9CA3AF', fontSize: 11 }}>mg/dL</span>
-              </div>
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={sugarData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="sgGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#1F6F6A" stopOpacity={0.18} />
-                      <stop offset="95%" stopColor="#1F6F6A" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} interval={0} />
-                  <YAxis domain={['auto', 'auto']} tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={32} />
-                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E8EDED', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
-                  <Area type="monotone" dataKey="value" stroke="#185E59" strokeWidth={2} fill="url(#sgGrad)" dot={{ fill: '#185E59', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </>
-          )}
+        {/* Blood Sugar */}
+        <div style={{
+          background: '#fff', borderRadius: 18, padding: '24px 28px',
+          boxShadow: '0 2px 10px rgba(47,58,58,0.06)',
+          flex: 1, minWidth: 0,
+        }}>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: '#2F3A3A', fontSize: 15 }}>
+              Blood Sugar
+            </div>
+            <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 11, marginTop: 2 }}>
+              Last 6 months
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span style={{
+              background: 'rgba(31,111,106,0.08)', color: '#1F6F6A',
+              fontSize: 10, fontWeight: 700,
+              padding: '3px 10px', borderRadius: 999,
+            }}>
+              ↓ Improving trend
+            </span>
+            <span style={{ color: '#9CA3AF', fontSize: 11 }}>mg/dL</span>
+          </div>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={sugarData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+              <defs>
+                <linearGradient id="sgGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#1F6F6A" stopOpacity={0.18} />
+                  <stop offset="95%" stopColor="#1F6F6A" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} interval={0} />
+              <YAxis domain={['auto', 'auto']} tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={32} />
+              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E8EDED', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
+              <Area type="monotone" dataKey="value" stroke="#185E59" strokeWidth={2} fill="url(#sgGrad)" dot={{ fill: '#185E59', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 

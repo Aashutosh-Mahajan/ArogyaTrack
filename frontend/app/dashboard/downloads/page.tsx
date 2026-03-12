@@ -18,4 +18,4 @@ function DownloadsPage(): React.JSX.Element {
   );
 }
 
-export default withAuth(DownloadsPage);
+export default withAuth(DownloadsPage, ['patient']);

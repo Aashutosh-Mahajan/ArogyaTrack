@@ -28,7 +28,7 @@ export default function MyPatientsPage() {
   }) || [];
 
   const handleCreateRecord = (patientId: string) => {
-    router.push(`/doctor/patients/${patientId}/create-record`);
+    router.push(`/doctor/patients/${patientId}/create-consultation`);
   };
 
   return (
