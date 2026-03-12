@@ -248,7 +248,7 @@ export function Sidebar() {
       }} />
 
       {/* ── Logo ── */}
-      <div style={{ padding: '28px 26px 22px', display: 'flex', alignItems: 'center', gap: 13, position: 'relative' }}>
+      <Link href="/" style={{ padding: '28px 26px 22px', display: 'flex', alignItems: 'center', gap: 13, position: 'relative', textDecoration: 'none' }}>
         <div style={{
           width: 57, height: 57, borderRadius: 18,
           background: 'linear-gradient(135deg, #22856e 0%, #1a6b5a 100%)',
@@ -272,7 +272,7 @@ export function Sidebar() {
             GOVT. OF INDIA
           </div>
         </div>
-      </div>
+      </Link>
 
       {/* ── Separator ── */}
       <div style={{ margin: '0 22px', height: 1, background: 'rgba(255,255,255,0.06)' }} />

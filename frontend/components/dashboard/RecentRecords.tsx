@@ -117,7 +117,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
                 <div className="record-meta mt-2">
                   <span className="inline-flex items-center gap-1.5">
                     <FiUser className="h-3.5 w-3.5" />
-                    Dr. {record.doctor_name}
+                    {record.doctor_name?.startsWith('Dr') ? record.doctor_name : `Dr. ${record.doctor_name}`}
                   </span>
                   <span className="text-[#3D5B50] hidden sm:inline">•</span>
                   <span className="inline-flex items-center gap-1.5">

@@ -63,11 +63,11 @@ export default function AdminSignInPage() {
         className="w-full max-w-[440px] mx-4"
       >
         {/* Shield Icon */}
-        <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+        <Link href="/" className="flex justify-center mb-6">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center hover:bg-red-500/20 transition-all">
             <FiShield className="w-8 h-8 text-red-400" />
           </div>
-        </div>
+        </Link>
 
         {/* Title */}
         <div className="text-center mb-8">

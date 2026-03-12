@@ -215,7 +215,7 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
                 </div>
                 <div>
                   <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Doctor</p>
-                  <p className="text-sm font-semibold text-gray-900">Dr. {record.doctor_name}</p>
+                  <p className="text-sm font-semibold text-gray-900">{record.doctor_name?.startsWith('Dr') ? record.doctor_name : `Dr. ${record.doctor_name}`}</p>
                 </div>
               </div>
 
