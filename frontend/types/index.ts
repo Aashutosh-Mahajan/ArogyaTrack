@@ -222,6 +222,7 @@ export interface Allergy {
   reaction_type: string;
   reaction?: string; // Alias
   severity: number | string; // Handle both
+  added_by_name?: string | null;
   created_at: string;
 }
 
@@ -234,6 +235,7 @@ export interface ChronicCondition {
   diagnosed_date?: string;
   status?: string;
   is_active: boolean;
+  added_by_name?: string | null;
   created_at: string;
 }
 

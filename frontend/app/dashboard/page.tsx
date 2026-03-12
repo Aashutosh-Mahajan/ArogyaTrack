@@ -143,6 +143,21 @@ function PatientDashboard(): React.JSX.Element {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'bp' | 'sugar'>('bp');
   const [selectedRecord, setSelectedRecord] = useState<RecentRecord | null>(null);
+  const [downloadingAttId, setDownloadingAttId] = useState<number | null>(null);
+
+  const handleViewReport = async (attId: number, fileName: string) => {
+    setDownloadingAttId(attId);
+    try {
+      const blob = await api.medical.downloadReport(attId, 'inline');
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+    } catch {
+      // silent fail
+    } finally {
+      setDownloadingAttId(null);
+    }
+  };
 
   const { data: records } = useQuery<RecentRecord[]>({
     queryKey: ['dashboard-recent-records'],
@@ -602,15 +617,15 @@ function PatientDashboard(): React.JSX.Element {
                   <DetailSection icon="📎" title="Attachments">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {selectedRecord.attachments.map((att: RecentRecordAttachment) => (
-                        <a
+                        <button
                           key={att.id}
-                          href={att.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          onClick={() => handleViewReport(att.id, att.file_name)}
+                          disabled={downloadingAttId === att.id}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
                             borderRadius: 10, border: '1px solid #E2E8E7', textDecoration: 'none',
-                            color: '#2F3A3A', transition: 'background 0.15s',
+                            color: '#2F3A3A', transition: 'background 0.15s', background: 'transparent',
+                            cursor: downloadingAttId === att.id ? 'wait' : 'pointer', width: '100%', textAlign: 'left',
                           }}
                           onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafb'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
@@ -626,10 +641,16 @@ function PatientDashboard(): React.JSX.Element {
                               {att.file_type} • {new Date(att.uploaded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </div>
                           </div>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /><path d="M12 15V3" />
-                          </svg>
-                        </a>
+                          {downloadingAttId === att.id ? (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F6F6A" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}>
+                              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                            </svg>
+                          ) : (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F6F6A" strokeWidth="2">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+                            </svg>
+                          )}
+                        </button>
                       ))}
                     </div>
                   </DetailSection>

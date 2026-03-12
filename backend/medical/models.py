@@ -40,6 +40,13 @@ class Allergy(models.Model):
     allergen = models.CharField(max_length=255)
     reaction_type = models.CharField(max_length=120)
     severity = models.PositiveSmallIntegerField(default=1)
+    added_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="added_allergies",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -51,6 +58,13 @@ class ChronicCondition(models.Model):
     icd_10_code = models.CharField(max_length=10)
     disease_name = models.CharField(max_length=255, blank=True)
     is_active = models.BooleanField(default=True)
+    added_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="added_conditions",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { withAuth } from '@/components/auth/withAuth';
 import { api } from '@/lib/api';
@@ -18,17 +18,29 @@ import {
     FiMapPin,
     FiPhone,
     FiDroplet,
-    FiAlertCircle
+    FiAlertCircle,
+    FiAlertTriangle,
 } from 'react-icons/fi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 
 function PatientDetailsPage() {
     const params = useParams();
     const router = useRouter();
     const { t } = useLanguage();
+    const queryClient = useQueryClient();
     const patientId = params.id as string;
+
+    // Allergy form state
+    const [showAllergyForm, setShowAllergyForm] = useState(false);
+    const [allergyForm, setAllergyForm] = useState({ allergen: '', reaction_type: '', severity: 1 });
+
+    // Condition form state
+    const [showConditionForm, setShowConditionForm] = useState(false);
+    const [conditionForm, setConditionForm] = useState({ icd_10_code: '', disease_name: '' });
 
     // 1. Fetch Patient Details
     // Since we don't have a direct getPatient(id), we fetch all and find.
@@ -42,6 +54,45 @@ function PatientDetailsPage() {
     });
 
     const patient = patientsData?.results?.find(p => p.patient_id === patientId);
+
+    // Fetch patient history (allergies & conditions)
+    const { data: patientHistory, refetch: refetchHistory } = useQuery<{
+        allergies: any[];
+        chronic_conditions: any[];
+    }>({
+        queryKey: ['patient-history', patientId],
+        queryFn: () => api.medical.getPatientHistory(patientId),
+        enabled: !!patientId,
+    });
+
+    // Mutations for adding allergies/conditions
+    const addAllergyMutation = useMutation({
+        mutationFn: (data: { allergen: string; reaction_type: string; severity: number }) =>
+            api.medical.addAllergy(patientId, data),
+        onSuccess: () => {
+            toast.success('Allergy added successfully');
+            setAllergyForm({ allergen: '', reaction_type: '', severity: 1 });
+            setShowAllergyForm(false);
+            refetchHistory();
+        },
+        onError: (err: any) => {
+            toast.error(err.response?.data?.detail || 'Failed to add allergy');
+        },
+    });
+
+    const addConditionMutation = useMutation({
+        mutationFn: (data: { icd_10_code: string; disease_name: string }) =>
+            api.medical.addCondition(patientId, data),
+        onSuccess: () => {
+            toast.success('Condition added successfully');
+            setConditionForm({ icd_10_code: '', disease_name: '' });
+            setShowConditionForm(false);
+            refetchHistory();
+        },
+        onError: (err: any) => {
+            toast.error(err.response?.data?.detail || 'Failed to add condition');
+        },
+    });
 
     // 2. Fetch Medical Records for this patient
     const { data: recordsData, isLoading: loadingRecords } = useQuery({
@@ -128,6 +179,158 @@ function PatientDetailsPage() {
                             {t('create_new_record_short')}
                         </Button>
                     </div>
+                </div>
+
+                {/* Allergies & Chronic Conditions */}
+                <div className="grid gap-6 md:grid-cols-2">
+                    {/* Allergies Card */}
+                    <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
+                        <div className="h-1 bg-gradient-to-r from-rose-400 to-orange-400"></div>
+                        <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-rose-50 rounded-lg">
+                                        <FiAlertTriangle className="w-5 h-5 text-rose-600" />
+                                    </div>
+                                    <CardTitle className="text-lg">Allergies</CardTitle>
+                                </div>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-rose-200 text-rose-700 hover:bg-rose-50"
+                                    onClick={() => setShowAllergyForm(!showAllergyForm)}
+                                >
+                                    <FiPlus className="h-4 w-4 mr-1" /> Add
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            {showAllergyForm && (
+                                <form
+                                    onSubmit={(e) => { e.preventDefault(); addAllergyMutation.mutate(allergyForm); }}
+                                    className="mb-4 p-3 bg-rose-50/50 border border-rose-100 rounded-xl space-y-2"
+                                >
+                                    <Input
+                                        placeholder="Allergen (e.g. Penicillin)"
+                                        value={allergyForm.allergen}
+                                        onChange={(e) => setAllergyForm({ ...allergyForm, allergen: e.target.value })}
+                                        required
+                                    />
+                                    <Input
+                                        placeholder="Reaction type (e.g. Rash, Anaphylaxis)"
+                                        value={allergyForm.reaction_type}
+                                        onChange={(e) => setAllergyForm({ ...allergyForm, reaction_type: e.target.value })}
+                                        required
+                                    />
+                                    <select
+                                        className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+                                        value={allergyForm.severity}
+                                        onChange={(e) => setAllergyForm({ ...allergyForm, severity: Number(e.target.value) })}
+                                    >
+                                        <option value={1}>Mild</option>
+                                        <option value={2}>Moderate</option>
+                                        <option value={3}>Severe</option>
+                                    </select>
+                                    <div className="flex gap-2 pt-1">
+                                        <Button type="submit" size="sm" className="bg-rose-600 hover:bg-rose-700 text-white" disabled={addAllergyMutation.isPending}>
+                                            {addAllergyMutation.isPending ? 'Saving...' : 'Save Allergy'}
+                                        </Button>
+                                        <Button type="button" size="sm" variant="ghost" onClick={() => setShowAllergyForm(false)}>Cancel</Button>
+                                    </div>
+                                </form>
+                            )}
+                            {patientHistory?.allergies && patientHistory.allergies.length > 0 ? (
+                                <div className="space-y-2">
+                                    {patientHistory.allergies.map((allergy: any) => (
+                                        <div key={allergy.id} className="flex items-center justify-between p-3 bg-rose-50/50 border border-rose-100 rounded-xl">
+                                            <div>
+                                                <p className="font-semibold text-slate-800">{allergy.allergen}</p>
+                                                <p className="text-xs text-rose-600 font-medium mt-0.5">{allergy.reaction_type}</p>
+                                                {allergy.added_by_name && (
+                                                    <p className="text-[10px] text-slate-400 mt-1">Added by {allergy.added_by_name}</p>
+                                                )}
+                                            </div>
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${allergy.severity === 3 ? 'bg-rose-100 text-rose-700' : allergy.severity === 2 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                                                {allergy.severity === 3 ? 'Severe' : allergy.severity === 2 ? 'Moderate' : 'Mild'}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-center text-sm text-slate-400 py-4">No allergies recorded</p>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Chronic Conditions Card */}
+                    <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
+                        <div className="h-1 bg-gradient-to-r from-teal-400 to-blue-400"></div>
+                        <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-teal-50 rounded-lg">
+                                        <FiClock className="w-5 h-5 text-teal-600" />
+                                    </div>
+                                    <CardTitle className="text-lg">Chronic Conditions</CardTitle>
+                                </div>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-teal-200 text-teal-700 hover:bg-teal-50"
+                                    onClick={() => setShowConditionForm(!showConditionForm)}
+                                >
+                                    <FiPlus className="h-4 w-4 mr-1" /> Add
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            {showConditionForm && (
+                                <form
+                                    onSubmit={(e) => { e.preventDefault(); addConditionMutation.mutate(conditionForm); }}
+                                    className="mb-4 p-3 bg-teal-50/50 border border-teal-100 rounded-xl space-y-2"
+                                >
+                                    <Input
+                                        placeholder="ICD-10 Code (e.g. E11.9)"
+                                        value={conditionForm.icd_10_code}
+                                        onChange={(e) => setConditionForm({ ...conditionForm, icd_10_code: e.target.value.toUpperCase() })}
+                                        required
+                                    />
+                                    <Input
+                                        placeholder="Disease name (e.g. Type 2 Diabetes)"
+                                        value={conditionForm.disease_name}
+                                        onChange={(e) => setConditionForm({ ...conditionForm, disease_name: e.target.value })}
+                                        required
+                                    />
+                                    <div className="flex gap-2 pt-1">
+                                        <Button type="submit" size="sm" className="bg-teal-600 hover:bg-teal-700 text-white" disabled={addConditionMutation.isPending}>
+                                            {addConditionMutation.isPending ? 'Saving...' : 'Save Condition'}
+                                        </Button>
+                                        <Button type="button" size="sm" variant="ghost" onClick={() => setShowConditionForm(false)}>Cancel</Button>
+                                    </div>
+                                </form>
+                            )}
+                            {patientHistory?.chronic_conditions && patientHistory.chronic_conditions.length > 0 ? (
+                                <div className="space-y-2">
+                                    {patientHistory.chronic_conditions.map((condition: any) => (
+                                        <div key={condition.id} className="flex items-center justify-between p-3 bg-teal-50/50 border border-teal-100 rounded-xl">
+                                            <div>
+                                                <p className="font-semibold text-slate-800">{condition.disease_name}</p>
+                                                <p className="text-xs text-slate-500 mt-0.5">{condition.icd_10_code}</p>
+                                                {condition.added_by_name && (
+                                                    <p className="text-[10px] text-slate-400 mt-1">Added by {condition.added_by_name}</p>
+                                                )}
+                                            </div>
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${condition.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                                                {condition.is_active ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-center text-sm text-slate-400 py-4">No chronic conditions recorded</p>
+                            )}
+                        </CardContent>
+                    </Card>
                 </div>
 
                 {/* Medical History Section */}
