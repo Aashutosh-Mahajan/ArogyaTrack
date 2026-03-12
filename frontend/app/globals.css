@@ -60,7 +60,7 @@
     background-color: #EEF3F2;
     color: #2F3A3A;
     font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
-    overflow-x: hidden;
+    overflow: hidden;
     @apply antialiased;
   }
 

@@ -23,6 +23,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         flexDirection: 'column',
         overflow: 'hidden',
         minWidth: 0,
+        marginLeft: 290,
       }}>
         <Header />
         <main style={{

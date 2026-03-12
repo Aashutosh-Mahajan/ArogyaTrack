@@ -55,10 +55,10 @@ function AdherenceRing({ pct, size = 100 }: { pct: number; size?: number }) {
         position: 'absolute', inset: 0,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       }}>
-        <span style={{ fontSize: size * 0.26, fontWeight: 800, color: col, lineHeight: 1 }}>
+        <span style={{ fontSize: size * 0.26, fontWeight: 800, color: '#ffffff', lineHeight: 1 }}>
           {Math.round(pct)}%
         </span>
-        <span style={{ fontSize: 10, color: '#6B7C7C', marginTop: 2 }}>{pctLabel(pct)}</span>
+        <span style={{ fontSize: 11, color: '#4ade80', marginTop: 3, fontWeight: 600 }}>{pctLabel(pct)}</span>
       </div>
     </div>
   );
@@ -191,7 +191,7 @@ function AdherencePage(): React.JSX.Element {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20, marginBottom: 28 }}>
         {/* Upcoming Doses */}
         <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E8EDED', overflow: 'hidden' }}>
-          <div style={{ height: 4, background: 'linear-gradient(90deg, #1F6F6A, #4ade80)' }} />
+          
           <div style={{ padding: '20px 24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
               <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(31,111,106,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>⏰</div>
@@ -241,7 +241,7 @@ function AdherencePage(): React.JSX.Element {
 
         {/* Missed Doses */}
         <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E8EDED', overflow: 'hidden' }}>
-          <div style={{ height: 4, background: '#DC2626' }} />
+          
           <div style={{ padding: '20px 24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
               <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(220,38,38,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>⚠️</div>
@@ -324,8 +324,7 @@ function AdherencePage(): React.JSX.Element {
                   onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 8px 28px rgba(31,111,106,0.08)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
                 >
-                  {/* Accent bar */}
-                  <div style={{ height: 4, background: t.is_active ? 'linear-gradient(90deg, #1F6F6A, #4ade80)' : '#CBD5D5' }} />
+                  
 
                   <div style={{ padding: '20px 24px' }}>
                     {/* Header row */}

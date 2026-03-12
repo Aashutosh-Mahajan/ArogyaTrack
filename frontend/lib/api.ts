@@ -108,7 +108,8 @@ class ApiClient {
         const requestUrl = error.config?.url || '';
         const isAuthRequest = requestUrl.includes('/auth/register/') ||
           requestUrl.includes('/auth/login/') ||
-          requestUrl.includes('/auth/verify-email/');
+          requestUrl.includes('/auth/verify-email/') ||
+          requestUrl.includes('/auth/logout/');
         if (!isAuthRequest) {
           toast.error(errorMessage);
         }

@@ -111,8 +111,6 @@ function MedicinesPage(): React.JSX.Element {
               onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 8px 28px rgba(31,111,106,0.10)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
             >
-              {/* Accent bar */}
-              <div style={{ height: 4, background: med.is_active ? 'linear-gradient(90deg, #1F6F6A, #4ade80)' : '#CBD5D5' }} />
 
               <div style={{ padding: '20px 24px' }}>
                 {/* Name + status */}
