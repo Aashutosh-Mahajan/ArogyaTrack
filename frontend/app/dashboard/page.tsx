@@ -298,7 +298,7 @@ function PatientDashboard(): React.JSX.Element {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 22, alignItems: 'flex-end', textAlign: 'right' }}>
             {/* Risk Level */}
             <div>
-              <div style={{ fontSize: 14, color: '#000', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 800 }}>RISK LEVEL</div>
+              <div style={{ fontSize: 10, color: '#fff', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 800, verticalAlign: 'super' }}>RISK LEVEL</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: riskColor, boxShadow: `0 0 8px ${riskColor}80` }} />
                 <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{riskLevel}</span>
@@ -306,7 +306,7 @@ function PatientDashboard(): React.JSX.Element {
             </div>
             {/* Adherence */}
             <div>
-              <div style={{ fontSize: 14, color: '#000', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 800 }}>ADHERENCE</div>
+              <div style={{ fontSize: 10, color: '#fff', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 800, verticalAlign: 'super' }}>ADHERENCE</div>
               <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{adherencePercentage}%</span>
               <div style={{ width: 72, height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 99, marginTop: 6 }}>
                 <div style={{ width: `${Math.min(adherencePercentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #1F6F6A, #4ade80)', borderRadius: 99, boxShadow: '0 0 6px rgba(74,222,128,0.3)' }} />
@@ -314,7 +314,7 @@ function PatientDashboard(): React.JSX.Element {
             </div>
             {/* Conditions */}
             <div>
-              <div style={{ fontSize: 14, color: '#000', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 800 }}>CONDITIONS</div>
+              <div style={{ fontSize: 10, color: '#fff', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 800, verticalAlign: 'super' }}>CONDITIONS</div>
               <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{activeConditions.length} Active</span>
             </div>
           </div>

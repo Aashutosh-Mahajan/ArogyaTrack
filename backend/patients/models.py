@@ -6,7 +6,7 @@ Production-grade patient models with comprehensive data fields
 import uuid
 import random
 import string
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone as dt_timezone
 from pathlib import Path
 
 import jwt
@@ -276,7 +276,7 @@ class HealthCardService:
     def generate_token(profile: Profile) -> tuple[str, timezone.datetime]:
         payload = HealthCardService._token_payload(profile)
         token = jwt.encode(payload, settings.SIMPLE_JWT.get("SIGNING_KEY"), algorithm=settings.SIMPLE_JWT.get("ALGORITHM", "HS256"))
-        expires_at = timezone.datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
+        expires_at = datetime.fromtimestamp(payload["exp"], tz=dt_timezone.utc)
         return token, expires_at
 
     @staticmethod
