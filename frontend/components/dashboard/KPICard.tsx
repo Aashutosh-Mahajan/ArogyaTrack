@@ -92,13 +92,13 @@ export function KPICard({
         </div>
 
         {trend && (
-          <div className="mt-4 pt-3 border-t border-slate-100">
+          <div className="mt-4 pt-3  border-slate-100">
             <p className={`text-xs ${trendColor} font-medium flex items-center gap-1`}>
               <span className="opacity-70">vs last month</span>
             </p>
           </div>
         )}
       </CardContent>
-    </Card>
+    </Card>border-t
   );
 }
