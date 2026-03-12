@@ -363,6 +363,8 @@ export const api = {
     validate: (data: any) => apiClient.post('/prescriptions/validate/', data),
     validateHash: (prescriptionNumber: string, hash: string) =>
       apiClient.post('/prescriptions/validate-hash/', { prescription_number: prescriptionNumber, hash }),
+    verifyQR: (prescriptionId: string, hash: string) =>
+      apiClient.post('/prescriptions/verify-qr/', { prescription_id: prescriptionId, hash }),
   },
 
   // Adherence
