@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 
 from accounts.permissions import IsApprovedDoctor, IsDoctorVerified
 
-from .models import Medicine, Prescription
+from .models import Medicine, Prescription, PrescriptionService
 from .serializers import (
     CheckAllergiesSerializer,
     CheckInteractionsSerializer,
@@ -243,3 +243,43 @@ class ValidatePrescriptionView(APIView):
         )
 
         return Response(report, status=status.HTTP_200_OK)
+
+
+class VerifyPrescriptionQRView(APIView):
+    """
+    Public endpoint to verify and view a prescription via QR code data.
+    POST /api/prescriptions/verify-qr/
+    Accepts: { "prescription_id": "<uuid>", "hash": "<security_hash>" }
+    No authentication required — anyone scanning the QR code can verify.
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        prescription_id = request.data.get("prescription_id", "").strip()
+        provided_hash = request.data.get("hash", "").strip()
+
+        if not prescription_id or not provided_hash:
+            return Response(
+                {"detail": "prescription_id and hash are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            prescription = Prescription.objects.get(id=prescription_id)
+        except (Prescription.DoesNotExist, ValueError):
+            return Response(
+                {"detail": "Prescription not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if not PrescriptionService.validate_security_hash(str(prescription.id), provided_hash):
+            return Response(
+                {"detail": "Invalid security hash. This prescription may be tampered with."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        return Response({
+            "verified": True,
+            "prescription": PrescriptionSerializer(prescription).data,
+        })

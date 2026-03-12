@@ -190,7 +190,7 @@ function MyPatientsPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <Button
                           onClick={() =>
-                            router.push(`/doctor/patients/${patient.patient_id}/create-record`)
+                            router.push(`/doctor/patients/${patient.patient_id}/create-consultation`)
                           }
                           variant="default"
                           className="w-full bg-teal-600 hover:bg-teal-700 text-white shadow-md shadow-teal-100"

@@ -38,7 +38,7 @@ class DispensingRecord(models.Model):
     prescription_medicine = models.ForeignKey(
         "prescriptions.PrescriptionMedicine", on_delete=models.CASCADE, related_name="dispensing_records"
     )
-    pharmacy = models.ForeignKey(Pharmacy, on_delete=models.CASCADE, related_name="dispensing_records")
+    pharmacy = models.ForeignKey(Pharmacy, on_delete=models.SET_NULL, null=True, blank=True, related_name="dispensing_records")
     pharmacist = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="dispensing_records")
     status = models.CharField(max_length=20)  # dispensed, unavailable, patient_has
     quantity_dispensed = models.PositiveIntegerField(default=0)

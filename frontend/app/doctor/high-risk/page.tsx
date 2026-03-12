@@ -252,7 +252,7 @@ function HighRiskPatientsPage() {
                           <Button
                             onClick={() =>
                               router.push(
-                                `/doctor/patients/${patient.patient_id}/create-record`
+                                `/doctor/patients/${patient.patient_id}/create-consultation`
                               )
                             }
                             className="w-full bg-teal-600 hover:bg-teal-700 text-white shadow-md shadow-teal-100"

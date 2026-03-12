@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLanguage } from '@/components/providers/LanguageProvider';
+import { useAuthStore } from '@/store/authStore';
 import { api } from '@/lib/api';
 import type { TranslationKey } from '@/lib/translations';
 
@@ -191,8 +192,16 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useLanguage();
+  const { user } = useAuthStore();
 
   const { nav, roleLabel } = getRoleInfo(pathname || '');
+
+  const userName = user?.first_name
+    ? `${user.first_name}${user.last_name ? ' ' + user.last_name : ''}`
+    : 'User';
+  const userInitials = user?.first_name
+    ? `${user.first_name[0]}${user.last_name ? user.last_name[0] : ''}`.toUpperCase()
+    : 'U';
 
   const isActive = (href: string) => {
     if (href === '/dashboard' || href === '/admin' || href === '/pharmacy') {

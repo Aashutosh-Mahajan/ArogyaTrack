@@ -92,6 +92,11 @@ class CreateMedicalRecordView(APIView):
 class AllergyCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsDoctorOrAdmin]
 
+    def get(self, request, profile_id):
+        profile = get_object_or_404(Profile, id=profile_id)
+        allergies = profile.allergies.all().order_by("-created_at")
+        return Response(AllergySerializer(allergies, many=True).data)
+
     def post(self, request, profile_id):
         profile = get_object_or_404(Profile, id=profile_id)
         serializer = AllergySerializer(data=request.data)
@@ -100,8 +105,23 @@ class AllergyCreateView(APIView):
         return Response(AllergySerializer(allergy).data, status=status.HTTP_201_CREATED)
 
 
+class AllergyDeleteView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsDoctorOrAdmin]
+
+    def delete(self, request, profile_id, allergy_id):
+        profile = get_object_or_404(Profile, id=profile_id)
+        allergy = get_object_or_404(Allergy, id=allergy_id, profile=profile)
+        allergy.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class ChronicConditionCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsDoctorOrAdmin]
+
+    def get(self, request, profile_id):
+        profile = get_object_or_404(Profile, id=profile_id)
+        conditions = profile.chronic_conditions.filter(is_active=True).order_by("-created_at")
+        return Response(ChronicConditionSerializer(conditions, many=True).data)
 
     def post(self, request, profile_id):
         profile = get_object_or_404(Profile, id=profile_id)
@@ -109,6 +129,16 @@ class ChronicConditionCreateView(APIView):
         serializer.is_valid(raise_exception=True)
         condition = serializer.save(profile=profile, added_by=request.user)
         return Response(ChronicConditionSerializer(condition).data, status=status.HTTP_201_CREATED)
+
+
+class ChronicConditionDeleteView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsDoctorOrAdmin]
+
+    def delete(self, request, profile_id, condition_id):
+        profile = get_object_or_404(Profile, id=profile_id)
+        condition = get_object_or_404(ChronicCondition, id=condition_id, profile=profile)
+        condition.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PatientHistoryView(APIView):
@@ -125,6 +155,11 @@ class PatientHistoryView(APIView):
         allergies = profile.allergies.select_related("added_by").all()
         chronic_conditions = profile.chronic_conditions.select_related("added_by").filter(is_active=True)
 
+        # Also include visit records (consultation history)
+        visit_records = PatientVisitRecord.objects.filter(
+            patient=profile.user
+        ).prefetch_related('report_attachments').order_by("-visit_date")
+
         return Response(
             {
                 "patient_id": str(profile.id),
@@ -132,6 +167,7 @@ class PatientHistoryView(APIView):
                 "allergies": AllergySerializer(allergies, many=True).data,
                 "chronic_conditions": ChronicConditionSerializer(chronic_conditions, many=True).data,
                 "medical_records": MedicalHistorySerializer(records, many=True).data,
+                "visit_records": PatientVisitRecordSerializer(visit_records, many=True, context={'request': request}).data,
             }
         )
 
@@ -177,14 +213,29 @@ class PatientOwnConditionsView(APIView):
 
 class PatientVisitRecordsView(APIView):
     """
-    Patient can view their own visit records (Consultation History).
-    GET: List all visit records for authenticated patient with search/filter
+    View visit records (Consultation History).
+    - Patients see their own records.
+    - Doctors/admins can pass ?patient_id=<uuid> to view a specific patient's records
+      (requires active DoctorPatientAccess).
+    GET: List visit records with search/filter
     """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        # Get all visit records for the authenticated user
-        records = PatientVisitRecord.objects.filter(patient=request.user).prefetch_related('report_attachments')
+        patient_id = request.query_params.get("patient_id")
+
+        if patient_id and request.user.role in ('doctor', 'admin'):
+            # Doctor/admin querying a specific patient's records
+            profile = get_object_or_404(Profile, id=patient_id)
+            if not HealthCardValidator.has_access(request.user, profile):
+                return Response(
+                    {"detail": "You do not have access to this patient's records."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            records = PatientVisitRecord.objects.filter(patient=profile.user).prefetch_related('report_attachments')
+        else:
+            # Patient viewing own records
+            records = PatientVisitRecord.objects.filter(patient=request.user).prefetch_related('report_attachments')
         
         # Search functionality
         search_query = request.query_params.get("search", "").strip()
@@ -230,16 +281,28 @@ class PatientVisitRecordsView(APIView):
 class PatientVisitRecordDetailView(APIView):
     """
     Get details of a specific visit record.
-    Only the patient who owns the record can access it.
+    Patients can view their own records; doctors/admins can view records of patients they have access to.
     """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, record_id):
         record = get_object_or_404(
-            PatientVisitRecord.objects.prefetch_related('report_attachments'), 
-            id=record_id, 
-            patient=request.user
+            PatientVisitRecord.objects.prefetch_related('report_attachments'),
+            id=record_id,
         )
+        # Patients can only see their own records
+        if request.user.role in ('doctor', 'admin'):
+            profile = Profile.objects.filter(user=record.patient).first()
+            if profile and not HealthCardValidator.has_access(request.user, profile):
+                return Response(
+                    {"detail": "You do not have access to this patient's records."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+        elif record.patient != request.user:
+            return Response(
+                {"detail": "You do not have access to this record."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         return Response(PatientVisitRecordSerializer(record, context={'request': request}).data)
 
 

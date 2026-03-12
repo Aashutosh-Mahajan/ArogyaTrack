@@ -167,7 +167,7 @@ function ScanQRPage() {
       const response: any = await api.medical.addPatientToMyList(patientData.patient.id);
       toast.success(response?.message || '✅ Patient added to your list!');
       if (confirm('Patient added successfully! Would you like to create a visit record now?')) {
-        router.push(`/doctor/patients/${patientData.patient.id}/create-record`);
+        router.push(`/doctor/patients/${patientData.patient.id}/create-consultation`);
       }
     } catch (error: any) {
       console.error('Error adding patient:', error);
@@ -470,20 +470,12 @@ function ScanQRPage() {
               </Button>
 
               <Button
-                onClick={() => router.push(`/doctor/patients/${patientData.patient?.id}/create-prescription`)}
-                className="w-full bg-violet-600 hover:bg-violet-700 text-white py-6 text-base font-semibold shadow-lg hover:shadow-xl transition-all rounded-2xl"
-                size="lg"
-              >
-                💊 Create Prescription
-              </Button>
-
-              <Button
-                onClick={() => router.push(`/doctor/patients/${patientData.patient?.id}/create-record`)}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-6 text-base font-semibold shadow-lg hover:shadow-xl transition-all rounded-2xl"
+                onClick={() => router.push(`/doctor/patients/${patientData.patient?.id}/create-consultation`)}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg font-semibold shadow-md hover:shadow-lg transition-all"
                 size="lg"
               >
                 <FiActivity className="mr-2 h-5 w-5" />
-                {t('create_visit_record')}
+                New Consultation
               </Button>
             </div>
 
