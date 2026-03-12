@@ -146,13 +146,13 @@ function MedicalRecordsPage(): React.JSX.Element {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Allergies Card */}
         <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
-          <div className="h-1 bg-gradient-to-r from-rose-400 to-orange-400"></div>
+
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-rose-50 rounded-lg">
                 <FiAlertCircle className="w-5 h-5 text-rose-600" />
               </div>
-              <CardTitle className="text-lg">{t('allergies_title')}</CardTitle>
+              <CardTitle className="text-xl font-bold">{t('allergies_title')}</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
@@ -172,10 +172,10 @@ function MedicalRecordsPage(): React.JSX.Element {
                     </div>
                     <Badge className={`
                                             ${String(allergy.severity).toLowerCase() === 'severe' || allergy.severity === 3
-                        ? 'bg-rose-100 text-rose-700 hover:bg-rose-200'
+                        ? 'bg-[#dc2626] text-white hover:bg-[#b91c1c]'
                         : String(allergy.severity).toLowerCase() === 'moderate' || allergy.severity === 2
-                          ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}
+                          ? 'bg-[#d97706] text-white hover:bg-[#b45309]'
+                          : 'bg-[#1F6F6A] text-white hover:bg-[#185E59]'}
                                             border-0 uppercase text-[10px] tracking-wider font-bold
                                         `}>
                       {typeof allergy.severity === 'number'
@@ -195,13 +195,13 @@ function MedicalRecordsPage(): React.JSX.Element {
 
         {/* Chronic Conditions Card */}
         <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
-          <div className="h-1 bg-gradient-to-r from-teal-400 to-blue-400"></div>
+
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-teal-50 rounded-lg">
                 <FiClock className="w-5 h-5 text-teal-600" />
               </div>
-              <CardTitle className="text-lg">{t('chronic_conditions')}</CardTitle>
+              <CardTitle className="text-xl font-bold">{t('chronic_conditions')}</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
@@ -223,8 +223,8 @@ function MedicalRecordsPage(): React.JSX.Element {
                     </div>
                     <Badge className={`
                                             ${condition.is_active
-                        ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}
+                        ? 'bg-[#1F6F6A] text-white hover:bg-[#185E59]'
+                        : 'bg-slate-400 text-white hover:bg-slate-500'}
                                             border-0 uppercase text-[10px] tracking-wider font-bold
                                         `}>
                       {condition.is_active ? 'Active' : 'Inactive'}
@@ -243,7 +243,7 @@ function MedicalRecordsPage(): React.JSX.Element {
 
       {/* Consultation History */}
       <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
-        <div className="h-1 bg-gradient-to-r from-indigo-400 to-cyan-400"></div>
+
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-50 rounded-lg">

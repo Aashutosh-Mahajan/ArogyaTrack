@@ -279,7 +279,7 @@ export function Sidebar() {
 
       {/* ── Section Label ── */}
       <div style={{ padding: '10px 28px 8px', position: 'relative' }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.18em' }}>
+        <span style={{ fontSize: 19, fontWeight: 800, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.18em' }}>
           NAVIGATION
         </span>
       </div>
@@ -304,7 +304,7 @@ export function Sidebar() {
                 boxShadow: active
                   ? '0 4px 16px rgba(31,111,106,0.2), inset 0 1px 0 rgba(255,255,255,0.06)'
                   : 'none',
-                borderLeft: active ? '3px solid #4ade80' : '3px solid transparent',
+                borderLeft: '3px solid transparent',
                 position: 'relative',
               }}
               onMouseEnter={(e) => {
@@ -353,19 +353,19 @@ export function Sidebar() {
           style={{
             display: 'flex', alignItems: 'center', gap: 14,
             padding: '11px 16px', borderRadius: 12, cursor: 'pointer',
-            color: 'rgba(255,255,255,0.2)', fontSize: 13.5, transition: 'all 0.2s',
+            color: '#ffffff', fontSize: 14, fontWeight: 600, transition: 'all 0.2s',
             borderLeft: '3px solid transparent',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.color = '#f87171';
-            e.currentTarget.style.background = 'rgba(239,68,68,0.08)';
+            e.currentTarget.style.color = '#ef4444';
+            e.currentTarget.style.background = 'rgba(239,68,68,0.12)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = 'rgba(255,255,255,0.2)';
+            e.currentTarget.style.color = '#ffffff';
             e.currentTarget.style.background = 'transparent';
           }}
         >
-          <span style={{ display: 'flex', width: 22, justifyContent: 'center', opacity: 0.5 }}>{icons.logout}</span>
+          <span style={{ display: 'flex', width: 22, justifyContent: 'center', opacity: 1 }}>{icons.logout}</span>
           <span>{t('sidebar_logout')}</span>
         </div>
       </div>

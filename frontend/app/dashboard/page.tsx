@@ -46,12 +46,12 @@ function buildStatCards(kpi?: DashboardKPIs) {
     : '';
 
   return [
-    { icon: '📁', labelKey: 'kpi_medical_records' as TranslationKey, value: kpi?.total_medical_records ?? 0, ...fmtTrend(bpTrend), accent: '#1F6F6A' },
-    { icon: '💊', labelKey: 'kpi_active_prescriptions' as TranslationKey, value: kpi?.active_prescriptions ?? 0, ...fmtTrend(rxTrend), accent: '#7c3aed', href: '/dashboard/prescriptions' },
-    { icon: '🩸', labelKey: 'kpi_medical_records' as TranslationKey, value: bpVal, trend: bpDate, dir: 'neutral' as string, accent: '#ef4444', customLabel: 'Recent BP (mmHg)' },
-    { icon: '🍬', labelKey: 'kpi_medical_records' as TranslationKey, value: <>{sugarVal} <sub style={{ fontSize: '0.55em', color: '#9CA3AF' }}>mg/dL</sub></>, trend: sugarDate, dir: 'neutral' as string, accent: '#f59e0b', customLabel: 'Blood Sugar' },
-    { icon: '🧪', labelKey: 'kpi_pending_labs' as TranslationKey, value: kpi?.total_medical_records ?? 0, ...fmtTrend(bpTrend), accent: '#d97706', href: '/dashboard/lab-reports' },
-    { icon: '⬇️', labelKey: 'kpi_downloads' as TranslationKey, value: kpi?.total_downloads ?? 0, ...fmtTrend(dlTrend), accent: '#185E59', href: '/dashboard/downloads' },
+    { labelKey: 'kpi_medical_records' as TranslationKey, value: kpi?.total_medical_records ?? 0, ...fmtTrend(bpTrend), accent: '#1F6F6A', customLabel: 'Medical Records' },
+    { labelKey: 'kpi_active_prescriptions' as TranslationKey, value: kpi?.active_prescriptions ?? 0, ...fmtTrend(rxTrend), accent: '#7c3aed', href: '/dashboard/prescriptions', customLabel: 'Active Prescriptions' },
+    { labelKey: 'kpi_medical_records' as TranslationKey, value: bpVal, trend: bpDate, dir: 'neutral' as string, accent: '#ef4444', customLabel: 'Recent BP (mmHg)' },
+    { labelKey: 'kpi_medical_records' as TranslationKey, value: <>{sugarVal} <sub style={{ fontSize: '0.55em', color: '#9CA3AF' }}>mg/dL</sub></>, trend: sugarDate, dir: 'neutral' as string, accent: '#f59e0b', customLabel: 'Blood Sugar' },
+    { labelKey: 'kpi_pending_labs' as TranslationKey, value: kpi?.total_medical_records ?? 0, ...fmtTrend(bpTrend), accent: '#d97706', href: '/dashboard/lab-reports', customLabel: 'Pending Lab Reports' },
+    { labelKey: 'kpi_downloads' as TranslationKey, value: kpi?.total_downloads ?? 0, ...fmtTrend(dlTrend), accent: '#185E59', href: '/dashboard/downloads', customLabel: 'Report Downloads' },
   ];
 }
 
@@ -311,12 +311,15 @@ function PatientDashboard(): React.JSX.Element {
         {statCards.map((card, i) => {
           const inner = (
             <>
-              <div style={{ fontSize: 18, marginBottom: 10 }}>{card.icon}</div>
+              <div className="label" style={{ color: card.accent }}>{'customLabel' in card && card.customLabel ? card.customLabel : t(card.labelKey)}</div>
               <div className="number">{card.value}</div>
-              <div className="label">{'customLabel' in card && card.customLabel ? card.customLabel : t(card.labelKey)}</div>
-              <div className={`trend trend-${card.dir}`}>
-                {card.trend} {card.dir !== 'neutral' && <span style={{ color: '#6B7C7C', fontWeight: 400 }}>vs last month</span>}
-              </div>
+              {'href' in card && card.href && (
+                <span className="card-link-arrow">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M7 17l9.2-9.2M17 17V7H7" />
+                  </svg>
+                </span>
+              )}
             </>
           );
           return ('href' in card && card.href) ? (
@@ -341,19 +344,19 @@ function PatientDashboard(): React.JSX.Element {
           flex: 1, minWidth: 0,
         }}>
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: '#2F3A3A', fontSize: 15 }}>
+            <div style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontWeight: 800, color: '#2F3A3A', fontSize: 20 }}>
               Blood Pressure
             </div>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 11, marginTop: 2 }}>
+            <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 12, marginTop: 3, fontWeight: 500 }}>
               Last 6 months
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 11, color: '#6B7C7C' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ width: 10, height: 3, background: '#1F6F6A', borderRadius: 2 }} /> Systolic
+          <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 13, fontWeight: 600, color: '#6B7C7C' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 12, height: 4, background: '#1F6F6A', borderRadius: 2 }} /> Systolic
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ width: 10, height: 3, background: '#4ade80', borderRadius: 2 }} /> Diastolic
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 12, height: 4, background: '#4ade80', borderRadius: 2 }} /> Diastolic
             </span>
           </div>
           <ResponsiveContainer width="100%" height={200}>
@@ -365,8 +368,8 @@ function PatientDashboard(): React.JSX.Element {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} interval={0} />
-              <YAxis domain={[60, 170]} tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={32} />
+              <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#6B7C7C', fontWeight: 500 }} axisLine={false} tickLine={false} interval={0} />
+              <YAxis domain={[60, 170]} tick={{ fontSize: 12, fill: '#6B7C7C', fontWeight: 500 }} axisLine={false} tickLine={false} width={36} />
               <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E8EDED', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
               <Area type="monotone" dataKey="systolic" stroke="#1F6F6A" strokeWidth={2} fill="url(#bpGrad)" dot={{ fill: '#1F6F6A', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
               <Line type="monotone" dataKey="diastolic" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
@@ -381,22 +384,22 @@ function PatientDashboard(): React.JSX.Element {
           flex: 1, minWidth: 0,
         }}>
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: '#2F3A3A', fontSize: 15 }}>
+            <div style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontWeight: 800, color: '#2F3A3A', fontSize: 20 }}>
               Blood Sugar
             </div>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 11, marginTop: 2 }}>
+            <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 12, marginTop: 3, fontWeight: 500 }}>
               Last 6 months
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
             <span style={{
               background: 'rgba(31,111,106,0.08)', color: '#1F6F6A',
-              fontSize: 10, fontWeight: 700,
-              padding: '3px 10px', borderRadius: 999,
+              fontSize: 12, fontWeight: 700,
+              padding: '4px 12px', borderRadius: 999,
             }}>
               ↓ Improving trend
             </span>
-            <span style={{ color: '#9CA3AF', fontSize: 11 }}>mg/dL</span>
+            <span style={{ color: '#6B7C7C', fontSize: 13, fontWeight: 600 }}>mg/dL</span>
           </div>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={sugarData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
@@ -407,8 +410,8 @@ function PatientDashboard(): React.JSX.Element {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} interval={0} />
-              <YAxis domain={['auto', 'auto']} tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={32} />
+              <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#6B7C7C', fontWeight: 500 }} axisLine={false} tickLine={false} interval={0} />
+              <YAxis domain={['auto', 'auto']} tick={{ fontSize: 12, fill: '#6B7C7C', fontWeight: 500 }} axisLine={false} tickLine={false} width={36} />
               <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E8EDED', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
               <Area type="monotone" dataKey="value" stroke="#185E59" strokeWidth={2} fill="url(#sgGrad)" dot={{ fill: '#185E59', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
             </AreaChart>
