@@ -432,7 +432,7 @@ function ScanQRPage() {
             </Card>
 
             {/* Action Buttons */}
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <Button
                 onClick={handleAddToMyPatients}
                 disabled={isAddingPatient}
@@ -441,6 +441,14 @@ function ScanQRPage() {
               >
                 <FiUserPlus className="mr-2 h-5 w-5" />
                 {isAddingPatient ? 'Adding...' : t('add_to_my_patients')}
+              </Button>
+
+              <Button
+                onClick={() => router.push(`/doctor/patients/${patientData.patient?.id}/create-prescription`)}
+                className="w-full bg-violet-600 hover:bg-violet-700 text-white py-6 text-lg font-semibold shadow-md hover:shadow-lg transition-all"
+                size="lg"
+              >
+                💊 Create Prescription
               </Button>
 
               <Button
@@ -597,7 +605,12 @@ function ScanQRPage() {
                           {record.prescription && (
                             <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                               <p className="text-xs font-bold text-slate-500 uppercase mb-1 tracking-wider">{t('prescription')}</p>
-                              <p className="text-sm text-slate-700 whitespace-pre-line font-mono text-xs">{record.prescription}</p>
+                              <ul className="list-disc list-inside space-y-1 text-sm text-slate-700 text-xs">
+                                {record.prescription.split(',').map((item: string, i: number) => {
+                                  const trimmed = item.trim().replace(/\.+$/, '');
+                                  return trimmed ? <li key={i}>{trimmed}</li> : null;
+                                })}
+                              </ul>
                             </div>
                           )}
 

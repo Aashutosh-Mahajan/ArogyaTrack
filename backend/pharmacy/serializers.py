@@ -197,3 +197,26 @@ class PharmacyInventorySerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "updated_at"]
+
+
+class UpdateStockSerializer(serializers.Serializer):
+    """Pharmacist updates stock quantity for an inventory item."""
+    inventory_id = serializers.UUIDField()
+    quantity_received = serializers.IntegerField(min_value=1)
+
+    def validate_inventory_id(self, value):
+        pharmacy = self.context.get("pharmacy")
+        if not pharmacy:
+            raise serializers.ValidationError("No pharmacy found for this user")
+        try:
+            item = PharmacyInventory.objects.get(id=value, pharmacy=pharmacy)
+        except PharmacyInventory.DoesNotExist:
+            raise serializers.ValidationError("Inventory item not found in your pharmacy")
+        self.context["inventory_item"] = item
+        return value
+
+    def save(self, **kwargs):
+        item = self.context["inventory_item"]
+        item.quantity_in_stock += self.validated_data["quantity_received"]
+        item.save(update_fields=["quantity_in_stock", "updated_at"])
+        return item

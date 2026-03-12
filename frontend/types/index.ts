@@ -1,3 +1,6 @@
+// Re-export CDSS types
+export type { CDSSResult, CDSSDiagnosis, CDSSDrugAlert, CDSSTest, CDSSLabInsight, CDSSWarning, CDSSRiskLevel } from './cdss';
+
 // User & Authentication Types
 export interface User {
   id: number;
@@ -582,6 +585,53 @@ export interface HeatMapData {
   risk_level: string;
 }
 
+// Day-Wise Comparison Types
+export type TrendType = 'rapid_increase' | 'gradual_increase' | 'stable' | 'gradual_decrease' | 'rapid_decrease';
+
+export interface DayData {
+  date: string;
+  cases: number;
+  severity: number;
+}
+
+export interface DayWiseRegionComparison {
+  disease_code: string;
+  disease_name: string;
+  region_id: string;
+  region_name: string;
+  district: string;
+  state: string;
+  trend: TrendType;
+  total_cases_7d: number;
+  peak_cases: number;
+  min_cases: number;
+  today_cases: number;
+  day_data: DayData[];
+}
+
+export interface DayTotalEntry {
+  date: string;
+  cases: number;
+}
+
+export interface DiseaseDaySummary {
+  disease_code: string;
+  disease_name: string;
+  trend: TrendType;
+  total_cases_7d: number;
+  today_cases: number;
+  regions_affected: number;
+  day_totals: DayTotalEntry[];
+}
+
+export interface DayWiseComparisonResponse {
+  reference_date: string;
+  dates: string[];
+  available_states: string[];
+  disease_summaries: DiseaseDaySummary[];
+  comparisons: DayWiseRegionComparison[];
+}
+
 // ML Model Types (v5.0 aligned)
 export interface MLModelInfo {
   name: string;
@@ -760,16 +810,10 @@ export interface KPITrend {
 export interface DashboardKPIs {
   total_medical_records: number;
   active_prescriptions: number;
-  pending_lab_reports: number;
-  adherence_percentage: number;
-  alerts_count: number;
   total_downloads: number;
   monthly_trends: {
     medical_records: KPITrend;
     prescriptions: KPITrend;
-    lab_reports: KPITrend;
-    adherence: KPITrend;
-    alerts: KPITrend;
     downloads: KPITrend;
   };
   last_updated: string;
@@ -877,10 +921,22 @@ export interface SecurityInfo {
 // Download Center
 export interface DownloadItem {
   id: number;
-  type: 'visit_attachment' | 'lab_report';
+  type: 'visit_attachment' | 'lab_report' | 'medical_record';
   type_label: string;
   title: string;
   visit_info: string;
   created_at: string;
   file_url: string | null;
+  record_data?: {
+    id: number;
+    visit_date: string;
+    visit_time: string;
+    doctor_name: string;
+    department: string;
+    diagnosis_summary: string;
+    tests_performed: string;
+    prescription_text: string;
+    doctor_notes: string;
+    status: string;
+  };
 }

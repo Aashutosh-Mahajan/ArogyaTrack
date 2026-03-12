@@ -36,6 +36,7 @@ import {
   FiZap,
 } from 'react-icons/fi';
 import { LineChartComponent, BarChartComponent, ForecastChart } from '@/components/charts/Charts';
+import { DayWiseComparison } from '@/components/dashboard/DayWiseComparison';
 
 // Reusable loading skeleton
 function LoadingSkeleton({ height = 'h-[300px]', rows }: { height?: string; rows?: number }) {
@@ -397,6 +398,9 @@ function AdminDashboard(): React.JSX.Element {
             )}
           </CardContent>
         </Card>
+
+        {/* Day-Wise Case Comparison */}
+        <DayWiseComparison />
 
         {/* Active Alerts */}
         {alerts?.results && alerts.results.length > 0 && (

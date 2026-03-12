@@ -16,6 +16,7 @@ function ForecastsPage(): React.JSX.Element {
   const queryClient = useQueryClient();
   const [selectedDisease, setSelectedDisease] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('');
+  const [forecastHorizon, setForecastHorizon] = useState(7);
   const [pipelineDisease, setPipelineDisease] = useState('A90');
 
   const { data: regions } = useQuery<PaginatedResponse<Region>>({
@@ -24,11 +25,12 @@ function ForecastsPage(): React.JSX.Element {
   });
 
   const { data: forecasts, refetch } = useQuery<PaginatedResponse<Forecast>>({
-    queryKey: ['forecasts-page', selectedDisease, selectedRegion],
+    queryKey: ['forecasts-page', selectedDisease, selectedRegion, forecastHorizon],
     queryFn: () => api.surveillance.getForecasts({
       disease_code: selectedDisease || undefined,
       region_id: selectedRegion || undefined,
-      page_size: 30,
+      horizon: forecastHorizon,
+      page_size: 50,
     }),
   });
 
@@ -40,17 +42,28 @@ function ForecastsPage(): React.JSX.Element {
     },
   });
 
-  // Group forecasts by region for chart
-  const chartData = forecasts?.results
-    ?.sort((a, b) => a.prediction_date.localeCompare(b.prediction_date))
-    .slice(0, 14)
-    .map((f) => ({
-      date: new Date(f.prediction_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      forecast: Math.round(f.predicted_cases),
-      lower_bound: Math.round(f.lower_bound),
-      upper_bound: Math.round(f.upper_bound),
-      actual: 0,
-    })) || [];
+  // Aggregate forecasts by prediction_date (raw results are per-region)
+  const chartData = (() => {
+    if (!forecasts?.results) return [];
+    const byDate: Record<string, { forecasts: number[]; lowers: number[]; uppers: number[] }> = {};
+    for (const f of forecasts.results) {
+      if (!byDate[f.prediction_date]) {
+        byDate[f.prediction_date] = { forecasts: [], lowers: [], uppers: [] };
+      }
+      byDate[f.prediction_date].forecasts.push(f.predicted_cases);
+      byDate[f.prediction_date].lowers.push(f.lower_bound);
+      byDate[f.prediction_date].uppers.push(f.upper_bound);
+    }
+    return Object.entries(byDate)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([dateStr, vals]) => ({
+        date: new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        forecast: Math.round(vals.forecasts.reduce((s, v) => s + v, 0) / vals.forecasts.length),
+        lower_bound: Math.round(vals.lowers.reduce((s, v) => s + v, 0) / vals.lowers.length),
+        upper_bound: Math.round(vals.uppers.reduce((s, v) => s + v, 0) / vals.uppers.length),
+        actual: 0,
+      }));
+  })();
 
   return (
     <DashboardLayout>
@@ -86,7 +99,13 @@ function ForecastsPage(): React.JSX.Element {
         {/* Filters */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-wrap items-center">
+              <select value={forecastHorizon} onChange={(e) => setForecastHorizon(Number(e.target.value))}
+                className="px-3 py-2 border rounded-lg text-sm font-medium">
+                <option value={7}>7 Days</option>
+                <option value={14}>14 Days</option>
+                <option value={30}>30 Days</option>
+              </select>
               <select value={selectedDisease} onChange={(e) => setSelectedDisease(e.target.value)}
                 className="px-3 py-2 border rounded-lg text-sm">
                 <option value="">All Diseases</option>

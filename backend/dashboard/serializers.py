@@ -39,9 +39,6 @@ class DashboardKPISerializer(serializers.Serializer):
 
     total_medical_records = serializers.IntegerField()
     active_prescriptions = serializers.IntegerField()
-    pending_lab_reports = serializers.IntegerField()
-    adherence_percentage = serializers.FloatField()
-    alerts_count = serializers.IntegerField()
     total_downloads = serializers.IntegerField()
 
     # Monthly trend data  (current 30d vs previous 30d)

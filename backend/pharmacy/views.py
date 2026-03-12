@@ -13,7 +13,7 @@ from prescriptions.models import Prescription, PrescriptionMedicine
 from prescriptions.serializers import PrescriptionSerializer, PrescriptionMedicineSerializer
 
 from .models import DispensingRecord, Pharmacy, PharmacyInventory
-from .serializers import DispenseMedicineSerializer, DispensingRecordSerializer, PharmacySerializer, PharmacyInventorySerializer, ScanPrescriptionSerializer
+from .serializers import DispenseMedicineSerializer, DispensingRecordSerializer, PharmacySerializer, PharmacyInventorySerializer, ScanPrescriptionSerializer, UpdateStockSerializer
 
 
 class ScanPrescriptionView(APIView):
@@ -293,3 +293,44 @@ class PharmacyDashboardStatsView(APIView):
                 "trend": trend,
             }
         )
+
+
+class UpdateStockView(APIView):
+    """
+    Pharmacist adds received stock to an existing inventory item.
+    POST /api/pharmacy/update-stock/
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        pharmacy = Pharmacy.objects.filter(owner=request.user, is_active=True).first()
+        if not pharmacy:
+            return Response(
+                {"detail": "No pharmacy found for this user."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = UpdateStockSerializer(
+            data=request.data, context={"request": request, "pharmacy": pharmacy}
+        )
+        serializer.is_valid(raise_exception=True)
+        item = serializer.save()
+
+        return Response(
+            PharmacyInventorySerializer(item).data, status=status.HTTP_200_OK
+        )
+
+
+class PharmacyListView(APIView):
+    """List all active pharmacies (for doctors selecting a target pharmacy)."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        search = request.query_params.get("search", "").strip()
+        qs = Pharmacy.objects.filter(is_active=True)
+        if search:
+            qs = qs.filter(name__icontains=search)
+        qs = qs[:50]
+        return Response(PharmacySerializer(qs, many=True).data)

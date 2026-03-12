@@ -92,6 +92,11 @@ class CreateMedicalRecordView(APIView):
 class AllergyCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsDoctorOrAdmin]
 
+    def get(self, request, profile_id):
+        profile = get_object_or_404(Profile, id=profile_id)
+        allergies = profile.allergies.all().order_by("-created_at")
+        return Response(AllergySerializer(allergies, many=True).data)
+
     def post(self, request, profile_id):
         profile = get_object_or_404(Profile, id=profile_id)
         serializer = AllergySerializer(data=request.data)
@@ -100,8 +105,23 @@ class AllergyCreateView(APIView):
         return Response(AllergySerializer(allergy).data, status=status.HTTP_201_CREATED)
 
 
+class AllergyDeleteView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsDoctorOrAdmin]
+
+    def delete(self, request, profile_id, allergy_id):
+        profile = get_object_or_404(Profile, id=profile_id)
+        allergy = get_object_or_404(Allergy, id=allergy_id, profile=profile)
+        allergy.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class ChronicConditionCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsDoctorOrAdmin]
+
+    def get(self, request, profile_id):
+        profile = get_object_or_404(Profile, id=profile_id)
+        conditions = profile.chronic_conditions.filter(is_active=True).order_by("-created_at")
+        return Response(ChronicConditionSerializer(conditions, many=True).data)
 
     def post(self, request, profile_id):
         profile = get_object_or_404(Profile, id=profile_id)
@@ -109,6 +129,16 @@ class ChronicConditionCreateView(APIView):
         serializer.is_valid(raise_exception=True)
         condition = serializer.save(profile=profile)
         return Response(ChronicConditionSerializer(condition).data, status=status.HTTP_201_CREATED)
+
+
+class ChronicConditionDeleteView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsDoctorOrAdmin]
+
+    def delete(self, request, profile_id, condition_id):
+        profile = get_object_or_404(Profile, id=profile_id)
+        condition = get_object_or_404(ChronicCondition, id=condition_id, profile=profile)
+        condition.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PatientHistoryView(APIView):

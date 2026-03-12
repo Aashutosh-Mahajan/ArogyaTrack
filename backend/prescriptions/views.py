@@ -13,6 +13,7 @@ from .serializers import (
     CreatePrescriptionSerializer,
     MedicineSerializer,
     PrescriptionSerializer,
+    ValidatePrescriptionSerializer,
 )
 
 
@@ -183,3 +184,62 @@ class GeneratePrescriptionPDFView(APIView):
         translated_data = translate_prescription_data(prescription, language)
 
         return Response(translated_data)
+
+
+class ValidatePrescriptionView(APIView):
+    """
+    AI-powered prescription safety validation.
+    POST /api/prescriptions/validate/
+    Accepts patient_id + medicines list, calls the GPT-5.1 agent,
+    returns a structured safety report.
+    """
+
+    permission_classes = [permissions.IsAuthenticated, IsApprovedDoctor]
+
+    def post(self, request):
+        serializer = ValidatePrescriptionSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+
+        from .agent_context import gather_agent_context
+        from .agent_service import run_safety_agent
+
+        patient_id = str(serializer.validated_data["patient_id"])
+        pharmacy_id = serializer.validated_data.get("pharmacy_id")
+        medicines_input = serializer.validated_data["medicines"]
+
+        import logging
+        logger = logging.getLogger(__name__)
+
+        try:
+            context = gather_agent_context(patient_id, medicines_input, pharmacy_id=str(pharmacy_id) if pharmacy_id else None)
+            report = run_safety_agent(context)
+        except Exception as e:
+            logger.error("Prescription validation failed: %s", e)
+            report = {
+                "overall_status": "warning",
+                "medicines": [],
+                "drug_interactions": [],
+                "alternatives": [],
+                "summary": "Automated validation was unavailable. Please review the prescription manually.",
+                "agent_unavailable": True,
+            }
+
+        # Audit log the validation
+        from accounts.audit import AuditService
+
+        AuditService.log_event(
+            event_type="prescription_validated",
+            action="AI prescription safety validation",
+            user=request.user,
+            resource_type="PrescriptionValidation",
+            resource_id=patient_id,
+            details={
+                "overall_status": report.get("overall_status"),
+                "medicine_count": len(medicines_input),
+                "agent_unavailable": report.get("agent_unavailable", False),
+            },
+        )
+
+        return Response(report, status=status.HTTP_200_OK)

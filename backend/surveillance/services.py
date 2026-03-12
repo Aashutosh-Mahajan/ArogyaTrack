@@ -979,6 +979,98 @@ class AnomalyDetectionService:
         )
         return anomaly
 
+    @classmethod
+    def detect_and_update_incremental(cls, region: Region, disease_code: str, date=None) -> Optional[Anomaly]:
+        """Run anomaly detection then update the IF model incrementally.
+
+        1. Build features from the last 90 days (including today's new data).
+        2. Run inference on the latest row using the existing model.
+        3. Save anomaly if detected.
+        4. If the latest observation is *not* anomalous, retrain the model
+           with warm_start to incorporate the new normal pattern.
+        """
+        if date is None:
+            date = timezone.now().date()
+
+        feature_df = cls._build_features(region, disease_code, date)
+        if feature_df is None or len(feature_df) < 7:
+            return None
+
+        latest_row = feature_df.iloc[[-1]]
+
+        model = cls.load_model()
+        scaler = cls.load_scaler()
+        corrector = cls.load_corrector()
+        corrector_idx = cls.load_corrector_idx()
+        scoring_cfg = cls.load_scoring_config()
+
+        if model is None:
+            from sklearn.ensemble import IsolationForest
+            model = IsolationForest(
+                contamination=0.03, random_state=42, n_jobs=-1, warm_start=True,
+            )
+            X_fit = scaler.transform(feature_df.values) if scaler else feature_df.values
+            model.fit(X_fit)
+
+        X = scaler.transform(latest_row.values) if scaler else latest_row.values
+
+        raw_score = model.score_samples(X)[0]
+        is_anomaly_raw = model.predict(X)[0] == -1
+
+        is_anomaly = is_anomaly_raw
+        anomaly_score = abs(raw_score)
+
+        if corrector is not None and scoring_cfg.get("method") == "corrected_gb":
+            try:
+                X_corr = X[:, corrector_idx] if corrector_idx is not None else X
+                corrected_prob = corrector.predict_proba(X_corr)[0][1]
+                alpha = scoring_cfg.get("alpha", 0.15)
+                blended = alpha * (1 - (raw_score + 0.5)) + (1 - alpha) * corrected_prob
+                anomaly_score = float(blended)
+                is_anomaly = corrected_prob > 0.5
+            except Exception as exc:
+                logger.warning("GB corrector scoring failed, using raw IF: %s", exc)
+
+        # --- Incremental model update ---
+        # Only retrain on non-anomalous data to preserve the normal-distribution assumption.
+        if not is_anomaly:
+            try:
+                X_full = scaler.transform(feature_df.values) if scaler else feature_df.values
+                model.warm_start = True
+                model.n_estimators = getattr(model, "n_estimators", 100) + 10
+                model.fit(X_full)
+                save_path = cls.ENSEMBLE_PATH if cls.ENSEMBLE_PATH.exists() else cls.MODEL_PATH
+                joblib.dump(model, save_path)
+                logger.info("IF model updated incrementally for %s / %s", region.name, disease_code)
+            except Exception as exc:
+                logger.warning("Incremental IF update failed: %s", exc)
+
+        if not is_anomaly:
+            return None
+
+        case_count = float(latest_row["case_count"].iloc[0])
+        expected = float(latest_row.get("cases_rm_7", latest_row["case_count"]).iloc[0])
+        deviation = ((case_count - expected) / expected * 100) if expected > 0 else 0
+
+        disease_name_obj = SurveillanceData.objects.filter(disease_code=disease_code).first()
+        disease_name = disease_name_obj.disease_name if disease_name_obj else disease_code
+
+        anomaly = Anomaly.objects.create(
+            region=region,
+            disease_code=disease_code,
+            disease_name=disease_name,
+            detection_date=date,
+            anomaly_score=anomaly_score,
+            actual_cases=int(case_count),
+            expected_cases=expected,
+            deviation_percentage=deviation,
+            description=(
+                f"[RT] Cases {case_count:.0f} vs expected {expected:.0f} "
+                f"({deviation:.1f}% deviation) [score={anomaly_score:.3f}]"
+            ),
+        )
+        return anomaly
+
 
 # ===================================================================
 # 5. RiskScoringService  (XGBoost v4.0 outbreak classifier)
@@ -1355,6 +1447,64 @@ class RiskScoringService:
         )
         return risk_score
 
+    @classmethod
+    def score_and_update_incremental(cls, region: Region, disease_code: str, date=None) -> RiskScore:
+        """Run risk scoring then update the XGBoost model via continuation training.
+
+        1. Run the standard calculate_risk_score (inference + save).
+        2. Perform a small number of continuation-training boosting rounds
+           on the latest feature row so the model adapts to new patterns.
+        3. Re-save the model file.
+        """
+        risk_score = cls.calculate_risk_score(region, disease_code, date)
+
+        if date is None:
+            date = timezone.now().date()
+
+        feature_df = cls._build_features(region, disease_code, date)
+        if feature_df is None or len(feature_df) < 7:
+            return risk_score
+
+        try:
+            import xgboost as xgb
+
+            model = cls.load_model()
+            scaler = cls.load_scaler()
+            feature_names = cls.load_features()
+
+            if model is None:
+                return risk_score
+
+            X = feature_df.values
+            if scaler:
+                X = scaler.transform(X)
+
+            # Derive pseudo-labels: outbreak if case_count exceeds rolling mean + 2*std
+            case_counts = feature_df["case_count"].values if "case_count" in feature_df.columns else np.zeros(len(X))
+            rm7 = pd.Series(case_counts).rolling(7, min_periods=1).mean().values
+            rstd7 = pd.Series(case_counts).rolling(7, min_periods=1).std().fillna(0).values
+            labels = (case_counts > (rm7 + 2 * rstd7)).astype(float)
+
+            dtrain = xgb.DMatrix(X, label=labels, feature_names=feature_names)
+            params = {
+                "objective": "binary:logistic",
+                "eval_metric": "logloss",
+                "max_depth": 6,
+                "learning_rate": 0.01,
+                "verbosity": 0,
+            }
+            updated_model = xgb.train(
+                params, dtrain, num_boost_round=5, xgb_model=model,
+            )
+
+            save_path = cls.MODEL_PATH if cls.MODEL_PATH.exists() else cls.MODEL_PKL_PATH
+            updated_model.save_model(str(save_path))
+            logger.info("XGBoost model updated incrementally for %s / %s", region.name, disease_code)
+        except Exception as exc:
+            logger.warning("Incremental XGBoost update failed: %s", exc)
+
+        return risk_score
+
 
 # ===================================================================
 # 6. AlertService  (multi-model fusion)
@@ -1443,6 +1593,74 @@ class AlertService:
                 alerts.append(alert)
 
         return alerts
+
+    @classmethod
+    def evaluate_alert_for_region(cls, region: Region, disease_code: str, date=None) -> Optional[Alert]:
+        """Decision fusion for a single region-disease pair (real-time path)."""
+        if date is None:
+            date = timezone.now().date()
+
+        forecasts = Forecast.objects.filter(
+            region=region,
+            disease_code=disease_code,
+            forecast_date__gte=date - timedelta(days=1),
+            prediction_date__gte=date,
+            prediction_date__lte=date + timedelta(days=7),
+        )
+        forecast_spike = any(f.predicted_cases > 1.5 * f.lower_bound for f in forecasts)
+
+        clusters = Cluster.objects.filter(
+            regions__region=region,
+            disease_code=disease_code,
+            detection_date__gte=date - timedelta(days=3),
+            is_active=True,
+        )
+        in_cluster = clusters.exists()
+
+        anomalies = Anomaly.objects.filter(
+            region=region,
+            disease_code=disease_code,
+            detection_date=date,
+            is_resolved=False,
+        )
+        has_anomaly = anomalies.exists()
+
+        risk_scores = RiskScore.objects.filter(
+            region=region,
+            disease_code=disease_code,
+            calculation_date=date,
+        )
+        high_risk = risk_scores.exists() and risk_scores.first().risk_level >= 2
+
+        if forecast_spike and in_cluster and has_anomaly:
+            return cls._create_alert(
+                "critical", disease_code, [region],
+                "Multi-model Critical Alert",
+                "Forecasted spike, active cluster, and anomaly detected",
+                0.95, forecasts, clusters, anomalies, risk_scores,
+            )
+        elif forecast_spike and in_cluster:
+            return cls._create_alert(
+                "high", disease_code, [region],
+                "High Priority Alert",
+                "Forecasted spike and active cluster detected",
+                0.80, forecasts, clusters, anomalies, risk_scores,
+            )
+        elif has_anomaly:
+            return cls._create_alert(
+                "medium", disease_code, [region],
+                "Anomaly Detected",
+                "Unusual disease pattern requires review",
+                0.60, forecasts, clusters, anomalies, risk_scores,
+            )
+        elif high_risk:
+            return cls._create_alert(
+                "low", disease_code, [region],
+                "Preventive Warning",
+                "Environmental and demographic factors indicate elevated risk",
+                0.50, forecasts, clusters, anomalies, risk_scores,
+            )
+        return None
 
     @classmethod
     def _create_alert(cls, severity, disease_code, regions, title, description, confidence,

@@ -13,6 +13,9 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_ME")
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
+# OpenAI API Key for AI prescription safety agent
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+
 ALLOWED_HOSTS: List[str] = [
     host.strip() for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host.strip()
 ]
@@ -35,6 +38,7 @@ INSTALLED_APPS = [
     "adherence",
     "surveillance",
     "dashboard",
+    "cdss",
 ]
 
 MIDDLEWARE = [

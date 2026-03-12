@@ -17,8 +17,10 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['Syne', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+        syne: ['Syne', 'sans-serif'],
+        dm: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -27,9 +29,22 @@ const config: Config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "#1F6F6A",
+          foreground: "#FFFFFF",
+          dark: "#185E59",
         },
+        card: {
+          DEFAULT: "#FFFFFF",
+          foreground: "#2F3A3A",
+        },
+        "sidebar-dark": "#0D2B29",
+        "bg-light": "#EEF3F2",
+        "border-light": "#D9E5E3",
+        "text-dark": "#2F3A3A",
+        "text-muted": "#6B7C7C",
+        success: "#4ade80",
+        warning: "#f59e0b",
+        danger: "#ef4444",
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
@@ -50,10 +65,6 @@ const config: Config = {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -64,10 +75,10 @@ const config: Config = {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-        "medical-gradient": "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%)",
       },
       boxShadow: {
-        "soft": "0 8px 30px rgba(0,0,0,0.04)",
+        "soft": "0 2px 10px rgba(47,58,58,0.06)",
+        "card-hover": "0 16px 36px rgba(31,111,106,0.14)",
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
