@@ -147,7 +147,6 @@ const patientNav: NavItem[] = [
   { icon: 'card', label: 'sidebar_patient_card', isTranslationKey: true, href: '/dashboard/patient-card' },
   { icon: 'profile', label: 'sidebar_profile', isTranslationKey: true, href: '/dashboard/profile' },
   { icon: 'records', label: 'sidebar_medical_records', isTranslationKey: true, href: '/dashboard/medical-records' },
-  { icon: 'conditions', label: 'sidebar_conditions', isTranslationKey: true, href: '/dashboard/conditions' },
   { icon: 'medicines', label: 'sidebar_medicines', isTranslationKey: true, href: '/dashboard/medicines' },
   { icon: 'adherence', label: 'sidebar_adherence', isTranslationKey: true, href: '/dashboard/adherence' },
   { icon: 'alerts', label: 'sidebar_alerts', isTranslationKey: true, href: '/dashboard/alerts', badge: 3 },

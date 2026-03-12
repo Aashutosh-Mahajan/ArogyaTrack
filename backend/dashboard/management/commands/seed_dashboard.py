@@ -68,7 +68,7 @@ class Command(BaseCommand):
         doctor_user = self._ensure_doctor()
         visits = self._seed_medical_records(user)
         self._seed_lab_results(user, visits)
-        self._seed_health_metrics(user)
+        self._seed_health_metrics(user, visits)
         medicines = self._seed_medicines()
         prescriptions = self._seed_prescriptions(profile, doctor_user, medicines)
         self._seed_adherence(profile, prescriptions, medicines)
@@ -327,43 +327,31 @@ class Command(BaseCommand):
     #  3.  HEALTH METRICS  (monthly vitals for trends)
     # ═════════════════════════════════════════════════════════════
 
-    VITALS = [
-        # (year, month, systolic, diastolic, sugar, weight, bmi)
-        (2024, 3, 140, 90, 135, 82.0, 27.1),
-        (2024, 4, 138, 88, 133, 82.2, 27.2),
-        (2024, 5, 136, 88, 135, 82.5, 27.3),
-        (2024, 6, 140, 90, 140, 83.0, 27.4),
-        (2024, 7, 142, 92, 145, 83.5, 27.6),
-        (2024, 8, 144, 92, 150, 84.0, 27.8),
-        (2024, 9, 148, 94, 155, 84.5, 27.9),
-        (2024, 10, 154, 96, 160, 85.0, 28.1),
-        (2024, 11, 160, 100, 165, 85.0, 28.1),
-        (2024, 12, 155, 96, 158, 84.5, 27.9),
-        (2025, 1, 148, 92, 145, 83.5, 27.6),
-        (2025, 2, 146, 90, 142, 83.0, 27.4),
-        (2025, 3, 145, 90, 148, 82.5, 27.3),
-        (2025, 4, 143, 88, 144, 82.0, 27.1),
-        (2025, 5, 140, 88, 140, 81.5, 26.9),
-        (2025, 6, 139, 86, 137, 81.0, 26.8),
-        (2025, 7, 140, 88, 135, 80.0, 26.4),
-        (2025, 8, 138, 86, 132, 79.5, 26.3),
-        (2025, 9, 138, 86, 130, 78.0, 25.8),
-        (2025, 10, 136, 84, 128, 78.0, 25.8),
-        (2025, 11, 134, 84, 126, 77.5, 25.6),
-        (2025, 12, 134, 82, 125, 77.0, 25.5),
-        (2026, 1, 134, 84, 128, 77.5, 25.6),
-        (2026, 2, 133, 82, 126, 77.0, 25.5),
+    # Vitals per visit – same order as VISIT_PLAN
+    # (systolic, diastolic, sugar, weight, bmi)
+    VISIT_VITALS = [
+        (136, 88, 135, 82.5, 27.3),   # 2024-03-05  Dr. Rao
+        (136, 88, 135, 82.5, 27.3),   # 2024-05-08  Dr. Mehta
+        (142, 92, 145, 83.5, 27.6),   # 2024-07-10  Dr. Sharma
+        (148, 94, 155, 84.5, 27.9),   # 2024-09-12  Dr. Mehta
+        (160, 100, 165, 85.0, 28.1),  # 2024-11-14  Dr. Sharma
+        (148, 92, 145, 83.5, 27.6),   # 2025-01-09  Dr. Rao
+        (145, 90, 148, 82.5, 27.3),   # 2025-03-13  Dr. Sharma
+        (140, 88, 140, 81.5, 26.9),   # 2025-05-15  Dr. Mehta
+        (140, 88, 135, 80.0, 26.4),   # 2025-07-17  Dr. Rao
+        (138, 86, 130, 78.0, 25.8),   # 2025-09-18  Dr. Sharma
+        (134, 84, 126, 77.5, 25.6),   # 2025-11-20  Dr. Mehta
+        (134, 84, 128, 77.5, 25.6),   # 2026-01-22  Dr. Rao
     ]
 
-    def _seed_health_metrics(self, user):
+    def _seed_health_metrics(self, user, visits):
         if HealthMetric.objects.filter(patient=user).exists():
             self.stdout.write("  ⏭ Health metrics already exist – skipping.")
             return
 
         count = 0
-        for yr, mo, sys, dia, sugar, weight, bmi in self.VITALS:
-            day = random.randint(1, 15)
-            ts = _dt(yr, mo, day, 9, 0)
+        for visit, (sys, dia, sugar, weight, bmi) in zip(visits, self.VISIT_VITALS):
+            ts = visit.visit_date
 
             # Blood pressure
             HealthMetric.objects.create(
@@ -373,7 +361,7 @@ class Command(BaseCommand):
                 secondary_value=dia,
                 unit="mmHg",
                 recorded_at=ts,
-                notes=f"Routine BP check – {yr}/{mo:02d}",
+                notes=f"BP during visit – Dr. {visit.doctor_name}",
             )
             # Blood sugar
             HealthMetric.objects.create(
@@ -382,7 +370,7 @@ class Command(BaseCommand):
                 value=sugar,
                 unit="mg/dL",
                 recorded_at=ts + timedelta(minutes=15),
-                notes=f"FBS – {yr}/{mo:02d}",
+                notes=f"FBS during visit – Dr. {visit.doctor_name}",
             )
             # Weight
             HealthMetric.objects.create(
