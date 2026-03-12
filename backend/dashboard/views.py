@@ -723,6 +723,46 @@ def _generate_alerts_for_patient(user, profile):
                 ),
             ))
 
+    # ── 4.  Outbreak alerts from surveillance ───────────────────
+    if profile and profile.region:
+        # Find active surveillance alerts affecting this patient's region
+        # that haven't already been surfaced as a dashboard alert
+        already_linked_ids = set(
+            DashboardAlert.objects.filter(
+                patient=user,
+                alert_type="outbreak",
+                is_dismissed=False,
+                surveillance_alert__isnull=False,
+            ).values_list("surveillance_alert_id", flat=True)
+        )
+
+        region_alerts = (
+            Alert.objects.filter(
+                status="active",
+                affected_regions__name__iexact=profile.region,
+            )
+            .exclude(id__in=already_linked_ids)
+            .distinct()
+        )
+
+        for surv_alert in region_alerts:
+            regions_list = ", ".join(
+                surv_alert.affected_regions.values_list("name", flat=True)
+            )
+            new_alerts.append(DashboardAlert(
+                patient=user,
+                alert_type="outbreak",
+                severity=surv_alert.severity,
+                title=f"Outbreak Alert: {surv_alert.disease_name}",
+                message=(
+                    f"{surv_alert.title} — A {surv_alert.severity} severity "
+                    f"{surv_alert.disease_name} outbreak has been detected in "
+                    f"your region ({regions_list}). "
+                    f"{surv_alert.recommended_actions or 'Please follow local health advisories and consult your doctor if you experience symptoms.'}"
+                ),
+                surveillance_alert=surv_alert,
+            ))
+
     if new_alerts:
         DashboardAlert.objects.bulk_create(new_alerts)
 

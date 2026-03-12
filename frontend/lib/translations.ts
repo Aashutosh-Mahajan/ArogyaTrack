@@ -93,6 +93,7 @@ export type TranslationKey =
     | 'alert_lab_results'
     | 'alert_adherence'
     | 'alert_risk_score'
+    | 'alert_outbreak'
     | 'mark_read'
     | 'dismiss'
     | 'all_clear'
@@ -452,6 +453,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         alert_lab_results: 'Lab Results',
         alert_adherence: 'Adherence',
         alert_risk_score: 'Risk Score',
+        alert_outbreak: 'Outbreak Alert',
         mark_read: 'Mark as read',
         dismiss: 'Dismiss',
         all_clear: 'All Clear',
@@ -808,6 +810,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         alert_lab_results: 'लैब परिणाम',
         alert_adherence: 'अनुपालन',
         alert_risk_score: 'जोखिम स्कोर',
+        alert_outbreak: 'प्रकोप चेतावनी',
         mark_read: 'पढ़ा हुआ चिह्नित करें',
         dismiss: 'खारिज करें',
         all_clear: 'सब ठीक है',
@@ -1164,6 +1167,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
         alert_lab_results: 'लॅब परिणाम',
         alert_adherence: 'पालन',
         alert_risk_score: 'धोका गुण',
+        alert_outbreak: 'उद्रेक सूचना',
         mark_read: 'वाचलेले म्हणून चिन्हांकित करा',
         dismiss: 'काढून टाका',
         all_clear: 'सर्व साफ',
