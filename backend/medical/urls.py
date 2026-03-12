@@ -3,7 +3,9 @@ from django.urls import path
 from .views import (
     AddPatientToMyListView,
     AllergyCreateView,
+    AllergyDeleteView,
     ChronicConditionCreateView,
+    ChronicConditionDeleteView,
     CreateMedicalRecordView,
     CreateVisitRecordView,
     DoctorDashboardSummaryView,
@@ -36,7 +38,9 @@ urlpatterns = [
     path("scan-health-card/", DoctorScanHealthCardView.as_view(), name="scan-health-card"),
     path("medical-records/", CreateMedicalRecordView.as_view(), name="create-medical-record"),
     path("patients/<uuid:profile_id>/allergies/", AllergyCreateView.as_view(), name="add-allergy"),
+    path("patients/<uuid:profile_id>/allergies/<uuid:allergy_id>/", AllergyDeleteView.as_view(), name="delete-allergy"),
     path("patients/<uuid:profile_id>/conditions/", ChronicConditionCreateView.as_view(), name="add-condition"),
+    path("patients/<uuid:profile_id>/conditions/<uuid:condition_id>/", ChronicConditionDeleteView.as_view(), name="delete-condition"),
     path("patient-history/<uuid:profile_id>/", PatientHistoryView.as_view(), name="patient-history"),
     # Doctor-facing endpoints - High-Risk Patients
     path("high-risk-patients/", HighRiskPatientsView.as_view(), name="high-risk-patients"),

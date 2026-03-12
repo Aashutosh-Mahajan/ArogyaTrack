@@ -4,13 +4,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { withAuth } from '@/components/auth/withAuth';
 import { api } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 import { useLanguage } from '@/components/providers/LanguageProvider';
 import type { TranslationKey } from '@/lib/translations';
 import {
   ComposedChart, AreaChart, Area, LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import type { RecentRecord, RecentRecordAttachment, HealthTrendsResponse } from '@/types';
+import type { RecentRecord, RecentRecordAttachment, HealthTrendsResponse, DashboardSummary, ChronicCondition } from '@/types';
 import Link from 'next/link';
 
 /* ─── helpers ─── */
@@ -80,8 +81,8 @@ function useCounter(target: number, duration = 1400) {
 }
 
 /* ─── Health Score Ring ─── */
-function HealthScoreRing() {
-  const score = useCounter(100, 1400);
+function HealthScoreRing({ score: targetScore }: { score: number }) {
+  const score = useCounter(targetScore, 1400);
   const r = 46;
   const circ = 2 * Math.PI * r; // ≈289.03
   const offset = circ - (score / 100) * circ;
@@ -136,8 +137,33 @@ function DetailSection({ icon, title, children }: { icon: string; title: string;
 /* ─── MAIN DASHBOARD ─── */
 function PatientDashboard(): React.JSX.Element {
   const { t } = useLanguage();
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'bp' | 'sugar'>('bp');
   const [selectedRecord, setSelectedRecord] = useState<RecentRecord | null>(null);
+  const [downloadingAttId, setDownloadingAttId] = useState<number | null>(null);
+
+  const firstName = user?.first_name || 'User';
+
+  const handleViewReport = async (attId: number, fileName: string) => {
+    setDownloadingAttId(attId);
+    try {
+      const blob = await api.medical.downloadReport(attId, 'inline');
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+    } catch {
+      // silent fail
+    } finally {
+      setDownloadingAttId(null);
+    }
+  };
+
+  // Fetch dashboard summary (patient name, risk, adherence, health score)
+  const { data: summary } = useQuery<DashboardSummary>({
+    queryKey: ['dashboard-summary'],
+    queryFn: () => api.dashboard.getSummary(),
+    staleTime: 30_000,
+  });
 
   const { data: kpiData } = useQuery<KPIData>({
     queryKey: ['dashboard-kpis'],
@@ -158,6 +184,23 @@ function PatientDashboard(): React.JSX.Element {
     queryFn: () => api.dashboard.getRecentRecords({ limit: 12 }),
     staleTime: 10_000,
   });
+
+  // Fetch chronic conditions
+  const { data: conditions } = useQuery<ChronicCondition[]>({
+    queryKey: ['patient-chronic-conditions'],
+    queryFn: () => api.medical.getChronicConditions(),
+    staleTime: 60_000,
+  });
+
+  // Derive values from API data
+  const healthScore = summary?.calculated_risk_score != null
+    ? Math.max(0, Math.min(100, 100 - summary.calculated_risk_score))
+    : 100;
+  const riskLevel = summary?.calculated_risk_level || 'Low';
+  const adherencePercentage = summary?.adherence_percentage ?? 0;
+  const activeConditions = conditions?.filter(c => c.is_active) || [];
+
+  const riskColor = riskLevel === 'High' ? '#ef4444' : riskLevel === 'Medium' ? '#f59e0b' : '#4ade80';
 
   const bpSeries = trendsData?.trends.find(t => t.metric === 'blood_pressure');
   const sugarSeries = trendsData?.trends.find(t => t.metric === 'sugar');
@@ -219,13 +262,13 @@ function PatientDashboard(): React.JSX.Element {
               animation: 'pulse-dot 2.2s infinite', display: 'inline-block',
               boxShadow: '0 0 8px rgba(74,222,128,0.5)',
             }} />
-            National Health ID: 48e53f17-b68
+            {summary?.health_id ? `National Health ID: ${summary.health_id}` : 'Health Surveillance Active'}
           </div>
           <h1 style={{
             fontFamily: 'Syne, sans-serif', color: '#fff',
             fontSize: 36, lineHeight: 1.15, marginBottom: 12, letterSpacing: '-0.02em',
           }}>
-            {t('welcome_back')},<br />Aditya
+            {t('welcome_back')},<br />{summary?.patient_name || firstName}
           </h1>
           <p style={{
             color: 'rgba(255,255,255,0.45)', fontSize: 13.5, lineHeight: 1.7,
@@ -243,7 +286,7 @@ function PatientDashboard(): React.JSX.Element {
           position: 'relative', display: 'flex', alignItems: 'center',
           gap: 44, flexShrink: 0,
         }}>
-          <HealthScoreRing />
+          <HealthScoreRing score={healthScore} />
 
           {/* Stats column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
@@ -251,22 +294,22 @@ function PatientDashboard(): React.JSX.Element {
             <div>
               <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 600 }}>RISK LEVEL</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px rgba(74,222,128,0.5)' }} />
-                <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{t('low')}</span>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: riskColor, boxShadow: `0 0 8px ${riskColor}80` }} />
+                <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{riskLevel}</span>
               </div>
             </div>
             {/* Adherence */}
             <div>
               <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 600 }}>ADHERENCE</div>
-              <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>84%</span>
+              <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{adherencePercentage}%</span>
               <div style={{ width: 72, height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 99, marginTop: 6 }}>
-                <div style={{ width: '84%', height: '100%', background: 'linear-gradient(90deg, #1F6F6A, #4ade80)', borderRadius: 99, boxShadow: '0 0 6px rgba(74,222,128,0.3)' }} />
+                <div style={{ width: `${Math.min(adherencePercentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #1F6F6A, #4ade80)', borderRadius: 99, boxShadow: '0 0 6px rgba(74,222,128,0.3)' }} />
               </div>
             </div>
             {/* Conditions */}
             <div>
               <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 600 }}>CONDITIONS</div>
-              <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>3 Active</span>
+              <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{activeConditions.length} Active</span>
             </div>
           </div>
         </div>
@@ -591,15 +634,15 @@ function PatientDashboard(): React.JSX.Element {
                   <DetailSection icon="📎" title="Attachments">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {selectedRecord.attachments.map((att: RecentRecordAttachment) => (
-                        <a
+                        <button
                           key={att.id}
-                          href={att.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          onClick={() => handleViewReport(att.id, att.file_name)}
+                          disabled={downloadingAttId === att.id}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
                             borderRadius: 10, border: '1px solid #E2E8E7', textDecoration: 'none',
-                            color: '#2F3A3A', transition: 'background 0.15s',
+                            color: '#2F3A3A', transition: 'background 0.15s', background: 'transparent',
+                            cursor: downloadingAttId === att.id ? 'wait' : 'pointer', width: '100%', textAlign: 'left',
                           }}
                           onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafb'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
@@ -615,10 +658,16 @@ function PatientDashboard(): React.JSX.Element {
                               {att.file_type} • {new Date(att.uploaded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </div>
                           </div>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /><path d="M12 15V3" />
-                          </svg>
-                        </a>
+                          {downloadingAttId === att.id ? (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F6F6A" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}>
+                              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                            </svg>
+                          ) : (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F6F6A" strokeWidth="2">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+                            </svg>
+                          )}
+                        </button>
                       ))}
                     </div>
                   </DetailSection>
