@@ -71,43 +71,60 @@ function useCounter(target: number, duration = 1400) {
   return count;
 }
 
+/* ─── Health Score helpers ─── */
+function getScoreInfo(score: number) {
+  if (score >= 80) return { label: 'Excellent', color: '#4ade80', gradientFrom: '#1F6F6A', gradientTo: '#4ade80' };
+  if (score >= 60) return { label: 'Good', color: '#a3e635', gradientFrom: '#4d7c0f', gradientTo: '#a3e635' };
+  if (score >= 40) return { label: 'Fair', color: '#f59e0b', gradientFrom: '#92400e', gradientTo: '#f59e0b' };
+  return { label: 'Needs Attention', color: '#ef4444', gradientFrom: '#991b1b', gradientTo: '#ef4444' };
+}
+
 /* ─── Health Score Ring ─── */
 function HealthScoreRing({ score: targetScore }: { score: number }) {
   const score = useCounter(targetScore, 1400);
   const r = 46;
   const circ = 2 * Math.PI * r; // ≈289.03
   const offset = circ - (score / 100) * circ;
+  const info = getScoreInfo(targetScore);
 
   return (
-    <div style={{ position: 'relative', width: 128, height: 128 }}>
-      <svg width={128} height={128} style={{ transform: 'rotate(-90deg)' }}>
-        <defs>
-          <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#1F6F6A" />
-            <stop offset="100%" stopColor="#4ade80" />
-          </linearGradient>
-        </defs>
-        <circle cx={64} cy={64} r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={9} />
-        <circle
-          cx={64} cy={64} r={r} fill="none"
-          stroke="url(#ringGrad)" strokeWidth={9}
-          strokeDasharray={circ} strokeDashoffset={offset}
-          strokeLinecap="round"
-          style={{ transition: 'stroke-dashoffset 1.6s cubic-bezier(0.34,1.56,0.64,1)' }}
-        />
-      </svg>
-      <div style={{
-        position: 'absolute', inset: 0,
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-      }}>
-        <span style={{ fontSize: 30, fontWeight: 800, color: '#fff', lineHeight: 1, fontFamily: 'Syne, sans-serif' }}>
-          {score}
-        </span>
-        <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em', marginTop: 3 }}>
-          HEALTH SCORE
-        </span>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+      <div style={{ position: 'relative', width: 128, height: 128 }}>
+        <svg width={128} height={128} style={{ transform: 'rotate(-90deg)' }}>
+          <defs>
+            <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor={info.gradientFrom} />
+              <stop offset="100%" stopColor={info.gradientTo} />
+            </linearGradient>
+          </defs>
+          <circle cx={64} cy={64} r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={9} />
+          <circle
+            cx={64} cy={64} r={r} fill="none"
+            stroke="url(#ringGrad)" strokeWidth={9}
+            strokeDasharray={circ} strokeDashoffset={offset}
+            strokeLinecap="round"
+            style={{ transition: 'stroke-dashoffset 1.6s cubic-bezier(0.34,1.56,0.64,1)' }}
+          />
+        </svg>
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+        }}>
+          <span style={{ fontSize: 30, fontWeight: 800, color: '#fff', lineHeight: 1, fontFamily: 'Syne, sans-serif' }}>
+            {score}
+          </span>
+          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em', marginTop: 3 }}>
+            HEALTH SCORE
+          </span>
+        </div>
       </div>
+      <span style={{ fontSize: 13, fontWeight: 700, color: info.color, letterSpacing: '0.04em' }}>
+        {info.label}
+      </span>
+      <span style={{ fontSize: 13, color: '#fff', textAlign: 'center', maxWidth: 160, lineHeight: 1.4 }}>
+        Based on vitals, labs &amp; medication adherence
+      </span>
     </div>
   );
 }
@@ -185,7 +202,7 @@ function PatientDashboard(): React.JSX.Element {
 
   // Derive values from API data
   const healthScore = summary?.calculated_risk_score != null
-    ? Math.max(0, Math.min(100, 100 - summary.calculated_risk_score))
+    ? Math.max(0, Math.min(100, 100 - 10 * summary.calculated_risk_score))
     : 100;
   const riskLevel = summary?.calculated_risk_level || 'Low';
   const adherencePercentage = summary?.adherence_percentage ?? 0;
@@ -277,21 +294,19 @@ function PatientDashboard(): React.JSX.Element {
           position: 'relative', display: 'flex', alignItems: 'center',
           gap: 44, flexShrink: 0,
         }}>
-          <HealthScoreRing score={healthScore} />
-
-          {/* Stats column */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+          {/* Stats column - left */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 22, alignItems: 'flex-end', textAlign: 'right' }}>
             {/* Risk Level */}
             <div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 600 }}>RISK LEVEL</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ fontSize: 14, color: '#000', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 800 }}>RISK LEVEL</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: riskColor, boxShadow: `0 0 8px ${riskColor}80` }} />
                 <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{riskLevel}</span>
               </div>
             </div>
             {/* Adherence */}
             <div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 600 }}>ADHERENCE</div>
+              <div style={{ fontSize: 14, color: '#000', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 800 }}>ADHERENCE</div>
               <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{adherencePercentage}%</span>
               <div style={{ width: 72, height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 99, marginTop: 6 }}>
                 <div style={{ width: `${Math.min(adherencePercentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #1F6F6A, #4ade80)', borderRadius: 99, boxShadow: '0 0 6px rgba(74,222,128,0.3)' }} />
@@ -299,10 +314,13 @@ function PatientDashboard(): React.JSX.Element {
             </div>
             {/* Conditions */}
             <div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 600 }}>CONDITIONS</div>
+              <div style={{ fontSize: 14, color: '#000', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 800 }}>CONDITIONS</div>
               <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{activeConditions.length} Active</span>
             </div>
           </div>
+
+          {/* Health Score Ring - center */}
+          <HealthScoreRing score={healthScore} />
         </div>
       </section>
 
