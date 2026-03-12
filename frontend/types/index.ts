@@ -893,7 +893,7 @@ export interface HealthTrendsResponse {
 // Alerts & Risk Monitoring
 export interface DashboardAlert {
   id: string;
-  alert_type: 'abnormal_labs' | 'low_adherence' | 'high_risk';
+  alert_type: 'abnormal_labs' | 'low_adherence' | 'high_risk' | 'outbreak';
   severity: 'low' | 'medium' | 'high' | 'critical';
   title: string;
   message: string;

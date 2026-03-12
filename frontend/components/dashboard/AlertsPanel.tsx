@@ -90,12 +90,14 @@ function AlertRow({
     abnormal_labs: FiActivity,
     low_adherence: FiHeart,
     high_risk: FiShield,
+    outbreak: FiAlertTriangle,
   };
 
   const ALERT_TYPE_LABEL: Record<string, string> = {
     abnormal_labs: t('alert_lab_results'),
     low_adherence: t('alert_adherence'),
     high_risk: t('alert_risk_score'),
+    outbreak: t('alert_outbreak'),
   };
 
   const cfg = SEVERITY_CONFIG[alert.severity];
