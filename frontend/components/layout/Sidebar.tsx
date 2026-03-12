@@ -241,25 +241,25 @@ export function Sidebar() {
       {/* ── Logo ── */}
       <div style={{ padding: '28px 26px 22px', display: 'flex', alignItems: 'center', gap: 13, position: 'relative' }}>
         <div style={{
-          width: 44, height: 44, borderRadius: 14,
+          width: 57, height: 57, borderRadius: 18,
           background: 'linear-gradient(135deg, #22856e 0%, #1a6b5a 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 8px 24px rgba(31,111,106,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
           flexShrink: 0,
         }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <svg width="29" height="29" viewBox="0 0 24 24" fill="none">
             <path d="M3 12h3l3-9 4 18 3-9h5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
         <div>
           <div style={{
-            color: '#fff', fontSize: 18, fontWeight: 800,
+            color: '#fff', fontSize: 23, fontWeight: 800,
             letterSpacing: '-0.04em', lineHeight: 1.1,
             fontFamily: 'Syne, Plus Jakarta Sans, sans-serif',
           }}>
             {t('health_system')}
           </div>
-          <div style={{ color: '#4ade80', fontSize: 9, letterSpacing: '0.16em', fontWeight: 700, marginTop: 3, opacity: 0.7 }}>
+          <div style={{ color: '#4ade80', fontSize: 12, letterSpacing: '0.16em', fontWeight: 700, marginTop: 4, opacity: 0.7 }}>
             GOVT. OF INDIA
           </div>
         </div>
@@ -268,47 +268,9 @@ export function Sidebar() {
       {/* ── Separator ── */}
       <div style={{ margin: '0 22px', height: 1, background: 'rgba(255,255,255,0.06)' }} />
 
-      {/* ── User Card ── */}
-      <div style={{
-        margin: '16px 16px 12px', padding: '14px 16px',
-        background: 'rgba(255,255,255,0.03)', borderRadius: 14,
-        border: '1px solid rgba(255,255,255,0.05)', position: 'relative',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{
-            width: 42, height: 42, borderRadius: 12,
-            background: 'linear-gradient(135deg, #1F6F6A, #2a9d8f)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontWeight: 700, fontSize: 14,
-            boxShadow: '0 4px 12px rgba(31,111,106,0.3)',
-            border: '2px solid rgba(74,222,128,0.15)', flexShrink: 0,
-          }}>
-            AP
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              color: '#fff', fontWeight: 600, fontSize: 14, lineHeight: 1.2,
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            }}>
-              Aditya Patra
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 5 }}>
-              <span style={{
-                width: 6, height: 6, borderRadius: '50%', background: '#4ade80',
-                animation: 'pulse-dot 2.2s infinite', display: 'inline-block',
-                boxShadow: '0 0 8px rgba(74,222,128,0.6)',
-              }} />
-              <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 500 }}>
-                {roleLabel}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* ── Section Label ── */}
       <div style={{ padding: '10px 28px 8px', position: 'relative' }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.15)', letterSpacing: '0.18em' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.18em' }}>
           NAVIGATION
         </span>
       </div>
@@ -325,8 +287,8 @@ export function Sidebar() {
                 display: 'flex', alignItems: 'center', gap: 14,
                 padding: '11px 16px', marginBottom: 3, borderRadius: 12,
                 cursor: 'pointer', transition: 'all 0.2s ease', textDecoration: 'none',
-                fontSize: 13.5, fontWeight: active ? 600 : 450,
-                color: active ? '#ffffff' : 'rgba(255,255,255,0.38)',
+                fontSize: 15, fontWeight: active ? 600 : 450,
+                color: active ? '#ffffff' : 'rgba(255,255,255,0.9)',
                 background: active
                   ? 'linear-gradient(135deg, rgba(31,111,106,0.55) 0%, rgba(34,133,110,0.35) 100%)'
                   : 'transparent',
@@ -339,19 +301,19 @@ export function Sidebar() {
               onMouseEnter={(e) => {
                 if (!active) {
                   e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.65)';
+                  e.currentTarget.style.color = '#ffffff';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!active) {
                   e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.38)';
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.9)';
                 }
               }}
             >
               <span style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                width: 22, flexShrink: 0, opacity: active ? 1 : 0.45, transition: 'opacity 0.2s',
+                width: 22, flexShrink: 0, opacity: active ? 1 : 0.8, transition: 'opacity 0.2s',
               }}>
                 {icons[item.icon]}
               </span>

@@ -16,50 +16,25 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
   return (
     <header style={{
-      background: '#FFFFFF',
+      background: 'linear-gradient(135deg, #1a6b5a 0%, #22856e 50%, #2a9d8f 100%)',
       padding: '0 28px',
       height: 56,
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      borderBottom: '1px solid #E2E8E7',
+      borderBottom: 'none',
       flexShrink: 0,
+      borderRadius: 14,
+      margin: '12px 28px 0',
+      boxShadow: '0 4px 16px rgba(31,111,106,0.25)',
     }}>
       {/* Breadcrumb / Page Title */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 13, color: '#6B7C7C', fontWeight: 500 }}>Pages</span>
-        <span style={{ color: '#D9E5E3', fontSize: 12 }}>/</span>
-        <span style={{ fontSize: 13, color: '#2F3A3A', fontWeight: 600 }}>Dashboard</span>
+        <span style={{ fontSize: 24, color: '#ffffff', fontWeight: 800, letterSpacing: '-0.02em' }}>Dashboard</span>
       </div>
 
       {/* Spacer */}
       <div style={{ flex: 1 }} />
-
-      {/* Search */}
-      <div style={{
-        width: 280,
-        background: '#F5F8F7',
-        borderRadius: 10,
-        padding: '8px 14px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        border: '1px solid #E2E8E7',
-        transition: 'border-color 0.2s',
-      }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3A3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-        </svg>
-        <input
-          type="text"
-          placeholder="Search…"
-          style={{
-            border: 'none', background: 'transparent', outline: 'none',
-            fontSize: 12.5, color: '#2F3A3A', width: '100%',
-            fontWeight: 400,
-          }}
-        />
-      </div>
 
       {/* Language */}
       <select
@@ -108,16 +83,13 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           {initials}
         </div>
         <div>
-          <div style={{ fontWeight: 600, fontSize: 12.5, color: '#2F3A3A', lineHeight: 1.2 }}>
+          <div style={{ fontWeight: 600, fontSize: 12.5, color: '#0d3b2e', lineHeight: 1.2 }}>
             {fullName}
           </div>
-          <div style={{ fontSize: 10, color: '#94A3A3', fontWeight: 500, lineHeight: 1.2 }}>
+          <div style={{ fontSize: 10, color: '#ffffff', fontWeight: 500, lineHeight: 1.2 }}>
             {role}
           </div>
         </div>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94A3A3" strokeWidth="2.5">
-          <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
       </div>
     </header>
   );
