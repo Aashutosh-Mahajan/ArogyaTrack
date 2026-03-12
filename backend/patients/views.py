@@ -261,6 +261,7 @@ class MyCardView(APIView):
             "district": profile.district or "",
             "gender": profile.gender,
             "qr_code_url": qr_code_url,
+            "token": card.token if card else None,
             "profile_photo_url": profile_photo_url,
         })
 
@@ -421,6 +422,8 @@ class ScanPatientQRView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        import jwt as pyjwt
+
         # Check authorization - only doctors and admins can scan
         if request.user.role not in ["doctor", "admin"]:
             return Response(
@@ -438,40 +441,46 @@ class ScanPatientQRView(APIView):
             )
 
         try:
+            optimized_qs = (
+                Profile.objects
+                .select_related("user", "health_card")
+                .prefetch_related(
+                    "medical_records__diagnoses",
+                    Prefetch("allergies", queryset=Allergy.objects.select_related("added_by")),
+                    Prefetch("chronic_conditions", queryset=ChronicCondition.objects.select_related("added_by")),
+                )
+            )
+
             if patient_id_input:
-                # Single query: profile + user + card + all related medical data
-                profile = (
-                    Profile.objects
-                    .select_related("user", "health_card")
-                    .prefetch_related(
-                        "medical_records__diagnoses",
-                        Prefetch("allergies", queryset=Allergy.objects.select_related("added_by")),
-                        Prefetch("chronic_conditions", queryset=ChronicCondition.objects.select_related("added_by")),
-                    )
-                    .get(patient_id=patient_id_input)
-                )
+                # Lookup by the generated HS-YYYY-XXXXXX format
+                profile = optimized_qs.get(patient_id=patient_id_input)
             else:
-                payload = jwt.decode(
-                    token,
-                    settings.SIMPLE_JWT.get("SIGNING_KEY"),
-                    algorithms=[settings.SIMPLE_JWT.get("ALGORITHM", "HS256")],
-                )
-                patient_id = payload.get("patient_id")
-                if not patient_id:
-                    return Response(
-                        {"detail": "Invalid QR code format."},
-                        status=status.HTTP_400_BAD_REQUEST,
+                # Decode the JWT token
+                try:
+                    payload = jwt.decode(
+                        token,
+                        settings.SIMPLE_JWT.get("SIGNING_KEY"),
+                        algorithms=[settings.SIMPLE_JWT.get("ALGORITHM", "HS256")],
                     )
-                profile = (
-                    Profile.objects
-                    .select_related("user", "health_card")
-                    .prefetch_related(
-                        "medical_records__diagnoses",
-                        Prefetch("allergies", queryset=Allergy.objects.select_related("added_by")),
-                        Prefetch("chronic_conditions", queryset=ChronicCondition.objects.select_related("added_by")),
-                    )
-                    .get(id=patient_id)
-                )
+                    patient_id = payload.get("patient_id")
+                    if not patient_id:
+                        raise jwt.InvalidTokenError("No patient_id in token")
+                    profile = optimized_qs.get(id=patient_id)
+                except (jwt.InvalidTokenError, Profile.DoesNotExist):
+                    # Fallback: look up health card by matching the raw token string
+                    try:
+                        card_match = HealthCard.objects.select_related("profile__user", "profile__health_card").get(token=token)
+                        if not card_match.is_active():
+                            return Response(
+                                {"detail": "This health card has expired or been revoked."},
+                                status=status.HTTP_410_GONE,
+                            )
+                        profile = card_match.profile
+                    except HealthCard.DoesNotExist:
+                        return Response(
+                            {"detail": "Invalid QR code."},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
 
             card = profile.health_card
             if card and not card.is_active():
@@ -595,16 +604,6 @@ class ScanPatientQRView(APIView):
                 "prescriptions": prescriptions_data,
             })
 
-        except jwt.ExpiredSignatureError:
-            return Response(
-                {"detail": "This QR code has expired."},
-                status=status.HTTP_410_GONE,
-            )
-        except jwt.InvalidTokenError:
-            return Response(
-                {"detail": "Invalid QR code."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except Profile.DoesNotExist:
             return Response(
                 {"detail": "Patient not found."},

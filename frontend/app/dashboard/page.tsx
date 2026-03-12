@@ -7,39 +7,61 @@ import { api } from '@/lib/api';
 import { useLanguage } from '@/components/providers/LanguageProvider';
 import type { TranslationKey } from '@/lib/translations';
 import {
-  AreaChart, Area, LineChart, Line, XAxis, YAxis,
+  ComposedChart, AreaChart, Area, LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import type { RecentRecord, RecentRecordAttachment } from '@/types';
+import type { RecentRecord, RecentRecordAttachment, HealthTrendsResponse } from '@/types';
+import Link from 'next/link';
 
-/* ─── Data ─── */
-const bpData = [
-  { day: 'Mon', systolic: 128, diastolic: 82 },
-  { day: 'Tue', systolic: 132, diastolic: 85 },
-  { day: 'Wed', systolic: 126, diastolic: 80 },
-  { day: 'Thu', systolic: 134, diastolic: 84 },
-  { day: 'Fri', systolic: 130, diastolic: 83 },
-  { day: 'Sat', systolic: 127, diastolic: 81 },
-  { day: 'Sun', systolic: 124, diastolic: 79 },
-];
-const sugarData = [
-  { day: 'Mon', value: 132 },
-  { day: 'Tue', value: 128 },
-  { day: 'Wed', value: 126 },
-  { day: 'Thu', value: 130 },
-  { day: 'Fri', value: 122 },
-  { day: 'Sat', value: 118 },
-  { day: 'Sun', value: 115 },
-];
+/* ─── helpers ─── */
+function fmtDate(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
 
-const statCards: { icon: string; labelKey: TranslationKey; value: number | string; trend: string; dir: string; accent: string }[] = [
-  { icon: '📁', labelKey: 'kpi_medical_records', value: 12, trend: '+9%', dir: 'up', accent: '#1F6F6A' },
-  { icon: '💊', labelKey: 'kpi_active_prescriptions', value: 2, trend: '+8%', dir: 'up', accent: '#7c3aed' },
-  { icon: '🧪', labelKey: 'kpi_pending_labs', value: 12, trend: '+1%', dir: 'up', accent: '#d97706' },
-  { icon: '❤️', labelKey: 'kpi_adherence_rate', value: '84%', trend: '-12%', dir: 'down', accent: '#ef4444' },
-  { icon: '⚠️', labelKey: 'kpi_health_alerts', value: 0, trend: '—', dir: 'neutral', accent: '#1F6F6A' },
-  { icon: '⬇️', labelKey: 'kpi_downloads', value: 0, trend: '—', dir: 'neutral', accent: '#185E59' },
-];
+interface KPIData {
+  total_medical_records: number;
+  active_prescriptions: number;
+  total_downloads: number;
+  recent_bp: { value: number | null; secondary_value: number | null; unit: string; recorded_at: string | null };
+  recent_sugar: { value: number | null; secondary_value: number | null; unit: string; recorded_at: string | null };
+  monthly_trends: Record<string, { current: number; previous: number; change: number; direction: string }>;
+}
+
+function buildStatCards(kpi?: KPIData) {
+  const bpTrend = kpi?.monthly_trends?.medical_records;
+  const rxTrend = kpi?.monthly_trends?.prescriptions;
+  const dlTrend = kpi?.monthly_trends?.downloads;
+
+  const fmtTrend = (t?: { change: number; direction: string }) => {
+    if (!t || t.change === 0) return { trend: '—', dir: 'neutral' };
+    const sign = t.direction === 'up' ? '+' : '-';
+    return { trend: `${sign}${Math.abs(t.change)}`, dir: t.direction };
+  };
+
+  const bpVal = kpi?.recent_bp?.value != null
+    ? `${Math.round(kpi.recent_bp.value)}/${Math.round(kpi.recent_bp.secondary_value ?? 0)}`
+    : '—/—';
+  const sugarVal = kpi?.recent_sugar?.value != null
+    ? `${Math.round(kpi.recent_sugar.value)}`
+    : '—';
+
+  const bpDate = kpi?.recent_bp?.recorded_at
+    ? new Date(kpi.recent_bp.recorded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+    : '';
+  const sugarDate = kpi?.recent_sugar?.recorded_at
+    ? new Date(kpi.recent_sugar.recorded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+    : '';
+
+  return [
+    { icon: '📁', labelKey: 'kpi_medical_records' as TranslationKey, value: kpi?.total_medical_records ?? 0, ...fmtTrend(bpTrend), accent: '#1F6F6A' },
+    { icon: '💊', labelKey: 'kpi_active_prescriptions' as TranslationKey, value: kpi?.active_prescriptions ?? 0, ...fmtTrend(rxTrend), accent: '#7c3aed', href: '/dashboard/prescriptions' },
+    { icon: '🩸', labelKey: 'kpi_medical_records' as TranslationKey, value: bpVal, trend: bpDate, dir: 'neutral' as string, accent: '#ef4444', customLabel: 'Recent BP (mmHg)' },
+    { icon: '🍬', labelKey: 'kpi_medical_records' as TranslationKey, value: <>{sugarVal} <sub style={{ fontSize: '0.55em', color: '#9CA3AF' }}>mg/dL</sub></>, trend: sugarDate, dir: 'neutral' as string, accent: '#f59e0b', customLabel: 'Blood Sugar' },
+    { icon: '🧪', labelKey: 'kpi_pending_labs' as TranslationKey, value: kpi?.total_medical_records ?? 0, ...fmtTrend(bpTrend), accent: '#d97706', href: '/dashboard/lab-reports' },
+    { icon: '⬇️', labelKey: 'kpi_downloads' as TranslationKey, value: kpi?.total_downloads ?? 0, ...fmtTrend(dlTrend), accent: '#185E59', href: '/dashboard/downloads' },
+  ];
+}
 
 /* ─── Animated counter hook ─── */
 function useCounter(target: number, duration = 1400) {
@@ -98,33 +120,6 @@ function HealthScoreRing() {
   );
 }
 
-/* ─── Adherence Donut ─── */
-function AdherenceDonut() {
-  const r = 31;
-  const circ = 2 * Math.PI * r; // ≈194.78
-  const offset = circ * 0.16;
-
-  return (
-    <div style={{ position: 'relative', width: 82, height: 82 }}>
-      <svg width={82} height={82} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={41} cy={41} r={r} fill="none" stroke="#D9E5E3" strokeWidth={8} />
-        <circle
-          cx={41} cy={41} r={r} fill="none"
-          stroke="#1F6F6A" strokeWidth={8}
-          strokeDasharray={circ} strokeDashoffset={offset}
-          strokeLinecap="round"
-        />
-      </svg>
-      <div style={{
-        position: 'absolute', inset: 0,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 15, color: '#2F3A3A' }}>84%</span>
-      </div>
-    </div>
-  );
-}
-
 /* ─── Detail Section Helper ─── */
 function DetailSection({ icon, title, children }: { icon: string; title: string; children: React.ReactNode }) {
   return (
@@ -159,11 +154,44 @@ function PatientDashboard(): React.JSX.Element {
     }
   };
 
+  const { data: kpiData } = useQuery<KPIData>({
+    queryKey: ['dashboard-kpis'],
+    queryFn: () => api.dashboard.getKPIs(),
+    staleTime: 30_000,
+  });
+
+  const statCards = buildStatCards(kpiData);
+
+  const { data: trendsData } = useQuery<HealthTrendsResponse>({
+    queryKey: ['dashboard-health-trends'],
+    queryFn: () => api.dashboard.getHealthTrends({ months: 24 }),
+    staleTime: 60_000,
+  });
+
   const { data: records } = useQuery<RecentRecord[]>({
     queryKey: ['dashboard-recent-records'],
-    queryFn: () => api.dashboard.getRecentRecords({ limit: 5 }),
+    queryFn: () => api.dashboard.getRecentRecords({ limit: 12 }),
     staleTime: 10_000,
   });
+
+  const bpSeries = trendsData?.trends.find(t => t.metric === 'blood_pressure');
+  const sugarSeries = trendsData?.trends.find(t => t.metric === 'sugar');
+
+  // Only show readings that fall on doctor visit dates (last 6 visits)
+  const visitDates = new Set(
+    (records ?? [])
+      .map(r => r.visit_date?.split('T')[0])
+      .filter(Boolean)
+      .sort()
+      .slice(-6)
+  );
+
+  const bpData = (bpSeries?.data ?? [])
+    .filter(p => visitDates.has(p.date))
+    .map(p => ({ date: fmtDate(p.date), systolic: p.value, diastolic: p.secondary_value ?? 0 }));
+  const sugarData = (sugarSeries?.data ?? [])
+    .filter(p => visitDates.has(p.date))
+    .map(p => ({ date: fmtDate(p.date), value: p.value }));
 
   return (
     <>
@@ -261,43 +289,68 @@ function PatientDashboard(): React.JSX.Element {
 
       {/* ═══ SECTION 2 — STAT CARDS ═══ */}
       <div className="f2 stat-grid">
-        {statCards.map((card, i) => (
-          <div key={i} className="stat-card">
-            <div className="accent-bar" style={{ background: `linear-gradient(90deg, ${card.accent}, ${card.accent}66)` }} />
-            <div style={{ fontSize: 18, marginBottom: 10 }}>{card.icon}</div>
-            <div className="number">{card.value}</div>
-            <div className="label">{t(card.labelKey)}</div>
-            <div className={`trend trend-${card.dir}`}>
-              {card.trend} <span style={{ color: '#6B7C7C', fontWeight: 400 }}>vs last month</span>
+        {statCards.map((card, i) => {
+          const inner = (
+            <>
+              <div className="accent-bar" style={{ background: `linear-gradient(90deg, ${card.accent}, ${card.accent}66)` }} />
+              <div style={{ fontSize: 18, marginBottom: 10 }}>{card.icon}</div>
+              <div className="number">{card.value}</div>
+              <div className="label">{'customLabel' in card && card.customLabel ? card.customLabel : t(card.labelKey)}</div>
+              <div className={`trend trend-${card.dir}`}>
+                {card.trend} {card.dir !== 'neutral' && <span style={{ color: '#6B7C7C', fontWeight: 400 }}>vs last month</span>}
+              </div>
+            </>
+          );
+          return card.href ? (
+            <Link key={i} href={card.href} className="stat-card" style={{ textDecoration: 'none', cursor: 'pointer' }}>
+              {inner}
+            </Link>
+          ) : (
+            <div key={i} className="stat-card">
+              {inner}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* ═══ SECTION 3 — CHARTS ROW ═══ */}
-      <div className="f3" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16 }}>
+      {/* ═══ SECTION 3 — CHARTS ═══ */}
+      <div className="f3">
 
         {/* Vitals Trend */}
-        <div className="content-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div style={{
+          background: '#fff', borderRadius: 18, padding: '24px 28px',
+          boxShadow: '0 2px 10px rgba(47,58,58,0.06)',
+          maxWidth: 680, width: '100%',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <div>
-              <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: '#2F3A3A', fontSize: 14 }}>
+              <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: '#2F3A3A', fontSize: 15 }}>
                 Vitals Trend
               </div>
-              <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 11, marginTop: 1 }}>
-                Last 7 days
+              <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 11, marginTop: 2 }}>
+                Last 6 months
               </div>
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
               <button
-                className={`tab-btn ${activeTab === 'bp' ? 'active' : 'inactive'}`}
                 onClick={() => setActiveTab('bp')}
+                style={{
+                  padding: '6px 16px', borderRadius: 20, border: 'none', cursor: 'pointer',
+                  fontSize: 12, fontWeight: 600, transition: 'all 0.2s',
+                  background: activeTab === 'bp' ? '#1F6F6A' : '#F3F4F6',
+                  color: activeTab === 'bp' ? '#fff' : '#6B7C7C',
+                }}
               >
                 Blood Pressure
               </button>
               <button
-                className={`tab-btn ${activeTab === 'sugar' ? 'active' : 'inactive'}`}
                 onClick={() => setActiveTab('sugar')}
+                style={{
+                  padding: '6px 16px', borderRadius: 20, border: 'none', cursor: 'pointer',
+                  fontSize: 12, fontWeight: 600, transition: 'all 0.2s',
+                  background: activeTab === 'sugar' ? '#1F6F6A' : '#F3F4F6',
+                  color: activeTab === 'sugar' ? '#fff' : '#6B7C7C',
+                }}
               >
                 Blood Sugar
               </button>
@@ -314,116 +367,52 @@ function PatientDashboard(): React.JSX.Element {
                   <span style={{ width: 10, height: 3, background: '#4ade80', borderRadius: 2 }} /> Diastolic
                 </span>
               </div>
-              <ResponsiveContainer width="100%" height={165}>
-                <AreaChart data={bpData}>
+              <ResponsiveContainer width="100%" height={200}>
+                <ComposedChart data={bpData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="bpGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#1F6F6A" stopOpacity={0.2} />
+                      <stop offset="5%" stopColor="#1F6F6A" stopOpacity={0.15} />
                       <stop offset="95%" stopColor="#1F6F6A" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" />
-                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#6B7C7C' }} axisLine={false} tickLine={false} />
-                  <YAxis domain={[60, 150]} tick={{ fontSize: 10, fill: '#6B7C7C' }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 10, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
-                  <Area type="monotone" dataKey="systolic" stroke="#1F6F6A" strokeWidth={2.5} fill="url(#bpGrad)" dot={{ fill: '#1F6F6A', r: 3 }} />
-                  <Line type="monotone" dataKey="diastolic" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 3 }} />
-                </AreaChart>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} interval={0} />
+                  <YAxis domain={[60, 170]} tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={32} />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E8EDED', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
+                  <Area type="monotone" dataKey="systolic" stroke="#1F6F6A" strokeWidth={2} fill="url(#bpGrad)" dot={{ fill: '#1F6F6A', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
+                  <Line type="monotone" dataKey="diastolic" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
+                </ComposedChart>
               </ResponsiveContainer>
             </>
           ) : (
             <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <span style={{
-                  background: '#f0fdf4', color: '#1F6F6A',
+                  background: 'rgba(31,111,106,0.08)', color: '#1F6F6A',
                   fontSize: 10, fontWeight: 700,
                   padding: '3px 10px', borderRadius: 999,
                 }}>
                   ↓ Improving trend
                 </span>
-                <span style={{ color: '#6B7C7C', fontSize: 11 }}>mg/dL</span>
+                <span style={{ color: '#9CA3AF', fontSize: 11 }}>mg/dL</span>
               </div>
-              <ResponsiveContainer width="100%" height={165}>
-                <AreaChart data={sugarData}>
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={sugarData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="sgGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#1F6F6A" stopOpacity={0.25} />
+                      <stop offset="5%" stopColor="#1F6F6A" stopOpacity={0.18} />
                       <stop offset="95%" stopColor="#1F6F6A" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" />
-                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#6B7C7C' }} axisLine={false} tickLine={false} />
-                  <YAxis domain={[100, 145]} tick={{ fontSize: 10, fill: '#6B7C7C' }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 10, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
-                  <Area type="monotone" dataKey="value" stroke="#185E59" strokeWidth={2.5} fill="url(#sgGrad)" dot={{ fill: '#185E59', r: 3 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} interval={0} />
+                  <YAxis domain={['auto', 'auto']} tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={32} />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E8EDED', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
+                  <Area type="monotone" dataKey="value" stroke="#185E59" strokeWidth={2} fill="url(#sgGrad)" dot={{ fill: '#185E59', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
                 </AreaChart>
               </ResponsiveContainer>
             </>
           )}
-        </div>
-
-        {/* Right column — Adherence + Conditions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {/* Adherence Ring Card */}
-          <div className="content-card" style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: '#2F3A3A', fontSize: 13, marginBottom: 1 }}>
-              Medication Adherence
-            </div>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 11, marginBottom: 14 }}>
-              This month
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-              <AdherenceDonut />
-              <div>
-                <div style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 11, color: '#6B7C7C', marginBottom: 10 }}>
-                  Medicines on time
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#1F6F6A' }} />
-                  <span style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 11.5, fontWeight: 600, color: '#2F3A3A' }}>Taken: 21 days</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#D9E5E3' }} />
-                  <span style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 11.5, color: '#6B7C7C' }}>Missed: 4 days</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Active Conditions Card */}
-          <div style={{
-            background: 'linear-gradient(135deg, #0D2B29, #1F6F6A 200%)',
-            borderRadius: 18, padding: '18px 20px',
-            boxShadow: '0 2px 10px rgba(13,43,41,0.15)',
-            position: 'relative', overflow: 'hidden',
-          }}>
-            <div style={{
-              position: 'absolute', right: -24, top: -24,
-              width: 120, height: 120, borderRadius: '50%', pointerEvents: 'none',
-              background: 'radial-gradient(circle, rgba(74,222,128,0.15) 0%, transparent 70%)',
-            }} />
-            <div style={{
-              fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)',
-              letterSpacing: '0.12em', marginBottom: 12, fontFamily: 'DM Sans, sans-serif',
-            }}>
-              ACTIVE CONDITIONS
-            </div>
-            {[
-              { name: 'Type 2 Diabetes', color: '#f59e0b' },
-              { name: 'Hypertension', color: '#ef4444' },
-              { name: 'Dyslipidemia', color: '#4ade80' },
-            ].map((c, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: i < 2 ? 10 : 0 }}>
-                <span style={{
-                  width: 6, height: 6, borderRadius: '50%',
-                  background: c.color, boxShadow: `0 0 6px ${c.color}`,
-                }} />
-                <span style={{ color: '#fff', fontFamily: 'DM Sans, sans-serif', fontSize: 12.5, fontWeight: 500 }}>
-                  {c.name}
-                </span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 

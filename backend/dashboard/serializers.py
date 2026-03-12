@@ -34,12 +34,24 @@ class KPITrendSerializer(serializers.Serializer):
     direction = serializers.CharField()  # "up" | "down" | "flat"
 
 
+class RecentVitalSerializer(serializers.Serializer):
+    """Most recent BP or sugar reading."""
+    value = serializers.FloatField(allow_null=True)
+    secondary_value = serializers.FloatField(allow_null=True)
+    unit = serializers.CharField()
+    recorded_at = serializers.DateTimeField(allow_null=True)
+
+
 class DashboardKPISerializer(serializers.Serializer):
     """Read-only serializer for the patient KPI summary cards."""
 
     total_medical_records = serializers.IntegerField()
     active_prescriptions = serializers.IntegerField()
     total_downloads = serializers.IntegerField()
+
+    # Recent vitals
+    recent_bp = RecentVitalSerializer()
+    recent_sugar = RecentVitalSerializer()
 
     # Monthly trend data  (current 30d vs previous 30d)
     monthly_trends = serializers.DictField(child=KPITrendSerializer())

@@ -302,11 +302,42 @@ class DashboardKPIView(APIView):
             downloaded_at__lt=thirty_days_ago,
         ).count()
 
+        # ── Recent BP & Sugar ───────────────────────────────────
+        latest_bp = (
+            HealthMetric.objects.filter(
+                patient=user, metric_type=HealthMetric.MetricType.BLOOD_PRESSURE
+            )
+            .order_by("-recorded_at")
+            .first()
+        )
+        latest_sugar = (
+            HealthMetric.objects.filter(
+                patient=user, metric_type=HealthMetric.MetricType.SUGAR
+            )
+            .order_by("-recorded_at")
+            .first()
+        )
+
+        recent_bp = {
+            "value": latest_bp.value if latest_bp else None,
+            "secondary_value": latest_bp.secondary_value if latest_bp else None,
+            "unit": "mmHg",
+            "recorded_at": latest_bp.recorded_at if latest_bp else None,
+        }
+        recent_sugar = {
+            "value": latest_sugar.value if latest_sugar else None,
+            "secondary_value": None,
+            "unit": "mg/dL",
+            "recorded_at": latest_sugar.recorded_at if latest_sugar else None,
+        }
+
         # ── Build response ───────────────────────────────────────
         data = {
             "total_medical_records": total_medical_records,
             "active_prescriptions": active_prescriptions,
             "total_downloads": total_downloads,
+            "recent_bp": recent_bp,
+            "recent_sugar": recent_sugar,
             "monthly_trends": {
                 "medical_records": _make_trend(records_current, records_previous),
                 "prescriptions": _make_trend(prescriptions_current, prescriptions_previous),
@@ -524,7 +555,7 @@ class HealthTrendsView(APIView):
         from collections import defaultdict
 
         user = request.user
-        months = min(int(request.query_params.get("months", 6)), 12)
+        months = min(int(request.query_params.get("months", 6)), 24)
         cutoff = timezone.now() - timedelta(days=months * 30)
 
         metrics_qs = (
@@ -690,6 +721,46 @@ def _generate_alerts_for_patient(user, profile):
                     f"This is based on recent lab results, vital readings, "
                     f"and medication adherence.  Please schedule a check-up."
                 ),
+            ))
+
+    # ── 4.  Outbreak alerts from surveillance ───────────────────
+    if profile and profile.region:
+        # Find active surveillance alerts affecting this patient's region
+        # that haven't already been surfaced as a dashboard alert
+        already_linked_ids = set(
+            DashboardAlert.objects.filter(
+                patient=user,
+                alert_type="outbreak",
+                is_dismissed=False,
+                surveillance_alert__isnull=False,
+            ).values_list("surveillance_alert_id", flat=True)
+        )
+
+        region_alerts = (
+            Alert.objects.filter(
+                status="active",
+                affected_regions__name__iexact=profile.region,
+            )
+            .exclude(id__in=already_linked_ids)
+            .distinct()
+        )
+
+        for surv_alert in region_alerts:
+            regions_list = ", ".join(
+                surv_alert.affected_regions.values_list("name", flat=True)
+            )
+            new_alerts.append(DashboardAlert(
+                patient=user,
+                alert_type="outbreak",
+                severity=surv_alert.severity,
+                title=f"Outbreak Alert: {surv_alert.disease_name}",
+                message=(
+                    f"{surv_alert.title} — A {surv_alert.severity} severity "
+                    f"{surv_alert.disease_name} outbreak has been detected in "
+                    f"your region ({regions_list}). "
+                    f"{surv_alert.recommended_actions or 'Please follow local health advisories and consult your doctor if you experience symptoms.'}"
+                ),
+                surveillance_alert=surv_alert,
             ))
 
     if new_alerts:
