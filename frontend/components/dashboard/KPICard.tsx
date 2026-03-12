@@ -99,6 +99,6 @@ export function KPICard({
           </div>
         )}
       </CardContent>
-    </Card>border-t
+    </Card>
   );
 }

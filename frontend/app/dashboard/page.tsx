@@ -11,7 +11,7 @@ import {
   ComposedChart, AreaChart, Area, LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import type { RecentRecord, RecentRecordAttachment, HealthTrendsResponse, DashboardSummary, ChronicCondition } from '@/types';
+import type { RecentRecord, RecentRecordAttachment, HealthTrendsResponse, DashboardKPIs, DashboardSummary, ChronicCondition } from '@/types';
 import Link from 'next/link';
 
 /* ─── helpers ─── */
@@ -20,16 +20,7 @@ function fmtDate(iso: string) {
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
-interface KPIData {
-  total_medical_records: number;
-  active_prescriptions: number;
-  total_downloads: number;
-  recent_bp: { value: number | null; secondary_value: number | null; unit: string; recorded_at: string | null };
-  recent_sugar: { value: number | null; secondary_value: number | null; unit: string; recorded_at: string | null };
-  monthly_trends: Record<string, { current: number; previous: number; change: number; direction: string }>;
-}
-
-function buildStatCards(kpi?: KPIData) {
+function buildStatCards(kpi?: DashboardKPIs) {
   const bpTrend = kpi?.monthly_trends?.medical_records;
   const rxTrend = kpi?.monthly_trends?.prescriptions;
   const dlTrend = kpi?.monthly_trends?.downloads;
@@ -165,7 +156,7 @@ function PatientDashboard(): React.JSX.Element {
     staleTime: 30_000,
   });
 
-  const { data: kpiData } = useQuery<KPIData>({
+  const { data: kpiData } = useQuery<DashboardKPIs>({
     queryKey: ['dashboard-kpis'],
     queryFn: () => api.dashboard.getKPIs(),
     staleTime: 30_000,
@@ -320,7 +311,6 @@ function PatientDashboard(): React.JSX.Element {
         {statCards.map((card, i) => {
           const inner = (
             <>
-              <div className="accent-bar" style={{ background: `linear-gradient(90deg, ${card.accent}, ${card.accent}66)` }} />
               <div style={{ fontSize: 18, marginBottom: 10 }}>{card.icon}</div>
               <div className="number">{card.value}</div>
               <div className="label">{'customLabel' in card && card.customLabel ? card.customLabel : t(card.labelKey)}</div>
@@ -329,7 +319,7 @@ function PatientDashboard(): React.JSX.Element {
               </div>
             </>
           );
-          return card.href ? (
+          return ('href' in card && card.href) ? (
             <Link key={i} href={card.href} className="stat-card" style={{ textDecoration: 'none', cursor: 'pointer' }}>
               {inner}
             </Link>

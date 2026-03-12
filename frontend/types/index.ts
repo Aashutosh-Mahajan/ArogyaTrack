@@ -813,6 +813,8 @@ export interface DashboardKPIs {
   total_medical_records: number;
   active_prescriptions: number;
   total_downloads: number;
+  recent_bp: { value: number | null; secondary_value: number | null; unit: string; recorded_at: string | null };
+  recent_sugar: { value: number | null; secondary_value: number | null; unit: string; recorded_at: string | null };
   monthly_trends: {
     medical_records: KPITrend;
     prescriptions: KPITrend;
