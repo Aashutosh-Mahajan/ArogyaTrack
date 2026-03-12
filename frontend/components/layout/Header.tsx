@@ -43,7 +43,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         style={{
           background: '#F5F8F7', border: '1px solid #E2E8E7', borderRadius: 8,
           padding: '7px 12px', fontSize: 12, color: '#2F3A3A',
-          cursor: 'pointer', fontWeight: 500,
+          cursor: 'pointer', fontWeight: 700,
         }}
       >
         <option value="en">EN</option>
@@ -83,7 +83,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           {initials}
         </div>
         <div>
-          <div style={{ fontWeight: 600, fontSize: 12.5, color: '#0d3b2e', lineHeight: 1.2 }}>
+          <div style={{ fontWeight: 800, fontSize: 14.5, color: '#0d3b2e', lineHeight: 1.2 }}>
             {fullName}
           </div>
           <div style={{ fontSize: 10, color: '#ffffff', fontWeight: 500, lineHeight: 1.2 }}>

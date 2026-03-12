@@ -57,27 +57,10 @@ export default function Home() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.role === 'doctor') router.push('/doctor');
-      else if (user.role === 'admin' || user.role === 'authority') router.push('/admin');
-      else if (user.role === 'pharmacist') router.push('/pharmacy');
-      else router.push('/dashboard');
-    }
-  }, [isAuthenticated, user, router]);
-
-  useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
-
-  if (isAuthenticated) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-[#185E59]">
-        <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   /* ─── animation variants ─── */
   const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.12, duration: 0.6, ease: [.22, 1, .36, 1] } }) };

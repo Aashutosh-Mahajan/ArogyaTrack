@@ -424,11 +424,11 @@ function PatientDashboard(): React.JSX.Element {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M3 12h3l3-9 4 18 3-9h5" stroke="#1F6F6A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: '#2F3A3A', fontSize: 15 }}>
+              <span style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: '#2F3A3A', fontSize: 18 }}>
                 {t('recent_records_title')}
               </span>
             </div>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 11, marginTop: 3 }}>
+            <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 13, marginTop: 3, marginLeft: 24 }}>
               {t('empty_records_desc')}
             </div>
           </div>
@@ -459,7 +459,7 @@ function PatientDashboard(): React.JSX.Element {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="record-title">{record.diagnosis_summary}</div>
                   <div className="record-meta">
-                    <span>Dr. {record.doctor_name}</span>
+                    <span>{record.doctor_name?.startsWith('Dr') ? record.doctor_name : `Dr. ${record.doctor_name}`}</span>
                     <span style={{ color: '#D9E5E3' }}>•</span>
                     <span>{new Date(record.visit_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                   </div>
@@ -518,7 +518,7 @@ function PatientDashboard(): React.JSX.Element {
                     {selectedRecord.diagnosis_summary}
                   </h2>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, fontSize: 13, color: '#6B7C7C' }}>
-                    <span>Dr. {selectedRecord.doctor_name}</span>
+                    <span>{selectedRecord.doctor_name?.startsWith('Dr') ? selectedRecord.doctor_name : `Dr. ${selectedRecord.doctor_name}`}</span>
                     <span>•</span>
                     <span>{selectedRecord.department}</span>
                     <span>•</span>

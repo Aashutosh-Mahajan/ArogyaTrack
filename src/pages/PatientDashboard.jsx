@@ -393,9 +393,9 @@ const PatientDashboard = () => {
               <div>
                 <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F6F6A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h3l3-9 4 18 3-9h5" /></svg>
-                  <span style={{ fontWeight:700, color:'#2F3A3A', fontSize:15 }}>Recent Medical Records</span>
+                  <span style={{ fontWeight:700, color:'#2F3A3A', fontSize:18 }}>Recent Medical Records</span>
                 </div>
-                <div style={{ color:'#6B7C7C', fontSize:11, marginTop:3 }}>Latest medical history and checkups</div>
+                <div style={{ color:'#6B7C7C', fontSize:13, marginTop:3, marginLeft:24 }}>Latest medical history and checkups</div>
               </div>
               <button className="dash-view-all">View All →</button>
             </div>
