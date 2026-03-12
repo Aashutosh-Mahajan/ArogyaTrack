@@ -307,11 +307,30 @@ export const api = {
       apiClient.get('/doctors/my-allergies/'),
     getChronicConditions: (): Promise<ChronicCondition[]> =>
       apiClient.get('/doctors/my-conditions/'),
+    addAllergy: (profileId: string, data: { allergen: string; reaction_type: string; severity: number }) =>
+      apiClient.post(`/doctors/patients/${profileId}/allergies/`, data),
+    addCondition: (profileId: string, data: { icd_10_code: string; disease_name: string }) =>
+      apiClient.post(`/doctors/patients/${profileId}/conditions/`, data),
+    getPatientHistory: (profileId: string) =>
+      apiClient.get(`/doctors/patient-history/${profileId}/`),
     scanQR: (token: string) => apiClient.post('/doctors/scan-health-card/', { token }),
     scanPatientQR: (signedToken: string) => apiClient.get(`/patients/qr/${signedToken}/`),
     createRecord: (data: any) => apiClient.post('/doctors/medical-records/', data),
     addDiagnosis: (recordId: number, data: any) =>
       apiClient.post(`/doctors/patients/${recordId}/conditions/`, data),
+    // Doctor-side: get/add/delete patient allergies & conditions
+    getPatientAllergies: (patientId: string): Promise<Allergy[]> =>
+      apiClient.get(`/doctors/patients/${patientId}/allergies/`),
+    addPatientAllergy: (patientId: string, data: { allergen: string; reaction_type: string; severity: number }) =>
+      apiClient.post(`/doctors/patients/${patientId}/allergies/`, data),
+    deletePatientAllergy: (patientId: string, allergyId: string) =>
+      apiClient.delete(`/doctors/patients/${patientId}/allergies/${allergyId}/`),
+    getPatientConditions: (patientId: string): Promise<ChronicCondition[]> =>
+      apiClient.get(`/doctors/patients/${patientId}/conditions/`),
+    addPatientCondition: (patientId: string, data: { icd_10_code: string; disease_name: string; diagnosed_date?: string; is_active?: boolean }) =>
+      apiClient.post(`/doctors/patients/${patientId}/conditions/`, data),
+    deletePatientCondition: (patientId: string, conditionId: string) =>
+      apiClient.delete(`/doctors/patients/${patientId}/conditions/${conditionId}/`),
     // Download report with authentication
     downloadReport: async (attachmentId: number, disposition: string = 'attachment'): Promise<Blob> => {
       const response = await apiClient.client.get(

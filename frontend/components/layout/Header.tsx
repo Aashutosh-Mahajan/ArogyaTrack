@@ -2,9 +2,17 @@
 
 import React from 'react';
 import { useLanguage } from '@/components/providers/LanguageProvider';
+import { useAuthStore } from '@/store/authStore';
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { language, setLanguage } = useLanguage();
+  const { user } = useAuthStore();
+
+  const firstName = user?.first_name || '';
+  const lastName = user?.last_name || '';
+  const fullName = [firstName, lastName].filter(Boolean).join(' ') || 'User';
+  const initials = [firstName, lastName].filter(Boolean).map(n => n[0]?.toUpperCase()).join('') || 'U';
+  const role = user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User';
 
   return (
     <header style={{
@@ -97,14 +105,14 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           letterSpacing: '0.02em',
         }}>
-          AP
+          {initials}
         </div>
         <div>
           <div style={{ fontWeight: 600, fontSize: 12.5, color: '#2F3A3A', lineHeight: 1.2 }}>
-            Aditya Patra
+            {fullName}
           </div>
           <div style={{ fontSize: 10, color: '#94A3A3', fontWeight: 500, lineHeight: 1.2 }}>
-            Patient
+            {role}
           </div>
         </div>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94A3A3" strokeWidth="2.5">

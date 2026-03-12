@@ -302,11 +302,42 @@ class DashboardKPIView(APIView):
             downloaded_at__lt=thirty_days_ago,
         ).count()
 
+        # ── Recent BP & Sugar ───────────────────────────────────
+        latest_bp = (
+            HealthMetric.objects.filter(
+                patient=user, metric_type=HealthMetric.MetricType.BLOOD_PRESSURE
+            )
+            .order_by("-recorded_at")
+            .first()
+        )
+        latest_sugar = (
+            HealthMetric.objects.filter(
+                patient=user, metric_type=HealthMetric.MetricType.SUGAR
+            )
+            .order_by("-recorded_at")
+            .first()
+        )
+
+        recent_bp = {
+            "value": latest_bp.value if latest_bp else None,
+            "secondary_value": latest_bp.secondary_value if latest_bp else None,
+            "unit": "mmHg",
+            "recorded_at": latest_bp.recorded_at if latest_bp else None,
+        }
+        recent_sugar = {
+            "value": latest_sugar.value if latest_sugar else None,
+            "secondary_value": None,
+            "unit": "mg/dL",
+            "recorded_at": latest_sugar.recorded_at if latest_sugar else None,
+        }
+
         # ── Build response ───────────────────────────────────────
         data = {
             "total_medical_records": total_medical_records,
             "active_prescriptions": active_prescriptions,
             "total_downloads": total_downloads,
+            "recent_bp": recent_bp,
+            "recent_sugar": recent_sugar,
             "monthly_trends": {
                 "medical_records": _make_trend(records_current, records_previous),
                 "prescriptions": _make_trend(prescriptions_current, prescriptions_previous),
@@ -524,7 +555,7 @@ class HealthTrendsView(APIView):
         from collections import defaultdict
 
         user = request.user
-        months = min(int(request.query_params.get("months", 6)), 12)
+        months = min(int(request.query_params.get("months", 6)), 24)
         cutoff = timezone.now() - timedelta(days=months * 30)
 
         metrics_qs = (

@@ -5,6 +5,9 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+import jwt
+from django.db.models import Prefetch
+
 from .models import HealthCard, HealthCardService, Profile, PatientProfile
 from .serializers import (
     HealthCardSerializer,
@@ -13,6 +16,15 @@ from .serializers import (
     RevokeHealthCardSerializer,
     SwitchProfileSerializer,
 )
+from medical.models import Allergy, ChronicCondition, MedicalRecord, PatientVisitRecord, HealthMetric
+from medical.serializers import (
+    MedicalHistorySerializer,
+    PatientVisitRecordSerializer,
+    AllergySerializer,
+    ChronicConditionSerializer,
+)
+from prescriptions.models import Prescription
+from prescriptions.serializers import PrescriptionSerializer
 
 
 class ActiveProfileView(APIView):
@@ -428,22 +440,33 @@ class ScanPatientQRView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        profile = None
         try:
+            optimized_qs = (
+                Profile.objects
+                .select_related("user", "health_card")
+                .prefetch_related(
+                    "medical_records__diagnoses",
+                    Prefetch("allergies", queryset=Allergy.objects.select_related("added_by")),
+                    Prefetch("chronic_conditions", queryset=ChronicCondition.objects.select_related("added_by")),
+                )
+            )
+
             if patient_id_input:
                 # Lookup by the generated HS-YYYY-XXXXXX format
-                profile = Profile.objects.select_related("user", "health_card").get(patient_id=patient_id_input)
+                profile = optimized_qs.get(patient_id=patient_id_input)
             else:
                 # Decode the JWT token
                 try:
-                    payload = pyjwt.decode(
-                        token, settings.SIMPLE_JWT.get("SIGNING_KEY"), algorithms=[settings.SIMPLE_JWT.get("ALGORITHM", "HS256")]
+                    payload = jwt.decode(
+                        token,
+                        settings.SIMPLE_JWT.get("SIGNING_KEY"),
+                        algorithms=[settings.SIMPLE_JWT.get("ALGORITHM", "HS256")],
                     )
                     patient_id = payload.get("patient_id")
                     if not patient_id:
-                        raise pyjwt.InvalidTokenError("No patient_id in token")
-                    profile = Profile.objects.select_related("user", "health_card").get(id=patient_id)
-                except (pyjwt.InvalidTokenError, Profile.DoesNotExist):
+                        raise jwt.InvalidTokenError("No patient_id in token")
+                    profile = optimized_qs.get(id=patient_id)
+                except (jwt.InvalidTokenError, Profile.DoesNotExist):
                     # Fallback: look up health card by matching the raw token string
                     try:
                         card_match = HealthCard.objects.select_related("profile__user", "profile__health_card").get(token=token)
@@ -460,67 +483,58 @@ class ScanPatientQRView(APIView):
                         )
 
             card = profile.health_card
-
-            # Check if card is still active
             if card and not card.is_active():
                 return Response(
                     {"detail": "This health card has expired or been revoked."},
                     status=status.HTTP_410_GONE,
                 )
 
-            # Build patient information response
             unique_patient_id = profile.patient_id or "N/A"
+            profile_photo_url = (
+                request.build_absolute_uri(profile.profile_photo.url)
+                if profile.profile_photo
+                else None
+            )
 
-            profile_photo_url = None
-            if profile.profile_photo:
-                profile_photo_url = request.build_absolute_uri(profile.profile_photo.url)
+            user = profile.user
 
-            # Get medical history
-            from medical.models import MedicalRecord, PatientVisitRecord
-            from medical.serializers import MedicalHistorySerializer, PatientVisitRecordSerializer
-            from prescriptions.models import Prescription
-            
-            # Get medical records (old model)
-            medical_records = profile.medical_records.prefetch_related('diagnoses').order_by('-created_at')[:10]
-            
-            # Get visit records (new model for consultation history)
-            visit_records = PatientVisitRecord.objects.filter(
-                patient=profile.user
-            ).order_by('-visit_date')[:10]
-            
-            # Get allergies
-            allergies = profile.allergies.all()
-            
-            # Get chronic conditions
-            chronic_conditions = profile.chronic_conditions.filter(is_active=True)
-            
-            # Get prescriptions
-            prescriptions = Prescription.objects.filter(patient=profile).order_by('-created_at')[:10]
-            
-            # Serialize medical data
-            from medical.serializers import AllergySerializer, ChronicConditionSerializer
-            from prescriptions.serializers import PrescriptionSerializer
-            
-            medical_records_data = MedicalHistorySerializer(medical_records, many=True).data
-            visit_records_data = PatientVisitRecordSerializer(visit_records, many=True, context={'request': request}).data
-            allergies_data = AllergySerializer(allergies, many=True).data
-            chronic_conditions_data = ChronicConditionSerializer(chronic_conditions, many=True).data
-            prescriptions_data = PrescriptionSerializer(prescriptions, many=True).data
+            # Batch remaining queries (visit records, prescriptions, vitals)
+            # These can't be prefetched on Profile but we minimize round-trips
+            medical_records = list(
+                profile.medical_records.order_by('-created_at')[:10]
+            )  # already prefetched with diagnoses
 
-            # Get latest vitals
-            from medical.models import HealthMetric
-            
-            latest_vitals = {
-                "blood_pressure": None,
-                "blood_sugar": None,
+            visit_records = list(
+                PatientVisitRecord.objects
+                .filter(patient=user)
+                .order_by('-visit_date')[:10]
+            )
+
+            allergies = list(profile.allergies.all())  # already prefetched
+            chronic_conditions = list(
+                profile.chronic_conditions.filter(is_active=True)
+            )  # already prefetched (filtered in Python is fine for small sets)
+
+            prescriptions = list(
+                Prescription.objects
+                .filter(patient=profile)
+                .order_by('-created_at')[:10]
+            )
+
+            # Single query for both latest vitals (PostgreSQL DISTINCT ON)
+            latest_metrics = {
+                m.metric_type: m
+                for m in HealthMetric.objects
+                .filter(patient=user, metric_type__in=['blood_pressure', 'sugar'])
+                .order_by('metric_type', '-recorded_at')
+                .distinct('metric_type')
             }
+            bp_metric = latest_metrics.get('blood_pressure')
+            sugar_metric = latest_metrics.get('sugar')
 
-            # Latest BP
-            bp_metric = HealthMetric.objects.filter(
-                patient=profile.user, 
-                metric_type='blood_pressure'
-            ).order_by('-recorded_at').first()
-            
+            # Build vitals dict
+            latest_vitals = {"blood_pressure": None, "blood_sugar": None}
+
             if bp_metric:
                 systolic = bp_metric.value
                 diastolic = bp_metric.secondary_value
@@ -529,7 +543,6 @@ class ScanPatientQRView(APIView):
                     bp_status = "high"
                 elif systolic < 90 or (diastolic and diastolic < 60):
                     bp_status = "low"
-                    
                 latest_vitals["blood_pressure"] = {
                     "value": f"{int(systolic)}/{int(diastolic) if diastolic else '?'}",
                     "systolic": systolic,
@@ -539,27 +552,28 @@ class ScanPatientQRView(APIView):
                     "recorded_at": bp_metric.recorded_at.isoformat(),
                 }
 
-            # Latest Sugar
-            sugar_metric = HealthMetric.objects.filter(
-                patient=profile.user,
-                metric_type='sugar'
-            ).order_by('-recorded_at').first()
-
             if sugar_metric:
                 val = sugar_metric.value
                 sugar_status = "normal"
-                # Simple logic for now (assuming random/post-prandial > 200 is high)
-                if val >= 200: 
+                if val >= 200:
                     sugar_status = "high"
                 elif val < 70:
                     sugar_status = "low"
-
                 latest_vitals["blood_sugar"] = {
                     "value": val,
                     "unit": sugar_metric.unit,
                     "status": sugar_status,
                     "recorded_at": sugar_metric.recorded_at.isoformat(),
                 }
+
+            # Serialize once
+            medical_records_data = MedicalHistorySerializer(medical_records, many=True).data
+            visit_records_data = PatientVisitRecordSerializer(
+                visit_records, many=True, context={'request': request}
+            ).data
+            allergies_data = AllergySerializer(allergies, many=True).data
+            chronic_conditions_data = ChronicConditionSerializer(chronic_conditions, many=True).data
+            prescriptions_data = PrescriptionSerializer(prescriptions, many=True).data
 
             return Response({
                 "success": True,

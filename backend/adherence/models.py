@@ -28,7 +28,7 @@ class AdherenceTracker(models.Model):
         """Calculate adherence percentage"""
         if self.expected_doses == 0:
             return 0.0
-        return (self.actual_doses / self.expected_doses) * 100
+        return round((self.actual_doses / self.expected_doses) * 100, 1)
 
     def __str__(self):
         return f"Tracker for Prescription {self.prescription_id} - {self.adherence_percentage:.1f}%"

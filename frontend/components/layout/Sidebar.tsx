@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLanguage } from '@/components/providers/LanguageProvider';
+import { useAuthStore } from '@/store/authStore';
 import { api } from '@/lib/api';
 import type { TranslationKey } from '@/lib/translations';
 
@@ -147,7 +148,6 @@ const patientNav: NavItem[] = [
   { icon: 'card', label: 'sidebar_patient_card', isTranslationKey: true, href: '/dashboard/patient-card' },
   { icon: 'profile', label: 'sidebar_profile', isTranslationKey: true, href: '/dashboard/profile' },
   { icon: 'records', label: 'sidebar_medical_records', isTranslationKey: true, href: '/dashboard/medical-records' },
-  { icon: 'conditions', label: 'sidebar_conditions', isTranslationKey: true, href: '/dashboard/conditions' },
   { icon: 'medicines', label: 'sidebar_medicines', isTranslationKey: true, href: '/dashboard/medicines' },
   { icon: 'adherence', label: 'sidebar_adherence', isTranslationKey: true, href: '/dashboard/adherence' },
   { icon: 'alerts', label: 'sidebar_alerts', isTranslationKey: true, href: '/dashboard/alerts', badge: 3 },
@@ -192,8 +192,16 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useLanguage();
+  const { user } = useAuthStore();
 
   const { nav, roleLabel } = getRoleInfo(pathname || '');
+
+  const userName = user?.first_name
+    ? `${user.first_name}${user.last_name ? ' ' + user.last_name : ''}`
+    : 'User';
+  const userInitials = user?.first_name
+    ? `${user.first_name[0]}${user.last_name ? user.last_name[0] : ''}`.toUpperCase()
+    : 'U';
 
   const isActive = (href: string) => {
     if (href === '/dashboard' || href === '/admin' || href === '/pharmacy') {
@@ -284,14 +292,14 @@ export function Sidebar() {
             boxShadow: '0 4px 12px rgba(31,111,106,0.3)',
             border: '2px solid rgba(74,222,128,0.15)', flexShrink: 0,
           }}>
-            AP
+            {userInitials}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
               color: '#fff', fontWeight: 600, fontSize: 14, lineHeight: 1.2,
               whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
             }}>
-              Aditya Patra
+              {userName}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 5 }}>
               <span style={{

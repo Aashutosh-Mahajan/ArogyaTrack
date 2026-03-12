@@ -38,7 +38,7 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
 
         const startScanner = async () => {
             // Dynamic import to avoid SSR issues
-            const { Html5Qrcode } = await import('html5-qrcode');
+            const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode');
 
             // Make sure the container div exists and is empty
             const container = document.getElementById(scannerId);
@@ -48,14 +48,18 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
             container.innerHTML = '';
 
             try {
-                const scanner = new Html5Qrcode(scannerId, /* verbose */ false);
+                const scanner = new Html5Qrcode(scannerId, {
+                    formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+                    verbose: false,
+                });
                 scannerRef.current = scanner;
 
                 await scanner.start(
                     { facingMode: 'environment' },
                     {
-                        fps: 10,
-                        qrbox: { width: 250, height: 250 },
+                        fps: 30,
+                        qrbox: { width: 200, height: 200 },
+                        disableFlip: false,
                     },
                     (decodedText: string) => {
                         if (scannedRef.current) return;
@@ -79,8 +83,8 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
             }
         };
 
-        // Small delay to ensure DOM is ready
-        const timer = setTimeout(startScanner, 100);
+        // Minimal delay – just wait for next frame so DOM is ready
+        const timer = setTimeout(startScanner, 10);
 
         return () => {
             mountedRef.current = false;
