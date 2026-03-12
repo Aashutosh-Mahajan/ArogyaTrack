@@ -307,6 +307,12 @@ export const api = {
       apiClient.get('/doctors/my-allergies/'),
     getChronicConditions: (): Promise<ChronicCondition[]> =>
       apiClient.get('/doctors/my-conditions/'),
+    addAllergy: (profileId: string, data: { allergen: string; reaction_type: string; severity: number }) =>
+      apiClient.post(`/doctors/patients/${profileId}/allergies/`, data),
+    addCondition: (profileId: string, data: { icd_10_code: string; disease_name: string }) =>
+      apiClient.post(`/doctors/patients/${profileId}/conditions/`, data),
+    getPatientHistory: (profileId: string) =>
+      apiClient.get(`/doctors/patient-history/${profileId}/`),
     scanQR: (token: string) => apiClient.post('/doctors/scan-health-card/', { token }),
     scanPatientQR: (signedToken: string) => apiClient.get(`/patients/qr/${signedToken}/`),
     createRecord: (data: any) => apiClient.post('/doctors/medical-records/', data),

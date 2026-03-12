@@ -57,9 +57,30 @@ class PharmacyScanPatientView(APIView):
         try:
             profile = None
             if patient_id_input:
-                profile = Profile.objects.select_related("user", "health_card").get(
-                    patient_id=patient_id_input
+                patient_id_input = patient_id_input.strip()
+
+                # 1) Exact match on patient_id (case-insensitive)
+                profile = (
+                    Profile.objects.select_related("user", "health_card")
+                    .filter(patient_id__iexact=patient_id_input)
+                    .first()
                 )
+
+                # 2) Fallback: try as UUID (profile.id)
+                if profile is None:
+                    try:
+                        import uuid as _uuid
+                        val = _uuid.UUID(patient_id_input)
+                        profile = (
+                            Profile.objects.select_related("user", "health_card")
+                            .filter(id=val)
+                            .first()
+                        )
+                    except (ValueError, AttributeError):
+                        pass
+
+                if profile is None:
+                    raise Profile.DoesNotExist
             else:
                 payload = jwt.decode(
                     token,

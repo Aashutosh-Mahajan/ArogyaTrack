@@ -101,7 +101,7 @@ class AllergyCreateView(APIView):
         profile = get_object_or_404(Profile, id=profile_id)
         serializer = AllergySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        allergy = serializer.save(profile=profile)
+        allergy = serializer.save(profile=profile, added_by=request.user)
         return Response(AllergySerializer(allergy).data, status=status.HTTP_201_CREATED)
 
 
@@ -127,7 +127,7 @@ class ChronicConditionCreateView(APIView):
         profile = get_object_or_404(Profile, id=profile_id)
         serializer = ChronicConditionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        condition = serializer.save(profile=profile)
+        condition = serializer.save(profile=profile, added_by=request.user)
         return Response(ChronicConditionSerializer(condition).data, status=status.HTTP_201_CREATED)
 
 
@@ -152,8 +152,8 @@ class PatientHistoryView(APIView):
             return Response({"detail": "You do not have access to this patient's records"}, status=status.HTTP_403_FORBIDDEN)
 
         records = profile.medical_records.prefetch_related("diagnoses").order_by("-created_at")
-        allergies = profile.allergies.all()
-        chronic_conditions = profile.chronic_conditions.filter(is_active=True)
+        allergies = profile.allergies.select_related("added_by").all()
+        chronic_conditions = profile.chronic_conditions.select_related("added_by").filter(is_active=True)
 
         return Response(
             {
@@ -190,7 +190,7 @@ class PatientOwnAllergiesView(APIView):
 
     def get(self, request):
         profiles = request.user.profiles.all()
-        allergies = Allergy.objects.filter(profile__in=profiles).order_by("-created_at")
+        allergies = Allergy.objects.filter(profile__in=profiles).select_related("added_by").order_by("-created_at")
         return Response(AllergySerializer(allergies, many=True).data)
 
 
@@ -201,7 +201,7 @@ class PatientOwnConditionsView(APIView):
 
     def get(self, request):
         profiles = request.user.profiles.all()
-        conditions = ChronicCondition.objects.filter(profile__in=profiles, is_active=True).order_by("-created_at")
+        conditions = ChronicCondition.objects.filter(profile__in=profiles, is_active=True).select_related("added_by").order_by("-created_at")
         return Response(ChronicConditionSerializer(conditions, many=True).data)
 
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { withAuth } from '@/components/auth/withAuth';
 import { api } from '@/lib/api';
@@ -8,13 +8,61 @@ import { useAuthStore } from '@/store/authStore';
 import { useLanguage } from '@/components/providers/LanguageProvider';
 import type { TranslationKey } from '@/lib/translations';
 import {
-  AreaChart, Area, LineChart, Line, XAxis, YAxis,
+  ComposedChart, AreaChart, Area, LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import type {
-  RecentRecord, RecentRecordAttachment, DashboardSummary,
-  DashboardKPIs, HealthTrendsResponse, ChronicCondition,
-} from '@/types';
+import type { RecentRecord, RecentRecordAttachment, HealthTrendsResponse, DashboardSummary, ChronicCondition } from '@/types';
+import Link from 'next/link';
+
+/* ─── helpers ─── */
+function fmtDate(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
+
+interface KPIData {
+  total_medical_records: number;
+  active_prescriptions: number;
+  total_downloads: number;
+  recent_bp: { value: number | null; secondary_value: number | null; unit: string; recorded_at: string | null };
+  recent_sugar: { value: number | null; secondary_value: number | null; unit: string; recorded_at: string | null };
+  monthly_trends: Record<string, { current: number; previous: number; change: number; direction: string }>;
+}
+
+function buildStatCards(kpi?: KPIData) {
+  const bpTrend = kpi?.monthly_trends?.medical_records;
+  const rxTrend = kpi?.monthly_trends?.prescriptions;
+  const dlTrend = kpi?.monthly_trends?.downloads;
+
+  const fmtTrend = (t?: { change: number; direction: string }) => {
+    if (!t || t.change === 0) return { trend: '—', dir: 'neutral' };
+    const sign = t.direction === 'up' ? '+' : '-';
+    return { trend: `${sign}${Math.abs(t.change)}`, dir: t.direction };
+  };
+
+  const bpVal = kpi?.recent_bp?.value != null
+    ? `${Math.round(kpi.recent_bp.value)}/${Math.round(kpi.recent_bp.secondary_value ?? 0)}`
+    : '—/—';
+  const sugarVal = kpi?.recent_sugar?.value != null
+    ? `${Math.round(kpi.recent_sugar.value)}`
+    : '—';
+
+  const bpDate = kpi?.recent_bp?.recorded_at
+    ? new Date(kpi.recent_bp.recorded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+    : '';
+  const sugarDate = kpi?.recent_sugar?.recorded_at
+    ? new Date(kpi.recent_sugar.recorded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+    : '';
+
+  return [
+    { icon: '📁', labelKey: 'kpi_medical_records' as TranslationKey, value: kpi?.total_medical_records ?? 0, ...fmtTrend(bpTrend), accent: '#1F6F6A' },
+    { icon: '💊', labelKey: 'kpi_active_prescriptions' as TranslationKey, value: kpi?.active_prescriptions ?? 0, ...fmtTrend(rxTrend), accent: '#7c3aed', href: '/dashboard/prescriptions' },
+    { icon: '🩸', labelKey: 'kpi_medical_records' as TranslationKey, value: bpVal, trend: bpDate, dir: 'neutral' as string, accent: '#ef4444', customLabel: 'Recent BP (mmHg)' },
+    { icon: '🍬', labelKey: 'kpi_medical_records' as TranslationKey, value: <>{sugarVal} <sub style={{ fontSize: '0.55em', color: '#9CA3AF' }}>mg/dL</sub></>, trend: sugarDate, dir: 'neutral' as string, accent: '#f59e0b', customLabel: 'Blood Sugar' },
+    { icon: '🧪', labelKey: 'kpi_pending_labs' as TranslationKey, value: kpi?.total_medical_records ?? 0, ...fmtTrend(bpTrend), accent: '#d97706', href: '/dashboard/lab-reports' },
+    { icon: '⬇️', labelKey: 'kpi_downloads' as TranslationKey, value: kpi?.total_downloads ?? 0, ...fmtTrend(dlTrend), accent: '#185E59', href: '/dashboard/downloads' },
+  ];
+}
 
 /* ─── Animated counter hook ─── */
 function useCounter(target: number, duration = 1400) {
@@ -22,7 +70,6 @@ function useCounter(target: number, duration = 1400) {
   useEffect(() => {
     let start = 0;
     const step = Math.ceil(target / (duration / 16));
-    if (target <= 0) { setCount(target); return; }
     const timer = setInterval(() => {
       start += step;
       if (start >= target) { setCount(target); clearInterval(timer); }
@@ -37,7 +84,7 @@ function useCounter(target: number, duration = 1400) {
 function HealthScoreRing({ score: targetScore }: { score: number }) {
   const score = useCounter(targetScore, 1400);
   const r = 46;
-  const circ = 2 * Math.PI * r;
+  const circ = 2 * Math.PI * r; // ≈289.03
   const offset = circ - (score / 100) * circ;
 
   return (
@@ -74,33 +121,6 @@ function HealthScoreRing({ score: targetScore }: { score: number }) {
   );
 }
 
-/* ─── Adherence Donut ─── */
-function AdherenceDonut({ percentage }: { percentage: number }) {
-  const r = 31;
-  const circ = 2 * Math.PI * r;
-  const offset = circ * ((100 - percentage) / 100);
-
-  return (
-    <div style={{ position: 'relative', width: 82, height: 82 }}>
-      <svg width={82} height={82} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={41} cy={41} r={r} fill="none" stroke="#D9E5E3" strokeWidth={8} />
-        <circle
-          cx={41} cy={41} r={r} fill="none"
-          stroke="#1F6F6A" strokeWidth={8}
-          strokeDasharray={circ} strokeDashoffset={offset}
-          strokeLinecap="round"
-        />
-      </svg>
-      <div style={{
-        position: 'absolute', inset: 0,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 15, color: '#2F3A3A' }}>{percentage}%</span>
-      </div>
-    </div>
-  );
-}
-
 /* ─── Detail Section Helper ─── */
 function DetailSection({ icon, title, children }: { icon: string; title: string; children: React.ReactNode }) {
   return (
@@ -114,24 +134,29 @@ function DetailSection({ icon, title, children }: { icon: string; title: string;
   );
 }
 
-/* ─── Risk level color helper ─── */
-function getRiskColor(level: string) {
-  switch (level) {
-    case 'Low': return '#4ade80';
-    case 'Medium': return '#f59e0b';
-    case 'High': return '#ef4444';
-    default: return '#4ade80';
-  }
-}
-
 /* ─── MAIN DASHBOARD ─── */
 function PatientDashboard(): React.JSX.Element {
   const { t } = useLanguage();
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'bp' | 'sugar'>('bp');
   const [selectedRecord, setSelectedRecord] = useState<RecentRecord | null>(null);
+  const [downloadingAttId, setDownloadingAttId] = useState<number | null>(null);
 
   const firstName = user?.first_name || 'User';
+
+  const handleViewReport = async (attId: number, fileName: string) => {
+    setDownloadingAttId(attId);
+    try {
+      const blob = await api.medical.downloadReport(attId, 'inline');
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+    } catch {
+      // silent fail
+    } finally {
+      setDownloadingAttId(null);
+    }
+  };
 
   // Fetch dashboard summary (patient name, risk, adherence, health score)
   const { data: summary } = useQuery<DashboardSummary>({
@@ -140,24 +165,23 @@ function PatientDashboard(): React.JSX.Element {
     staleTime: 30_000,
   });
 
-  // Fetch KPIs
-  const { data: kpis } = useQuery<DashboardKPIs>({
+  const { data: kpiData } = useQuery<KPIData>({
     queryKey: ['dashboard-kpis'],
     queryFn: () => api.dashboard.getKPIs(),
     staleTime: 30_000,
   });
 
-  // Fetch health trends (vitals charts)
-  const { data: healthTrends } = useQuery<HealthTrendsResponse>({
+  const statCards = buildStatCards(kpiData);
+
+  const { data: trendsData } = useQuery<HealthTrendsResponse>({
     queryKey: ['dashboard-health-trends'],
-    queryFn: () => api.dashboard.getHealthTrends({ months: 1 }),
+    queryFn: () => api.dashboard.getHealthTrends({ months: 24 }),
     staleTime: 60_000,
   });
 
-  // Fetch recent records
   const { data: records } = useQuery<RecentRecord[]>({
     queryKey: ['dashboard-recent-records'],
-    queryFn: () => api.dashboard.getRecentRecords({ limit: 5 }),
+    queryFn: () => api.dashboard.getRecentRecords({ limit: 12 }),
     staleTime: 10_000,
   });
 
@@ -168,13 +192,6 @@ function PatientDashboard(): React.JSX.Element {
     staleTime: 60_000,
   });
 
-  // Fetch alerts count
-  const { data: alerts } = useQuery({
-    queryKey: ['dashboard-alerts'],
-    queryFn: () => api.dashboard.getAlerts(),
-    staleTime: 30_000,
-  });
-
   // Derive values from API data
   const healthScore = summary?.calculated_risk_score != null
     ? Math.max(0, Math.min(100, 100 - summary.calculated_risk_score))
@@ -182,63 +199,27 @@ function PatientDashboard(): React.JSX.Element {
   const riskLevel = summary?.calculated_risk_level || 'Low';
   const adherencePercentage = summary?.adherence_percentage ?? 0;
   const activeConditions = conditions?.filter(c => c.is_active) || [];
-  const unreadAlerts = Array.isArray(alerts) ? alerts.filter((a: any) => !a.is_read && !a.is_dismissed).length : 0;
 
-  // Build KPI stat cards from real data
-  const statCards = useMemo(() => {
-    const totalRecords = kpis?.total_medical_records ?? 0;
-    const activePrescriptions = kpis?.active_prescriptions ?? 0;
-    const totalDownloads = kpis?.total_downloads ?? 0;
-    const recordsTrend = kpis?.monthly_trends?.medical_records;
-    const prescriptionsTrend = kpis?.monthly_trends?.prescriptions;
-    const downloadsTrend = kpis?.monthly_trends?.downloads;
+  const riskColor = riskLevel === 'High' ? '#ef4444' : riskLevel === 'Medium' ? '#f59e0b' : '#4ade80';
 
-    const formatTrend = (trend?: { change: number; direction: string }) => {
-      if (!trend) return { trend: '—', dir: 'neutral' };
-      const sign = trend.change > 0 ? '+' : '';
-      return {
-        trend: trend.change === 0 ? '—' : `${sign}${trend.change}%`,
-        dir: trend.direction === 'up' ? 'up' : trend.direction === 'down' ? 'down' : 'neutral',
-      };
-    };
+  const bpSeries = trendsData?.trends.find(t => t.metric === 'blood_pressure');
+  const sugarSeries = trendsData?.trends.find(t => t.metric === 'sugar');
 
-    const rt = formatTrend(recordsTrend);
-    const pt = formatTrend(prescriptionsTrend);
-    const dt = formatTrend(downloadsTrend);
+  // Only show readings that fall on doctor visit dates (last 6 visits)
+  const visitDates = new Set(
+    (records ?? [])
+      .map(r => r.visit_date?.split('T')[0])
+      .filter(Boolean)
+      .sort()
+      .slice(-6)
+  );
 
-    return [
-      { icon: '📁', labelKey: 'kpi_medical_records' as TranslationKey, value: totalRecords, trend: rt.trend, dir: rt.dir, accent: '#1F6F6A' },
-      { icon: '💊', labelKey: 'kpi_active_prescriptions' as TranslationKey, value: activePrescriptions, trend: pt.trend, dir: pt.dir, accent: '#7c3aed' },
-      { icon: '🧪', labelKey: 'kpi_pending_labs' as TranslationKey, value: totalRecords, trend: rt.trend, dir: rt.dir, accent: '#d97706' },
-      { icon: '❤️', labelKey: 'kpi_adherence_rate' as TranslationKey, value: `${adherencePercentage}%`, trend: '—', dir: adherencePercentage >= 80 ? 'up' : 'down', accent: '#ef4444' },
-      { icon: '⚠️', labelKey: 'kpi_health_alerts' as TranslationKey, value: unreadAlerts, trend: '—', dir: unreadAlerts > 0 ? 'down' : 'neutral', accent: '#1F6F6A' },
-      { icon: '⬇️', labelKey: 'kpi_downloads' as TranslationKey, value: totalDownloads, trend: dt.trend, dir: dt.dir, accent: '#185E59' },
-    ];
-  }, [kpis, adherencePercentage, unreadAlerts]);
-
-  // Transform health trends to chart data
-  const bpData = useMemo(() => {
-    const bpSeries = healthTrends?.trends?.find(s => s.metric === 'blood_pressure');
-    if (!bpSeries?.data?.length) return [];
-    return bpSeries.data.slice(-7).map(point => {
-      const date = new Date(point.date);
-      const day = date.toLocaleDateString('en-US', { weekday: 'short' });
-      return { day, systolic: point.value, diastolic: point.secondary_value ?? 0 };
-    });
-  }, [healthTrends]);
-
-  const sugarData = useMemo(() => {
-    const sugarSeries = healthTrends?.trends?.find(s => s.metric === 'sugar');
-    if (!sugarSeries?.data?.length) return [];
-    return sugarSeries.data.slice(-7).map(point => {
-      const date = new Date(point.date);
-      const day = date.toLocaleDateString('en-US', { weekday: 'short' });
-      return { day, value: point.value };
-    });
-  }, [healthTrends]);
-
-  // Condition colors for display
-  const conditionColors = ['#f59e0b', '#ef4444', '#4ade80', '#7c3aed', '#0ea5e9'];
+  const bpData = (bpSeries?.data ?? [])
+    .filter(p => visitDates.has(p.date))
+    .map(p => ({ date: fmtDate(p.date), systolic: p.value, diastolic: p.secondary_value ?? 0 }));
+  const sugarData = (sugarSeries?.data ?? [])
+    .filter(p => visitDates.has(p.date))
+    .map(p => ({ date: fmtDate(p.date), value: p.value }));
 
   return (
     <>
@@ -313,8 +294,8 @@ function PatientDashboard(): React.JSX.Element {
             <div>
               <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 600 }}>RISK LEVEL</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: getRiskColor(riskLevel), boxShadow: `0 0 8px ${getRiskColor(riskLevel)}80` }} />
-                <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{t(riskLevel.toLowerCase() as TranslationKey) || riskLevel}</span>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: riskColor, boxShadow: `0 0 8px ${riskColor}80` }} />
+                <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{riskLevel}</span>
               </div>
             </div>
             {/* Adherence */}
@@ -336,43 +317,68 @@ function PatientDashboard(): React.JSX.Element {
 
       {/* ═══ SECTION 2 — STAT CARDS ═══ */}
       <div className="f2 stat-grid">
-        {statCards.map((card, i) => (
-          <div key={i} className="stat-card">
-            <div className="accent-bar" style={{ background: `linear-gradient(90deg, ${card.accent}, ${card.accent}66)` }} />
-            <div style={{ fontSize: 18, marginBottom: 10 }}>{card.icon}</div>
-            <div className="number">{card.value}</div>
-            <div className="label">{t(card.labelKey)}</div>
-            <div className={`trend trend-${card.dir}`}>
-              {card.trend} <span style={{ color: '#6B7C7C', fontWeight: 400 }}>vs last month</span>
+        {statCards.map((card, i) => {
+          const inner = (
+            <>
+              <div className="accent-bar" style={{ background: `linear-gradient(90deg, ${card.accent}, ${card.accent}66)` }} />
+              <div style={{ fontSize: 18, marginBottom: 10 }}>{card.icon}</div>
+              <div className="number">{card.value}</div>
+              <div className="label">{'customLabel' in card && card.customLabel ? card.customLabel : t(card.labelKey)}</div>
+              <div className={`trend trend-${card.dir}`}>
+                {card.trend} {card.dir !== 'neutral' && <span style={{ color: '#6B7C7C', fontWeight: 400 }}>vs last month</span>}
+              </div>
+            </>
+          );
+          return card.href ? (
+            <Link key={i} href={card.href} className="stat-card" style={{ textDecoration: 'none', cursor: 'pointer' }}>
+              {inner}
+            </Link>
+          ) : (
+            <div key={i} className="stat-card">
+              {inner}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* ═══ SECTION 3 — CHARTS ROW ═══ */}
-      <div className="f3" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16 }}>
+      {/* ═══ SECTION 3 — CHARTS ═══ */}
+      <div className="f3">
 
         {/* Vitals Trend */}
-        <div className="content-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div style={{
+          background: '#fff', borderRadius: 18, padding: '24px 28px',
+          boxShadow: '0 2px 10px rgba(47,58,58,0.06)',
+          maxWidth: 680, width: '100%',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <div>
-              <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: '#2F3A3A', fontSize: 14 }}>
+              <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: '#2F3A3A', fontSize: 15 }}>
                 Vitals Trend
               </div>
-              <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 11, marginTop: 1 }}>
-                Last 7 days
+              <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 11, marginTop: 2 }}>
+                Last 6 months
               </div>
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
               <button
-                className={`tab-btn ${activeTab === 'bp' ? 'active' : 'inactive'}`}
                 onClick={() => setActiveTab('bp')}
+                style={{
+                  padding: '6px 16px', borderRadius: 20, border: 'none', cursor: 'pointer',
+                  fontSize: 12, fontWeight: 600, transition: 'all 0.2s',
+                  background: activeTab === 'bp' ? '#1F6F6A' : '#F3F4F6',
+                  color: activeTab === 'bp' ? '#fff' : '#6B7C7C',
+                }}
               >
                 Blood Pressure
               </button>
               <button
-                className={`tab-btn ${activeTab === 'sugar' ? 'active' : 'inactive'}`}
                 onClick={() => setActiveTab('sugar')}
+                style={{
+                  padding: '6px 16px', borderRadius: 20, border: 'none', cursor: 'pointer',
+                  fontSize: 12, fontWeight: 600, transition: 'all 0.2s',
+                  background: activeTab === 'sugar' ? '#1F6F6A' : '#F3F4F6',
+                  color: activeTab === 'sugar' ? '#fff' : '#6B7C7C',
+                }}
               >
                 Blood Sugar
               </button>
@@ -380,144 +386,61 @@ function PatientDashboard(): React.JSX.Element {
           </div>
 
           {activeTab === 'bp' ? (
-            bpData.length > 0 ? (
-              <>
-                <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 11, color: '#6B7C7C' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <span style={{ width: 10, height: 3, background: '#1F6F6A', borderRadius: 2 }} /> Systolic
-                  </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <span style={{ width: 10, height: 3, background: '#4ade80', borderRadius: 2 }} /> Diastolic
-                  </span>
-                </div>
-                <ResponsiveContainer width="100%" height={165}>
-                  <AreaChart data={bpData}>
-                    <defs>
-                      <linearGradient id="bpGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#1F6F6A" stopOpacity={0.2} />
-                        <stop offset="95%" stopColor="#1F6F6A" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" />
-                    <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#6B7C7C' }} axisLine={false} tickLine={false} />
-                    <YAxis domain={[60, 150]} tick={{ fontSize: 10, fill: '#6B7C7C' }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ fontSize: 11, borderRadius: 10, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
-                    <Area type="monotone" dataKey="systolic" stroke="#1F6F6A" strokeWidth={2.5} fill="url(#bpGrad)" dot={{ fill: '#1F6F6A', r: 3 }} />
-                    <Line type="monotone" dataKey="diastolic" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 3 }} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </>
-            ) : (
-              <div style={{ height: 165, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7C7C', fontSize: 13 }}>
-                No blood pressure data recorded yet
+            <>
+              <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 11, color: '#6B7C7C' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ width: 10, height: 3, background: '#1F6F6A', borderRadius: 2 }} /> Systolic
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ width: 10, height: 3, background: '#4ade80', borderRadius: 2 }} /> Diastolic
+                </span>
               </div>
-            )
+              <ResponsiveContainer width="100%" height={200}>
+                <ComposedChart data={bpData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="bpGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#1F6F6A" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#1F6F6A" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} interval={0} />
+                  <YAxis domain={[60, 170]} tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={32} />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E8EDED', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
+                  <Area type="monotone" dataKey="systolic" stroke="#1F6F6A" strokeWidth={2} fill="url(#bpGrad)" dot={{ fill: '#1F6F6A', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
+                  <Line type="monotone" dataKey="diastolic" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </>
           ) : (
-            sugarData.length > 0 ? (
-              <>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{
-                    background: '#f0fdf4', color: '#1F6F6A',
-                    fontSize: 10, fontWeight: 700,
-                    padding: '3px 10px', borderRadius: 999,
-                  }}>
-                    Trend data
-                  </span>
-                  <span style={{ color: '#6B7C7C', fontSize: 11 }}>mg/dL</span>
-                </div>
-                <ResponsiveContainer width="100%" height={165}>
-                  <AreaChart data={sugarData}>
-                    <defs>
-                      <linearGradient id="sgGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#1F6F6A" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="#1F6F6A" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" />
-                    <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#6B7C7C' }} axisLine={false} tickLine={false} />
-                    <YAxis domain={['auto', 'auto']} tick={{ fontSize: 10, fill: '#6B7C7C' }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ fontSize: 11, borderRadius: 10, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
-                    <Area type="monotone" dataKey="value" stroke="#185E59" strokeWidth={2.5} fill="url(#sgGrad)" dot={{ fill: '#185E59', r: 3 }} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </>
-            ) : (
-              <div style={{ height: 165, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7C7C', fontSize: 13 }}>
-                No blood sugar data recorded yet
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                <span style={{
+                  background: 'rgba(31,111,106,0.08)', color: '#1F6F6A',
+                  fontSize: 10, fontWeight: 700,
+                  padding: '3px 10px', borderRadius: 999,
+                }}>
+                  ↓ Improving trend
+                </span>
+                <span style={{ color: '#9CA3AF', fontSize: 11 }}>mg/dL</span>
               </div>
-            )
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={sugarData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="sgGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#1F6F6A" stopOpacity={0.18} />
+                      <stop offset="95%" stopColor="#1F6F6A" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} interval={0} />
+                  <YAxis domain={['auto', 'auto']} tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={32} />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E8EDED', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
+                  <Area type="monotone" dataKey="value" stroke="#185E59" strokeWidth={2} fill="url(#sgGrad)" dot={{ fill: '#185E59', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </>
           )}
-        </div>
-
-        {/* Right column — Adherence + Conditions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {/* Adherence Ring Card */}
-          <div className="content-card" style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: '#2F3A3A', fontSize: 13, marginBottom: 1 }}>
-              Medication Adherence
-            </div>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 11, marginBottom: 14 }}>
-              This month
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-              <AdherenceDonut percentage={adherencePercentage} />
-              <div>
-                <div style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 11, color: '#6B7C7C', marginBottom: 10 }}>
-                  Medicines on time
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#1F6F6A' }} />
-                  <span style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 11.5, fontWeight: 600, color: '#2F3A3A' }}>
-                    Taken: {Math.round(adherencePercentage * 30 / 100)} days
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#D9E5E3' }} />
-                  <span style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 11.5, color: '#6B7C7C' }}>
-                    Missed: {30 - Math.round(adherencePercentage * 30 / 100)} days
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Active Conditions Card */}
-          <div style={{
-            background: 'linear-gradient(135deg, #0D2B29, #1F6F6A 200%)',
-            borderRadius: 18, padding: '18px 20px',
-            boxShadow: '0 2px 10px rgba(13,43,41,0.15)',
-            position: 'relative', overflow: 'hidden',
-          }}>
-            <div style={{
-              position: 'absolute', right: -24, top: -24,
-              width: 120, height: 120, borderRadius: '50%', pointerEvents: 'none',
-              background: 'radial-gradient(circle, rgba(74,222,128,0.15) 0%, transparent 70%)',
-            }} />
-            <div style={{
-              fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)',
-              letterSpacing: '0.12em', marginBottom: 12, fontFamily: 'DM Sans, sans-serif',
-            }}>
-              ACTIVE CONDITIONS
-            </div>
-            {activeConditions.length > 0 ? (
-              activeConditions.map((c, i) => (
-                <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: i < activeConditions.length - 1 ? 10 : 0 }}>
-                  <span style={{
-                    width: 6, height: 6, borderRadius: '50%',
-                    background: conditionColors[i % conditionColors.length],
-                    boxShadow: `0 0 6px ${conditionColors[i % conditionColors.length]}`,
-                  }} />
-                  <span style={{ color: '#fff', fontFamily: 'DM Sans, sans-serif', fontSize: 12.5, fontWeight: 500 }}>
-                    {c.disease_name || c.condition_name}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'DM Sans, sans-serif', fontSize: 12 }}>
-                No active conditions recorded
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
@@ -711,15 +634,15 @@ function PatientDashboard(): React.JSX.Element {
                   <DetailSection icon="📎" title="Attachments">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {selectedRecord.attachments.map((att: RecentRecordAttachment) => (
-                        <a
+                        <button
                           key={att.id}
-                          href={att.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          onClick={() => handleViewReport(att.id, att.file_name)}
+                          disabled={downloadingAttId === att.id}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
                             borderRadius: 10, border: '1px solid #E2E8E7', textDecoration: 'none',
-                            color: '#2F3A3A', transition: 'background 0.15s',
+                            color: '#2F3A3A', transition: 'background 0.15s', background: 'transparent',
+                            cursor: downloadingAttId === att.id ? 'wait' : 'pointer', width: '100%', textAlign: 'left',
                           }}
                           onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafb'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
@@ -735,10 +658,16 @@ function PatientDashboard(): React.JSX.Element {
                               {att.file_type} • {new Date(att.uploaded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </div>
                           </div>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /><path d="M12 15V3" />
-                          </svg>
-                        </a>
+                          {downloadingAttId === att.id ? (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F6F6A" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}>
+                              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                            </svg>
+                          ) : (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F6F6A" strokeWidth="2">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+                            </svg>
+                          )}
+                        </button>
                       ))}
                     </div>
                   </DetailSection>

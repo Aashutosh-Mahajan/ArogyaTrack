@@ -22,14 +22,15 @@ function ScanPage() {
         setCameraError('');
 
         try {
+            const trimmed = data.trim();
+
             // Determine type of input
-            const isJWT = data.split('.').length === 3; // JWT tokens have exactly 3 dot-separated parts
-            const isPrescriptionQR = data.includes('|');
-            const isPatientId = data.startsWith('HS-');
+            const isJWT = trimmed.split('.').length === 3; // JWT tokens have exactly 3 dot-separated parts
+            const isPrescriptionQR = trimmed.includes('|');
 
             if (isPrescriptionQR) {
                 // prescription_id|hash format
-                const response = await api.pharmacy.scanPrescription(data) as any;
+                const response = await api.pharmacy.scanPrescription(trimmed) as any;
                 const prescriptionId = response?.prescription?.id;
                 if (prescriptionId) {
                     toast.success('Prescription scanned successfully');
@@ -38,12 +39,13 @@ function ScanPage() {
                 }
             }
 
-            // For JWT tokens or patient IDs, use scanPatient
+            // For JWT tokens, use scanPatient with token
+            // For anything else (HS-IDs, UUIDs, etc.), use scanPatient with patient_id
             const payload: { token?: string; patient_id?: string } = {};
             if (isJWT) {
-                payload.token = data;
+                payload.token = trimmed;
             } else {
-                payload.patient_id = data;
+                payload.patient_id = trimmed;
             }
 
             const response = await api.pharmacy.scanPatient(payload) as any;
@@ -58,7 +60,7 @@ function ScanPage() {
         } catch (error: any) {
             console.error('Scan failed:', error);
             const detail = error?.response?.data?.detail;
-            const msg = typeof detail === 'string' ? detail : 'Invalid or expired code';
+            const msg = typeof detail === 'string' ? detail : 'Patient not found. Please check the ID and try again.';
             toast.error(msg);
         } finally {
             setLoading(false);

@@ -222,6 +222,7 @@ export interface Allergy {
   reaction_type: string;
   reaction?: string; // Alias
   severity: number | string; // Handle both
+  added_by_name?: string | null;
   created_at: string;
 }
 
@@ -234,6 +235,7 @@ export interface ChronicCondition {
   diagnosed_date?: string;
   status?: string;
   is_active: boolean;
+  added_by_name?: string | null;
   created_at: string;
 }
 
@@ -893,7 +895,7 @@ export interface HealthTrendsResponse {
 // Alerts & Risk Monitoring
 export interface DashboardAlert {
   id: string;
-  alert_type: 'abnormal_labs' | 'low_adherence' | 'high_risk';
+  alert_type: 'abnormal_labs' | 'low_adherence' | 'high_risk' | 'outbreak';
   severity: 'low' | 'medium' | 'high' | 'critical';
   title: string;
   message: string;
