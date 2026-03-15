@@ -90,12 +90,14 @@ function AlertRow({
     abnormal_labs: FiActivity,
     low_adherence: FiHeart,
     high_risk: FiShield,
+    outbreak: FiAlertTriangle,
   };
 
   const ALERT_TYPE_LABEL: Record<string, string> = {
     abnormal_labs: t('alert_lab_results'),
     low_adherence: t('alert_adherence'),
     high_risk: t('alert_risk_score'),
+    outbreak: t('alert_outbreak'),
   };
 
   const cfg = SEVERITY_CONFIG[alert.severity];
@@ -128,13 +130,13 @@ function AlertRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-1">
           <h4
-            className={`text-sm font-bold ${alert.is_read ? 'text-slate-500' : 'text-slate-800'
+            className={`text-[17px] font-extrabold ${alert.is_read ? 'text-slate-500' : 'text-slate-800'
               }`}
           >
             {alert.title}
           </h4>
           <span
-            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${cfg.badge}`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[12px] font-bold uppercase tracking-wider border ${cfg.badge}`}
           >
             {alert.severity}
           </span>
@@ -244,16 +246,15 @@ export function AlertsPanel() {
 
   return (
     <Card className="border-0 shadow-lg overflow-hidden">
-      <div className="h-1 bg-gradient-to-r from-rose-400 to-orange-400"></div>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-rose-50 rounded-lg">
-              <FiBell className="w-5 h-5 text-rose-600" />
+              <FiBell className="w-[22px] h-[22px] text-rose-600" />
             </div>
             <div>
-              <CardTitle className="text-lg">{t('alerts_title')}</CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">{t('alerts_subtitle')}</p>
+              <CardTitle className="text-[23px] text-[#0d3b2e]">{t('alerts_title')}</CardTitle>
+              <p className="text-[16px] text-muted-foreground mt-0.5">{t('alerts_subtitle')}</p>
             </div>
           </div>
 

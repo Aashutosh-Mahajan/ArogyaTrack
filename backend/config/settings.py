@@ -13,9 +13,12 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_ME")
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
+# OpenAI API Key for AI prescription safety agent
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+
 ALLOWED_HOSTS: List[str] = [
     host.strip() for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host.strip()
-]
+] + ["172.18.18.111", "0.0.0.0"]
 
 # Applications
 INSTALLED_APPS = [
@@ -35,6 +38,7 @@ INSTALLED_APPS = [
     "adherence",
     "surveillance",
     "dashboard",
+    "cdss",
 ]
 
 MIDDLEWARE = [
@@ -188,7 +192,7 @@ AUTH_USER_MODEL = "accounts.User"
 # For development, allowing common development ports
 
 if DEBUG:
-    # Development: Allow localhost on common ports (3000, 3001, 3002)
+    # Development: Allow localhost on common ports + LAN IP for mobile app
     CORS_ALLOWED_ORIGINS = [
         "http://localhost:3000",
         "http://localhost:3001",
@@ -196,7 +200,9 @@ if DEBUG:
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
         "http://127.0.0.1:3002",
+        "http://172.18.18.111:8000",
     ]
+    CORS_ALLOW_ALL_ORIGINS = True
 else:
     # Production: Use environment variable
     CORS_ALLOWED_ORIGINS = [
@@ -235,6 +241,7 @@ if DEBUG:
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
         "http://127.0.0.1:3002",
+        "http://172.18.18.111:8000",
     ]
 else:
     CSRF_TRUSTED_ORIGINS = [

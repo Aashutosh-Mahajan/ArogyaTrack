@@ -111,7 +111,7 @@ function PrescriptionsPage(): React.JSX.Element {
       </div>
 
       <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
-        <div className="h-1 bg-gradient-to-r from-teal-400 to-emerald-400"></div>
+        
         <CardContent className="p-0">
           {prescriptions.length === 0 ? (
             <div className="text-center py-16 text-slate-500">

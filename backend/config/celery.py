@@ -14,7 +14,26 @@ app.autodiscover_tasks()
 
 # Celery Beat Schedule
 app.conf.beat_schedule = {
-    # Master daily pipeline - runs at 2 AM every day
+    # --- Real-time pipeline (every 5 minutes) ---
+    'process-inference-queue': {
+        'task': 'surveillance.tasks.process_inference_queue',
+        'schedule': crontab(minute='*/5'),
+    },
+    # --- Prophet forecasts — twice daily at 6 AM and 6 PM ---
+    'prophet-forecasts-morning': {
+        'task': 'surveillance.tasks.run_prophet_forecasts_all',
+        'schedule': crontab(hour=6, minute=0),
+    },
+    'prophet-forecasts-evening': {
+        'task': 'surveillance.tasks.run_prophet_forecasts_all',
+        'schedule': crontab(hour=18, minute=0),
+    },
+    # --- DBSCAN clustering — every 3 hours ---
+    'dbscan-clustering': {
+        'task': 'surveillance.tasks.run_dbscan_clustering_all',
+        'schedule': crontab(minute=0, hour='*/3'),
+    },
+    # --- Fallback 2 AM batch pipeline (safety net) ---
     'master-daily-pipeline': {
         'task': 'surveillance.tasks.master_daily_pipeline',
         'schedule': crontab(hour=2, minute=0),

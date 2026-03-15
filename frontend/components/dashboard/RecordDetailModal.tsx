@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import type { RecentRecord } from '@/types';
@@ -54,6 +55,7 @@ function Section({
 export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailModalProps) {
   const st = statusConfig[record.status];
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
   // Authenticated download function
   const handleDownloadReport = async (attachmentId: number, fileName: string, isView: boolean = false) => {
@@ -78,6 +80,16 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
         toast.success('Report downloaded successfully');
+
+        // Log the download and refresh KPIs
+        api.dashboard.logDownload({
+          file_type: 'visit_attachment',
+          file_id: attachmentId,
+          file_name: fileName,
+        }).then(() => {
+          queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] });
+          queryClient.invalidateQueries({ queryKey: ['dashboard-downloads'] });
+        }).catch(() => {});
       }
     } catch (error: any) {
       console.error('Download error:', error);
@@ -143,7 +155,7 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
           </div>
           <div class="section"><div class="section-title">Diagnosis</div><div class="section-body">${record.diagnosis_summary}</div></div>
           <div class="section"><div class="section-title">Tests Performed</div><div class="section-body">${record.tests_performed || 'None recorded'}</div></div>
-          <div class="section"><div class="section-title">Prescription</div><div class="section-body">${record.prescription_text || 'None'}</div></div>
+          <div class="section"><div class="section-title">Prescription</div><div class="section-body">${record.prescription_text ? record.prescription_text.split(',').map((s: string) => s.trim().replace(/\.+$/, '')).filter(Boolean).join('<br/>') : 'None'}</div></div>
           ${record.doctor_notes ? `<div class="section"><div class="section-title">Doctor Notes</div><div class="section-body">${record.doctor_notes}</div></div>` : ''}
           <div class="footer">Generated from Health Surveillance Platform</div>
         </body>
@@ -152,6 +164,16 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
     printWindow.document.close();
     printWindow.focus();
     setTimeout(() => printWindow.print(), 300);
+
+    // Log the download and refresh KPI counts
+    api.dashboard.logDownload({
+      file_type: 'medical_record',
+      file_id: record.id,
+      file_name: `Visit_Record_${visitDate}.pdf`,
+    }).then(() => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-downloads'] });
+    }).catch(() => {});
   };
 
   return (
@@ -193,7 +215,7 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
                 </div>
                 <div>
                   <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Doctor</p>
-                  <p className="text-sm font-semibold text-gray-900">Dr. {record.doctor_name}</p>
+                  <p className="text-sm font-semibold text-gray-900">{record.doctor_name?.startsWith('Dr') ? record.doctor_name : `Dr. ${record.doctor_name}`}</p>
                 </div>
               </div>
 
@@ -232,7 +254,12 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
 
             {record.prescription_text && (
               <Section icon={FiFileText} title="Prescription">
-                <pre className="whitespace-pre-wrap font-sans">{record.prescription_text}</pre>
+                <ul className="list-disc list-inside space-y-1">
+                  {record.prescription_text.split(',').map((item: string, i: number) => {
+                    const trimmed = item.trim().replace(/\.+$/, '');
+                    return trimmed ? <li key={i}>{trimmed}</li> : null;
+                  })}
+                </ul>
               </Section>
             )}
 

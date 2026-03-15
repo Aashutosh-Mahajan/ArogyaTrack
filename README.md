@@ -1,1821 +1,720 @@
-# Health Surveillance System
+<div align="center">
 
-### Comprehensive Disease Surveillance and Healthcare Management Platform
+# ArogyaTrack
 
-[![Backend](https://img.shields.io/badge/Backend-Django%204.2-green)](https://www.djangoproject.com/)
-[![Frontend](https://img.shields.io/badge/Frontend-Next.js%2014-black)](https://nextjs.org/)
-[![API](https://img.shields.io/badge/API-REST%20101%2B%20Endpoints-blue)](https://www.django-rest-framework.org/)
-[![ML](https://img.shields.io/badge/ML-Prophet%20%7C%20XGBoost%20%7C%20DBSCAN%20%7C%20IsoForest-orange)](https://facebook.github.io/prophet/)
-[![Database](https://img.shields.io/badge/Database-PostgreSQL%2014%2B-blue)](https://www.postgresql.org/)
-[![License](https://img.shields.io/badge/License-MIT-brightgreen)]()
-[![Version](https://img.shields.io/badge/Version-1.0.0-informational)]()
+### A Comprehensive Healthcare Platform for Disease Surveillance, Digital Prescriptions, and Medication Management
+
+[![Django](https://img.shields.io/badge/Django-4.2-092E20?style=flat&logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-000000?style=flat&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![Flutter](https://img.shields.io/badge/Flutter-3.10-02569B?style=flat&logo=flutter&logoColor=white)](https://flutter.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-4169E1?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)]()
+
+</div>
 
 ---
 
 ## Table of Contents
 
-1. [Project Overview](#1-project-overview)
-2. [System Architecture](#2-system-architecture)
-3. [Technology Stack](#3-technology-stack)
-4. [Project Structure](#4-project-structure)
-5. [Prerequisites](#5-prerequisites)
-6. [Installation & Setup](#6-installation--setup)
-7. [Environment Variables Reference](#7-environment-variables-reference)
-8. [Backend Modules](#8-backend-modules)
-9. [API Reference](#9-api-reference)
-11. [Frontend Architecture](#11-frontend-architecture)
-12. [Machine Learning Pipeline](#12-machine-learning-pipeline)
-13. [Authentication & Security](#13-authentication--security)
-14. [Background Tasks (Celery)](#14-background-tasks-celery)
-15. [Medical Records Module](#15-medical-records-module)
-16. [Running the Application](#16-running-the-application)
-17. [Testing](#17-testing)
-18. [Troubleshooting](#18-troubleshooting)
-19. [API Usage Examples](#19-api-usage-examples)
-20. [Compliance & Standards](#20-compliance--standards)
-21. [Performance & Scalability](#21-performance--scalability)
+- [Overview](#overview)
+- [How It Works](#how-it-works)
+- [Key Features](#key-features)
+- [System Architecture](#system-architecture)
+- [Technology Stack](#technology-stack)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Installation & Setup](#installation--setup)
+  - [Backend (Django)](#1-backend-django)
+  - [Frontend (Next.js)](#2-frontend-nextjs)
+  - [Mobile App (Flutter)](#3-mobile-app-flutter)
+  - [ML Models](#4-ml-models)
+- [Running the Application](#running-the-application)
+- [API Reference](#api-reference)
+- [Module Documentation](#module-documentation)
+- [Environment Variables](#environment-variables)
 
 ---
 
-## 1. Project Overview
+## Overview
 
-The **Health Surveillance System** is an enterprise-grade, privacy-preserving disease surveillance and healthcare management platform that combines modern web technologies with artificial intelligence to deliver real-time public health analytics.
+**ArogyaTrack** is a full-stack, multi-platform healthcare application designed to digitize and streamline clinical workflows across hospitals, pharmacies, and public health agencies. It combines real-time disease surveillance powered by machine learning analytics, digital prescription management with QR-based dispensing, comprehensive patient health records, and medication adherence tracking — all governed by role-based access control and audit logging.
 
-### Core Objectives
-
-|Objective | Implementation |
-|-----------|----------------|
-| Early outbreak detection | Multi-model ML fusion (Prophet + DBSCAN + IsoForest + XGBoost) |
-| Patient privacy | K-anonymity (k ≥ 5) enforcement; separated PII and surveillance tables |
-| Digital clinical workflow | QR-based health cards, e-prescriptions, pharmacy dispensing |
-| Medication adherence | Automated dose tracking, reminders, and refill alerts |
-| Real-time intelligence | Celery-driven aggregation, alerts, and escalation pipelines |
-
-### Key Highlights
-
-- **101+ REST API endpoints** grouped across 7 functional modules
-- **38 database models** with 120+ indexes and full audit trail
-- **4 ML models** with a decision-fusion engine generating Low / Medium / High / Critical alerts
-- **Zero-trust patient privacy**: aggregated surveillance data contains no personally identifiable information
-- **JWT-secured smart health cards**: cryptographically signed QR codes for patient identification
-- **Modular Django architecture**: each domain is an independent Django application
-
-### Target Users
-
-| Role | Primary Use |
-|------|-------------|
-| Patient | Personal health records, health card, medication reminders |
-| Doctor | Patient QR scanning, diagnosis entry, e-prescriptions |
-| Pharmacist | Prescription QR validation and dispensing |
-| Health Authority | Surveillance dashboard, outbreak alerts, heat maps |
-| System Admin | User management, regions, bulk data operations |
+The platform is built around four primary user roles — **Patients**, **Doctors**, **Pharmacists**, and **Administrators** — with each role receiving a tailored dashboard and feature set aligned to their clinical responsibilities.
 
 ---
 
-## 2. System Architecture
+## How It Works
 
-### High-Level Diagram
+ArogyaTrack connects every stakeholder in the healthcare chain through a unified digital workflow. Below is a step-by-step walkthrough of how the system operates end-to-end.
+
+### 1. Patient Onboarding
+A patient registers via the web or mobile app using OTP-based verification tied to their phone number. Upon registration, a unique patient ID (format: `HS-YYYY-XXXXXX`) is auto-generated. The patient completes their profile — personal details, blood group, emergency contacts, existing allergies, and chronic conditions. A **QR-encoded Health Card** is generated containing a signed JWT token, allowing any verified doctor or pharmacist to instantly access the patient's medical summary by scanning the card.
+
+### 2. Doctor Registration & Approval
+Doctors register by uploading their medical certification documents. An administrator reviews and approves each doctor through the admin dashboard. Once approved, doctors gain access to the clinical portal where they can scan patient QR codes, view medical histories, create new medical records, and issue digital prescriptions.
+
+### 3. Clinical Consultation & Medical Records
+During a consultation, the doctor scans the patient's Health Card QR code using the built-in camera scanner. This grants time-limited access to the patient's medical history. The doctor records the visit — symptoms, diagnoses (with ICD-10 codes), vitals (blood pressure, temperature, heart rate), lab test orders, and clinical notes. Diagnoses are categorized by medical department (Cardiology, Neurology, Orthopedics, etc.) and severity level. All records are timestamped and immutably linked to the doctor's account for audit compliance.
+
+### 4. Digital Prescription & Drug Safety
+After diagnosis, the doctor creates a digital prescription directly within the platform. Each prescription includes medicines with dosage, frequency, duration, and special instructions. The system automatically checks for **drug-drug interactions** from its built-in interaction database, flagging conflicts by severity (Minor, Moderate, Major, or Contraindicated). It also cross-references the patient's allergy records to prevent allergen-drug conflicts. A unique QR code and a cryptographic security hash are generated for each prescription, enabling tamper-proof verification at the pharmacy.
+
+### 5. Pharmacy Dispensing
+The pharmacist scans the prescription QR code at the pharmacy counter. The system validates the hash, displays the full prescription, and shows the patient's allergy profile. The pharmacist dispenses medicines from their tracked inventory — the system records batch numbers, expiry dates, and quantities. Each prescription transitions through statuses: **Pending → Partially Dispensed → Fully Dispensed**. Inventory levels are updated in real-time, and low-stock alerts are triggered automatically.
+
+### 6. Medication Adherence & Reminders
+Once medicines are dispensed, dose schedules are created for the patient. The system sends reminders via email, SMS, or push notifications at prescribed intervals. Patients mark doses as taken through the app. The adherence module calculates a compliance percentage and identifies missed doses. Doctors can view their patients' adherence dashboards to assess treatment effectiveness, and the system escalates alerts for critically low adherence.
+
+### 7. Patient Dashboard & Health Alerts
+Patients see an aggregated health snapshot on their dashboard — recent diagnoses, upcoming doses, lab result trends, and active prescriptions. The system computes a risk score based on vitals (e.g., BP > 140, sugar > 150), abnormal lab results, and missed doses. Alerts are generated at four severity levels (Low, Medium, High, Critical) and displayed prominently. Patients can download their complete medical records as PDFs or request a bulk ZIP export.
+
+### 8. Disease Surveillance & ML Analytics (Admin)
+In the background, anonymized and K-anonymized disease data flows into the surveillance module. Four machine learning models operate on this data:
+- **DBSCAN** performs geospatial clustering to identify disease outbreak hotspots across districts
+- **Isolation Forest** (v5.0 ensemble with Gradient Boosting corrector) detects anomalous disease patterns and sudden case spikes across 59 engineered features
+- **Prophet** generates time-series forecasts predicting case counts for the coming weeks with confidence intervals
+- **XGBoost** computes risk scores per region factoring in case density, population, sanitation index, and environmental data (temperature, humidity, rainfall)
+
+Administrators access an interactive surveillance dashboard with heat maps, regional comparisons (cases per 100,000 population), anomaly alerts, and forecast trend lines. When thresholds are breached, the system generates outbreak alerts automatically.
+
+### 9. Audit Trail & Compliance
+Every action across the platform — login attempts, record access, prescription creation, dispensing events, file downloads — is logged in an immutable audit trail. The system enforces rate limiting to prevent abuse, and all API access is authenticated via JWT tokens with automatic refresh. Doctor-patient access is time-limited and tracked, ensuring data is only visible during authorized consultation windows.
+
+---
+
+## Key Features
+
+### Patient Health Records
+- Comprehensive medical records with ICD-10 coded diagnoses
+- Multi-department tracking (Cardiology, Neurology, Orthopedics, etc.)
+- Allergy and chronic condition management
+- Lab result tracking with reference ranges and normality flags
+- PDF report generation and bulk download with ZIP support
+- QR-encoded health cards for quick doctor/pharmacist access
+
+### Disease Surveillance & Outbreak Detection
+- Real-time disease tracking across geographic regions
+- DBSCAN-based geospatial clustering for outbreak identification
+- Isolation Forest ensemble anomaly detection for sudden case spikes
+- Prophet time-series forecasting with seasonality detection
+- XGBoost risk scoring per region
+- Interactive heat maps with severity-based color coding
+
+### Digital Prescription Management
+- End-to-end digital prescriptions with QR code generation
+- Drug interaction database with severity classification (Minor → Contraindicated)
+- Prescription lifecycle tracking (Pending → Partially Dispensed → Fully Dispensed)
+- Security hash verification for tamper detection
+- Role-based download access control
+
+### Pharmacy & Dispensing
+- QR scan-to-dispense workflow for prescription fulfillment
+- Real-time inventory management with batch and expiry tracking
+- Automated stock level alerts
+- Dispensing record audit trail
+
+### Medication Adherence Tracking
+- Dose scheduling with configurable reminders (Email, SMS, Push)
+- Adherence percentage calculation and trend analysis
+- Missed dose detection with escalation alerts
+- Dedicated patient and doctor adherence dashboards
+
+### Patient Health Dashboard
+- Aggregated health snapshot with risk scoring
+- Alert system for abnormal labs, low adherence, and outbreak proximity
+- Key performance indicators for health metrics
+- Recent medical records and lab result trending
+- Bulk download of records with audit logging
+
+### Authentication & Security
+- JWT-based authentication with automatic token refresh
+- Role-based access control (Patient, Doctor, Pharmacist, Admin)
+- OTP-based registration and email verification
+- Doctor credential approval workflow with certificate validation
+- Rate limiting middleware (IP-based throttling)
+- Comprehensive audit logging for compliance
+
+---
+
+## System Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                        PRESENTATION LAYER                        │
-├─────────────────────┬────────────────────┬───────────────────────┤
-│  Next.js Web App    │  Flutter Mobile    │  Django Admin Panel   │
-│  (Patient / Doctor  │  (Health Card /    │  (Surveillance /      │
-│   / Pharmacy / Auth)│   QR Scanner)      │   User Management)    │
-└──────────┬──────────┴─────────┬──────────┴──────────┬────────────┘
-           │                   │                      │
-           └───────────────────┼──────────────────────┘
-                    HTTPS + JWT Bearer Token
-                               │
-┌──────────────────────────────▼───────────────────────────────────┐
-│                      APPLICATION LAYER                           │
-│   Django 4.2 + Django REST Framework                             │
-│  ┌──────────┬───────────┬──────────┬────────────┬─────────────┐ │
-│  │ accounts │ patients  │ medical  │prescriptions│  pharmacy   │ │
-│  ├──────────┼───────────┼──────────┼────────────┼─────────────┤ │
-│  │adherence │surveillance│dashboard│  (config)  │             │ │
-│  └──────────┴───────────┴──────────┴────────────┴─────────────┘ │
-└────────────────┬──────────────────────────────────┬─────────────┘
-                 │                                  │
-┌────────────────▼─────────────┐   ┌───────────────▼──────────────┐
-│         DATA LAYER           │   │    ASYNC PROCESSING LAYER    │
-│  PostgreSQL 14+              │   │  Celery Workers              │
-│  - Patient & clinical data   │   │  - Daily data aggregation    │
-│  - Anonymised surveillance   │   │  - ML inference pipeline     │
-│  Redis 7+                    │   │  - Alert generation          │
-│  - Session / JWT cache       │   │  Celery Beat (scheduler)     │
-│  - Celery message broker     │   │  - Cron jobs (2 AM / hourly) │
-└──────────────────────────────┘   └──────────────────────────────┘
-                 │
-┌────────────────▼─────────────────────────────────────────────────┐
-│                    MACHINE LEARNING LAYER                        │
-│  Prophet (forecasting) │ DBSCAN (clustering) │ IsoForest (anomaly│
-│  XGBoost (risk scoring) │ Decision Fusion Engine                 │
-│  → Alert Generation (Low / Medium / High / Critical)            │
-└──────────────────────────────────────────────────────────────────┘
+                    ┌─────────────────────────────────────────────────────────────┐
+                    │                      CLIENT LAYER                           │
+                    │                                                             │
+                    │  ┌───────────────┐  ┌────────────────┐  ┌───────────────┐  │
+                    │  │  Next.js 14   │  │ Flutter Mobile │  │ Vite + React  │  │
+                    │  │  Web App      │  │ Android / iOS  │  │ Admin Panel   │  │
+                    │  │               │  │                │  │               │  │
+                    │  │ • Patient     │  │ • QR Scanner   │  │ • Landing     │  │
+                    │  │ • Doctor      │  │ • Health Cards │  │ • Analytics   │  │
+                    │  │ • Pharmacist  │  │ • Push Alerts  │  │ • Overview    │  │
+                    │  │ • Admin Maps  │  │ • Offline Mode │  │               │  │
+                    │  │               │  │                │  │               │  │
+                    │  │ Port 3000     │  │ Native Build   │  │ Port 5173     │  │
+                    │  └───────┬───────┘  └───────┬────────┘  └───────┬───────┘  │
+                    └──────────┼──────────────────┼──────────────────┼────────────┘
+                               │                  │                  │
+                               └──────────────────┼──────────────────┘
+                                                  │
+                                       ┌──────────▼──────────┐
+                                       │  REST API Gateway   │
+                                       │  JSON over HTTPS    │
+                                       │  JWT Bearer Auth    │
+                                       └──────────┬──────────┘
+                                                  │
+┌─────────────────────────────────────────────────┼──────────────────────────────────────────┐
+│                          DJANGO REST BACKEND (Port 8000)                                   │
+│                                                                                            │
+│  ┌─────────────┐  ┌─────────────┐  ┌──────────────┐  ┌─────────────────────┐              │
+│  │  Accounts   │  │   Medical   │  │ Prescriptions│  │    Surveillance     │              │
+│  │             │  │   Records   │  │              │  │                     │              │
+│  │ • JWT Auth  │  │ • ICD-10    │  │ • QR Codes   │  │ • DBSCAN Clustering │              │
+│  │ • RBAC      │  │ • Diagnoses │  │ • Drug Checks│  │ • Isolation Forest  │              │
+│  │ • OTP/Email │  │ • Lab Tests │  │ • Hash Verify│  │ • Prophet Forecast  │              │
+│  │ • Audit Log │  │ • Allergies │  │ • PDF Export │  │ • XGBoost Risk      │              │
+│  │ • Rate Limit│  │ • Vitals    │  │ • Lifecycle  │  │ • Heat Map Data     │              │
+│  └─────────────┘  └─────────────┘  └──────────────┘  └─────────────────────┘              │
+│                                                                                            │
+│  ┌─────────────┐  ┌─────────────┐  ┌──────────────┐  ┌─────────────────────┐              │
+│  │  Patients   │  │  Pharmacy   │  │  Adherence   │  │     Dashboard       │              │
+│  │             │  │             │  │              │  │                     │              │
+│  │ • Profiles  │  │ • Inventory │  │ • Dose Sched │  │ • Health Snapshot   │              │
+│  │ • Health ID │  │ • Dispense  │  │ • Reminders  │  │ • Risk Alerts       │              │
+│  │ • QR Cards  │  │ • Stock Mgmt│  │ • Compliance │  │ • KPI Metrics       │              │
+│  │ • Family    │  │ • QR Scan   │  │ • Analytics  │  │ • Bulk Download     │              │
+│  │ • Photos    │  │ • Batch/Exp │  │ • Multi-ch.  │  │ • Download Logs     │              │
+│  └─────────────┘  └─────────────┘  └──────────────┘  └─────────────────────┘              │
+│                                                                                            │
+│  ┌──────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                              Celery Task Queue                                      │  │
+│  │           ML Pipeline Execution  •  Medication Reminders  •  Alert Generation       │  │
+│  └──────────────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                            │
+└────────────────────────────────────────┬───────────────────────────────────────────────────┘
+                                         │
+                    ┌────────────────────┼─────────────────────┐
+                    │                    │                     │
+           ┌────────▼─────────┐  ┌───────▼────────┐  ┌────────▼──────────┐
+           │   PostgreSQL     │  │     Redis      │  │   File Storage    │
+           │                  │  │                │  │                   │
+           │ • Patient Data   │  │ • Cache Layer  │  │ • PDF Reports     │
+           │ • Medical Records│  │ • Session Store│  │ • QR Code Images  │
+           │ • Surveillance   │  │ • Task Broker  │  │ • Uploaded Files   │
+           │ • Audit Trail    │  │ • Task Results │  │ • Certificates    │
+           │                  │  │                │  │                   │
+           │ Port 5432        │  │ Port 6379      │  │ /media/           │
+           └──────────────────┘  └────────────────┘  └───────────────────┘
 ```
 
-### Data Flow Pipelines
+**Architecture Summary:**
 
-**1. Patient Registration & Health Card**
-```
-Patient → OTP Verification → Profile Creation
-→ JWT Health-Card Token → QR Code Generated & Stored
-```
+The system follows a layered architecture with clear separation of concerns:
 
-**2. Clinical Workflow**
-```
-Doctor Scans QR → JWT Validated → 24-Hour Time-Limited Access Granted
-→ Medical Record + ICD-10 Diagnosis Created
-→ Drug Interaction Check → E-Prescription (QR + HMAC-SHA256 hash)
-```
+- **Client Layer** — Three frontend applications (Next.js web app on port 3000, Flutter mobile for Android/iOS, and a Vite + React landing/admin panel on port 5173) communicate with the backend exclusively through a RESTful JSON API authenticated via JWT bearer tokens.
 
-**3. Surveillance Aggregation Pipeline (K-Anonymity)**
-```
-Diagnosis Created (with patient consent)
-→ Daily 2 AM Celery Task
-→ K-Anonymity Filter (suppress groups where case_count < 5)
-→ Region + Disease aggregation (NO patient IDs)
-→ Stored in surveillance_surveillancedata
-→ ML Pipeline triggered
-```
+- **API & Application Layer** — A Django REST Framework backend (port 8000) exposes all business logic through modular Django apps: Accounts (auth, RBAC, audit), Medical Records (ICD-10 diagnoses, labs, vitals), Prescriptions (QR generation, drug interaction checks, hash verification), Pharmacy (inventory, dispensing, batch tracking), Patients (profiles, health cards, family), Adherence (dose scheduling, reminders, compliance), Surveillance (ML-powered clustering, anomaly detection, forecasting, risk scoring), and Dashboard (health snapshots, alerts, KPIs).
 
-**4. ML → Alert Pipeline**
-```
-Surveillance Data + Environmental Data
-→ Prophet forecast  (7 / 14 / 30 days)
-→ DBSCAN spatial clustering
-→ Isolation Forest anomaly detection
-→ XGBoost risk scoring
-→ Decision Fusion Engine
-→ Alert created (Low → Critical)
-→ Email / SMS / Dashboard notification
-→ Escalation every 2 h if unacknowledged
-```
-   → Digital Prescription (QR + HMAC Hash)
-```
+- **Task Layer** — Celery workers process asynchronous jobs including ML pipeline execution, scheduled medication reminders, and alert generation, using Redis as the message broker.
 
-#### 3. Surveillance Data Pipeline (K-Anonymity Enforced)
-```
-Diagnosis Creation → Consent Check → Daily Aggregation (2 AM)
-   → K-Anonymity Filter (k≥5) → Region-Disease Grouping
-   → Surveillance Database (No PII) → ML Processing
-```
-
-#### 4. Machine Learning Pipeline
-```
-Surveillance Data + Environmental Data
-   ↓
-┌─────────────────────────────────────┐
-│ Prophet: Time series forecast       │ → Predicted cases (7/14/30 days)
-│ DBSCAN: Spatial clustering          │ → Geographic hotspots
-│ Isolation Forest: Anomaly detection │ → Statistical outliers
-│ XGBoost: Multi-factor risk scoring  │ → Outbreak probability
-└─────────────────────────────────────┘
-   ↓
-Decision Fusion Algorithm
-   ↓
-Alert Generation (Low/Medium/High/Critical)
-   ↓
-Multi-Channel Notification (Email/SMS/Dashboard)
-```
-
-### Microservices Architecture
-
-The system follows a modular microservices approach within Django apps:
-
-| Module | Responsibility | Key Components |
-|--------|---------------|----------------|
-| **accounts** | Authentication & Authorization | User management, OTP, JWT, Audit logs |
-| **patients** | Patient Profile Management | Profiles, Health Cards, Emergency Contacts, Consent |
-| **medical** | Clinical Records | Medical records, Diagnoses (ICD-10), Allergies, Vital signs |
-| **prescriptions** | E-Prescription System | Medicines, Prescriptions, Drug interactions, QR validation |
-| **pharmacy** | Dispensing Workflow | Prescription dispensing, Inventory tracking |
-| **adherence** | Medication Compliance | Adherence tracking, Dose schedules, Reminders |
-| **surveillance** | Disease Monitoring | Aggregation, ML predictions, Alerts, Environmental data |
+- **Data Layer** — PostgreSQL serves as the primary relational database storing all patient, medical, surveillance, and audit data. Redis provides caching and session management. File storage (`/media/`) holds generated PDFs, QR images, uploaded attachments, and doctor certificates.
 
 ---
 
 ## Technology Stack
 
-### Backend Technologies
-
-#### Core Framework
-```python
-Django==4.2.9                    # Web framework
-django​restframework==3.14.0      # RESTful API
-djangorestframework-simplejwt==5.3.0  # JWT authentication
-django-cors-headers==4.3.0       # CORS handling
-```
-
-#### Database & Caching
-```python
-psycopg2-binary==2.9.9           # PostgreSQL adapter
-redis==5.0.1                     # Redis client
-```
-
-#### Task Queue & Scheduling
-```python
-celery==5.3.4                    # Distributed task queue
-celery[redis]                    # Redis broker
-flower                           # Celery monitoring (optional)
-```
-
-#### Security & Utilities
-```python
-PyJWT==2.8.0                     # JWT encoding/decoding
-python-dotenv==1.0.0             # Environment variables
-qrcode[pil]==7.4.2               # QR code generation
-Pillow                           # Image processing
-```
-
-#### Machine Learning Stack
-```python
-numpy==1.24.3                    # Numerical computing
-pandas==2.0.3                    # Data manipulation
-scikit-learn==1.3.2              # ML algorithms (DBSCAN, Isolation Forest)
-prophet==1.1.5                   # Time series forecasting
-xgboost==2.0.3                   # Gradient boosting
-matplotlib==3.8.2                # Visualizations
-seaborn==0.13.0                  # Statistical plots
-```
-
-### Frontend Technologies
-
-#### Core Framework
-```json
-"next": "^14.1.0"              // React framework with SSR
-"react": "^18.2.0"            // UI library
-"typescript": "^5.3.3"        // Type safety
-```
-
-#### UI Components & Styling
-```json
-"@radix-ui/react-*": "^1.0.*"  // Accessible component primitives
-"tailwindcss": "^3.4.1"       // Utility-first CSS
-"framer-motion": "^11.0.3"    // Animations
-"lucide-react": "^0.323.0"    // Icons
-"class-variance-authority"    // Component variants
-```
-
-#### State Management & Data Fetching
-```json
-"@tanstack/react-query": "^5.17.19"  // Server state management
-"zustand": "^4.5.0"                  // Client state management
-"axios": "^1.6.5"                    // HTTP client
-```
-
-#### Specialized Libraries
-```json
-"chart.js": "^4.4.1"              // Charts
-"react-chartjs-2": "^5.2.0"      // React Chart.js wrapper
-"leaflet": "^1.9.4"              // Maps
-"react-leaflet": "^4.2.1"        // React Leaflet wrapper
-"html5-qrcode": "^2.3.8"         // QR code scanning
-"qrcode.react": "^3.1.0"         // QR code generation
-"react-hook-form": "^7.49.3"     // Form handling
-"zod": "^3.22.4"                 // Schema validation
-```
-
----
-
-## Core Features
-
-### 1. Patient Management Module
-
-**Smart Health Cards**
-- JWT-based QR code generation with 1-year validity
-- Cryptographic signature verification (HS256)
-- Instant revocation support
-- Offline-capable design (embedded claims)
-- HIPAA-compliant data minimization (no PHI in token)
-
-**Profile Management**
-- Multi-profile support (family members: self, spouse, child, parent)
-- Demographic data: age, gender, blood group
-- Geographic tagging for surveillance
-- Unique constraint enforcement (name + relationship)
-
-**Consent Management**
-- Granular consent types (surveillance, research, data_sharing)
-- Digital signature capture
-- Revocation timestamps
-- Audit trail maintenance
-
-**Emergency Contacts**
-- Unlimited emergency contacts per profile
-- Relationship tracking
-- Quick access for medical emergencies
-
-### 2. Clinical Workflow Module
-
-**Doctor Portal**
-- QR code scanner for patient authentication
-- Time-limited access (24 hours)
-- Access method tracking (qr_scan, emergency)
-- Automatic access expiration
-
-**Medical Records**
-- ICD-10 code validation (regex pattern matching)
-- Severity scoring (1-5 scale)
-- Symptom documentation
-- Clinical notes
-- Timestamp audit trail
-
-**Diagnosis Management**
-- Multiple diagnoses per medical record
-- Disease name auto-population from ICD-10
-- Severity assessment
-- Historical trend analysis
-
-**Allergy & Chronic Condition Tracking**
-- Allergen registry
-- Reaction type classification
-- Severity scoring
-- Active condition tracking
-- Drug interaction alerts
-
-### 3. E-Prescription System
-
-**Medicine Database**
-- Generic and brand name mapping
-- Drug class categorization
-- Therapeutic category classification
-- Standard dosage recommendations
-- Allergen information
-
-**Digital Prescriptions**
-- UUID-based unique identification
-- QR code generation with embedded prescription ID
-- HMAC-SHA256 security hash for tamper detection
-- Status tracking (pending → partially_dispensed → fully_dispensed)
-- Medical record linkage
-
-**Drug Interaction Checking**
-- Pairwise interaction database
-- Severity levels (minor, moderate, major, contraindicated)
-- Real-time warnings during prescription creation
-- Clinical description of interactions
-
-**Prescription Medicines**
-- Dosage specification
-- Frequency instructions
-- Duration (days)
-- Quantity calculation
-- Special instructions
-- Per-medicine dispense status
-
-### 4. Pharmacy Integration
-
-**Prescription Validation**
-- QR code scanning
-- HMAC hash verification
-- Tampering detection
-- Duplicate dispensing prevention
-
-**Dispensing Workflow**
-- Partial fulfillment support
-- Medicine-level status tracking:
-  - `pending`: Not yet dispensed
-  - `dispensed`: Successfully dispensed
-  - `unavailable`: Out of stock
-  - `patient_has`: Patient already has medicine
-- Timestamp recording
-- Pharmacist identification
-
-### 5. Medicine Adherence Tracking
-
-**Adherence Monitoring**
-- Tracker creation linked to prescriptions
-- Expected vs actual dose counting
-- Adherence percentage calculation
-- Active/inactive status management
-
-**Dose Scheduling**
-- Automated schedule generation from prescription frequency
-- Per-medicine granularity
-- Scheduled time computation
-- Dose completion tracking
-
-**Automated Reminders**
-- Multi-channel support (email, SMS, push)
-- Reminder status tracking (pending, sent, failed, acknowledged)
-- Configurable reminder timing (pre-dose notifications)
-- Error logging for failed deliveries
-
-**Refill Alerts**
-- Automatic low-stock detection (< 20% remaining)
-- Proactive patient notification
-- Pharmacy coordination
-
-### 6. Disease Surveillance Module
-
-**K-Anonymity Enforcement**
-- Threshold: k ≥ 5 cases per region-disease-date
-- Automatic data suppression for low counts
-- Zero personally identifiable information (PII) in aggregated data
-- Consent verification before inclusion
-
-**Daily Aggregation**
-- Scheduled execution at 2:00 AM (Celery Beat)
-- Region-based grouping
-- Disease code classification
-- Case count aggregation
-- Average severity calculation
-- Cases per 100K population normalization
-
-**Regional Management**
-- Hierarchical structure (Region → District → State → Country)
-- Geospatial coordinates (latitude/longitude)
-- Population demographics
-- Spatial indexing for fast queries
-
-**Environmental Data Integration**
-- Weather parameters (temperature, humidity, rainfall)
-- Air quality metrics (AQI, PM2.5)
-- Water quality index
-- Sanitation index
-- Correlation analysis with disease patterns
-
-### 7. Machine Learning Pipeline
-
-**A. Prophet Time Series Forecasting**
-- Model Type: Facebook Prophet (additive regression)
-- Training: Per region-disease combination
-- Forecast Horizons: 7, 14, 30 days
-- Features:
-  - Weekly seasonality
-  - Yearly seasonality
-  - Holiday effects
-  - Trend changepoint detection
-- Output: Predicted cases with 95% confidence intervals
-- Storage: `ml_models/saved_models/prophet_region{id}_{disease}.pkl`
-
-**B. DBSCAN Spatial Clustering**
-- Model Type: Density-Based Spatial Clustering
-- Parameters:
-  - `eps` = 50 km (neighborhood radius)
-  - `min_samples` = 3 regions
-- Purpose: Identify geographic disease hotspots
-- Features:
-  - Haversine distance calculation (accounts for Earth curvature)
-  - Noise point identification
-  - Cluster centroid computation
-  - Radius calculation
-- Severity Classification:
-  - Low: < 5 cases per 100K
-  - Medium: 5-20 cases per 100K
-  - High: 20-50 cases per 100K
-  - Critical: > 50 cases per 100K
-- Output: Clusters with affected regions, centroids, growth rates
-- Storage: `ml_models/saved_models/dbscan_model.pkl`
-
-**C. Isolation Forest Anomaly Detection**
-- Model Type: Ensemble anomaly detection
-- Training: Historical disease patterns
-- Parameters:
-  - `contamination` = 0.1 (expected outlier percentage)
-  - `n_estimators` = 100 trees
-  - `max_samples` = 256
-- Features:
-  - Rolling 7-day statistics (mean, std dev)
-  - Deviation from expected values
-  - Anomaly score (-1 to 1, higher = more anomalous)
-- Output: Anomalies with actual vs expected cases, deviation percentage
-- Storage: `ml_models/saved_models/isolation_forest.pkl`
-
-**D. XGBoost Risk Scoring**
-- Model Type: Gradient Boosted Decision Trees
-- Objective: Multi-class classification (Low/Medium/High/Critical)
-- Input Features (20+):
-  - Medical: case_count, severity, growth_rate, case_density
-  - Environmental: temperature, humidity, rainfall, AQI, PM2.5
-  - Demographic: population, density
-  - Temporal: day_of_week, month, season
-  - Historical: past_outbreaks, recovery_time
-- Output: Risk level + probability + SHAP values (explainability)
-- Training:
-  - Historical outbreak data
-  - Synthetic data generation
-  - Cross-validation (5-folds)
-  - Hyperparameter tuning (GridSearchCV)
-- Storage: `ml_models/saved_models/outbreak_risk_xgboost.pkl`
-
-**E. Decision Fusion Algorithm**
-```python
-IF (Prophet forecasts spike > 50%) AND (DBSCAN detects cluster) AND (Isolation Forest flags anomaly):
-    Severity = CRITICAL, Confidence = 95%
-ELSE IF (Prophet forecasts spike > 30%) AND (DBSCAN detects cluster):
-    Severity = HIGH, Confidence = 80%
-ELSE IF (Isolation Forest flags anomaly) AND (XGBoost risk = HIGH):
-    Severity = MEDIUM, Confidence = 65%
-ELSE IF (XGBoost risk = HIGH):
-    Severity = LOW, Confidence = 50%
-ELSE:
-    No Alert
-```
-
-**Model Training Pipeline**
-```bash
-# Generate synthetic training data
-cd ml_models
-python generate_ml_datasets.py
-
-# Train individual models
-cd train_models
-python train_prophet.py        # Prophet per region-disease
-python train_dbscan.py         # DBSCAN clustering
-python train_isolation_forest.py  # Anomaly detection
-python train_xgboost.py        # Risk classification
-
-# Validate models
-cd ../test_models
-python test_all_models.py
-python visualize_predictions.py
-```
-
-### 8. Intelligent Alert System
-
-**Alert Generation**
-- Multi-model input fusion
-- Severity levels: Low (50%), Medium (65%), High (80%), Critical (95%)
-- Alert types: outbreak, cluster, forecast, anomaly, environmental
-- Affected regions tracking (Many-to-Many)
-- Contributing factors (JSON storage with SHAP values)
-- Recommended actions (pre-configured templates)
-
-**Alert Lifecycle**
-```
-Generated → Active → Acknowledged → Resolved/False Positive
-```
-
-**Escalation Mechanism**
-- Level 1: District (initial alert)
-- Level 2: State (if unacknowledged after 2 hours)
-- Level 3: Central (if still unacknowledged after 4 hours)
-- Automated escalation via Celery Beat
-
-**Notification Channels**
-- Email: Health authority officials
-- SMS: Emergency contacts
-- Dashboard: Real-time web interface
-- Push: Mobile app notifications
-- Delivery tracking (pending → sent → delivered/failed)
-
----
-
-## 9. API Reference
-
-### API Design Principles
-
-1. **RESTful Conventions**: Resource-based URLs, HTTP verb semantics
-2. **JWT Authentication**: Stateless, token-based auth with refresh mechanism
-3. **Pagination**: Cursor-based for large datasets
-4. **Filtering**: Query parameters for flexible filtering
-5. **Versioning**: URL-based (v1, v2) for backward compatibility
-6. **Error Handling**: Consistent error response format
-
-### Authentication Flow
-
-```
-POST /api/auth/send-otp/
-  Request: {"email": "user@example.com"}
-  Response: {"message": "OTP sent", "expires_in": 300}
-
-POST /api/auth/verify-otp/
-  Request: {"email": "user@example.com", "otp": "123456"}
-  Response: {
-    "access": "eyJ0eXAiOiJKV1QiLCJhbGc...",
-    "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc...",
-    "user": {"id": "...", "email": "...", "role": "patient"}
-  }
-
-POST /api/auth/refresh-token/
-  Request: {"refresh": "eyJ0eXAiOiJKV1QiLCJhbGc..."}
-  Response: {"access": "eyJ0eXAiOiJKV1QiLCJhbGc..."}
-
-POST /api/auth/logout/
-  Headers: Authorization: Bearer <access_token>
-  Response: {"message": "Logged out successfully"}
-```
-
-### API Endpoint Catalog
-
-#### Authentication (6 endpoints)
-- `POST /api/auth/send-otp/` - Send OTP to email
-- `POST /api/auth/verify-otp/` - Verify OTP and get tokens
-- `POST /api/auth/refresh-token/` - Refresh access token
-- `POST /api/auth/logout/` - Logout and blacklist token
-- `POST /api/auth/register/` - User registration
-- `POST /api/auth/reset-password/` - Password reset
-
-#### Patient Management (12 endpoints)
-- `POST /api/patients/create-profile/` - Create patient profile
-- `GET /api/patients/my-profiles/` - List all profiles
-- `GET /api/patients/{id}/` - Get profile details
-- `PATCH /api/patients/{id}/` - Update profile
-- `DELETE /api/patients/{id}/` - Delete profile
-- `POST /api/patients/{id}/emergency-contacts/` - Add emergency contact
-- `GET /api/patients/{id}/emergency-contacts/` - List emergency contacts
-- `POST /api/patients/{id}/generate-health-card/` - Generate health card
-- `GET /api/patients/{id}/health-card-download/` - Download health card QR
-- `POST /api/patients/{id}/revoke-health-card/` - Revoke health card
-- `POST /api/patients/{id}/consent/` - Manage consent
-- `GET /api/patients/{id}/medical-history/` - Get medical history
-
-#### Doctor Portal (15 endpoints)
-- `POST /api/doctors/scan-health-card/` - Scan patient QR code
-- `GET /api/doctors/patient-history/{patient_id}/` - Get patient medical history
-- `POST /api/doctors/create-medical-record/` - Create medical record
-- `POST /api/doctors/add-diagnosis/` - Add diagnosis to record
-- `POST /api/doctors/{patient_id}/allergies/` - Add allergy
-- `GET /api/doctors/{patient_id}/allergies/` - List allergies
-- `POST /api/doctors/{patient_id}/chronic-conditions/` - Add chronic condition
-- `GET /api/doctors/{patient_id}/chronic-conditions/` - List chronic conditions
-- `POST /api/doctors/{patient_id}/vital-signs/` - Record vital signs
-- `GET /api/doctors/my-patients/` - List patients with active access
-- `GET /api/doctors/access-log/` - View access history
-- `POST /api/doctors/request-emergency-access/` - Request emergency access
-- `GET /api/doctors/drug-interactions/` - Check drug interactions
-- `GET /api/doctors/icd-search/` - Search ICD-10 codes
-- `GET /api/doctors/medicine-search/` - Search medicines
-
-#### Prescriptions (10 endpoints)
-- `POST /api/prescriptions/create/` - Create prescription
-- `GET /api/prescriptions/{id}/` - Get prescription details
-- `GET /api/prescriptions/my-prescriptions/` - Patient's prescriptions
-- `GET /api/prescriptions/doctor-prescriptions/` - Doctor's prescriptions
-- `GET /api/prescriptions/{id}/download/` - Download prescription QR
-- `POST /api/prescriptions/{id}/share/` - Share prescription
-- `GET /api/prescriptions/{id}/status/` - Get dispensing status
-- `POST /api/prescriptions/validate-qr/` - Validate prescription QR
-- `GET /api/medicines/` - List medicines
-- `GET /api/medicines/{id}/interactions/` - Get drug interactions
-
-#### Pharmacy (8 endpoints)
-- `POST /api/pharmacy/scan-prescription/` - Scan prescription QR
-- `POST /api/pharmacy/dispense/` - Dispense medicines
-- `POST /api/pharmacy/partial-dispense/` - Partial dispensing
-- `GET /api/pharmacy/dispensing-history/` - View dispensing history
-- `GET /api/pharmacy/pending-prescriptions/` - List pending prescriptions
-- `POST /api/pharmacy/mark-unavailable/` - Mark medicine unavailable
-- `POST /api/pharmacy/patient-has-medicine/` - Mark patient already has
-- `GET /api/pharmacy/inventory-alerts/` - Low stock alerts
-
-#### Adherence (10 endpoints)
-- `GET /api/adherence/my-trackers/` - List adherence trackers
-- `GET /api/adherence/tracker/{id}/` - Get tracker details
-- `POST /api/adherence/record-dose/` - Record dose taken
-- `GET /api/adherence/dose-schedule/` - Get upcoming doses
-- `GET /api/adherence/adherence-report/` - Adherence statistics
-- `POST /api/adherence/snooze-reminder/` - Snooze reminder
-- `GET /api/adherence/missed-doses/` - List missed doses
-- `POST /api/adherence/refill-request/` - Request refill
-- `GET /api/adherence/reminders/` - List reminders
-- `PATCH /api/adherence/update-preferences/` - Update reminder preferences
-
-#### Surveillance (25 endpoints)
-- `GET /api/surveillance/dashboard-overview/` - Key metrics
-- `GET /api/surveillance/disease-statistics/` - Disease trends
-- `GET /api/surveillance/regional-comparison/` - Region comparison
-- `GET /api/surveillance/heat-map/` - Heat map data
-- `GET /api/surveillance/time-series/` - Time series data
-- `GET /api/surveillance/clusters/` - Active clusters
-- `GET /api/surveillance/cluster/{id}/` - Cluster details
-- `GET /api/surveillance/forecasts/` - Predictions
-- `GET /api/surveillance/forecast/{id}/` - Forecast details
-- `GET /api/surveillance/anomalies/` - Detected anomalies
-- `GET /api/surveillance/anomaly/{id}/` - Anomaly details
-- `GET /api/surveillance/risk-scores/` - Risk assessments
-- `GET /api/surveillance/risk-score/{id}/` - Risk score details
-- `GET /api/surveillance/alerts/` - Active alerts
-- `GET /api/surveillance/alert/{id}/` - Alert details
-- `POST /api/surveillance/alerts/{id}/acknowledge/` - Acknowledge alert
-- `POST /api/surveillance/alerts/{id}/resolve/` - Resolve alert
-- `POST /api/surveillance/alerts/{id}/mark-false-positive/` - Mark false positive
-- `GET /api/surveillance/environmental-data/` - Environmental metrics
-- `GET /api/surveillance/correlation-analysis/` - Disease-environment correlation
-- `GET /api/surveillance/outbreak-history/` - Past outbreaks
-- `GET /api/surveillance/regions/` - List regions
-- `GET /api/surveillance/region/{id}/stats/` - Region statistics
-- `POST /api/surveillance/trigger-aggregation/` - Manual aggregation
-- `POST /api/surveillance/trigger-ml-pipeline/` - Manual ML run
-
-#### Admin (15 endpoints)
-- `POST /api/admin/users/` - Create user
-- `GET /api/admin/users/` - List users
-- `PATCH /api/admin/users/{id}/` - Update user
-- `DELETE /api/admin/users/{id}/` - Delete user
-- `POST /api/admin/regions/` - Create region
-- `GET /api/admin/regions/` - List regions
-- `POST /api/admin/medicines/bulk-upload/` - Bulk upload medicines
-- `GET /api/admin/audit-logs/` - View audit logs
-- `GET /api/admin/system-health/` - System health check
-- `GET /api/admin/database-stats/` - Database statistics
-- `GET /api/admin/ml-model-status/` - ML model status
-- `POST /api/admin/retrain-models/` - Trigger model retraining
-- `GET /api/admin/celery-tasks/` - View task queue status
-- `GET /api/admin/export-data/` - Export surveillance data
-- `POST /api/admin/import-environmental-data/` - Import environmental data
-
-**Total Endpoints: 101**
-
-### API Response Format
-
-**Success Response:**
-```json
-{
-  "status": "success",
-  "data": {
-    // Resource data
-  },
-  "message": "Operation completed successfully",
-  "timestamp": "2026-02-11T10:30:00Z"
-}
-```
-
-**Error Response:**
-```json
-{
-  "status": "error",
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Invalid input data",
-    "details": {
-      "field": ["This field is required"]
-    }
-  },
-  "timestamp": "2026-02-11T10:30:00Z"
-}
-```
-
-**Paginated Response:**
-```json
-{
-  "status": "success",
-  "data": {
-    "count": 150,
-    "next": "https://api.example.com/resource?page=3",
-    "previous": "https://api.example.com/resource?page=1",
-    "results": [
-      // Array of resources
-    ]
-  }
-}
-```
-
----
-
-## Frontend Architecture
-
-### Technology Choices
-
-**Framework**: Next.js 14 with App Router
-- Server-Side Rendering (SSR) for SEO
-- Static Site Generation (SSG) for performance
-- API Routes for BFF pattern
-- Streaming SSR with Suspense
-- Incremental Static Regeneration (ISR)
-
-**State Management**:
-- **Server State**: TanStack Query (React Query)
-  - Automatic caching
-  - Background refetching
-  - Optimistic updates
-  - Infinite queries
-- **Client State**: Zustand
-  - Lightweight alternative to Redux
-  - No boilerplate
-  - DevTools integration
-
-**Styling Architecture**:
-- **Tailwind CSS**: Utility-first styling
-- **CSS Modules**: Component-scoped styles
-- **Radix UI**: Accessible component primitives
-- **CVA (Class Variance Authority)**: Type-safe component variants
-- **Framer Motion**: Declarative animations
-
-### Component Structure
-
-```
-frontend/
-├── app/
-│   ├── (auth)/
-│   │   ├── login/
-│   │   ├── signup/
-│   │   └── forgot-password/
-│   ├── dashboard/              # Patient dashboard
-│   ├── doctor/                 # Doctor portal
-│   │   ├── patients/
-│   │   ├── scan-qr/
-│   │   └── prescriptions/
-│   ├── admin/                  # Surveillance dashboard
-│   │   ├── overview/
-│   │   ├── heat-map/
-│   │   ├── alerts/
-│   │   └── analytics/
-│   ├── layout.tsx
-│   ├── page.tsx
-│   └── providers.tsx
-├── components/
-│   ├── auth/                   # Auth components
-│   ├── layout/                 # Layout components
-│   ├── charts/                 # Chart components
-│   ├── maps/                   # Map components
-│   └── ui/                     # Reusable UI components
-├── lib/
-│   ├── api.ts                  # API client
-│   └── utils.ts                # Utility functions
-├── store/
-│   └── authStore.ts            # Zustand stores
-├── types/
-│   └── index.ts                # TypeScript types
-└── styles/
-    └── globals.css
-```
-
-### Key Features
-
-**1. Authentication**
-- OTP-based passwordless auth
-- JWT token management (access + refresh)
-- Automatic token refresh
-- Route protection middleware
-
-**2. QR Code Integration**
-- Health card generation (qrcode.react)
-- QR scanning (html5-qrcode)
-- Real-time validation
-- Offline capability
-
-**3. Data Visualization**
-- Heat maps (React Leaflet + Leaflet)
-- Time series charts (Chart.js + react-chartjs-2)
-- Statistical charts (Recharts)
-- Real-time updates
-
-**4. Form Handling**
-- React Hook Form for performance
-- Zod for schema validation
-- Type-safe forms with TypeScript
-- Optimistic UI updates
-
-**5. Accessibility**
-- WCAG 2.1 Level AA compliance
-- Keyboard navigation
-- Screen reader support
-- Focus management
-
----
-
-## Security Architecture
-
-### Authentication Security
-
-**1. OTP System**
-- SHA-256 hashed storage (no plaintext)
-- 5-minute expiration
-- Maximum 3 verification attempts
-- Rate limiting: 5 OTPs per hour per email
-- Account lockout after 5 failed attempts
-
-**2. JWT Tokens**
-- Access Token: 1-hour expiry
-- Refresh Token: 30-day expiry
-- HMAC-SHA256 signature
-- Token blacklisting on logout
-- Automatic refresh mechanism
-- Secure HttpOnly cookies (production)
-
-**3. Password Security**
-- PBKDF2 algorithm with SHA256
-- 390,000 iterations
-- Per-user salt
-- Only for admin/staff accounts (patients use OTP)
-
-### Data Privacy
-
-**1. K-Anonymity Implementation**
-```python
-def enforce_k_anonymity(data, k=5):
-    # Group by region, disease, date
-    grouped = data.groupby(['region', 'disease_code', 'date'])
-    
-    # Filter out groups with < k records
-    filtered = grouped.filter(lambda x: len(x) >= k)
-    
-    # Aggregate without patient IDs
-    aggregated = filtered.agg({
-        'case_count': 'sum',
-        'severity': 'mean'
-    })
-    
-    return aggregated  # No PII included
-```
-
-**2. Data Separation**
-- Patient identifiable data: `patients_*`, `medical_*` tables
-- Anonymized surveillance data: `surveillance_surveillancedata`
-- No foreign keys between PII and surveillance tables
-- Consent verification before aggregation
-
-**3. Health Card Security**
-- JWT payload contains only profile UUID
-- No medical data in token
-- 1-year expiration
-- Revocation support
-- Offline validation capability
-
-**4. Prescription Security**
-- HMAC-SHA256 hash of prescription content
-- Tamper detection on dispensing
-- One-time dispensing check
-- Audit trail for all accesses
-
-### Access Control
-
-**Role-Based Access Control (RBAC)**:
-
-| Role | Permissions |
-|------|-------------|
-| Patient | Own profiles, medical history, prescriptions, consent management |
-| Doctor | Patient access (time-limited), medical records, prescriptions, diagnosis |
-| Pharmacist | Prescription validation, dispensing, inventory |
-| Authority | Surveillance dashboard, alerts, analytics (no PII) |
-| Admin | User management, system configuration, full access |
-
-### API Security
-
-**1. Rate Limiting**
-```python
-RateLimitMiddleware:
-  - OTP: 5 requests/hour
-  - Login: 10 requests/hour
-  - API: 1000 requests/hour (authenticated)
-  - Public endpoints: 100 requests/hour
-```
-
-**2. Input Validation**
-- Django REST Framework serializers
-- Field-level validation
-- SQL injection prevention (Django ORM)
-- XSS protection (automatic escaping)
-- CSRF tokens for state-changing operations
-
-**3. CORS Configuration**
-```python
-CORS_ALLOWED_ORIGINS = [
-    'https://app.health-surveillance.com',
-    'https://admin.health-surveillance.com',
-]
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
-```
-
-**4. HTTPS Enforcement**
-- Redirect HTTP to HTTPS
-- HSTS header (max-age=31536000)
-- Secure cookies
-- Certificate pinning (mobile apps)
-
-### Audit Trail
-
-**Logged Actions**:
-- All authentication attempts
-- Health card generation/revocation
-- Doctor patient access
-- Prescription creation/dispensing
-- Consent changes
-- Alert acknowledgment/resolution
-- Admin actions
-
-**Audit Log Schema**:
-```python
-class AuditLog:
-    user: FK(User)
-    action: str  # 'create', 'read', 'update', 'delete', 'access'
-    resource_type: str  # 'patient', 'prescription', etc.
-    resource_id: UUID
-    ip_address: str
-    user_agent: str
-    timestamp: datetime
-    metadata: JSONB  # Additional context
-```
-
----
-
-## 🏗️ System Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    USER INTERFACES                          │
-├──────────────────┬──────────────────┬──────────────────────┤
-│   Next.js Web    │  Flutter Mobile  │   Admin Dashboard   │
-│   (Patient/Doc)  │   (Patient)      │   (Authorities)     │
-└────────┬─────────┴────────┬─────────┴──────────┬──────────┘
-         │                  │                     │
-         └──────────────────┼─────────────────────┘
-                            │
-                    ┌───────▼───────┐
-                    │  Django API   │
-                    │   (REST API)  │
-                    └───────┬───────┘
-                            │
-         ┌──────────────────┼──────────────────┐
-         │                  │                  │
-    ┌────▼────┐      ┌─────▼──────┐    ┌─────▼──────┐
-    │PostgreSQL│     │ ML Pipeline │    │   Redis    │
-    │  (Neon)  │     │  (Celery)   │    │   Cache    │
-    └──────────┘     └────────────┘    └────────────┘
-```
-
-### Data Flow
-```
-Patient → QR Scan → Doctor → Diagnosis → Daily Aggregation
-                                              ↓
-                   [K-Anonymity Filter (k≥5)]
-                                              ↓
-                   Surveillance Database (No Patient IDs)
-                                              ↓
-            ┌──────────────┬──────────────┬──────────────┐
-            ↓              ↓              ↓              ↓
-        Prophet      Isolation       DBSCAN         XGBoost
-      Forecasting    Forest          Clustering     Risk Score
-                                              ↓
-                          Decision Fusion Engine
-                                              ↓
-                          Alert Generation
-                                              ↓
-               Email   ←   SMS   →   Dashboard
-```
-
----
-
-## 🛠️ Tech Stack
-
 ### Backend
-- **Framework:** Django 4.2 + Django REST Framework
-- **Database:** PostgreSQL 14+
-- **Cache:** Redis 7+
-- **Task Queue:** Celery + Celery Beat
-- **Authentication:** JWT (djangorestframework-simplejwt)
-- **QR Generation:** python-qrcode
+| Technology | Version | Purpose |
+|---|---|---|
+| Python | 3.10+ | Runtime environment |
+| Django | 4.2 | Web framework |
+| Django REST Framework | 3.14+ | RESTful API layer |
+| PostgreSQL | 14+ | Primary relational database |
+| Redis | 5.0+ | Caching and Celery message broker |
+| Celery | 5.3+ | Asynchronous task processing |
+| SimpleJWT | 5.3+ | JWT authentication |
+| ReportLab | 4.0+ | PDF report generation |
+
+### Frontend (Web)
+| Technology | Version | Purpose |
+|---|---|---|
+| Next.js | 14 | React framework with App Router |
+| React | 18 | UI component library |
+| TypeScript | 5.3 | Type-safe development |
+| Tailwind CSS | 3.4 | Utility-first CSS framework |
+| shadcn/ui + Radix UI | — | Accessible component primitives |
+| TanStack React Query | 5.x | Server state management |
+| Zustand | 4.5 | Client state management |
+| Recharts / Chart.js | — | Data visualization |
+| Leaflet | 1.9 | Interactive map rendering |
+| html5-qrcode | 2.3 | QR code scanning |
+| Zod | 3.22 | Schema validation |
+
+### Mobile
+| Technology | Version | Purpose |
+|---|---|---|
+| Flutter | 3.10+ | Cross-platform mobile framework |
+| Dart | 3.10+ | Programming language |
+| Dio | 5.7 | HTTP client |
+| Provider | 6.1 | State management |
+| flutter_secure_storage | 9.2 | Encrypted credential storage |
+| mobile_scanner | 6.0 | QR/barcode scanning |
+| fl_chart | 0.70 | Chart rendering |
 
 ### Machine Learning
-- **Prophet** - Facebook's time series forecasting
-- **scikit-learn** - DBSCAN, Isolation Forest
-- **XGBoost** - Gradient boosting for risk classification
-- **pandas** - Data processing
-- **numpy** - Numerical computing
+| Technology | Version | Purpose |
+|---|---|---|
+| scikit-learn (Isolation Forest) | 1.3+ | Ensemble anomaly detection |
+| scikit-learn (DBSCAN) | 1.3+ | Geospatial clustering |
+| Prophet | 1.1+ | Time-series forecasting |
+| XGBoost | 2.0+ | Gradient-boosted risk scoring |
+| pandas | 2.0+ | Data manipulation |
+| NumPy | 1.24+ | Numerical computation |
 
 ---
 
-## 🚀 Quick Start
+## Project Structure
 
-### Prerequisites
-```bash
-# Required
-Python 3.10+
-PostgreSQL 14+
-Redis 7+
+```
+algosmiths/
+├── backend/                    # Django REST API
+│   ├── accounts/               # Authentication, RBAC, audit logging
+│   ├── adherence/              # Medication adherence tracking
+│   ├── config/                 # Django settings, URLs, WSGI/ASGI
+│   ├── dashboard/              # Patient health dashboard & alerts
+│   ├── medical/                # Medical records, diagnoses, lab results
+│   ├── patients/               # Patient profiles, health cards
+│   ├── pharmacy/               # Pharmacy inventory, dispensing
+│   ├── prescriptions/          # Digital prescriptions, drug interactions
+│   ├── surveillance/           # Disease surveillance, ML pipeline
+│   ├── manage.py               # Django management entry point
+│   └── requirements.txt        # Python dependencies
+│
+├── frontend/                   # Next.js 14 web application
+│   ├── app/                    # App Router pages and layouts
+│   ├── components/             # Reusable UI components
+│   ├── lib/                    # API client, utilities
+│   ├── store/                  # Zustand state stores
+│   ├── types/                  # TypeScript type definitions
+│   └── package.json            # Node.js dependencies
+│
+├── mobile_app/                 # Flutter mobile application
+│   ├── lib/                    # Dart source code
+│   │   ├── config/             # API configuration
+│   │   ├── screens/            # Application screens
+│   │   ├── services/           # API and storage services
+│   │   ├── widgets/            # Reusable widgets
+│   │   └── providers/          # State management providers
+│   ├── android/                # Android platform configuration
+│   ├── ios/                    # iOS platform configuration
+│   └── pubspec.yaml            # Flutter dependencies
+│
+├── ml_models/                  # Machine learning model training
+│   ├── train_models/           # Training scripts
+│   ├── saved_models/           # Serialized trained models
+│   ├── test_models/            # Model evaluation scripts
+│   └── test_results/           # Evaluation outputs
+│
+├── src/                        # Vite + React admin panel (legacy)
+│   ├── components/             # React components
+│   ├── pages/                  # Page-level components
+│   └── main.jsx                # Application entry point
+│
+└── README.md                   # This file
 ```
 
-### Installation
+---
 
-**1. Clone Repository**
+## Prerequisites
+
+Ensure the following software is installed on your system:
+
+| Software | Minimum Version | Required |
+|---|---|---|
+| Python | 3.10 | Yes |
+| Node.js | 18.0 | Yes |
+| npm | 9.0 | Yes |
+| PostgreSQL | 14.0 | Yes |
+| Redis | 5.0 | Optional (caching/Celery) |
+| Flutter SDK | 3.10 | For mobile development |
+| Git | 2.30+ | Yes |
+
+---
+
+## Installation & Setup
+
+### 1. Backend (Django)
+
+#### Clone the Repository
+
 ```bash
 git clone <repository-url>
-cd Health-Surveillance/backend
+cd algosmiths
 ```
 
-**2. Install Dependencies**
+#### Create and Activate a Virtual Environment
+
+```bash
+cd backend
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+
+# Linux / macOS
+source venv/bin/activate
+```
+
+#### Install Python Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-**3. Configure Environment**
-```bash
-cp .env.example .env
-# Edit .env with your database credentials
-```
+#### Configure Environment Variables
 
-**4. Run Setup Script**
-```bash
-python setup.py
-```
+Create a `.env` file inside the `backend/` directory:
 
-This will:
-- Create database migrations
-- Apply migrations
-- Seed regions (20+ Indian cities)
-- Seed medicines database
-- Create superuser account
-
-**5. Load Demo Data (Optional - Recommended for Testing)**
-```bash
-python manage.py seed_demo_data --clear
-```
-
-This will populate the database with demo data from the ML models dataset:
-- ✅ **50 regions** from ML dataset (realistic Indian locations)
-- ✅ **3 months** of surveillance data (~837 records)
-- ✅ **16 demo users** (admin, doctors, patients)
-- ✅ **12 patient profiles** with medical records
-- ✅ **11 disease clusters** for visualization
-- ✅ **Demo login:** admin@demo.com / demo123
-
-See [DEMO_DATA_SETUP.md](backend/DEMO_DATA_SETUP.md) for detailed documentation.
-
-**Note:** This loads only a SUBSET of data for demo purposes, not the entire ML dataset.
-
-**6. Start Services**
-
-Terminal 1 - Django:
-```bash
-python manage.py runserver
-```
-
-Terminal 2 - Redis:
-```bash
-redis-server
-```
-
-Terminal 3 - Celery Worker:
-```bash
-celery -A config worker -l info
-```
-
-Terminal 4 - Celery Beat (optional for scheduled tasks):
-```bash
-celery -A config beat -l info
-```
-
-### Access Points
-- **API:** http://localhost:8000/api/
-- **Admin Panel:** http://localhost:8000/admin/
-- **API Documentation:** See [API Documentation](#-api-documentation)
-
----
-
-## 📡 API Documentation
-
-### Authentication
-```http
-POST /api/auth/send-otp/          # Send OTP to email
-POST /api/auth/verify-otp/        # Verify OTP & get tokens
-POST /api/auth/refresh-token/     # Refresh access token
-POST /api/auth/logout/            # Logout & blacklist token
-```
-
-### Patient Management
-```http
-POST   /api/patients/create-profile/                    # Create patient profile
-GET    /api/patients/my-profiles/                       # Get all profiles
-POST   /api/patients/{id}/emergency-contacts/          # Add emergency contact
-GET    /api/patients/{id}/health-card-download/        # Download health card
-POST   /api/patients/{id}/revoke-health-card/          # Revoke health card
-```
-
-### Doctor Portal
-```http
-POST   /api/doctors/scan-health-card/                   # Scan patient QR
-GET    /api/doctors/patient-history/{patient_id}/      # Get medical history
-POST   /api/doctors/create-medical-record/             # Add diagnosis
-POST   /api/doctors/{patient_id}/allergies/            # Add allergy
-```
-
-### Prescriptions
-```http
-POST   /api/prescriptions/create/                       # Create prescription
-GET    /api/prescriptions/{id}/                         # Get prescription
-GET    /api/prescriptions/my-prescriptions/            # Patient's prescriptions
-```
-
-### Surveillance (Admin/Authority only)
-```http
-GET    /api/surveillance/dashboard-overview/            # Key metrics
-GET    /api/surveillance/disease-statistics/           # Disease trends
-GET    /api/surveillance/regional-comparison/          # Region comparison
-GET    /api/surveillance/heat-map/                     # Heat map data
-GET    /api/surveillance/alerts/                       # Active alerts
-POST   /api/surveillance/alerts/{id}/acknowledge/     # Acknowledge alert
-```
-
-**Total Endpoints:** 100+
-
-See [IMPLEMENTATION_COMPLETE.md](IMPLEMENTATION_COMPLETE.md) for full API documentation.
-
----
-
-## 🤖 Machine Learning
-
-### 1. Prophet - Time Series Forecasting
-**Purpose:** Predict disease cases 7/14/30 days ahead
-
-**Features:**
-- Weekly & yearly seasonality
-- Holiday effects
-- 95% confidence intervals
-- Per region-disease models
-
-**Usage:**
-```python
-from surveillance.services import ForecastingService
-
-forecasts = ForecastingService.generate_forecast(
-    region=region,
-    disease_code='A90',  # Dengue
-    horizon_days=7
-)
-```
-
-### 2. DBSCAN - Spatial Clustering
-**Purpose:** Detect disease hotspots
-
-**Parameters:**
-- `eps` = 50km (neighborhood radius)
-- `min_samples` = 3 regions
-
-**Output:**
-- Cluster centroids
-- Severity levels (Low/Medium/High/Critical)
-- Affected regions
-
-### 3. Isolation Forest - Anomaly Detection
-**Purpose:** Real-time spike detection
-
-**Features:**
-- Rolling 7-day statistics
-- Anomaly score (-1 to 1)
-- Deviation percentage
-- Expected vs actual comparison
-
-### 4. XGBoost - Risk Scoring
-**Purpose:** Multi-factor outbreak risk assessment
-
-**Input Features:**
-- Medical: case count, severity, growth rate
-- Environmental: temp, humidity, rainfall, AQI
-- Demographic: population density
-- Historical: past outbreaks
-
-**Output:**
-- 4-level risk (Low/Medium/High/Critical)
-- Risk probability (0-1)
-- Contributing factors (SHAP values)
-
-### Multi-Model Decision Fusion
-```
-IF Prophet forecasts spike + DBSCAN detects cluster + Isolation Forest flags anomaly
-   → CRITICAL ALERT (95% confidence)
-
-IF Prophet forecasts spike + DBSCAN detects cluster
-   → HIGH ALERT (80% confidence)
-
-IF Isolation Forest flags anomaly only
-   → MEDIUM ALERT (60% confidence)
-
-IF XGBoost shows high risk but no other signals
-   → LOW ALERT (50% confidence)
-```
-
----
-
-## 🔒 Privacy & Security
-
-### K-Anonymity Enforcement
-```python
-# Only include data if k ≥ 5 cases per region-disease-date
-IF case_count < 5:
-    SUPPRESS DATA  # Privacy protection
-
-# No patient IDs in aggregated data
-surveillance_data = {
-    'date': '2026-02-11',
-    'region': 'Andheri West',
-    'disease_code': 'A90',
-    'case_count': 23,  # Aggregated
-    'average_severity': 2.4  # Averaged
-    # NO patient_ids, names, addresses
-}
-```
-
-### Consent Management
-- **Opt-in required** for surveillance
-- **Granular consent** types (surveillance, research, data sharing)
-- **Instant revocation** supported
-- **Audit trail** maintained
-
-### Authentication & Authorization
-- **JWT tokens** with 1-hour expiry
-- **Refresh tokens** (30-day expiry)
-- **Role-based access control** (RBAC)
-- **Rate limiting** (5 OTP/hour)
-
-### Health Card Security
-- **JWT signed** with HMAC-SHA256
-- **1-year expiry**
-- **Revocation support**
-- **No medical data** in token (just reference ID)
-
-### Prescription Security
-- **HMAC-SHA256** hash validation
-- **One-time dispensing** check
-- **Tamper detection**
-
----
-
-## 📁 Project Structure
-
-```
-Health-Surveillance/
-├── backend/
-│   ├── accounts/              # Authentication & users
-│   ├── patients/              # Patient profiles & health cards
-│   ├── medical/               # Medical records & diagnoses
-│   ├── prescriptions/         # E-prescriptions & medicines
-│   ├── pharmacy/              # Pharmacy dispensing
-│   ├── adherence/             # Medicine adherence tracking
-│   ├── surveillance/          # Disease surveillance & ML
-│   ├── config/                # Django settings & celery
-│   ├── media/                 # QR codes & uploads
-│   ├── manage.py
-│   ├── requirements.txt
-│   ├── setup.py               # Setup script
-│   └── .env.example
-├── ml_models/
-│   ├── saved_models/          # Pre-trained ML models
-│   ├── train_models/          # Training scripts
-│   ├── test_models/           # Testing & visualization
-│   └── ml_datasets/           # Training datasets
-├── frontend/                  # ⏳ Next.js (Phase 2)
-├── IMPLEMENTATION_COMPLETE.md # Full documentation
-├── IMPLEMENTATION_COMPARISON.md # Feature comparison
-├── QUICK_START.md             # Quick setup guide
-└── README.md                  # This file
-```
-
----
-
-## 📚 Documentation
-
-- **[IMPLEMENTATION_COMPLETE.md](IMPLEMENTATION_COMPLETE.md)** - Complete system documentation
-- **[IMPLEMENTATION_COMPARISON.md](IMPLEMENTATION_COMPARISON.md)** - Feature comparison vs plan
-- **[QUICK_START.md](QUICK_START.md)** - 5-minute setup guide
-- **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** - Implementation history
-- **API Documentation** - Inline in IMPLEMENTATION_COMPLETE.md
-
----
-
-## 🧪 Testing
-
-### Run All Tests
-```bash
-python manage.py test
-```
-
-### Test Individual Apps
-```bash
-python manage.py test accounts
-python manage.py test surveillance
-python manage.py test medical
-```
-
-### Manual Testing with Postman
-1. Import endpoints from documentation
-2. Start with authentication flow (OTP → JWT)
-3. Test patient registration → health card
-4. Test doctor workflow (QR scan → diagnosis → prescription)
-5. Test surveillance APIs (heat map, alerts, dashboard)
-
----
-
-##  Metrics
-
-### Code Statistics
-- **Lines of Code:** ~15,000
-- **API Endpoints:** 100+
-- **Database Models:** 38
-- **Django Apps:** 7
-- **ML Models:** 4 integrated
-- **Celery Tasks:** 20+
-- **Test Coverage:** 85%
-
-### Performance
-- **API Response Time:** < 200ms (95th percentile)
-- **ML Inference Time:** < 2s per prediction
-- **Daily Aggregation:** ~5 minutes for 1M records
-- **Alert Generation:** Real-time (< 10s)
-
----
-
-
-
-### Environment Variables
-```bash
-# Django Settings
+```env
+# Django Core
+SECRET_KEY=<your-secret-key>
 DEBUG=True
-SECRET_KEY=your-secret-key
 ALLOWED_HOSTS=localhost,127.0.0.1
 
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/health_surveillance
+# Database (PostgreSQL)
+DATABASE_URL=postgresql://<user>:<password>@localhost:5432/<dbname>
 DB_NAME=health_surveillance
 DB_USER=postgres
-DB_PASSWORD=your-password
+DB_PASSWORD=<your-password>
 DB_HOST=localhost
 DB_PORT=5432
 
-# Redis
+# JWT
+JWT_SECRET=<your-jwt-secret>
+
+# Redis (Optional)
 REDIS_URL=redis://localhost:6379/0
 
-# Celery
-CELERY_BROKER_URL=redis://localhost:6379/0
-CELERY_RESULT_BACKEND=redis://localhost:6379/0
-
-# JWT Settings
-JWT_ACCESS_TOKEN_LIFETIME=60  # minutes
-JWT_REFRESH_TOKEN_LIFETIME=43200  # minutes (30 days)
-
-# Email Configuration (for OTP)
-EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=your-email@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
-
-# SMS Configuration (for reminders)
-SMS_API_KEY=your-twilio-api-key
-SMS_API_SECRET=your-twilio-secret
-
-# ML Model Paths
-ML_MODELS_PATH=./ml_models/saved_models/
-
-# Surveillance Settings
-K_ANONYMITY_THRESHOLD=5
-AGGREGATION_HOUR=2  # 2 AM daily
-
-# Alert Settings
-ALERT_ESCALATION_TIMEOUT=120  # minutes
-ALERT_EMAIL_RECIPIENTS=health-authority@example.com
+# Email (Console backend for development)
+EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+DEFAULT_FROM_EMAIL=noreply@localhost
 ```
 
-### Celery Tasks
+#### Initialize the Database
 
-**Scheduled Tasks (Celery Beat):**
-```python
-# surveillance/tasks.py
-@shared_task
-def aggregate_disease_data_task():
-    """Daily 2 AM: Aggregate diagnoses with K-anonymity"""
-    pass
-
-@shared_task
-def generate_forecasts_task():
-    """Daily 3 AM: Generate Prophet forecasts"""
-    pass
-
-@shared_task
-def detect_anomalies_task():
-    """Hourly: Run Isolation Forest detection"""
-    pass
-
-@shared_task
-def generate_risk_scores_task():
-    """Daily 4 AM: Calculate XGBoost risk scores"""
-    pass
-
-@shared_task
-def check_alert_escalation_task():
-    """Every 10 min: Check for unacknowledged alerts"""
-    pass
-
-# adherence/tasks.py
-@shared_task
-def send_adherence_reminders_task():
-    """Every hour: Send medicine reminders"""
-    pass
-
-@shared_task
-def calculate_adherence_percentages_task():
-    """Daily 6 AM: Update adherence statistics"""
-    pass
-
-@shared_task
-def send_refill_reminders_task():
-    """Daily 9 AM: Alert for low medicine stock"""
-    pass
-```
-
-### ML Model Training
-
-**Training Prophet Models:**
 ```bash
-cd ml_models/train_models
-python train_prophet_models.py
+python manage.py migrate
+python manage.py createsuperuser
 ```
 
-**Training XGBoost Classifier:**
+#### Start the Backend Server
+
 ```bash
-python train_xgboost_risk_model.py
+python manage.py runserver 8000
 ```
 
-**Testing Models:**
+The API will be accessible at `http://localhost:8000/api/`.
+
+---
+
+### 2. Frontend (Next.js)
+
+#### Install Node.js Dependencies
+
 ```bash
-cd ../test_models
-python test_all_models.py
+cd frontend
+npm install
 ```
 
-**Visualizing Results:**
+#### Configure Environment Variables
+
+Create a `.env.local` file inside the `frontend/` directory:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+```
+
+#### Start the Development Server
+
 ```bash
-python visualize_predictions.py
+npm run dev
 ```
 
-### Security Best Practices
+The web application will be accessible at `http://localhost:3000`.
 
-1. **Never commit .env files** - Use .env.example as template
-2. **Rotate JWT secret keys** - Every 90 days
-3. **Use strong database passwords** - Minimum 16 characters
-4. **Enable SSL/TLS** - For production deployments
-5. **Rate limit APIs** - Prevent abuse (configured in middleware)
-6. **Audit logs** - Enable audit trail for sensitive operations
-7. **Backup database** - Daily automated backups
-8. **Monitor anomalies** - Set up Prometheus alerts
+---
 
-### Performance Optimization
+### 3. Mobile App (Flutter)
 
-**Database Optimization:**
-```sql
--- Create indexes for common queries
-CREATE INDEX idx_surveillance_region_date ON surveillance_diseasesurveillancedata(region_id, date);
-CREATE INDEX idx_medical_record_patient ON medical_medicalrecord(patient_id, created_at);
-CREATE INDEX idx_prescription_patient ON prescriptions_prescription(patient_id, created_at);
+#### Install Flutter Dependencies
+
+```bash
+cd mobile_app
+flutter pub get
 ```
 
-**Redis Caching:**
-```python
-# Cache surveillance dashboard data (5 minutes)
-cache.set('dashboard_overview', data, timeout=300)
+#### Configure API Endpoint
 
-# Cache forecast results (24 hours)
-cache.set(f'forecast_{region_id}_{disease}', forecast, timeout=86400)
+Create a `.env` file in the `mobile_app/` directory with the backend URL:
+
+```env
+API_BASE_URL=http://<your-local-ip>:8000/api
 ```
 
-**Query Optimization:**
-```python
-# Use select_related for foreign keys
-MedicalRecord.objects.select_related('patient', 'doctor').all()
+#### Run on a Device or Emulator
 
-# Use prefetch_related for many-to-many
-Prescription.objects.prefetch_related('items__medicine').all()
+```bash
+# Android
+flutter run
 
-# Use only() to fetch specific fields
-Patient.objects.only('first_name', 'last_name', 'date_of_birth')
+# iOS
+flutter run --target-platform ios
 ```
 
 ---
 
-## 🐛 Troubleshooting
+### 4. ML Models
 
-### Common Issues
+#### Set Up the ML Environment
 
-**1. Database Connection Error**
 ```bash
-# Check if PostgreSQL is running
-pg_isready
+cd ml_models
+python -m venv .venv
 
-# Verify credentials in .env
-psql -U postgres -d health_surveillance
+# Activate the virtual environment
+# Windows
+.venv\Scripts\activate
+
+# Linux / macOS
+source .venv/bin/activate
+
+pip install numpy pandas scikit-learn prophet xgboost
 ```
 
-**2. Redis Connection Error**
-```bash
-# Check Redis status
-redis-cli ping
-# Should return: PONG
+#### Train All Models
 
-# Start Redis if not running
-redis-server
+```bash
+python train_all_refined.py
 ```
 
-**3. Celery Workers Not Processing Tasks**
-```bash
-# Check Celery worker status
-celery -A config inspect active
-
-# Restart workers
-celery -A config worker -l info --purge
-```
-
-**4. OTP Not Sending**
-```bash
-# Check email configuration
-python manage.py shell
->>> from django.core.mail import send_mail
->>> send_mail('Test', 'Message', 'from@example.com', ['to@example.com'])
-```
-
-**5. ML Models Not Loading**
-```bash
-# Verify model files exist
-ls ml_models/saved_models/
-
-# Retrain models if missing
-cd ml_models/train_models
-python train_prophet_models.py
-```
-
-**6. QR Code Not Generating**
-```bash
-# Check media directory permissions
-chmod 755 backend/media/qr_codes/
-
-# Verify qrcode package installed
-pip show qrcode
-```
+Trained models are saved to the `saved_models/` directory and are loaded by the surveillance module at runtime.
 
 ---
 
-## 📖 Additional Resources
+## Running the Application
 
-### API Examples
+### Quick Start (Windows)
 
-**Complete Patient Registration Flow:**
 ```bash
-# 1. Send OTP
-curl -X POST http://localhost:8000/api/auth/send-otp/ \
-  -H "Content-Type: application/json" \
-  -d '{"email": "patient@example.com"}'
-
-# 2. Verify OTP
-curl -X POST http://localhost:8000/api/auth/verify-otp/ \
-  -H "Content-Type: application/json" \
-  -d '{"email": "patient@example.com", "otp": "123456"}'
-# Response: {"access": "jwt-token", "refresh": "refresh-token"}
-
-# 3. Create Profile
-curl -X POST http://localhost:8000/api/patients/create-profile/ \
-  -H "Authorization: Bearer {access-token}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "first_name": "John",
-    "last_name": "Doe",
-    "date_of_birth": "1990-01-01",
-    "gender": "M",
-    "blood_group": "O+",
-    "contact_number": "+919876543210",
-    "address": "123 Main St",
-    "region_id": 1,
-    "consent_for_surveillance": true
-  }'
-
-# 4. Download Health Card
-curl -X GET http://localhost:8000/api/patients/1/health-card-download/ \
-  -H "Authorization: Bearer {access-token}" \
-  --output health_card.png
+start-dev.bat
 ```
 
-**Doctor Diagnosis Workflow:**
+This script starts the Django backend on port 8000 and the Next.js frontend on port 3000 simultaneously.
+
+### Quick Start (Linux / macOS)
+
 ```bash
-# 1. Scan Patient QR
-curl -X POST http://localhost:8000/api/doctors/scan-health-card/ \
-  -H "Authorization: Bearer {doctor-token}" \
-  -H "Content-Type: application/json" \
-  -d '{"qr_code_token": "patient-jwt-from-qr"}'
-# Response: Patient data + 24-hour access token
-
-# 2. View Medical History
-curl -X GET http://localhost:8000/api/doctors/patient-history/1/ \
-  -H "Authorization: Bearer {doctor-token}"
-
-# 3. Create Diagnosis
-curl -X POST http://localhost:8000/api/doctors/create-medical-record/ \
-  -H "Authorization: Bearer {doctor-token}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "patient_id": 1,
-    "diagnosis": "Dengue Fever",
-    "icd_code": "A90",
-    "severity": 3,
-    "symptoms": "High fever, headache, joint pain",
-    "notes": "Patient advised rest and hydration"
-  }'
-
-# 4. Create Prescription
-curl -X POST http://localhost:8000/api/prescriptions/create/ \
-  -H "Authorization: Bearer {doctor-token}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "patient_id": 1,
-    "medications": [
-      {
-        "medicine_id": 1,
-        "dosage": "500mg",
-        "frequency": "Twice daily",
-        "duration_days": 7,
-        "instructions": "Take after meals"
-      }
-    ],
-    "notes": "Complete the full course"
-  }'
+chmod +x start-dev.sh
+./start-dev.sh
 ```
 
-**Surveillance Dashboard:**
+### Manual Start
+
+Open three terminal sessions:
+
 ```bash
-# Get Overview Metrics
-curl -X GET http://localhost:8000/api/surveillance/dashboard-overview/ \
-  -H "Authorization: Bearer {admin-token}"
-# Returns: total_cases, active_regions, alerts_count, trends
+# Terminal 1 — Backend
+cd backend
+venv\Scripts\activate        # or source venv/bin/activate
+python manage.py runserver 8000
 
-# Get Heat Map Data
-curl -X GET "http://localhost:8000/api/surveillance/heat-map/?disease_code=A90&days=7" \
-  -H "Authorization: Bearer {admin-token}"
-# Returns: [{region, lat, lon, case_count, severity}, ...]
+# Terminal 2 — Frontend
+cd frontend
+npm run dev
 
-# Get Active Alerts
-curl -X GET http://localhost:8000/api/surveillance/alerts/ \
-  -H "Authorization: Bearer {admin-token}"
-
-# Acknowledge Alert
-curl -X POST http://localhost:8000/api/surveillance/alerts/1/acknowledge/ \
-  -H "Authorization: Bearer {admin-token}" \
-  -H "Content-Type: application/json" \
-  -d '{"notes": "Dispatched field team to investigate"}'
+# Terminal 3 — Celery Worker (optional, for async tasks)
+cd backend
+venv\Scripts\activate
+celery -A config worker --loglevel=info
 ```
 
-### Technology References
+### Default Ports
 
-- **Django Documentation:** https://docs.djangoproject.com/
-- **Django REST Framework:** https://www.django-rest-framework.org/
-- **Prophet Documentation:** https://facebook.github.io/prophet/
-- **XGBoost Guide:** https://xgboost.readthedocs.io/
-- **scikit-learn DBSCAN:** https://scikit-learn.org/stable/modules/clustering.html#dbscan
-- **ICD-10 Codes:** https://icd.who.int/browse10/2019/en
-- **Celery Documentation:** https://docs.celeryproject.org/
-- **PostgreSQL Docs:** https://www.postgresql.org/docs/
+| Service | URL |
+|---|---|
+| Django API | `http://localhost:8000` |
+| Django Admin Panel | `http://localhost:8000/admin/` |
+| Next.js Frontend | `http://localhost:3000` |
+| Vite Admin Panel | `http://localhost:5173` |
+| PostgreSQL | `localhost:5432` |
+| Redis | `localhost:6379` |
 
 ---
 
-## 📊 System Capabilities
+## API Reference
 
-### Scalability Metrics
-- **Patients:** Supports 10M+ profiles
-- **Concurrent Users:** 100K+ simultaneous
-- **Transactions/sec:** 5,000 TPS
-- **Data Storage:** Petabyte-scale ready
-- **Geographic Coverage:** Unlimited regions
-- **Disease Types:** 14,000+ ICD-10 codes
-- **ML Predictions:** 10K/hour
+All endpoints are prefixed with `/api/`. Authentication is required for most endpoints via the `Authorization: Bearer <token>` header.
 
-### Compliance & Standards
-- **Privacy:** HIPAA-compliant architecture
-- **Data Protection:** GDPR-ready (consent management)
-- **Security:** OWASP Top 10 mitigated
-- **Interoperability:** HL7 FHIR compatible (planned)
-- **Classification:** WHO ICD-10 standard
-- **Audit:** SOC 2 Type II ready
+### Authentication (`/api/auth/`)
 
-### Supported Use Cases
-1. **Public Health Surveillance** - Early outbreak detection
-2. **Clinical Workflows** - Patient management for hospitals
-3. **Research** - De-identified data for epidemiology
-4. **Emergency Response** - Rapid disease tracking
-5. **Medication Management** - Adherence monitoring
-6. **Supply Chain** - Pharmacy inventory optimization
-7. **Health Analytics** - Population health insights
-8. **Policy Making** - Evidence-based decisions
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/auth/send-otp/` | Send OTP for registration |
+| `POST` | `/auth/verify-otp/` | Verify OTP code |
+| `POST` | `/auth/register/doctor/` | Register a new doctor account |
+| `POST` | `/auth/register/patient/` | Register a new patient account |
+| `POST` | `/auth/register/pharmacist/` | Register a new pharmacist account |
+| `POST` | `/auth/login/` | Authenticate and receive JWT tokens |
+| `POST` | `/auth/token/` | Obtain JWT token pair |
+| `POST` | `/auth/token/refresh/` | Refresh an expired access token |
+| `POST` | `/auth/password-reset/request/` | Request password reset email |
+| `POST` | `/auth/password-reset/confirm/` | Confirm password reset |
+| `POST` | `/auth/verify-email/` | Verify email address |
+| `GET` | `/auth/me/` | Retrieve authenticated user profile |
+| `GET` | `/auth/admin/doctors/pending/` | List doctors pending approval (Admin) |
+| `PATCH` | `/auth/admin/doctors/<id>/approval/` | Approve or reject a doctor (Admin) |
+
+### Medical Records (`/api/doctors/`, `/api/patients/`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/doctors/records/` | List medical records |
+| `POST` | `/doctors/records/` | Create a new medical record |
+| `GET` | `/doctors/records/<id>/` | Retrieve a specific record |
+| `GET` | `/doctors/reports/<id>/download/` | Download a report attachment |
+| `POST` | `/patients/<id>/allergies/` | Add patient allergy |
+| `GET` | `/patients/<id>/allergies/` | List patient allergies |
+| `POST` | `/patients/<id>/chronic-conditions/` | Add chronic condition |
+| `GET` | `/patients/<id>/chronic-conditions/` | List chronic conditions |
+
+### Prescriptions (`/api/prescriptions/`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/prescriptions/` | Create a digital prescription |
+| `GET` | `/prescriptions/` | List prescriptions |
+| `POST` | `/prescriptions/<id>/medicines/` | Add medicines to a prescription |
+| `GET` | `/prescriptions/<id>/drug-interactions/` | Check drug interactions |
+| `GET` | `/prescriptions/<id>/download/` | Download prescription PDF |
+
+### Pharmacy (`/api/pharmacy/`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/pharmacy/scan-prescription/` | Scan a prescription QR code |
+| `POST` | `/pharmacy/scan-patient/` | Scan a patient health card QR |
+| `GET` | `/pharmacy/inventory/` | View pharmacy inventory |
+| `POST` | `/pharmacy/dispense/` | Record a dispensing transaction |
+| `GET` | `/pharmacy/<id>/` | Retrieve pharmacy details |
+
+### Adherence (`/api/adherence/`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/adherence/<patient_id>/summary/` | Get patient adherence summary |
+| `POST` | `/adherence/<prescription_id>/mark-dose/` | Mark a dose as taken |
+| `GET` | `/adherence/reminders/` | List active reminders |
+
+### Surveillance (`/api/surveillance/`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/surveillance/regions/` | List geographic regions |
+| `GET` | `/surveillance/surveillance-data/` | Retrieve surveillance case data |
+| `GET` | `/surveillance/clusters/` | Get DBSCAN-detected clusters |
+| `GET` | `/surveillance/forecasts/` | Get Prophet forecasts |
+| `GET` | `/surveillance/anomalies/` | List detected anomalies |
+| `GET` | `/surveillance/risk-scores/` | Get XGBoost risk scores |
+| `GET` | `/surveillance/alerts/` | List active alerts |
+| `GET` | `/surveillance/heat-map/` | Get heat map visualization |
+| `GET` | `/surveillance/heat-map-data/` | Get heat map raw data |
+| `GET` | `/surveillance/disease-statistics/` | Disease statistics summary |
+| `GET` | `/surveillance/regional-comparison/` | Compare regions by cases/100k |
+| `GET` | `/surveillance/dashboard-overview/` | Surveillance dashboard summary |
+| `GET` | `/surveillance/forecast-chart-data/` | Forecast chart datasets |
+| `GET` | `/surveillance/ml-models/` | List available ML models |
+| `GET` | `/surveillance/ml-pipeline-status/` | ML pipeline execution status |
+| `POST` | `/surveillance/run-ml-pipeline/` | Trigger ML pipeline execution |
+| `GET` | `/surveillance/daywise-comparison/` | Day-wise case comparison |
+
+### Dashboard (`/api/dashboard/`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/dashboard/summary/` | Patient health summary |
+| `GET` | `/dashboard/kpis/` | Key performance indicators |
+| `GET` | `/dashboard/alerts/` | Health alerts for the patient |
+| `POST` | `/dashboard/alerts/<id>/read/` | Mark alert as read |
+| `POST` | `/dashboard/alerts/<id>/dismiss/` | Dismiss an alert |
+| `GET` | `/dashboard/download-logs/` | Download audit logs |
+| `POST` | `/dashboard/bulk-download/` | Bulk download records as ZIP |
 
 ---
 
-## About
+## Module Documentation
+
+| Module | Description | Documentation |
+|---|---|---|
+| Local Setup | Complete end-to-end local development setup | [docs/local-setup.md](docs/local-setup.md) |
+| Backend Setup | Backend installation, services, and API configuration | [docs/backend-setup.md](docs/backend-setup.md) |
+| Frontend Setup | Frontend installation, build, and environment config | [docs/frontend-setup.md](docs/frontend-setup.md) |
+| JWT Authentication | Token-based auth with role management | [JWT_AUTHENTICATION_GUIDE.md](JWT_AUTHENTICATION_GUIDE.md) |
+| Medical Records | Medical records module architecture | [MEDICAL_RECORDS_MODULE.md](MEDICAL_RECORDS_MODULE.md) |
+| Localhost Setup | Localhost development configuration | [LOCALHOST_SETUP_GUIDE.md](LOCALHOST_SETUP_GUIDE.md) |
+| Quick Start | Rapid development environment setup | [QUICKSTART.md](QUICKSTART.md) |
+
+---
+
+## Environment Variables
+
+### Backend (`backend/.env`)
+
+| Variable | Description | Default |
+|---|---|---|
+| `SECRET_KEY` | Django secret key | — |
+| `DEBUG` | Enable debug mode | `True` |
+| `ALLOWED_HOSTS` | Comma-separated allowed hostnames | `localhost,127.0.0.1` |
+| `DATABASE_URL` | Full PostgreSQL connection URI | — |
+| `DB_NAME` | Database name | `health_surveillance` |
+| `DB_USER` | Database username | `postgres` |
+| `DB_PASSWORD` | Database password | — |
+| `DB_HOST` | Database host | `localhost` |
+| `DB_PORT` | Database port | `5432` |
+| `JWT_SECRET` | Secret key for JWT signing | — |
+| `REDIS_URL` | Redis connection URI | `redis://localhost:6379/0` |
+| `CORS_ALLOWED_ORIGINS` | Allowed CORS origins (production) | — |
+| `EMAIL_BACKEND` | Django email backend class | Console backend |
+
+### Frontend (`frontend/.env.local`)
+
+| Variable | Description | Default |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | Backend API base URL | `http://localhost:8000/api` |
+| `NEXT_PUBLIC_WS_URL` | WebSocket URL | `ws://localhost:8000/ws` |
+| `NEXT_PUBLIC_APP_NAME` | Application display name | `ArogyaTrack` |
+| `NEXT_PUBLIC_MAPBOX_TOKEN` | Mapbox token (optional, production maps) | — |
+
+### Mobile App (`mobile_app/.env`)
+
+| Variable | Description | Default |
+|---|---|---|
+| `API_BASE_URL` | Backend API base URL (use local IP, not localhost) | — |
+| `APP_NAME` | Application display name | `ArogyaTrack` |
+
+### Environment File Templates
+
+| Location | Template File |
+|---|---|
+| `backend/.env` | `backend/.env.example` |
+| `frontend/.env.local` | `frontend/.env.local.example` |
+| `mobile_app/.env` | `mobile_app/.env.example` |
+
+---
 
 <div align="center">
 
-### Made with ❤️ by **Algosmiths**
-
-*Crafting intelligent solutions for a healthier tomorrow*
-
-**Empowering Healthcare Through Innovation**
-
----
-
-**Where Algorithms Meet Healthcare Excellence**
-
-Algosmiths is dedicated to building cutting-edge technology solutions that transform healthcare delivery. Our mission is to leverage artificial intelligence, machine learning, and modern software engineering to create systems that save lives, improve patient outcomes, and make healthcare accessible to all.
-
-### Our Vision
-
-*"To be the catalyst in digital healthcare transformation, creating intelligent systems that predict, prevent, and cure diseases while preserving patient privacy and dignity."*
-
----
-
-**🌟 Innovation • Privacy • Intelligence • Impact 🌟**
-
-<sub>Version 1.0.0 | Last Updated: February 11, 2026</sub><br>
-<sub>© 2026 Algosmiths. All rights reserved.</sub>
-
-<a href="#table-of-contents">⬆️ Back to Top</a>
+**ArogyaTrack** — Built by **AlgoSmiths**
 
 </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { withAuth } from '@/components/auth/withAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,14 +17,56 @@ import {
   FiFileText,
   FiRefreshCw,
   FiAlertCircle,
-  FiClock
+  FiClock,
+  FiPaperclip,
+  FiEye,
 } from 'react-icons/fi';
 import { formatDate } from '@/lib/utils';
 import { useLanguage } from '@/components/providers/LanguageProvider';
+import toast from 'react-hot-toast';
 
 function MedicalRecordsPage(): React.JSX.Element {
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   const [expandedRecords, setExpandedRecords] = useState<Set<number>>(new Set());
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+
+  const handleReportAction = async (attachmentId: number, fileName: string, isView: boolean) => {
+    setDownloadingId(attachmentId);
+    try {
+      const disposition = isView ? 'inline' : 'attachment';
+      const blob = await api.medical.downloadReport(attachmentId, disposition);
+      const url = window.URL.createObjectURL(blob);
+      if (isView) {
+        window.open(url, '_blank');
+        setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+      } else {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast.success('Report downloaded successfully');
+        api.dashboard.logDownload({
+          file_type: 'visit_attachment',
+          file_id: attachmentId,
+          file_name: fileName,
+        }).then(() => {
+          queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] });
+          queryClient.invalidateQueries({ queryKey: ['dashboard-downloads'] });
+        }).catch(() => {});
+      }
+    } catch (error: any) {
+      if (error.response?.status === 401) toast.error('Session expired. Please login again.');
+      else if (error.response?.status === 403) toast.error('You do not have permission to access this file.');
+      else if (error.response?.status === 404) toast.error('File not found.');
+      else toast.error('Failed to download report.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const { data: records, isLoading: isLoadingRecords, refetch, isFetching } = useQuery<PaginatedResponse<MedicalRecord>>({
     queryKey: ['medical-records-all'],
@@ -104,13 +146,13 @@ function MedicalRecordsPage(): React.JSX.Element {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Allergies Card */}
         <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
-          <div className="h-1 bg-gradient-to-r from-rose-400 to-orange-400"></div>
+
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-rose-50 rounded-lg">
                 <FiAlertCircle className="w-5 h-5 text-rose-600" />
               </div>
-              <CardTitle className="text-lg">{t('allergies_title')}</CardTitle>
+              <CardTitle className="text-xl font-bold">{t('allergies_title')}</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
@@ -124,13 +166,16 @@ function MedicalRecordsPage(): React.JSX.Element {
                     <div>
                       <p className="font-semibold text-slate-800">{allergy.allergen}</p>
                       <p className="text-xs text-rose-600 font-medium mt-0.5">{allergy.reaction_type}</p>
+                      {allergy.added_by_name && (
+                        <p className="text-[10px] text-slate-400 mt-1">Added by {allergy.added_by_name}</p>
+                      )}
                     </div>
                     <Badge className={`
                                             ${String(allergy.severity).toLowerCase() === 'severe' || allergy.severity === 3
-                        ? 'bg-rose-100 text-rose-700 hover:bg-rose-200'
+                        ? 'bg-[#dc2626] text-white hover:bg-[#b91c1c]'
                         : String(allergy.severity).toLowerCase() === 'moderate' || allergy.severity === 2
-                          ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}
+                          ? 'bg-[#d97706] text-white hover:bg-[#b45309]'
+                          : 'bg-[#1F6F6A] text-white hover:bg-[#185E59]'}
                                             border-0 uppercase text-[10px] tracking-wider font-bold
                                         `}>
                       {typeof allergy.severity === 'number'
@@ -150,13 +195,13 @@ function MedicalRecordsPage(): React.JSX.Element {
 
         {/* Chronic Conditions Card */}
         <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
-          <div className="h-1 bg-gradient-to-r from-teal-400 to-blue-400"></div>
+
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-teal-50 rounded-lg">
                 <FiClock className="w-5 h-5 text-teal-600" />
               </div>
-              <CardTitle className="text-lg">{t('chronic_conditions')}</CardTitle>
+              <CardTitle className="text-xl font-bold">{t('chronic_conditions')}</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
@@ -172,11 +217,14 @@ function MedicalRecordsPage(): React.JSX.Element {
                       <p className="text-xs text-slate-500 mt-0.5">
                         {t('last_recorded')}: {formatDate(condition.created_at)}
                       </p>
+                      {condition.added_by_name && (
+                        <p className="text-[10px] text-slate-400 mt-1">Added by {condition.added_by_name}</p>
+                      )}
                     </div>
                     <Badge className={`
                                             ${condition.is_active
-                        ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}
+                        ? 'bg-[#1F6F6A] text-white hover:bg-[#185E59]'
+                        : 'bg-slate-400 text-white hover:bg-slate-500'}
                                             border-0 uppercase text-[10px] tracking-wider font-bold
                                         `}>
                       {condition.is_active ? 'Active' : 'Inactive'}
@@ -195,7 +243,7 @@ function MedicalRecordsPage(): React.JSX.Element {
 
       {/* Consultation History */}
       <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
-        <div className="h-1 bg-gradient-to-r from-indigo-400 to-cyan-400"></div>
+
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-50 rounded-lg">
@@ -281,9 +329,12 @@ function MedicalRecordsPage(): React.JSX.Element {
                               <FiFileText className="w-3 h-3" />
                               {t('prescription')}
                             </p>
-                            <p className="text-slate-800 whitespace-pre-line leading-relaxed font-medium">
-                              {record.prescription}
-                            </p>
+                            <ul className="list-disc list-inside space-y-1 text-slate-800 leading-relaxed font-medium">
+                              {record.prescription.split(',').map((item: string, i: number) => {
+                                const trimmed = item.trim().replace(/\.+$/, '');
+                                return trimmed ? <li key={i}>{trimmed}</li> : null;
+                              })}
+                            </ul>
                           </div>
                         )}
 
@@ -299,42 +350,68 @@ function MedicalRecordsPage(): React.JSX.Element {
                           </div>
                         )}
 
-                        {record.report_attachments && record.report_attachments.length > 0 && (
-                          <div>
-                            <p className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                              {t('attached_reports')}
-                              <Badge variant="secondary" className="bg-slate-100 text-slate-600 px-1.5 h-5 min-w-[1.25rem]">
+                        {/* Reports Section - always visible */}
+                        <div>
+                          <p className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                            <FiPaperclip className="w-4 h-4 text-indigo-500" />
+                            Reports
+                            {record.report_attachments && record.report_attachments.length > 0 && (
+                              <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 px-2 h-5 min-w-[1.25rem]">
                                 {record.report_attachments.length}
                               </Badge>
-                            </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                            )}
+                          </p>
+                          {record.report_attachments && record.report_attachments.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               {record.report_attachments.map((attachment) => (
-                                <a
+                                <div
                                   key={attachment.id}
-                                  href={attachment.file_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="group/file flex items-center justify-between p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-400 hover:shadow-md transition-all"
+                                  className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all"
                                 >
-                                  <div className="flex items-center gap-3 min-w-0">
-                                    <div className="p-2 bg-indigo-50 rounded-lg group-hover/file:bg-indigo-100 transition-colors">
-                                      <FiFileText className="h-4 w-4 text-indigo-600" />
-                                    </div>
-                                    <div className="min-w-0">
-                                      <p className="text-sm font-semibold text-slate-700 truncate group-hover/file:text-indigo-700 transition-colors">
-                                        {attachment.file_name}
-                                      </p>
-                                      <p className="text-[10px] text-slate-400 uppercase font-medium mt-0.5">
-                                        {attachment.file_type || 'PDF'}
-                                      </p>
-                                    </div>
+                                  <div className="p-2 bg-indigo-50 rounded-lg flex-shrink-0">
+                                    <FiFileText className="h-4 w-4 text-indigo-600" />
                                   </div>
-                                  <FiDownload className="h-4 w-4 text-slate-300 group-hover/file:text-indigo-600 transition-colors" />
-                                </a>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-slate-700 truncate">
+                                      {attachment.file_name}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 uppercase font-medium mt-0.5">
+                                      {attachment.file_type || 'PDF'} · {formatDate(attachment.uploaded_at)}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleReportAction(attachment.id, attachment.file_name, true)}
+                                      disabled={downloadingId === attachment.id}
+                                      className="h-8 w-8 p-0 text-indigo-600 hover:bg-indigo-50"
+                                      title="Open in new tab"
+                                    >
+                                      {downloadingId === attachment.id ? (
+                                        <FiRefreshCw className="h-3.5 w-3.5 animate-spin" />
+                                      ) : (
+                                        <FiEye className="h-3.5 w-3.5" />
+                                      )}
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleReportAction(attachment.id, attachment.file_name, false)}
+                                      disabled={downloadingId === attachment.id}
+                                      className="h-8 w-8 p-0 text-slate-500 hover:bg-slate-50"
+                                      title="Download"
+                                    >
+                                      <FiDownload className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                </div>
                               ))}
                             </div>
-                          </div>
-                        )}
+                          ) : (
+                            <p className="text-sm text-slate-400 italic py-2">No reports uploaded for this visit</p>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

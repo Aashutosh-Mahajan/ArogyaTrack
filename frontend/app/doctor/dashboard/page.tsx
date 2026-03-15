@@ -223,7 +223,7 @@ function DoctorDashboardPage() {
         {/* ─── B. HIGH-RISK PATIENTS PREVIEW (top 5) ─── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <Card className="lg:col-span-2 border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
-            <div className="h-1 bg-gradient-to-r from-orange-400 to-rose-400"></div>
+            
             <CardHeader className="border-b border-slate-100/50 pb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -311,7 +311,7 @@ function DoctorDashboardPage() {
 
           {/* ─── C. RECENT ACTIVITY FEED ─── */}
           <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md h-fit">
-            <div className="h-1 bg-gradient-to-r from-blue-400 to-indigo-400"></div>
+            
             <CardHeader className="border-b border-slate-100/50 pb-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-50 rounded-lg">

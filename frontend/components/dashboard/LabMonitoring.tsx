@@ -171,7 +171,7 @@ export function LabMonitoring() {
 
   return (
     <Card className="border-0 shadow-lg overflow-hidden">
-      <div className="h-1 bg-gradient-to-r from-emerald-400 to-teal-400"></div>
+      
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

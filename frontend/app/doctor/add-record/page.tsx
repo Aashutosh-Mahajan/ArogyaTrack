@@ -12,6 +12,8 @@ import { MyPatient } from '@/types';
 import toast from 'react-hot-toast';
 import { FiSave, FiUser, FiFileText, FiCheckCircle, FiUpload, FiX, FiFile, FiCalendar, FiActivity, FiEdit3 } from 'react-icons/fi';
 import { useLanguage } from '@/components/providers/LanguageProvider';
+import { CDSSPanel } from '@/components/cdss/CDSSPanel';
+import type { CDSSResult } from '@/types';
 
 const ALLOWED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -32,6 +34,10 @@ function AddRecordPage() {
     new Date().toISOString().slice(0, 16)
   );
   const [submitted, setSubmitted] = useState(false);
+  const [cdssResult, setCdssResult] = useState<CDSSResult | null>(null);
+  const [cdssLoading, setCdssLoading] = useState(false);
+  const [cdssError, setCdssError] = useState<string | null>(null);
+  const [showCdss, setShowCdss] = useState(false);
 
   const STATUS_OPTIONS = [
     { value: 'completed', label: t('status_completed') },
@@ -106,6 +112,40 @@ function AddRecordPage() {
     setReportFiles([]);
     setVisitDate(new Date().toISOString().slice(0, 16));
     setSubmitted(false);
+    setCdssResult(null);
+    setCdssLoading(false);
+    setCdssError(null);
+    setShowCdss(false);
+  };
+
+  const handleCdssAnalyze = async () => {
+    if (!selectedPatient) {
+      toast.error('Please select a patient first');
+      return;
+    }
+    if (!doctorNotes.trim() && !diagnosis.trim()) {
+      toast.error('Please enter doctor notes or diagnosis before requesting AI analysis');
+      return;
+    }
+    const symptoms = [doctorNotes.trim(), diagnosis.trim(), testsPerformed.trim()]
+      .filter(Boolean)
+      .join('. ');
+    setCdssLoading(true);
+    setCdssError(null);
+    try {
+      const result = await api.cdss.analyze(selectedPatient, symptoms);
+      setCdssResult(result);
+      setShowCdss(true);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.detail ||
+        err?.message ||
+        'AI analysis failed. Please try again.';
+      setCdssError(msg);
+      toast.error(msg);
+    } finally {
+      setCdssLoading(false);
+    }
   };
 
   if (submitted) {
@@ -291,6 +331,45 @@ function AddRecordPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* CDSS AI Suggestions */}
+            <div className="rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 p-5 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3 text-white">
+                <FiActivity className="h-6 w-6" />
+                <div>
+                  <p className="font-semibold text-lg leading-tight">Clinical Decision Support</p>
+                  <p className="text-indigo-100 text-sm">AI-powered analysis based on patient history &amp; current notes</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={!selectedPatient || cdssLoading}
+                onClick={handleCdssAnalyze}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-indigo-700 font-semibold text-sm shadow hover:bg-indigo-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {cdssLoading ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                    Analyzing…
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a1 1 0 011 1v1.323a6.5 6.5 0 014.677 4.677H17a1 1 0 110 2h-1.323A6.5 6.5 0 0111 15.677V17a1 1 0 11-2 0v-1.323A6.5 6.5 0 014.323 11H3a1 1 0 110-2h1.323A6.5 6.5 0 019 4.323V3a1 1 0 011-1z" /></svg>
+                    Get AI Suggestions
+                  </>
+                )}
+              </button>
+            </div>
+
+            {cdssError && !cdssLoading && (
+              <div className="rounded-xl bg-rose-50 border border-rose-200 p-4 text-sm text-rose-700">
+                {cdssError}
+              </div>
+            )}
+
+            {showCdss && cdssResult && (
+              <CDSSPanel result={cdssResult} onClose={() => setShowCdss(false)} />
+            )}
 
             {/* File Upload */}
             <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">

@@ -783,6 +783,200 @@ def run_ml_pipeline(request):
             )
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthority])
+def daywise_comparison(request):
+    """
+    Day-wise case comparison for diseases across regions/cities/states.
+    Compares today with the past 6 days and determines trend direction.
+
+    Query params:
+      - disease_code: optional, filter to a specific disease
+      - state: optional, filter by state
+      - district: optional, filter by district
+      - region_id: optional, filter to a specific region
+    
+    Returns per-disease, per-region breakdown with 7 days of data
+    and a computed trend label.
+    """
+    disease_code = request.query_params.get('disease_code')
+    state = request.query_params.get('state')
+    district = request.query_params.get('district')
+    region_id = request.query_params.get('region_id')
+
+    today = timezone.now().date()
+    # Build list of 7 days: today + past 6 days
+    dates = [today - timedelta(days=i) for i in range(7)]
+
+    # Find the latest date with data if today has none
+    latest_date = SurveillanceData.objects.filter(
+        date__gte=today - timedelta(days=7),
+        date__lte=today,
+    ).order_by('-date').values_list('date', flat=True).first()
+
+    if latest_date and latest_date != today:
+        dates = [latest_date - timedelta(days=i) for i in range(7)]
+        today = latest_date
+
+    base_qs = SurveillanceData.objects.filter(
+        date__in=dates
+    ).select_related('region')
+
+    if disease_code:
+        base_qs = base_qs.filter(disease_code=disease_code)
+    if region_id:
+        base_qs = base_qs.filter(region_id=region_id)
+    if state:
+        base_qs = base_qs.filter(region__state__icontains=state)
+    if district:
+        base_qs = base_qs.filter(region__district__icontains=district)
+
+    # Group by disease + region + date
+    rows = base_qs.values(
+        'disease_code', 'disease_name',
+        'region__id', 'region__name', 'region__district', 'region__state',
+        'date',
+    ).annotate(
+        cases=Sum('case_count'),
+        severity=Avg('average_severity'),
+    ).order_by('disease_code', 'region__name', '-date')
+
+    # Organize into nested structure: disease -> region -> day_data[]
+    from collections import defaultdict
+    tree = defaultdict(lambda: defaultdict(dict))
+    disease_names = {}
+    region_meta = {}
+
+    for row in rows:
+        dc = row['disease_code']
+        rid = str(row['region__id'])
+        d = row['date']
+
+        disease_names[dc] = row['disease_name']
+        region_meta[rid] = {
+            'region_id': rid,
+            'region_name': row['region__name'],
+            'district': row['region__district'],
+            'state': row['region__state'],
+        }
+        tree[dc][rid][d] = {
+            'cases': row['cases'] or 0,
+            'severity': round(row['severity'] or 0, 2),
+        }
+
+    def _compute_trend(day_values):
+        """
+        Determine trend from a list of daily case counts (newest first).
+        Uses linear direction + magnitude to label the trend.
+        """
+        if len(day_values) < 2:
+            return 'stable'
+
+        # day_values[0] = today, day_values[1] = yesterday, etc.
+        recent_avg = sum(day_values[:3]) / min(len(day_values), 3)
+        older_avg = sum(day_values[3:]) / max(len(day_values[3:]), 1) if len(day_values) > 3 else day_values[-1]
+
+        if older_avg == 0 and recent_avg == 0:
+            return 'stable'
+        if older_avg == 0:
+            return 'rapid_increase'
+
+        pct_change = ((recent_avg - older_avg) / older_avg) * 100
+
+        if pct_change > 25:
+            return 'rapid_increase'
+        elif pct_change > 5:
+            return 'gradual_increase'
+        elif pct_change < -25:
+            return 'rapid_decrease'
+        elif pct_change < -5:
+            return 'gradual_decrease'
+        else:
+            return 'stable'
+
+    # Build response
+    comparisons = []
+    for dc, regions_dict in tree.items():
+        for rid, date_map in regions_dict.items():
+            day_data = []
+            day_values = []
+            for d in dates:
+                entry = date_map.get(d, {'cases': 0, 'severity': 0})
+                day_data.append({
+                    'date': str(d),
+                    'cases': entry['cases'],
+                    'severity': entry.get('severity', 0),
+                })
+                day_values.append(entry['cases'])
+
+            trend = _compute_trend(day_values)
+            total_cases = sum(day_values)
+            peak_cases = max(day_values)
+            min_cases = min(day_values)
+
+            meta = region_meta.get(rid, {})
+            comparisons.append({
+                'disease_code': dc,
+                'disease_name': disease_names.get(dc, dc),
+                'region_id': rid,
+                'region_name': meta.get('region_name', ''),
+                'district': meta.get('district', ''),
+                'state': meta.get('state', ''),
+                'trend': trend,
+                'total_cases_7d': total_cases,
+                'peak_cases': peak_cases,
+                'min_cases': min_cases,
+                'today_cases': day_values[0] if day_values else 0,
+                'day_data': day_data,
+            })
+
+    # Sort by today's cases desc
+    comparisons.sort(key=lambda x: x['today_cases'], reverse=True)
+
+    # Aggregate disease-level summaries
+    disease_summaries = []
+    disease_groups = defaultdict(list)
+    for c in comparisons:
+        disease_groups[c['disease_code']].append(c)
+
+    for dc, items in disease_groups.items():
+        all_day_values = []
+        for d in dates:
+            total = sum(
+                next((dd['cases'] for dd in item['day_data'] if dd['date'] == str(d)), 0)
+                for item in items
+            )
+            all_day_values.append(total)
+
+        disease_summaries.append({
+            'disease_code': dc,
+            'disease_name': disease_names.get(dc, dc),
+            'trend': _compute_trend(all_day_values),
+            'total_cases_7d': sum(all_day_values),
+            'today_cases': all_day_values[0] if all_day_values else 0,
+            'regions_affected': len(items),
+            'day_totals': [
+                {'date': str(dates[i]), 'cases': all_day_values[i]}
+                for i in range(len(dates))
+            ],
+        })
+
+    disease_summaries.sort(key=lambda x: x['today_cases'], reverse=True)
+
+    # Get distinct states for filter dropdown
+    available_states = list(
+        Region.objects.values_list('state', flat=True).distinct().order_by('state')
+    )
+
+    return Response({
+        'reference_date': str(today),
+        'dates': [str(d) for d in dates],
+        'available_states': available_states,
+        'disease_summaries': disease_summaries,
+        'comparisons': comparisons,
+    })
+
+
 class EnvironmentalDataViewSet(viewsets.ReadOnlyModelViewSet):
     """Environmental data viewset."""
     queryset = EnvironmentalData.objects.all()

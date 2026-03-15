@@ -43,17 +43,37 @@ class MedicalRecordSerializer(serializers.ModelSerializer):
 
 
 class AllergySerializer(serializers.ModelSerializer):
+    added_by_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Allergy
-        fields = ["id", "allergen", "reaction_type", "severity", "created_at"]
-        read_only_fields = ["id", "created_at"]
+        fields = ["id", "allergen", "reaction_type", "severity", "added_by_name", "created_at"]
+        read_only_fields = ["id", "added_by_name", "created_at"]
+
+    def get_added_by_name(self, obj):
+        if obj.added_by:
+            name = f"{obj.added_by.get_first_name()} {obj.added_by.get_last_name()}".strip()
+            if name.lower().startswith("dr.") or name.lower().startswith("dr "):
+                return name
+            return f"Dr. {name}" if name else obj.added_by.email
+        return None
 
 
 class ChronicConditionSerializer(serializers.ModelSerializer):
+    added_by_name = serializers.SerializerMethodField()
+
     class Meta:
         model = ChronicCondition
-        fields = ["id", "icd_10_code", "disease_name", "is_active", "created_at"]
-        read_only_fields = ["id", "created_at"]
+        fields = ["id", "icd_10_code", "disease_name", "is_active", "added_by_name", "created_at"]
+        read_only_fields = ["id", "added_by_name", "created_at"]
+
+    def get_added_by_name(self, obj):
+        if obj.added_by:
+            name = f"{obj.added_by.get_first_name()} {obj.added_by.get_last_name()}".strip()
+            if name.lower().startswith("dr.") or name.lower().startswith("dr "):
+                return name
+            return f"Dr. {name}" if name else obj.added_by.email
+        return None
 
     def validate_icd_10_code(self, value):
         if not validate_icd10(value):

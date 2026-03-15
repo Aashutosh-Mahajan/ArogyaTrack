@@ -243,9 +243,6 @@ class DashboardKPIView(APIView):
     Returns KPI summary cards for the logged-in patient:
     - total_medical_records
     - active_prescriptions
-    - pending_lab_reports
-    - adherence_percentage
-    - alerts_count
     - total_downloads
     - monthly_trends (current 30d vs previous 30d)
     """
@@ -294,101 +291,56 @@ class DashboardKPIView(APIView):
                 created_at__lt=thirty_days_ago,
             ).count()
 
-        # ── Pending lab reports ──────────────────────────────────
-        # Visit records that have tests listed but no report attachments
-        pending_lab_reports = 0
-        labs_current = 0
-        labs_previous = 0
+        # ── Total downloads (from DownloadLog) ──────────────────
+        all_downloads = DownloadLog.objects.filter(user=user)
+        total_downloads = all_downloads.count()
+        downloads_current = all_downloads.filter(
+            downloaded_at__gte=thirty_days_ago,
+        ).count()
+        downloads_previous = all_downloads.filter(
+            downloaded_at__gte=sixty_days_ago,
+            downloaded_at__lt=thirty_days_ago,
+        ).count()
 
-        records_with_tests = all_records.exclude(
-            tests_performed=""
-        ).exclude(tests_performed__isnull=True)
-
-        for vr in records_with_tests:
-            has_attachment = VisitReportAttachment.objects.filter(
-                visit_record=vr,
-                file_type__icontains="lab",
-            ).exists()
-            if not has_attachment:
-                pending_lab_reports += 1
-                if vr.visit_date >= thirty_days_ago:
-                    labs_current += 1
-                elif vr.visit_date >= sixty_days_ago:
-                    labs_previous += 1
-
-        # ── Adherence percentage ─────────────────────────────────
-        adherence_pct = 0.0
-        adherence_current = 0
-        adherence_previous = 0
-        if profile:
-            trackers = AdherenceTracker.objects.filter(
-                patient=profile, is_active=True
+        # ── Recent BP & Sugar ───────────────────────────────────
+        latest_bp = (
+            HealthMetric.objects.filter(
+                patient=user, metric_type=HealthMetric.MetricType.BLOOD_PRESSURE
             )
-            if trackers.exists():
-                total_expected = sum(t.expected_doses for t in trackers)
-                total_actual = sum(t.actual_doses for t in trackers)
-                if total_expected > 0:
-                    adherence_pct = round(
-                        (total_actual / total_expected) * 100, 1
-                    )
-
-            # Doses taken in current vs previous window
-            adherence_current = DoseSchedule.objects.filter(
-                tracker__patient=profile,
-                scheduled_time__gte=thirty_days_ago,
-                is_taken=True,
-            ).count()
-            adherence_previous = DoseSchedule.objects.filter(
-                tracker__patient=profile,
-                scheduled_time__gte=sixty_days_ago,
-                scheduled_time__lt=thirty_days_ago,
-                is_taken=True,
-            ).count()
-
-        # ── Alerts count ─────────────────────────────────────────
-        alerts_count = 0
-        alerts_current = 0
-        alerts_previous = 0
-        if profile and profile.region:
-            region_alerts = Alert.objects.filter(
-                affected_regions__name__iexact=profile.region,
-            ).distinct()
-            alerts_count = region_alerts.filter(status="active").count()
-            alerts_current = region_alerts.filter(
-                generated_at__gte=thirty_days_ago,
-            ).count()
-            alerts_previous = region_alerts.filter(
-                generated_at__gte=sixty_days_ago,
-                generated_at__lt=thirty_days_ago,
-            ).count()
-
-        # ── Total downloads (report attachments) ─────────────────
-        all_attachments = VisitReportAttachment.objects.filter(
-            visit_record__patient=user,
+            .order_by("-recorded_at")
+            .first()
         )
-        total_downloads = all_attachments.count()
-        downloads_current = all_attachments.filter(
-            uploaded_at__gte=thirty_days_ago,
-        ).count()
-        downloads_previous = all_attachments.filter(
-            uploaded_at__gte=sixty_days_ago,
-            uploaded_at__lt=thirty_days_ago,
-        ).count()
+        latest_sugar = (
+            HealthMetric.objects.filter(
+                patient=user, metric_type=HealthMetric.MetricType.SUGAR
+            )
+            .order_by("-recorded_at")
+            .first()
+        )
+
+        recent_bp = {
+            "value": latest_bp.value if latest_bp else None,
+            "secondary_value": latest_bp.secondary_value if latest_bp else None,
+            "unit": "mmHg",
+            "recorded_at": latest_bp.recorded_at if latest_bp else None,
+        }
+        recent_sugar = {
+            "value": latest_sugar.value if latest_sugar else None,
+            "secondary_value": None,
+            "unit": "mg/dL",
+            "recorded_at": latest_sugar.recorded_at if latest_sugar else None,
+        }
 
         # ── Build response ───────────────────────────────────────
         data = {
             "total_medical_records": total_medical_records,
             "active_prescriptions": active_prescriptions,
-            "pending_lab_reports": pending_lab_reports,
-            "adherence_percentage": adherence_pct,
-            "alerts_count": alerts_count,
             "total_downloads": total_downloads,
+            "recent_bp": recent_bp,
+            "recent_sugar": recent_sugar,
             "monthly_trends": {
                 "medical_records": _make_trend(records_current, records_previous),
                 "prescriptions": _make_trend(prescriptions_current, prescriptions_previous),
-                "lab_reports": _make_trend(labs_current, labs_previous),
-                "adherence": _make_trend(adherence_current, adherence_previous),
-                "alerts": _make_trend(alerts_current, alerts_previous),
                 "downloads": _make_trend(downloads_current, downloads_previous),
             },
             "last_updated": now,
@@ -603,7 +555,7 @@ class HealthTrendsView(APIView):
         from collections import defaultdict
 
         user = request.user
-        months = min(int(request.query_params.get("months", 6)), 12)
+        months = min(int(request.query_params.get("months", 6)), 24)
         cutoff = timezone.now() - timedelta(days=months * 30)
 
         metrics_qs = (
@@ -769,6 +721,46 @@ def _generate_alerts_for_patient(user, profile):
                     f"This is based on recent lab results, vital readings, "
                     f"and medication adherence.  Please schedule a check-up."
                 ),
+            ))
+
+    # ── 4.  Outbreak alerts from surveillance ───────────────────
+    if profile and profile.region:
+        # Find active surveillance alerts affecting this patient's region
+        # that haven't already been surfaced as a dashboard alert
+        already_linked_ids = set(
+            DashboardAlert.objects.filter(
+                patient=user,
+                alert_type="outbreak",
+                is_dismissed=False,
+                surveillance_alert__isnull=False,
+            ).values_list("surveillance_alert_id", flat=True)
+        )
+
+        region_alerts = (
+            Alert.objects.filter(
+                status="active",
+                affected_regions__name__iexact=profile.region,
+            )
+            .exclude(id__in=already_linked_ids)
+            .distinct()
+        )
+
+        for surv_alert in region_alerts:
+            regions_list = ", ".join(
+                surv_alert.affected_regions.values_list("name", flat=True)
+            )
+            new_alerts.append(DashboardAlert(
+                patient=user,
+                alert_type="outbreak",
+                severity=surv_alert.severity,
+                title=f"Outbreak Alert: {surv_alert.disease_name}",
+                message=(
+                    f"{surv_alert.title} — A {surv_alert.severity} severity "
+                    f"{surv_alert.disease_name} outbreak has been detected in "
+                    f"your region ({regions_list}). "
+                    f"{surv_alert.recommended_actions or 'Please follow local health advisories and consult your doctor if you experience symptoms.'}"
+                ),
+                surveillance_alert=surv_alert,
             ))
 
     if new_alerts:
@@ -981,10 +973,46 @@ class Toggle2FAView(APIView):
 # DOWNLOAD CENTER
 # ═══════════════════════════════════════════════════════════════════
 
+
+class LogDownloadView(APIView):
+    """
+    POST /api/dashboard/log-download/
+    Logs a client-side PDF generation download (e.g. print-to-PDF).
+    Body: { "file_type": "medical_record", "file_id": 123, "file_name": "..." }
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    ALLOWED_TYPES = {t.value for t in DownloadLog.FileType}
+
+    def post(self, request):
+        user = request.user
+        file_type = request.data.get("file_type", "medical_record")
+        file_id = request.data.get("file_id")
+        file_name = request.data.get("file_name", "")
+
+        if file_type not in self.ALLOWED_TYPES:
+            return Response(
+                {"detail": "Invalid file_type."},
+                status=drf_status.HTTP_400_BAD_REQUEST,
+            )
+
+        DownloadLog.objects.create(
+            user=user,
+            file_type=file_type,
+            file_id=file_id,
+            file_name=file_name[:255],
+            ip_address=_get_client_ip(request),
+        )
+        return Response({"detail": "Download logged."}, status=drf_status.HTTP_201_CREATED)
+
+
 class DownloadListView(APIView):
     """
     GET /api/dashboard/downloads/
     Returns all downloadable files belonging to the logged-in user.
+    Includes visit records (as client-generated PDFs), file attachments,
+    and lab reports.
     """
 
     permission_classes = [IsAuthenticated]
@@ -993,7 +1021,36 @@ class DownloadListView(APIView):
         user = request.user
         items = []
 
-        # 1) Visit Report Attachments
+        # 1) Visit Records (each can be downloaded as a PDF)
+        visit_records = PatientVisitRecord.objects.filter(
+            patient=user,
+        ).order_by("-visit_date")
+
+        for vr in visit_records:
+            visit_date = vr.visit_date.strftime("%d %b %Y") if vr.visit_date else ""
+            items.append({
+                "id": vr.id,
+                "type": "medical_record",
+                "type_label": "Medical Record",
+                "title": f"{vr.diagnosis or 'Visit Record'} – {visit_date}",
+                "visit_info": f"Dr. {vr.doctor_name} – {vr.department}",
+                "created_at": (vr.visit_date or vr.created_at).isoformat(),
+                "file_url": None,  # generated client-side
+                "record_data": {
+                    "id": vr.id,
+                    "visit_date": vr.visit_date.isoformat() if vr.visit_date else "",
+                    "visit_time": "",
+                    "doctor_name": vr.doctor_name or "",
+                    "department": vr.department or "",
+                    "diagnosis_summary": vr.diagnosis or "",
+                    "tests_performed": vr.tests_performed or "",
+                    "prescription_text": vr.prescription or "",
+                    "doctor_notes": vr.doctor_notes or "",
+                    "status": "completed",
+                },
+            })
+
+        # 2) Visit Report Attachments
         attachments = VisitReportAttachment.objects.filter(
             visit_record__patient=user,
         ).select_related("visit_record")
@@ -1009,7 +1066,7 @@ class DownloadListView(APIView):
                 "file_url": att.file.url if att.file else None,
             })
 
-        # 2) Lab Report files
+        # 3) Lab Report files
         lab_reports = LabTestResult.objects.filter(
             patient=user,
         ).exclude(report_file="")

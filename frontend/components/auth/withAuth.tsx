@@ -13,8 +13,23 @@ export function withAuth<P extends object>(
     const router = useRouter();
     const { isAuthenticated, user } = useAuthStore();
     const [isChecking, setIsChecking] = React.useState(true);
+    const [hydrated, setHydrated] = React.useState(false);
 
     React.useEffect(() => {
+      // Wait for Zustand to hydrate from localStorage
+      const unsub = useAuthStore.persist.onFinishHydration(() => {
+        setHydrated(true);
+      });
+      // If already hydrated (e.g. not the first mount)
+      if (useAuthStore.persist.hasHydrated()) {
+        setHydrated(true);
+      }
+      return () => { unsub(); };
+    }, []);
+
+    React.useEffect(() => {
+      if (!hydrated) return;
+
       if (!isAuthenticated) {
         toast.error('Please login to continue');
         router.push('/login');
@@ -28,7 +43,7 @@ export function withAuth<P extends object>(
       }
 
       setIsChecking(false);
-    }, [isAuthenticated, user, router]);
+    }, [hydrated, isAuthenticated, user, router]);
 
     if (isChecking) {
       return (

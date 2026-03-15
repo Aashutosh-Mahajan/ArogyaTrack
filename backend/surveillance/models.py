@@ -382,3 +382,25 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.get_channel_display()} notification for {self.recipient.email} - {self.status}"
+
+
+class PendingInferenceQueue(models.Model):
+    """Lightweight tracking table for near real-time inference pipeline.
+
+    Populated by post_save signals on Diagnosis and DispensingRecord.
+    Consumed every 5 minutes by the middleman aggregation task.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name='pending_inferences')
+    disease_code = models.CharField(max_length=10)
+    severity = models.PositiveSmallIntegerField(default=1)
+    recorded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['region', 'disease_code']),
+            models.Index(fields=['recorded_at']),
+        ]
+
+    def __str__(self):
+        return f"Pending: {self.disease_code} in {self.region_id} at {self.recorded_at}"

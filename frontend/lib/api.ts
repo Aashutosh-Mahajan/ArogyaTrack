@@ -35,6 +35,8 @@ import type {
   DashboardAlert,
   SecurityInfo,
   DownloadItem,
+  DayWiseComparisonResponse,
+  CDSSResult,
 } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -106,7 +108,8 @@ class ApiClient {
         const requestUrl = error.config?.url || '';
         const isAuthRequest = requestUrl.includes('/auth/register/') ||
           requestUrl.includes('/auth/login/') ||
-          requestUrl.includes('/auth/verify-email/');
+          requestUrl.includes('/auth/verify-email/') ||
+          requestUrl.includes('/auth/logout/');
         if (!isAuthRequest) {
           toast.error(errorMessage);
         }
@@ -305,11 +308,30 @@ export const api = {
       apiClient.get('/doctors/my-allergies/'),
     getChronicConditions: (): Promise<ChronicCondition[]> =>
       apiClient.get('/doctors/my-conditions/'),
+    addAllergy: (profileId: string, data: { allergen: string; reaction_type: string; severity: number }) =>
+      apiClient.post(`/doctors/patients/${profileId}/allergies/`, data),
+    addCondition: (profileId: string, data: { icd_10_code: string; disease_name: string }) =>
+      apiClient.post(`/doctors/patients/${profileId}/conditions/`, data),
+    getPatientHistory: (profileId: string) =>
+      apiClient.get(`/doctors/patient-history/${profileId}/`),
     scanQR: (token: string) => apiClient.post('/doctors/scan-health-card/', { token }),
     scanPatientQR: (signedToken: string) => apiClient.get(`/patients/qr/${signedToken}/`),
     createRecord: (data: any) => apiClient.post('/doctors/medical-records/', data),
     addDiagnosis: (recordId: number, data: any) =>
       apiClient.post(`/doctors/patients/${recordId}/conditions/`, data),
+    // Doctor-side: get/add/delete patient allergies & conditions
+    getPatientAllergies: (patientId: string): Promise<Allergy[]> =>
+      apiClient.get(`/doctors/patients/${patientId}/allergies/`),
+    addPatientAllergy: (patientId: string, data: { allergen: string; reaction_type: string; severity: number }) =>
+      apiClient.post(`/doctors/patients/${patientId}/allergies/`, data),
+    deletePatientAllergy: (patientId: string, allergyId: string) =>
+      apiClient.delete(`/doctors/patients/${patientId}/allergies/${allergyId}/`),
+    getPatientConditions: (patientId: string): Promise<ChronicCondition[]> =>
+      apiClient.get(`/doctors/patients/${patientId}/conditions/`),
+    addPatientCondition: (patientId: string, data: { icd_10_code: string; disease_name: string; diagnosed_date?: string; is_active?: boolean }) =>
+      apiClient.post(`/doctors/patients/${patientId}/conditions/`, data),
+    deletePatientCondition: (patientId: string, conditionId: string) =>
+      apiClient.delete(`/doctors/patients/${patientId}/conditions/${conditionId}/`),
     // Download report with authentication
     downloadReport: async (attachmentId: number, disposition: string = 'attachment'): Promise<Blob> => {
       const response = await apiClient.client.get(
@@ -358,8 +380,11 @@ export const api = {
     getMedicines: (params?: any): Promise<Medicine[]> =>
       apiClient.get('/prescriptions/medicines/', { params }),
     create: (data: any) => apiClient.post('/prescriptions/create/', data),
+    validate: (data: any) => apiClient.post('/prescriptions/validate/', data),
     validateHash: (prescriptionNumber: string, hash: string) =>
       apiClient.post('/prescriptions/validate-hash/', { prescription_number: prescriptionNumber, hash }),
+    verifyQR: (prescriptionId: string, hash: string) =>
+      apiClient.post('/prescriptions/verify-qr/', { prescription_id: prescriptionId, hash }),
   },
 
   // Adherence
@@ -414,6 +439,9 @@ export const api = {
 
     getEnvironmentalData: (params?: any): Promise<PaginatedResponse<EnvironmentalData>> =>
       apiClient.get('/surveillance/environmental-data/', { params }),
+
+    getDayWiseComparison: (params?: { disease_code?: string; state?: string; district?: string; region_id?: string }): Promise<DayWiseComparisonResponse> =>
+      apiClient.get('/surveillance/daywise-comparison/', { params }),
 
     acknowledgeAlert: (id: string, data?: any) =>
       apiClient.post(`/surveillance/alerts/${id}/acknowledge/`, data || {}),
@@ -488,6 +516,7 @@ export const api = {
     // Inventory
     getInventory: (params?: any) => apiClient.get('/pharmacy/inventory/', { params }),
     addInventory: (data: any) => apiClient.post('/pharmacy/inventory/', data),
+    list: (params?: any) => apiClient.get('/pharmacy/list/', { params }),
   },
 
   // Public Client (for custom requests)
@@ -525,6 +554,14 @@ export const api = {
       apiClient.get(`/dashboard/download/${fileId}/`, { params: { type }, responseType: 'blob' }),
     downloadAll: (): Promise<Blob> =>
       apiClient.get('/dashboard/download-all/', { responseType: 'blob' }),
+    logDownload: (data: { file_type: string; file_id?: number; file_name: string }): Promise<{ detail: string }> =>
+      apiClient.post('/dashboard/log-download/', data),
+  },
+
+  // CDSS (Clinical Decision Support)
+  cdss: {
+    analyze: (patientId: string, currentSymptoms: string): Promise<CDSSResult> =>
+      apiClient.post('/cdss/analyze/', { patient_id: patientId, current_symptoms: currentSymptoms }),
   },
 };
 

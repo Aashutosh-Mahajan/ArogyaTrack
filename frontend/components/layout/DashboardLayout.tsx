@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 
@@ -9,19 +9,29 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
   return (
-    <div className="min-h-screen bg-section-bg">
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        onClose={() => setIsSidebarOpen(false)} 
-      />
-      
-      <div className="lg:pl-72">
-        <Header onMenuClick={() => setIsSidebarOpen(true)} />
-        
-        <main className="p-6 lg:p-10">
+    <div style={{
+      display: 'flex',
+      height: '100vh',
+      width: '100vw',
+      overflow: 'hidden',
+    }}>
+      <Sidebar />
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        minWidth: 0,
+        marginLeft: 290,
+      }}>
+        <Header />
+        <main style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px 28px',
+          background: '#EEF3F2',
+        }}>
           {children}
         </main>
       </div>

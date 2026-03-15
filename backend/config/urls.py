@@ -13,10 +13,12 @@ urlpatterns = [
     path("api/adherence/", include("adherence.urls")),
     path("api/surveillance/", include("surveillance.urls")),
     path("api/dashboard/", include("dashboard.urls")),
+    path("api/cdss/", include("cdss.urls")),
     # Web interface for medical records
     path("medical/", include("medical.web_urls")),
 ]
 
-# Serve media files in development
+# Serve media and static files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

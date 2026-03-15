@@ -12,6 +12,7 @@ class Pharmacy(models.Model):
     name = models.CharField(max_length=255)
     license_number = models.CharField(max_length=100, unique=True)
     address = models.TextField()
+    district = models.CharField(max_length=120, blank=True, db_index=True)
     phone = models.CharField(max_length=20)
     email = models.EmailField()
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="pharmacies")
@@ -21,6 +22,9 @@ class Pharmacy(models.Model):
     class Meta:
         ordering = ["name"]
         verbose_name_plural = "Pharmacies"
+        indexes = [
+            models.Index(fields=["district"]),
+        ]
 
     def __str__(self):
         return self.name
@@ -34,7 +38,7 @@ class DispensingRecord(models.Model):
     prescription_medicine = models.ForeignKey(
         "prescriptions.PrescriptionMedicine", on_delete=models.CASCADE, related_name="dispensing_records"
     )
-    pharmacy = models.ForeignKey(Pharmacy, on_delete=models.CASCADE, related_name="dispensing_records")
+    pharmacy = models.ForeignKey(Pharmacy, on_delete=models.SET_NULL, null=True, blank=True, related_name="dispensing_records")
     pharmacist = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="dispensing_records")
     status = models.CharField(max_length=20)  # dispensed, unavailable, patient_has
     quantity_dispensed = models.PositiveIntegerField(default=0)

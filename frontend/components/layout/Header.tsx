@@ -1,59 +1,93 @@
 'use client';
 
 import React from 'react';
-import { FiMenu, FiBell, FiSearch } from 'react-icons/fi';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 import { useAuthStore } from '@/store/authStore';
 
-import { LanguageSelector } from '@/components/dashboard/LanguageSelector';
-
-interface HeaderProps {
-  onMenuClick: () => void;
-}
-
-export function Header({ onMenuClick }: HeaderProps) {
+export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
+  const { language, setLanguage } = useLanguage();
   const { user } = useAuthStore();
 
+  const firstName = user?.first_name || '';
+  const lastName = user?.last_name || '';
+  const fullName = [firstName, lastName].filter(Boolean).join(' ') || 'User';
+  const initials = [firstName, lastName].filter(Boolean).map(n => n[0]?.toUpperCase()).join('') || 'U';
+  const role = user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User';
+
   return (
-    <header className="sticky top-0 z-30 glass-morphism shadow-glass rounded-2xl mx-4 mt-4 border border-white/40">
-      <div className="flex h-16 items-center justify-between px-6 lg:px-8">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onMenuClick}
-            className="lg:hidden text-teal-700 hover:text-teal-900 transition-colors p-2 rounded-xl hover:bg-teal-50"
-          >
-            <FiMenu className="h-6 w-6" />
-          </button>
+    <header style={{
+      background: 'linear-gradient(135deg, #1a6b5a 0%, #22856e 50%, #2a9d8f 100%)',
+      padding: '0 28px',
+      height: 56,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 16,
+      borderBottom: 'none',
+      flexShrink: 0,
+      borderRadius: 14,
+      margin: '12px 28px 0',
+      boxShadow: '0 4px 16px rgba(31,111,106,0.25)',
+    }}>
+      {/* Breadcrumb / Page Title */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: 24, color: '#ffffff', fontWeight: 800, letterSpacing: '-0.02em' }}>Dashboard</span>
+      </div>
 
-          <div className="relative hidden lg:block">
-            <FiSearch className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-teal-600" />
-            <input
-              type="search"
-              placeholder="Search patients, records..."
-              className="w-80 rounded-full border border-teal-100 bg-white/50 py-2.5 pl-11 pr-5 text-sm text-heading placeholder:text-muted-text transition-all duration-200 focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-500/10 hover:bg-white/80"
-            />
-          </div>
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
+
+      {/* Language */}
+      <select
+        value={language}
+        onChange={(e) => setLanguage(e.target.value as any)}
+        style={{
+          background: '#F5F8F7', border: '1px solid #E2E8E7', borderRadius: 8,
+          padding: '7px 12px', fontSize: 12, color: '#2F3A3A',
+          cursor: 'pointer', fontWeight: 700,
+        }}
+      >
+        <option value="en">EN</option>
+        <option value="hi">हिंदी</option>
+        <option value="mr">मराठी</option>
+      </select>
+
+      {/* Notification bell */}
+      <div style={{
+        width: 34, height: 34, background: '#F5F8F7', borderRadius: 10,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer', position: 'relative', border: '1px solid #E2E8E7',
+      }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6B7C7C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span style={{
+          position: 'absolute', top: 5, right: 5,
+          width: 7, height: 7, background: '#ef4444', borderRadius: '50%',
+          border: '1.5px solid white',
+        }} />
+      </div>
+
+      {/* Divider */}
+      <div style={{ width: 1, height: 28, background: '#E2E8E7' }} />
+
+      {/* User info */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+        <div style={{
+          width: 34, height: 34, borderRadius: 10,
+          background: 'linear-gradient(135deg, #1F6F6A, #185E59)',
+          color: '#fff', fontWeight: 700, fontSize: 12,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          letterSpacing: '0.02em',
+        }}>
+          {initials}
         </div>
-
-        <div className="flex items-center space-x-4">
-          <LanguageSelector />
-
-          <button className="relative rounded-full p-2.5 text-teal-700 hover:bg-teal-50 transition-all duration-200">
-            <FiBell className="h-5 w-5" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-          </button>
-
-          <div className="h-9 w-px bg-teal-100 hidden sm:block"></div>
-
-          <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-heading leading-none">{user?.first_name} {user?.last_name}</p>
-              <p className="text-xs text-muted-text mt-1">{user?.role}</p>
-            </div>
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center shadow-soft ring-4 ring-teal-50 cursor-pointer hover:ring-teal-100 transition-all">
-              <span className="text-sm font-bold text-white">
-                {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
-              </span>
-            </div>
+        <div>
+          <div style={{ fontWeight: 800, fontSize: 14.5, color: '#0d3b2e', lineHeight: 1.2 }}>
+            {fullName}
+          </div>
+          <div style={{ fontSize: 10, color: '#ffffff', fontWeight: 500, lineHeight: 1.2 }}>
+            {role}
           </div>
         </div>
       </div>

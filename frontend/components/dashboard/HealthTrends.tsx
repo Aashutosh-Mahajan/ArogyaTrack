@@ -328,7 +328,7 @@ export function HealthTrends() {
 
   return (
     <Card className="border-0 shadow-lg overflow-hidden">
-      <div className="h-1 bg-gradient-to-r from-teal-400 to-cyan-400"></div>
+      
       <CardHeader className="pb-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">

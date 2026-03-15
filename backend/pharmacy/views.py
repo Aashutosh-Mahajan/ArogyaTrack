@@ -13,7 +13,7 @@ from prescriptions.models import Prescription, PrescriptionMedicine
 from prescriptions.serializers import PrescriptionSerializer, PrescriptionMedicineSerializer
 
 from .models import DispensingRecord, Pharmacy, PharmacyInventory
-from .serializers import DispenseMedicineSerializer, DispensingRecordSerializer, PharmacySerializer, PharmacyInventorySerializer, ScanPrescriptionSerializer
+from .serializers import DispenseMedicineSerializer, DispensingRecordSerializer, PharmacySerializer, PharmacyInventorySerializer, ScanPrescriptionSerializer, UpdateStockSerializer
 
 
 class ScanPrescriptionView(APIView):
@@ -57,9 +57,30 @@ class PharmacyScanPatientView(APIView):
         try:
             profile = None
             if patient_id_input:
-                profile = Profile.objects.select_related("user", "health_card").get(
-                    patient_id=patient_id_input
+                patient_id_input = patient_id_input.strip()
+
+                # 1) Exact match on patient_id (case-insensitive)
+                profile = (
+                    Profile.objects.select_related("user", "health_card")
+                    .filter(patient_id__iexact=patient_id_input)
+                    .first()
                 )
+
+                # 2) Fallback: try as UUID (profile.id)
+                if profile is None:
+                    try:
+                        import uuid as _uuid
+                        val = _uuid.UUID(patient_id_input)
+                        profile = (
+                            Profile.objects.select_related("user", "health_card")
+                            .filter(id=val)
+                            .first()
+                        )
+                    except (ValueError, AttributeError):
+                        pass
+
+                if profile is None:
+                    raise Profile.DoesNotExist
             else:
                 payload = jwt.decode(
                     token,
@@ -147,7 +168,7 @@ class DispenseMedicineView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        # Get pharmacy for current user (if pharmacist owns a pharmacy)
+        # Get pharmacy for current user (if one exists)
         pharmacy = Pharmacy.objects.filter(owner=request.user, is_active=True).first()
 
         serializer = DispenseMedicineSerializer(data=request.data, context={"request": request, "pharmacy": pharmacy})
@@ -293,3 +314,44 @@ class PharmacyDashboardStatsView(APIView):
                 "trend": trend,
             }
         )
+
+
+class UpdateStockView(APIView):
+    """
+    Pharmacist adds received stock to an existing inventory item.
+    POST /api/pharmacy/update-stock/
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        pharmacy = Pharmacy.objects.filter(owner=request.user, is_active=True).first()
+        if not pharmacy:
+            return Response(
+                {"detail": "No pharmacy found for this user."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = UpdateStockSerializer(
+            data=request.data, context={"request": request, "pharmacy": pharmacy}
+        )
+        serializer.is_valid(raise_exception=True)
+        item = serializer.save()
+
+        return Response(
+            PharmacyInventorySerializer(item).data, status=status.HTTP_200_OK
+        )
+
+
+class PharmacyListView(APIView):
+    """List all active pharmacies (for doctors selecting a target pharmacy)."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        search = request.query_params.get("search", "").strip()
+        qs = Pharmacy.objects.filter(is_active=True)
+        if search:
+            qs = qs.filter(name__icontains=search)
+        qs = qs[:50]
+        return Response(PharmacySerializer(qs, many=True).data)

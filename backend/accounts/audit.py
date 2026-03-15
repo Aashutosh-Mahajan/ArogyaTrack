@@ -26,6 +26,7 @@ class AuditLog(models.Model):
         PATIENT_RECORD_ACCESSED = "patient_record_accessed", "Patient Record Accessed"
         PRESCRIPTION_CREATED = "prescription_created", "Prescription Created"
         PRESCRIPTION_DISPENSED = "prescription_dispensed", "Prescription Dispensed"
+        PRESCRIPTION_VALIDATED = "prescription_validated", "Prescription Validated"
         ALERT_GENERATED = "alert_generated", "Alert Generated"
         ALERT_ACKNOWLEDGED = "alert_acknowledged", "Alert Acknowledged"
         SECURITY_EVENT = "security_event", "Security Event"

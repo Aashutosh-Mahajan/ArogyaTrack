@@ -25,6 +25,7 @@ class DashboardAlert(models.Model):
         ABNORMAL_LABS = "abnormal_labs", "Abnormal Lab Results"
         LOW_ADHERENCE = "low_adherence", "Low Medication Adherence"
         HIGH_RISK = "high_risk", "Elevated Risk Score"
+        OUTBREAK = "outbreak", "Disease Outbreak in Region"
 
     class Severity(models.TextChoices):
         LOW = "low", "Low"
@@ -47,6 +48,14 @@ class DashboardAlert(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     read_at = models.DateTimeField(null=True, blank=True)
     dismissed_at = models.DateTimeField(null=True, blank=True)
+    surveillance_alert = models.ForeignKey(
+        'surveillance.Alert',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='dashboard_alerts',
+        help_text='Link to the surveillance alert that triggered this dashboard alert',
+    )
 
     class Meta:
         ordering = ["-created_at"]
