@@ -17,10 +17,10 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
-        display: ['Syne', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
-        syne: ['Syne', 'sans-serif'],
-        dm: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-jakarta)', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+        display: ['var(--font-fraunces)', 'Fraunces', 'Georgia', 'serif'],
+        syne: ['var(--font-fraunces)', 'Fraunces', 'Georgia', 'serif'],
+        dm: ['var(--font-jakarta)', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -29,22 +29,26 @@ const config: Config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#1F6F6A",
-          foreground: "#FFFFFF",
-          dark: "#185E59",
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+          dark: "hsl(var(--primary))",
         },
         card: {
-          DEFAULT: "#FFFFFF",
-          foreground: "#2F3A3A",
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
         },
-        "sidebar-dark": "#0D2B29",
-        "bg-light": "#EEF3F2",
-        "border-light": "#D9E5E3",
-        "text-dark": "#2F3A3A",
-        "text-muted": "#6B7C7C",
-        success: "#4ade80",
-        warning: "#f59e0b",
-        danger: "#ef4444",
+        /* Ink & Paper — these track the CSS vars so dark mode works, unlike
+           the hardcoded teal hex values they replace. The sidebar stays a
+           fixed ink-black panel in both modes (a book spine), so it's the
+           one color here that intentionally doesn't flip with the theme. */
+        "sidebar-dark": "#181410",
+        "bg-light": "hsl(var(--background))",
+        "border-light": "hsl(var(--border))",
+        "text-dark": "hsl(var(--foreground))",
+        "text-muted": "hsl(var(--muted-foreground))",
+        success: "#4a8a5c",
+        warning: "#b8783a",
+        danger: "hsl(var(--destructive))",
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
@@ -79,6 +83,15 @@ const config: Config = {
       boxShadow: {
         "soft": "0 2px 10px rgba(47,58,58,0.06)",
         "card-hover": "0 16px 36px rgba(31,111,106,0.14)",
+        "button": "0 8px 24px -8px rgba(31,111,106,0.45)",
+        "glass": "0 8px 32px -8px rgba(13,43,41,0.25)",
+        "bezel-inset": "inset 0 1px 1px rgba(255,255,255,0.6), inset 0 -1px 1px rgba(31,111,106,0.04)",
+        "ambient": "0 1px 2px rgba(31,41,41,0.04), 0 12px 32px -8px rgba(31,111,106,0.10)",
+        "ambient-lg": "0 2px 4px rgba(31,41,41,0.04), 0 24px 56px -12px rgba(31,111,106,0.16)",
+      },
+      transitionTimingFunction: {
+        "spring": "cubic-bezier(0.32,0.72,0,1)",
+        "spring-soft": "cubic-bezier(0.22,1,0.36,1)",
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",

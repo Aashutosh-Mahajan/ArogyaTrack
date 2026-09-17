@@ -2,35 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap');
+/* Fraunces (display/serif) + Plus Jakarta Sans (body) are loaded via
+   next/font in app/layout.tsx — self-hosted, no external request needed. */
 @import "tw-animate-css";
-@import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
 
 @layer base {
+  /* ═══ INK & PAPER — light mode ("paper") ═══ */
   :root {
-    --background: 160 14% 94%;
-    --foreground: 180 12% 21%;
-    --card: 0 0% 100%;
-    --card-foreground: 180 12% 21%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 180 12% 21%;
-    --primary: 175 56% 28%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 160 14% 94%;
-    --secondary-foreground: 180 12% 21%;
-    --muted: 160 14% 94%;
-    --muted-foreground: 180 9% 46%;
-    --accent: 160 14% 94%;
-    --accent-foreground: 175 56% 28%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 160 14% 88%;
-    --input: 160 14% 88%;
-    --ring: 175 56% 28%;
+    --background: 42 32% 95%;
+    --foreground: 30 14% 12%;
+    --card: 42 40% 98%;
+    --card-foreground: 30 14% 12%;
+    --popover: 42 40% 98%;
+    --popover-foreground: 30 14% 12%;
+    --primary: 165 45% 20%;
+    --primary-foreground: 42 40% 98%;
+    --secondary: 40 24% 90%;
+    --secondary-foreground: 30 14% 15%;
+    --muted: 40 24% 90%;
+    --muted-foreground: 30 9% 40%;
+    --accent: 38 30% 88%;
+    --accent-foreground: 165 45% 20%;
+    --destructive: 6 65% 42%;
+    --destructive-foreground: 42 40% 98%;
+    --border: 35 20% 84%;
+    --input: 35 20% 84%;
+    --ring: 165 45% 25%;
     --radius: 1rem;
   }
+
+  /* ═══ INK & PAPER — dark mode ("ink") ═══ */
+  .dark {
+    --background: 30 10% 7%;
+    --foreground: 42 25% 92%;
+    --card: 30 9% 10%;
+    --card-foreground: 42 25% 92%;
+    --popover: 30 9% 10%;
+    --popover-foreground: 42 25% 92%;
+    --primary: 160 35% 58%;
+    --primary-foreground: 30 10% 8%;
+    --secondary: 30 8% 15%;
+    --secondary-foreground: 42 25% 92%;
+    --muted: 30 8% 15%;
+    --muted-foreground: 35 10% 62%;
+    --accent: 30 8% 17%;
+    --accent-foreground: 160 35% 58%;
+    --destructive: 6 60% 55%;
+    --destructive-foreground: 30 10% 8%;
+    --border: 30 8% 19%;
+    --input: 30 8% 19%;
+    --ring: 160 35% 50%;
+    --radius: 1rem;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
@@ -57,10 +83,8 @@
   }
 
   body {
-    background-color: #EEF3F2;
-    color: #2F3A3A;
-    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
-    @apply antialiased;
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-jakarta), 'Plus Jakarta Sans', system-ui, sans-serif;
   }
 
   h1,
@@ -69,7 +93,7 @@
   h4,
   h5,
   h6 {
-    font-family: 'Syne', 'Plus Jakarta Sans', sans-serif;
+    font-family: var(--font-fraunces), 'Fraunces', Georgia, serif;
     @apply tracking-tight;
   }
 }
@@ -79,13 +103,144 @@
     box-shadow: 0 2px 10px rgba(47, 58, 58, 0.06);
   }
 
+  /* Remapped (not renamed) so every existing page using these classes for
+     headings/body picks up the ink-paper typography without per-page edits. */
   .font-syne {
-    font-family: 'Syne', sans-serif;
+    font-family: var(--font-fraunces), 'Fraunces', Georgia, serif;
   }
 
   .font-dm {
-    font-family: 'DM Sans', 'Inter', sans-serif;
+    font-family: var(--font-jakarta), 'Plus Jakarta Sans', system-ui, sans-serif;
   }
+}
+
+/* ══════════════════════════════════════════════════════════ */
+/* PREMIUM DESIGN FOUNDATION                                   */
+/* Elevates the existing teal / Govt-of-India identity to      */
+/* agency-tier polish. Keep using the existing color tokens —  */
+/* these are structural/motion utilities, not a new palette.   */
+/* ══════════════════════════════════════════════════════════ */
+
+/* Glass card — referenced by components/ui/card.tsx but was
+   previously undefined; this is what actually renders it. */
+.glass-card {
+  background: hsl(var(--card) / 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ── Double-bezel (nested "machined hardware" card) ──────────
+   Usage: <div class="bezel-shell"><div class="bezel-core">...</div></div>
+   These track the theme variables, so they render correctly in both
+   paper (light) and ink (dark) mode without any extra markup. */
+.bezel-shell {
+  background: hsl(var(--foreground) / 0.04);
+  border: 1px solid hsl(var(--foreground) / 0.08);
+  border-radius: 2rem;
+  padding: 0.375rem;
+}
+
+.bezel-core {
+  background: hsl(var(--card));
+  border-radius: 1.625rem;
+  /* mathematically: shell radius (2rem) - shell padding (0.375rem) */
+  box-shadow:
+    inset 0 1px 1px hsl(var(--card-foreground) / 0.06),
+    0 1px 2px hsl(var(--foreground) / 0.04);
+  height: 100%;
+}
+
+/* Fixed-dark variant — for permanently-dark decorative panels (e.g. the
+   hero mockup, always-ink feature sections) that don't flip with the
+   site-wide theme toggle, same idea as the sidebar. */
+.bezel-shell-dark {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 2rem;
+  padding: 0.375rem;
+}
+
+.bezel-core-dark {
+  background: #211c16;
+  border-radius: 1.625rem;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  height: 100%;
+}
+
+/* ── Magnetic / pill CTA button-in-button icon wrapper ────────
+   Usage: <button class="group ...magnetic-btn..."><span>Label</span>
+     <span class="btn-icon-wrap"><ArrowIcon /></span></button> */
+.magnetic-btn {
+  transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.magnetic-btn:active {
+  transform: scale(0.98);
+}
+
+.btn-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.18);
+  transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.group:hover .btn-icon-wrap {
+  transform: translate(2px, -1px) scale(1.06);
+}
+
+/* ── Fluid island nav ── detached floating glass pill ────────── */
+.fluid-nav {
+  background: hsl(var(--card) / 0.7);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid hsl(var(--foreground) / 0.08);
+  box-shadow: 0 8px 32px -8px hsl(var(--foreground) / 0.18);
+}
+
+/* ── Eyebrow tag ── */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* ── Fixed grain overlay (attach once at the root layout) ────── */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.025;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Scroll-entry reveal (paired with IntersectionObserver / framer whileInView) ── */
+.reveal-up {
+  opacity: 0;
+  transform: translateY(28px);
+  filter: blur(6px);
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
 }
 
 /* Scrollbar */
@@ -95,11 +250,11 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #EEF3F2;
+  background: hsl(var(--background));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D9E5E3;
+  background: hsl(var(--border));
   border-radius: 99px;
 }
 
@@ -167,13 +322,15 @@
   display: flex;
   height: 100vh;
   overflow: hidden;
-  background: #EEF3F2;
+  background: hsl(var(--background));
 }
 
+/* The sidebar is a fixed ink-black panel (a book spine) in both light and
+   dark mode — see the "sidebar-dark" note in tailwind.config.ts. */
 .sidebar {
   width: 222px;
   min-width: 222px;
-  background: #0D2B29;
+  background: #181410;
   display: flex;
   flex-direction: column;
   padding: 22px 0;
@@ -188,7 +345,7 @@
   top: -60px;
   left: -60px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(31, 111, 106, 0.25) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(90, 168, 140, 0.2) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -199,7 +356,7 @@
   bottom: -40px;
   right: -40px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(31, 111, 106, 0.2) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(90, 168, 140, 0.16) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -219,12 +376,12 @@
 }
 
 .topbar {
-  background: #FFFFFF;
+  background: hsl(var(--card));
   padding: 12px 28px;
   display: flex;
   align-items: center;
   gap: 14px;
-  border-bottom: 1px solid #D9E5E3;
+  border-bottom: 1px solid hsl(var(--border));
   flex-shrink: 0;
 }
 
@@ -248,18 +405,18 @@
   cursor: pointer;
   transition: background 0.18s;
   text-decoration: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
   font-size: 12.5px;
   color: rgba(255, 255, 255, 0.4);
   font-weight: 400;
 }
 
 .nav-item:hover {
-  background: rgba(31, 111, 106, 0.12);
+  background: rgba(90, 168, 140, 0.14);
 }
 
 .nav-item.nav-active {
-  background: linear-gradient(135deg, #1F6F6A, #185E59);
+  background: linear-gradient(135deg, #4a8a6f, #3a6f58);
   color: #FFFFFF;
   font-weight: 600;
 }
@@ -308,19 +465,19 @@
 }
 
 .stat-card {
-  background: #FFFFFF;
+  background: hsl(var(--card));
   border-radius: 14px;
   padding: 16px 14px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(47, 58, 58, 0.06);
+  box-shadow: 0 2px 10px hsl(var(--foreground) / 0.06);
   cursor: pointer;
   transition: transform 0.22s, box-shadow 0.22s;
 }
 
 .stat-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 36px rgba(31, 111, 106, 0.14);
+  box-shadow: 0 16px 36px hsl(var(--primary) / 0.14);
 }
 
 .stat-card .accent-bar {
@@ -335,19 +492,19 @@
 .stat-card .number {
   font-size: 24px;
   font-weight: 800;
-  color: #2F3A3A;
+  color: hsl(var(--foreground));
   line-height: 1;
   margin-bottom: 4px;
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-fraunces), serif;
 }
 
 .stat-card .label {
   font-size: 10px;
-  color: #6B7C7C;
+  color: hsl(var(--muted-foreground));
   font-weight: 500;
   margin-bottom: 6px;
   line-height: 1.3;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-jakarta), sans-serif;
 }
 
 .stat-card .trend {
@@ -359,23 +516,23 @@
 }
 
 .trend-up {
-  color: #1F6F6A;
+  color: hsl(var(--primary));
 }
 
 .trend-down {
-  color: #ef4444;
+  color: hsl(var(--destructive));
 }
 
 .trend-neutral {
-  color: #6B7C7C;
+  color: hsl(var(--muted-foreground));
 }
 
 /* ── CONTENT CARDS ── */
 .content-card {
-  background: #FFFFFF;
+  background: hsl(var(--card));
   border-radius: 18px;
   padding: 20px 22px;
-  box-shadow: 0 2px 10px rgba(47, 58, 58, 0.06);
+  box-shadow: 0 2px 10px hsl(var(--foreground) / 0.06);
   width: 100%;
 }
 
@@ -390,8 +547,8 @@
 .section-header h2 {
   font-size: 14px;
   font-weight: 700;
-  color: #2F3A3A;
-  font-family: 'DM Sans', sans-serif;
+  color: hsl(var(--foreground));
+  font-family: var(--font-jakarta), sans-serif;
 }
 
 /* ── RECORD LIST ITEMS ── */
@@ -400,7 +557,7 @@
   align-items: flex-start;
   gap: 14px;
   padding: 14px 16px;
-  border-bottom: 1px solid #D9E5E3;
+  border-bottom: 1px solid hsl(var(--border));
   transition: background 0.15s;
   border-radius: 12px;
 }
@@ -410,39 +567,39 @@
 }
 
 .record-item:hover {
-  background: #EEF3F2;
+  background: hsl(var(--muted));
 }
 
 .record-item .record-icon {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: rgba(31, 111, 106, 0.08);
+  background: hsl(var(--primary) / 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1F6F6A;
+  color: hsl(var(--primary));
   flex-shrink: 0;
 }
 
 .record-item .record-title {
   font-size: 16px;
   font-weight: 600;
-  color: #2F3A3A;
+  color: hsl(var(--foreground));
   line-height: 1.4;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-jakarta), sans-serif;
   text-transform: capitalize;
 }
 
 .record-item .record-meta {
   font-size: 13px;
-  color: #6B7C7C;
+  color: hsl(var(--muted-foreground));
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
   margin-top: 6px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-jakarta), sans-serif;
 }
 
 .record-item .record-tags {
@@ -453,9 +610,9 @@
 }
 
 .tag {
-  background: rgba(31, 111, 106, 0.08);
-  border: 1px solid #D9E5E3;
-  color: #1F6F6A;
+  background: hsl(var(--primary) / 0.08);
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--primary));
   font-size: 12px;
   padding: 2px 8px;
   border-radius: 999px;
@@ -473,21 +630,21 @@
 }
 
 .badge-completed {
-  background: rgba(74, 222, 128, 0.12);
-  color: #1F6F6A;
-  border: 1px solid rgba(74, 222, 128, 0.3);
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--primary));
+  border: 1px solid hsl(var(--primary) / 0.3);
 }
 
 .badge-followup {
-  background: rgba(245, 158, 11, 0.12);
-  color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: rgba(184, 120, 58, 0.12);
+  color: #b8783a;
+  border: 1px solid rgba(184, 120, 58, 0.3);
 }
 
 .badge-alert {
-  background: rgba(239, 68, 68, 0.12);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: hsl(var(--destructive) / 0.12);
+  color: hsl(var(--destructive));
+  border: 1px solid hsl(var(--destructive) / 0.3);
 }
 
 /* ── TAB BUTTONS ── */
@@ -499,17 +656,17 @@
   font-size: 11.5px;
   font-weight: 600;
   transition: all 0.2s;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-jakarta), sans-serif;
 }
 
 .tab-btn.active {
-  background: linear-gradient(135deg, #1F6F6A, #185E59);
+  background: linear-gradient(135deg, #4a8a6f, #3a6f58);
   color: #FFFFFF;
 }
 
 .tab-btn.inactive {
-  background: #EEF3F2;
-  color: #6B7C7C;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
 }
 
 /* ═══ Dashboard Section Spacing ═══ */
@@ -544,12 +701,12 @@
 
 /* ═══ Stat Card ═══ */
 .stat-card {
-  background: #fff;
+  background: hsl(var(--card));
   border-radius: 16px;
   padding: 28px 24px;
   position: relative;
   overflow: hidden;
-  border: 1px solid #E2E8E7;
+  border: 1px solid hsl(var(--border));
   transition: box-shadow 0.2s, transform 0.2s;
   display: flex;
   flex-direction: column;
@@ -558,7 +715,7 @@
 }
 
 .stat-card:hover {
-  box-shadow: 0 6px 20px rgba(31, 111, 106, 0.08);
+  box-shadow: 0 6px 20px hsl(var(--primary) / 0.1);
   transform: translateY(-1px);
 }
 
@@ -568,18 +725,18 @@
 
 .stat-card .label {
   font-size: 14.5px;
-  color: #2F3A3A;
+  color: hsl(var(--foreground));
   font-weight: 700;
   line-height: 1.3;
-  font-family: 'DM Sans', 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-jakarta), sans-serif;
   letter-spacing: -0.01em;
 }
 
 .stat-card .number {
-  font-family: 'Syne', 'Plus Jakarta Sans', sans-serif;
-  font-weight: 800;
+  font-family: var(--font-fraunces), serif;
+  font-weight: 700;
   font-size: 32px;
-  color: #2F3A3A;
+  color: hsl(var(--foreground));
   line-height: 1;
   margin-top: auto;
   padding-top: 12px;
@@ -589,7 +746,7 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  color: #1F6F6A;
+  color: hsl(var(--primary));
   opacity: 0.5;
   transition: opacity 0.2s;
 }
@@ -604,23 +761,23 @@
 }
 
 .stat-card .trend-up {
-  color: #22c55e;
+  color: #4a8a5c;
 }
 
 .stat-card .trend-down {
-  color: #ef4444;
+  color: hsl(var(--destructive));
 }
 
 .stat-card .trend-neutral {
-  color: #94A3A3;
+  color: hsl(var(--muted-foreground));
 }
 
 /* ═══ Content Card ═══ */
 .content-card {
-  background: #fff;
+  background: hsl(var(--card));
   border-radius: 16px;
   padding: 24px;
-  border: 1px solid #E2E8E7;
+  border: 1px solid hsl(var(--border));
 }
 
 /* ═══ Badge ═══ */
@@ -661,31 +818,21 @@
   }
 }
 
+/* NOTE: --background/--foreground/--card/--primary/etc are intentionally
+   NOT redefined here — they're already set once, correctly, in the
+   `:root`/`.dark` blocks at the top of this file (ink-paper palette).
+   This block used to redeclare all of them a second time using oklch
+   values, which silently WON the cascade (declared later) and broke
+   `hsl(var(--x))` everywhere, since hsl(oklch(...)) is invalid and drops
+   the whole declaration — every bg-background/text-foreground/etc utility
+   was rendering fully transparent. Only chart/sidebar-widget tokens (not
+   used by the ink-paper palette above) and --radius remain here. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -697,24 +844,6 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
@@ -731,7 +860,7 @@
 }
 
 @theme inline {
-  --font-sans: 'Geist Variable', sans-serif;
+  --font-sans: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
