@@ -6,6 +6,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from datetime import timedelta
 
+from accounts.models import DoctorProfile
 from patients.models import HealthCard, Profile
 
 User = get_user_model()
@@ -19,6 +20,14 @@ def auth_headers(user):
 class MedicalFlowTests(APITestCase):
     def setUp(self):
         self.doctor = User.objects.create_user(email="doc@example.com", role=User.Role.DOCTOR)
+        DoctorProfile.objects.create(
+            user=self.doctor,
+            first_name="Test",
+            last_name="Doctor",
+            medical_license="TEST-LICENSE-001",
+            specialization="General Medicine",
+            approval_status=DoctorProfile.ApprovalStatus.APPROVED,
+        )
         self.patient_user = User.objects.create_user(email="pat@example.com")
         self.profile = Profile.objects.create(
             user=self.patient_user,
@@ -42,7 +51,9 @@ class MedicalFlowTests(APITestCase):
             "notes": "rest",
             "diagnoses": [{"icd_10_code": "A01", "disease_name": "Test", "severity": 2}],
         }
-        resp = self.client.post(reverse("create-medical-record"), payload, **auth_headers(self.doctor))
+        resp = self.client.post(
+            reverse("create-medical-record"), payload, format="json", **auth_headers(self.doctor)
+        )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(resp.data["diagnoses"]), 1)
 
