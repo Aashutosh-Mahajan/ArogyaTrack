@@ -9,6 +9,7 @@ from .views import (
     MyCardPhotoUploadView,
     MyCardQRImageView,
     MyCardView,
+    MyHealthCardView,
     MyProfilesView,
     PatientProfileView,
     RevokeHealthCardView,
@@ -22,6 +23,7 @@ urlpatterns = [
     path("create-profile/", CreateProfileView.as_view(), name="create-profile"),
     path("my-profiles/", MyProfilesView.as_view(), name="my-profiles"),
     path("switch-profile/", SwitchProfileView.as_view(), name="switch-profile"),
+    path("health-card/", MyHealthCardView.as_view(), name="my-health-card"),
     # My Card (auto-resolve logged-in user's profile)
     path("my-card/", MyCardView.as_view(), name="my-card"),
     path("my-card/pdf/", MyCardPDFView.as_view(), name="my-card-pdf"),

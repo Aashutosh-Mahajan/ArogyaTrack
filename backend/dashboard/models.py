@@ -39,6 +39,14 @@ class DashboardAlert(models.Model):
         on_delete=models.CASCADE,
         related_name="dashboard_alerts",
     )
+    profile = models.ForeignKey(
+        "patients.Profile",
+        on_delete=models.CASCADE,
+        related_name="dashboard_alerts",
+        null=True,
+        blank=True,
+        help_text="The specific family-member profile this alert belongs to (see medical.PatientVisitRecord.profile).",
+    )
     alert_type = models.CharField(max_length=30, choices=AlertType.choices)
     severity = models.CharField(max_length=10, choices=Severity.choices)
     title = models.CharField(max_length=255)
@@ -62,6 +70,7 @@ class DashboardAlert(models.Model):
         indexes = [
             models.Index(fields=["patient", "is_dismissed", "-created_at"]),
             models.Index(fields=["patient", "is_read"]),
+            models.Index(fields=["profile", "is_dismissed", "-created_at"]),
         ]
         verbose_name = "Dashboard Alert"
         verbose_name_plural = "Dashboard Alerts"

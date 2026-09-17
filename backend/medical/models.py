@@ -135,6 +135,18 @@ class PatientVisitRecord(models.Model):
     Stores visit history with diagnosis, tests, and prescriptions.
     """
     patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="visit_records")
+    profile = models.ForeignKey(
+        "patients.Profile",
+        on_delete=models.CASCADE,
+        related_name="visit_records",
+        null=True,
+        blank=True,
+        help_text=(
+            "The specific family-member profile this visit belongs to. "
+            "Nullable for backward compatibility with rows predating this field "
+            "(backfilled via migration) — new code should always set this."
+        ),
+    )
     doctor_name = models.CharField(max_length=255)
     department = models.CharField(max_length=255)
     diagnosis = models.TextField()
@@ -193,6 +205,14 @@ class LabTestResult(models.Model):
         on_delete=models.CASCADE,
         related_name="lab_test_results",
     )
+    profile = models.ForeignKey(
+        "patients.Profile",
+        on_delete=models.CASCADE,
+        related_name="lab_test_results",
+        null=True,
+        blank=True,
+        help_text="The specific family-member profile this result belongs to (see PatientVisitRecord.profile).",
+    )
     visit_record = models.ForeignKey(
         PatientVisitRecord,
         on_delete=models.CASCADE,
@@ -217,6 +237,7 @@ class LabTestResult(models.Model):
         ordering = ["-tested_at"]
         indexes = [
             models.Index(fields=["patient", "test_name", "-tested_at"]),
+            models.Index(fields=["profile", "test_name", "-tested_at"]),
         ]
         verbose_name = "Lab Test Result"
         verbose_name_plural = "Lab Test Results"
@@ -251,6 +272,14 @@ class HealthMetric(models.Model):
         on_delete=models.CASCADE,
         related_name="health_metrics",
     )
+    profile = models.ForeignKey(
+        "patients.Profile",
+        on_delete=models.CASCADE,
+        related_name="health_metrics",
+        null=True,
+        blank=True,
+        help_text="The specific family-member profile this metric belongs to (see PatientVisitRecord.profile).",
+    )
     metric_type = models.CharField(
         max_length=20,
         choices=MetricType.choices,
@@ -274,6 +303,7 @@ class HealthMetric(models.Model):
         ordering = ["-recorded_at"]
         indexes = [
             models.Index(fields=["patient", "metric_type", "-recorded_at"]),
+            models.Index(fields=["profile", "metric_type", "-recorded_at"]),
         ]
         verbose_name = "Health Metric"
         verbose_name_plural = "Health Metrics"

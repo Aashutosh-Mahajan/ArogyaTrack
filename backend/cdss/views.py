@@ -107,8 +107,8 @@ class CDSSAnalyzeView(APIView):
             .exclude(severity=DrugInteraction.Severity.MINOR)
             .select_related("medicine_a", "medicine_b")
         )
-        vitals = HealthMetric.objects.filter(patient=patient.user).order_by("-recorded_at")[:10]
-        labs = LabTestResult.objects.filter(patient=patient.user).order_by("-tested_at")[:10]
+        vitals = HealthMetric.objects.filter(profile=patient).order_by("-recorded_at")[:10]
+        labs = LabTestResult.objects.filter(profile=patient).order_by("-tested_at")[:10]
 
         # ── STEP C: Anonymize (SECURITY LAYER) ──
         try:

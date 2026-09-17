@@ -87,20 +87,25 @@ def _chronic_conditions(profile: Profile) -> list[dict]:
 
 
 def _latest_vitals(profile: Profile) -> dict:
-    """Most recent weight metric for the patient."""
-    user = profile.user
+    """
+    Most recent vitals for this specific family-member profile.
+
+    Filtered by profile (not the account's User) so a prescription written
+    for one family member never pulls another family member's vitals into
+    the AI safety agent's dosage/interaction reasoning.
+    """
     vitals = {}
-    weight = HealthMetric.objects.filter(patient=user, metric_type="weight").first()
+    weight = HealthMetric.objects.filter(profile=profile, metric_type="weight").first()
     if weight:
         vitals["weight_kg"] = weight.value
-    bp = HealthMetric.objects.filter(patient=user, metric_type="blood_pressure").first()
+    bp = HealthMetric.objects.filter(profile=profile, metric_type="blood_pressure").first()
     if bp:
         vitals["blood_pressure"] = {
             "systolic": bp.value,
             "diastolic": bp.secondary_value,
             "unit": bp.unit,
         }
-    sugar = HealthMetric.objects.filter(patient=user, metric_type="sugar").first()
+    sugar = HealthMetric.objects.filter(profile=profile, metric_type="sugar").first()
     if sugar:
         vitals["blood_sugar"] = {"value": sugar.value, "unit": sugar.unit}
     return vitals
@@ -108,14 +113,14 @@ def _latest_vitals(profile: Profile) -> dict:
 
 def _lab_results(profile: Profile) -> dict:
     """
-    Most recent creatinine (kidney) and ALT (liver) if available.
+    Most recent creatinine (kidney) and ALT (liver) if available, for this
+    specific family-member profile (see _latest_vitals for why this matters).
     Returns a dict with test_name -> {value, unit, normal_min, normal_max, status}.
     """
-    user = profile.user
     results = {}
     for test_name in ["creatinine", "alt", "sgpt", "alanine aminotransferase"]:
         lab = LabTestResult.objects.filter(
-            patient=user, test_name__icontains=test_name
+            profile=profile, test_name__icontains=test_name
         ).first()
         if lab:
             key = "creatinine" if "creat" in test_name.lower() else "alt"

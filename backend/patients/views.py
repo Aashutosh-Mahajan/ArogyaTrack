@@ -190,6 +190,32 @@ def _get_or_create_card(user):
     return profile, card
 
 
+class MyHealthCardView(APIView):
+    """
+    Convenience endpoint: get (or auto-generate) the current user's active-profile
+    health card without needing to know its profile_id up front.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _respond(self, request):
+        profile, card = _get_or_create_card(request.user)
+        if not profile:
+            return Response(
+                {"detail": "No profile found. Please complete your profile first."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if card.revoked_at is not None:
+            return Response({"detail": "Health card revoked"}, status=status.HTTP_410_GONE)
+        data = HealthCardSerializer(card).data
+        return Response({"token": data["token"], "qr_code_path": data["qr_code_path"], "expires_at": data["expires_at"]})
+
+    def get(self, request):
+        return self._respond(request)
+
+    def post(self, request):
+        return self._respond(request)
+
+
 class MyCardView(APIView):
     """Return the logged-in patient's card data. Auto-generates if missing."""
     permission_classes = [permissions.IsAuthenticated]
@@ -496,8 +522,6 @@ class ScanPatientQRView(APIView):
                 else None
             )
 
-            user = profile.user
-
             # Batch remaining queries (visit records, prescriptions, vitals)
             # These can't be prefetched on Profile but we minimize round-trips
             medical_records = list(
@@ -506,7 +530,7 @@ class ScanPatientQRView(APIView):
 
             visit_records = list(
                 PatientVisitRecord.objects
-                .filter(patient=user)
+                .filter(profile=profile)
                 .order_by('-visit_date')[:10]
             )
 
@@ -525,7 +549,7 @@ class ScanPatientQRView(APIView):
             latest_metrics = {
                 m.metric_type: m
                 for m in HealthMetric.objects
-                .filter(patient=user, metric_type__in=['blood_pressure', 'sugar'])
+                .filter(profile=profile, metric_type__in=['blood_pressure', 'sugar'])
                 .order_by('metric_type', '-recorded_at')
                 .distinct('metric_type')
             }

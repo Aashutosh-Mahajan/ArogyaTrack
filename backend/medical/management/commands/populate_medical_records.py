@@ -50,6 +50,13 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR("No users found. Please create a user first."))
                 return
 
+        from patients.models import Profile
+
+        profile = (
+            Profile.objects.filter(user=patient, relationship="self").first()
+            or Profile.objects.filter(user=patient).order_by("created_at").first()
+        )
+
         self.stdout.write(f"Creating medical records for: {patient.email}")
 
         # Define realistic medical data
@@ -202,6 +209,7 @@ class Command(BaseCommand):
             # Create record
             PatientVisitRecord.objects.create(
                 patient=patient,
+                profile=profile,
                 doctor_name=scenario["doctor"],
                 department=scenario["department"],
                 diagnosis=scenario["diagnosis"],

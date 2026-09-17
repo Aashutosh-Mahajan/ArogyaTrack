@@ -157,7 +157,7 @@ class PatientHistoryView(APIView):
 
         # Also include visit records (consultation history)
         visit_records = PatientVisitRecord.objects.filter(
-            patient=profile.user
+            profile=profile
         ).prefetch_related('report_attachments').order_by("-visit_date")
 
         return Response(
@@ -232,10 +232,11 @@ class PatientVisitRecordsView(APIView):
                     {"detail": "You do not have access to this patient's records."},
                     status=status.HTTP_403_FORBIDDEN,
                 )
-            records = PatientVisitRecord.objects.filter(patient=profile.user).prefetch_related('report_attachments')
+            records = PatientVisitRecord.objects.filter(profile=profile).prefetch_related('report_attachments')
         else:
             # Patient viewing own records
-            records = PatientVisitRecord.objects.filter(patient=request.user).prefetch_related('report_attachments')
+            own_profile = Profile.objects.filter(user=request.user, relationship="self").first()
+            records = PatientVisitRecord.objects.filter(profile=own_profile).prefetch_related('report_attachments')
         
         # Search functionality
         search_query = request.query_params.get("search", "").strip()
@@ -333,11 +334,11 @@ class MyPatientsListView(APIView):
             unique_patient_id = profile.patient_id or "N/A"
             
             # Get recent visit records count
-            visit_count = PatientVisitRecord.objects.filter(patient=profile.user).count()
-            
+            visit_count = PatientVisitRecord.objects.filter(profile=profile).count()
+
             # Get last visit date
             last_visit = PatientVisitRecord.objects.filter(
-                patient=profile.user
+                profile=profile
             ).order_by('-visit_date').first()
             
             patients.append({
@@ -448,7 +449,6 @@ class HighRiskPatientsView(APIView):
         high_risk_patients = []
         for access in active_accesses:
             profile = access.patient
-            user = profile.user
 
             risk_factors = []
             risk_level = 'low'
@@ -463,7 +463,7 @@ class HighRiskPatientsView(APIView):
 
             # 2. Latest BP from HealthMetric
             latest_bp_metric = HealthMetric.objects.filter(
-                patient=user, metric_type='blood_pressure'
+                profile=profile, metric_type='blood_pressure'
             ).order_by('-recorded_at').first()
             latest_bp = None
             latest_bp_value = None
@@ -478,7 +478,7 @@ class HighRiskPatientsView(APIView):
 
             # 3. Latest blood sugar from HealthMetric
             latest_sugar_metric = HealthMetric.objects.filter(
-                patient=user, metric_type='sugar'
+                profile=profile, metric_type='sugar'
             ).order_by('-recorded_at').first()
             latest_sugar = None
             if latest_sugar_metric:
@@ -489,12 +489,12 @@ class HighRiskPatientsView(APIView):
 
             # 4. Most recent visit
             latest_visit = PatientVisitRecord.objects.filter(
-                patient=user
+                profile=profile
             ).order_by('-visit_date').first()
 
             # 5. Check abnormal lab results (last 90 days)
             recent_labs = LabTestResult.objects.filter(
-                patient=user,
+                profile=profile,
                 tested_at__gte=timezone.now() - timedelta(days=90),
             )
             abnormal_count = 0
@@ -577,12 +577,11 @@ class DoctorDashboardSummaryView(APIView):
         high_risk_count = 0
         pending_labs = 0
         recent_updates = 0
-        patient_users = []
+        patient_profiles = []
 
         for acc in active_accesses:
             profile = acc.patient
-            user = profile.user
-            patient_users.append(user)
+            patient_profiles.append(profile)
 
             has_risk = False
             conditions = ChronicCondition.objects.filter(profile=profile)
@@ -591,7 +590,7 @@ class DoctorDashboardSummaryView(APIView):
 
             # Check abnormal labs in last 90 days
             abnormal = LabTestResult.objects.filter(
-                patient=user,
+                profile=profile,
                 tested_at__gte=now - timedelta(days=90),
             ).filter(
                 Q(value__gt=F('normal_max')) | Q(value__lt=F('normal_min'))
@@ -603,22 +602,22 @@ class DoctorDashboardSummaryView(APIView):
                 high_risk_count += 1
 
         # Pending lab reviews — abnormal labs in last 30 days across all doctor's patients
-        if patient_users:
+        if patient_profiles:
             pending_labs = LabTestResult.objects.filter(
-                patient__in=patient_users,
+                profile__in=patient_profiles,
                 tested_at__gte=now - timedelta(days=30),
             ).filter(
                 Q(value__gt=F('normal_max')) | Q(value__lt=F('normal_min'))
             ).count()
 
         # Recent updates — visit records + lab results created in last 7 days
-        if patient_users:
+        if patient_profiles:
             recent_visits = PatientVisitRecord.objects.filter(
-                patient__in=patient_users,
+                profile__in=patient_profiles,
                 created_at__gte=now - timedelta(days=7),
             ).count()
             recent_labs_count = LabTestResult.objects.filter(
-                patient__in=patient_users,
+                profile__in=patient_profiles,
                 created_at__gte=now - timedelta(days=7),
             ).count()
             recent_updates = recent_visits + recent_labs_count
@@ -648,17 +647,17 @@ class DoctorRecentActivityView(APIView):
             expires_at__gt=now,
         ).select_related('patient')
 
-        patient_users = [acc.patient.user for acc in active_accesses]
-        patient_profile_map = {acc.patient.user_id: acc.patient.name for acc in active_accesses}
+        patient_profiles = [acc.patient for acc in active_accesses]
+        patient_profile_map = {acc.patient.id: acc.patient.name for acc in active_accesses}
 
         activities = []
 
-        if not patient_users:
+        if not patient_profiles:
             return Response({"count": 0, "results": []})
 
         # 1. Abnormal lab results (last 30 days)
         abnormal_labs = LabTestResult.objects.filter(
-            patient__in=patient_users,
+            profile__in=patient_profiles,
             tested_at__gte=now - timedelta(days=30),
         ).order_by('-tested_at')[:20]
 
@@ -666,7 +665,7 @@ class DoctorRecentActivityView(APIView):
             lab_status = lab.status  # 'high', 'low', or 'normal'
             if lab_status == 'normal':
                 continue
-            patient_name = patient_profile_map.get(lab.patient_id, 'Unknown')
+            patient_name = patient_profile_map.get(lab.profile_id, 'Unknown')
             activities.append({
                 "type": "abnormal_lab",
                 "icon": "lab",
@@ -678,12 +677,12 @@ class DoctorRecentActivityView(APIView):
 
         # 2. Recent visit records (last 14 days)
         recent_visits = PatientVisitRecord.objects.filter(
-            patient__in=patient_users,
+            profile__in=patient_profiles,
             created_at__gte=now - timedelta(days=14),
         ).order_by('-created_at')[:15]
 
         for visit in recent_visits:
-            patient_name = patient_profile_map.get(visit.patient_id, 'Unknown')
+            patient_name = patient_profile_map.get(visit.profile_id, 'Unknown')
             # Determine if it mentions follow-up or critical
             diag_lower = (visit.diagnosis or '').lower()
             notes_lower = (visit.doctor_notes or '').lower()
@@ -803,6 +802,7 @@ class CreateVisitRecordView(APIView):
         # Create visit record
         visit_record = PatientVisitRecord.objects.create(
             patient=profile.user,
+            profile=profile,
             doctor_name=doctor_name,
             department=department,
             diagnosis=diagnosis,

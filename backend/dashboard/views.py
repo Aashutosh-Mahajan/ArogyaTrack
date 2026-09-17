@@ -194,7 +194,7 @@ class DashboardSummaryView(APIView):
         # ── Recent visit records (last 90 days for risk calc) ────
         ninety_days_ago = timezone.now() - timedelta(days=90)
         visit_records = PatientVisitRecord.objects.filter(
-            patient=user,
+            profile=profile,
             visit_date__gte=ninety_days_ago,
         )
 
@@ -260,7 +260,7 @@ class DashboardKPIView(APIView):
         ).first()
 
         # ── Total medical records ────────────────────────────────
-        all_records = PatientVisitRecord.objects.filter(patient=user)
+        all_records = PatientVisitRecord.objects.filter(profile=profile)
         total_medical_records = all_records.count()
 
         records_current = all_records.filter(
@@ -305,14 +305,14 @@ class DashboardKPIView(APIView):
         # ── Recent BP & Sugar ───────────────────────────────────
         latest_bp = (
             HealthMetric.objects.filter(
-                patient=user, metric_type=HealthMetric.MetricType.BLOOD_PRESSURE
+                profile=profile, metric_type=HealthMetric.MetricType.BLOOD_PRESSURE
             )
             .order_by("-recorded_at")
             .first()
         )
         latest_sugar = (
             HealthMetric.objects.filter(
-                patient=user, metric_type=HealthMetric.MetricType.SUGAR
+                profile=profile, metric_type=HealthMetric.MetricType.SUGAR
             )
             .order_by("-recorded_at")
             .first()
@@ -386,9 +386,10 @@ class RecentRecordsView(APIView):
     def get(self, request):
         user = request.user
         limit = int(request.query_params.get("limit", 10))
+        profile = Profile.objects.filter(user=user, relationship="self").first()
 
         records = (
-            PatientVisitRecord.objects.filter(patient=user)
+            PatientVisitRecord.objects.filter(profile=profile)
             .prefetch_related("report_attachments")
             .order_by("-visit_date")[:limit]
         )
@@ -474,10 +475,11 @@ class LabMonitoringView(APIView):
 
     def get(self, request):
         user = request.user
+        profile = Profile.objects.filter(user=user, relationship="self").first()
 
         # Grab *all* results for this patient, newest first.
         all_results = (
-            LabTestResult.objects.filter(patient=user)
+            LabTestResult.objects.filter(profile=profile)
             .order_by("test_name", "-tested_at")
         )
 
@@ -557,10 +559,11 @@ class HealthTrendsView(APIView):
         user = request.user
         months = min(int(request.query_params.get("months", 6)), 24)
         cutoff = timezone.now() - timedelta(days=months * 30)
+        profile = Profile.objects.filter(user=user, relationship="self").first()
 
         metrics_qs = (
             HealthMetric.objects.filter(
-                patient=user,
+                profile=profile,
                 recorded_at__gte=cutoff,
             )
             .order_by("metric_type", "recorded_at")
@@ -625,7 +628,7 @@ def _generate_alerts_for_patient(user, profile):
 
     existing_types = set(
         DashboardAlert.objects.filter(
-            patient=user,
+            profile=profile,
             is_dismissed=False,
         ).values_list("alert_type", flat=True)
     )
@@ -635,7 +638,7 @@ def _generate_alerts_for_patient(user, profile):
     # ── 1.  Abnormal lab results ≥ 2 ────────────────────────────
     if "abnormal_labs" not in existing_types:
         abnormal_count = LabTestResult.objects.filter(
-            patient=user,
+            profile=profile,
             tested_at__gte=thirty_days_ago,
         ).exclude(
             value__gte=models.F("normal_min"),
@@ -648,6 +651,7 @@ def _generate_alerts_for_patient(user, profile):
             )
             new_alerts.append(DashboardAlert(
                 patient=user,
+                profile=profile,
                 alert_type="abnormal_labs",
                 severity=severity,
                 title="Multiple Abnormal Lab Results",
@@ -674,6 +678,7 @@ def _generate_alerts_for_patient(user, profile):
                     )
                     new_alerts.append(DashboardAlert(
                         patient=user,
+                        profile=profile,
                         alert_type="low_adherence",
                         severity=severity,
                         title="Low Medication Adherence",
@@ -688,7 +693,7 @@ def _generate_alerts_for_patient(user, profile):
     # ── 3.  Risk score ≥ 4 ──────────────────────────────────────
     if "high_risk" not in existing_types:
         visit_records = PatientVisitRecord.objects.filter(
-            patient=user,
+            profile=profile,
             visit_date__gte=ninety_days_ago,
         )
         missed_days = 0
@@ -713,6 +718,7 @@ def _generate_alerts_for_patient(user, profile):
             )
             new_alerts.append(DashboardAlert(
                 patient=user,
+                profile=profile,
                 alert_type="high_risk",
                 severity=severity,
                 title="Elevated Health Risk Score",
@@ -729,7 +735,7 @@ def _generate_alerts_for_patient(user, profile):
         # that haven't already been surfaced as a dashboard alert
         already_linked_ids = set(
             DashboardAlert.objects.filter(
-                patient=user,
+                profile=profile,
                 alert_type="outbreak",
                 is_dismissed=False,
                 surveillance_alert__isnull=False,
@@ -751,6 +757,7 @@ def _generate_alerts_for_patient(user, profile):
             )
             new_alerts.append(DashboardAlert(
                 patient=user,
+                profile=profile,
                 alert_type="outbreak",
                 severity=surv_alert.severity,
                 title=f"Outbreak Alert: {surv_alert.disease_name}",
@@ -786,7 +793,7 @@ class DashboardAlertsView(APIView):
         _generate_alerts_for_patient(user, profile)
 
         alerts = DashboardAlert.objects.filter(
-            patient=user,
+            profile=profile,
             is_dismissed=False,
         ).order_by("-created_at")
 
@@ -1019,11 +1026,12 @@ class DownloadListView(APIView):
 
     def get(self, request):
         user = request.user
+        profile = Profile.objects.filter(user=user, relationship="self").first()
         items = []
 
         # 1) Visit Records (each can be downloaded as a PDF)
         visit_records = PatientVisitRecord.objects.filter(
-            patient=user,
+            profile=profile,
         ).order_by("-visit_date")
 
         for vr in visit_records:
@@ -1052,7 +1060,7 @@ class DownloadListView(APIView):
 
         # 2) Visit Report Attachments
         attachments = VisitReportAttachment.objects.filter(
-            visit_record__patient=user,
+            visit_record__profile=profile,
         ).select_related("visit_record")
 
         for att in attachments:
@@ -1068,7 +1076,7 @@ class DownloadListView(APIView):
 
         # 3) Lab Report files
         lab_reports = LabTestResult.objects.filter(
-            patient=user,
+            profile=profile,
         ).exclude(report_file="")
 
         for lab in lab_reports:
@@ -1098,12 +1106,13 @@ class DownloadFileView(APIView):
 
     def get(self, request, file_id):
         user = request.user
+        profile = Profile.objects.filter(user=user, relationship="self").first()
         file_type = request.query_params.get("type", "visit_attachment")
         ip = _get_client_ip(request)
 
         if file_type == "lab_report":
             try:
-                record = LabTestResult.objects.get(id=file_id, patient=user)
+                record = LabTestResult.objects.get(id=file_id, profile=profile)
             except LabTestResult.DoesNotExist:
                 return Response({"detail": "File not found."}, status=404)
 
@@ -1117,7 +1126,7 @@ class DownloadFileView(APIView):
             try:
                 record = VisitReportAttachment.objects.select_related(
                     "visit_record"
-                ).get(id=file_id, visit_record__patient=user)
+                ).get(id=file_id, visit_record__profile=profile)
             except VisitReportAttachment.DoesNotExist:
                 return Response({"detail": "File not found."}, status=404)
 
@@ -1154,6 +1163,7 @@ class DownloadAllView(APIView):
 
     def get(self, request):
         user = request.user
+        profile = Profile.objects.filter(user=user, relationship="self").first()
         ip = _get_client_ip(request)
 
         buf = BytesIO()
@@ -1162,7 +1172,7 @@ class DownloadAllView(APIView):
         with ZipFile(buf, "w") as zf:
             # Visit attachments
             attachments = VisitReportAttachment.objects.filter(
-                visit_record__patient=user,
+                visit_record__profile=profile,
             ).select_related("visit_record")
 
             for att in attachments:
@@ -1179,7 +1189,7 @@ class DownloadAllView(APIView):
 
             # Lab reports
             labs = LabTestResult.objects.filter(
-                patient=user
+                profile=profile
             ).exclude(report_file="")
 
             for lab in labs:

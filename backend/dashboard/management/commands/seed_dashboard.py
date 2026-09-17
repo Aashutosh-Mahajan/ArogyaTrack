@@ -16,7 +16,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from accounts.models import User
@@ -62,17 +62,22 @@ class Command(BaseCommand):
     # ═════════════════════════════════════════════════════════════
 
     def handle(self, *args, **options):
+        if not settings.DEBUG:
+            raise CommandError(
+                "Refusing to seed a fixed-password demo account "
+                f"({PATIENT_EMAIL} / {PATIENT_PASSWORD}) outside DEBUG mode."
+            )
         self.stdout.write(self.style.MIGRATE_HEADING("\n━━━ Dashboard Data Seeder ━━━\n"))
 
         user, profile = self._ensure_patient(options["reset"])
         doctor_user = self._ensure_doctor()
-        visits = self._seed_medical_records(user)
-        self._seed_lab_results(user, visits)
-        self._seed_health_metrics(user, visits)
+        visits = self._seed_medical_records(user, profile)
+        self._seed_lab_results(user, profile, visits)
+        self._seed_health_metrics(user, profile, visits)
         medicines = self._seed_medicines()
         prescriptions = self._seed_prescriptions(profile, doctor_user, medicines)
         self._seed_adherence(profile, prescriptions, medicines)
-        self._seed_alerts(user)
+        self._seed_alerts(user, profile)
         self._seed_download_logs(user)
 
         self._print_summary(user, profile)
@@ -235,7 +240,7 @@ class Command(BaseCommand):
          "Satisfactory control. Next review in 3 months.", "completed"),
     ]
 
-    def _seed_medical_records(self, user):
+    def _seed_medical_records(self, user, profile):
         if PatientVisitRecord.objects.filter(patient=user).exists():
             self.stdout.write("  ⏭ Medical records already exist – skipping.")
             return list(PatientVisitRecord.objects.filter(patient=user).order_by("visit_date"))
@@ -246,6 +251,7 @@ class Command(BaseCommand):
             h, m = _random_time()
             v = PatientVisitRecord.objects.create(
                 patient=user,
+                profile=profile,
                 doctor_name=doctor,
                 department=dept,
                 diagnosis=diag,
@@ -295,7 +301,7 @@ class Command(BaseCommand):
         (2026, 1, 22, "LDL Cholesterol", 112, "mg/dL", 0, 130),
     ]
 
-    def _seed_lab_results(self, user, visits):
+    def _seed_lab_results(self, user, profile, visits):
         if LabTestResult.objects.filter(patient=user).exists():
             self.stdout.write("  ⏭ Lab results already exist – skipping.")
             return
@@ -312,6 +318,7 @@ class Command(BaseCommand):
             visit = visit_map.get((yr, mo))
             LabTestResult.objects.create(
                 patient=user,
+                profile=profile,
                 visit_record=visit,
                 test_name=name,
                 value=val,
@@ -344,7 +351,7 @@ class Command(BaseCommand):
         (134, 84, 128, 77.5, 25.6),   # 2026-01-22  Dr. Rao
     ]
 
-    def _seed_health_metrics(self, user, visits):
+    def _seed_health_metrics(self, user, profile, visits):
         if HealthMetric.objects.filter(patient=user).exists():
             self.stdout.write("  ⏭ Health metrics already exist – skipping.")
             return
@@ -356,6 +363,7 @@ class Command(BaseCommand):
             # Blood pressure
             HealthMetric.objects.create(
                 patient=user,
+                profile=profile,
                 metric_type=HealthMetric.MetricType.BLOOD_PRESSURE,
                 value=sys,
                 secondary_value=dia,
@@ -366,6 +374,7 @@ class Command(BaseCommand):
             # Blood sugar
             HealthMetric.objects.create(
                 patient=user,
+                profile=profile,
                 metric_type=HealthMetric.MetricType.SUGAR,
                 value=sugar,
                 unit="mg/dL",
@@ -375,6 +384,7 @@ class Command(BaseCommand):
             # Weight
             HealthMetric.objects.create(
                 patient=user,
+                profile=profile,
                 metric_type=HealthMetric.MetricType.WEIGHT,
                 value=weight,
                 unit="kg",
@@ -383,6 +393,7 @@ class Command(BaseCommand):
             # BMI
             HealthMetric.objects.create(
                 patient=user,
+                profile=profile,
                 metric_type=HealthMetric.MetricType.BMI,
                 value=bmi,
                 unit="kg/m²",
@@ -677,7 +688,7 @@ class Command(BaseCommand):
     #  7.  DASHBOARD ALERTS
     # ═════════════════════════════════════════════════════════════
 
-    def _seed_alerts(self, user):
+    def _seed_alerts(self, user, profile):
         if DashboardAlert.objects.filter(patient=user).exists():
             self.stdout.write("  ⏭ Alerts already exist – skipping.")
             return
@@ -718,7 +729,7 @@ class Command(BaseCommand):
         ]
 
         for a in alerts_data:
-            DashboardAlert.objects.create(patient=user, **a)
+            DashboardAlert.objects.create(patient=user, profile=profile, **a)
 
         self.stdout.write(self.style.SUCCESS(f"  ✔ Created {len(alerts_data)} dashboard alerts"))
 

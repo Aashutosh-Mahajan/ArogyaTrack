@@ -14,7 +14,13 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+from patients.models import Profile
+
 from .models import PatientVisitRecord
+
+
+def _self_profile(user):
+    return Profile.objects.filter(user=user, relationship="self").first()
 
 
 class MedicalRecordsListView(LoginRequiredMixin, ListView):
@@ -27,7 +33,7 @@ class MedicalRecordsListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        queryset = PatientVisitRecord.objects.filter(patient=self.request.user)
+        queryset = PatientVisitRecord.objects.filter(profile=_self_profile(self.request.user))
         
         # Search functionality
         search_query = self.request.GET.get("search", "").strip()
@@ -60,7 +66,7 @@ class MedicalRecordsListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         
         # Get unique values for filters
-        all_records = PatientVisitRecord.objects.filter(patient=self.request.user)
+        all_records = PatientVisitRecord.objects.filter(profile=_self_profile(self.request.user))
         context["years"] = all_records.dates("visit_date", "year", order="DESC")
         context["departments"] = all_records.values_list("department", flat=True).distinct().order_by("department")
         context["doctors"] = all_records.values_list("doctor_name", flat=True).distinct().order_by("doctor_name")
@@ -80,7 +86,7 @@ class DownloadMedicalRecordPDFView(LoginRequiredMixin, View):
     """
     
     def get(self, request, record_id):
-        record = get_object_or_404(PatientVisitRecord, id=record_id, patient=request.user)
+        record = get_object_or_404(PatientVisitRecord, id=record_id, profile=_self_profile(request.user))
         
         # Create the HttpResponse object with PDF headers
         response = HttpResponse(content_type="application/pdf")
