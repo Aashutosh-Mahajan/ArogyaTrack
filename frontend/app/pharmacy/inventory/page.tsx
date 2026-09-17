@@ -53,10 +53,10 @@ function InventoryPage() {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-background p-6">
             <div className="max-w-7xl mx-auto">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900">Inventory Management</h1>
+                    <h1 className="text-2xl font-bold text-foreground">Inventory Management</h1>
                     <button
                         onClick={() => setShowAddModal(true)}
                         className="bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 transition"
@@ -66,15 +66,15 @@ function InventoryPage() {
                 </div>
 
                 {/* Filters & Search */}
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
+                <div className="bg-card p-4 rounded-xl shadow-sm border border-border mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
                     <div className="relative w-full md:w-96">
-                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         <input
                             type="text"
                             placeholder="Search medicine name or batch..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                         />
                     </div>
 
@@ -86,12 +86,12 @@ function InventoryPage() {
                                 onChange={(e) => setShowLowStock(e.target.checked)}
                                 className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
                             />
-                            <span className="text-sm text-gray-700">Show Low Stock Only</span>
+                            <span className="text-sm text-foreground/80">Show Low Stock Only</span>
                         </label>
 
                         <button
                             onClick={fetchInventory}
-                            className="p-2 text-gray-500 hover:text-purple-600 transition rounded-full hover:bg-purple-50"
+                            className="p-2 text-muted-foreground hover:text-purple-600 transition rounded-full hover:bg-purple-50"
                             title="Refresh"
                         >
                             <FiRefreshCw className={loading ? "animate-spin" : ""} />
@@ -100,10 +100,10 @@ function InventoryPage() {
                 </div>
 
                 {/* Inventory Table */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-gray-600">
-                            <thead className="bg-gray-50 text-gray-900 font-semibold border-b border-gray-200">
+                        <table className="w-full text-left text-sm text-muted-foreground">
+                            <thead className="bg-background text-foreground font-semibold border-b border-border">
                                 <tr>
                                     <th className="px-6 py-4">Medicine Name</th>
                                     <th className="px-6 py-4">Batch No.</th>
@@ -122,20 +122,20 @@ function InventoryPage() {
                                     </tr>
                                 ) : filteredItems.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                                        <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
                                             No items found.
                                         </td>
                                     </tr>
                                 ) : (
                                     filteredItems.map((item) => (
-                                        <tr key={item.id} className="hover:bg-gray-50 transition">
+                                        <tr key={item.id} className="hover:bg-background transition">
                                             <td className="px-6 py-4">
-                                                <div className="font-medium text-gray-900">{item.medicine_name}</div>
-                                                <div className="text-xs text-gray-500">{item.medicine_generic}</div>
+                                                <div className="font-medium text-foreground">{item.medicine_name}</div>
+                                                <div className="text-xs text-muted-foreground">{item.medicine_generic}</div>
                                             </td>
                                             <td className="px-6 py-4 font-mono text-xs">{item.batch_number || 'N/A'}</td>
                                             <td className="px-6 py-4">
-                                                <div className={`flex items-center gap-2 ${item.quantity_in_stock <= item.low_stock_threshold ? 'text-red-600 font-medium' : 'text-gray-700'
+                                                <div className={`flex items-center gap-2 ${item.quantity_in_stock <= item.low_stock_threshold ? 'text-red-600 font-medium' : 'text-foreground/80'
                                                     }`}>
                                                     {item.quantity_in_stock}
                                                     {item.quantity_in_stock <= item.low_stock_threshold && (

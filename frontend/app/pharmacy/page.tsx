@@ -20,22 +20,22 @@ function PharmacyDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button
                     onClick={() => router.push('/pharmacy/scan')}
-                    className="p-4 bg-gradient-to-r from-teal-500 to-emerald-600 rounded-xl text-white shadow-lg hover:shadow-emerald-500/20 transition-all flex items-center justify-between group"
+                    className="p-4 bg-gradient-to-r from-primary to-emerald-600 rounded-xl text-white shadow-lg hover:shadow-emerald-500/20 transition-all flex items-center justify-between group"
                 >
                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-white/20 rounded-lg">
+                        <div className="p-3 bg-card/20 rounded-lg">
                             <FiSearch className="w-6 h-6" />
                         </div>
                         <div className="text-left">
                             <h3 className="font-bold text-lg">Scan Prescription</h3>
-                            <p className="text-teal-100 text-sm">Process new patient request</p>
+                            <p className="text-white/75 text-sm">Process new patient request</p>
                         </div>
                     </div>
                 </button>
 
                 <button
                     onClick={() => router.push('/pharmacy/inventory')}
-                    className="p-4 bg-white border border-gray-100 rounded-xl text-gray-800 shadow-sm hover:border-teal-200 transition-all flex items-center justify-between group"
+                    className="p-4 bg-card border border-border rounded-xl text-foreground shadow-sm hover:border-primary/30 transition-all flex items-center justify-between group"
                 >
                     <div className="flex items-center gap-4">
                         <div className="p-3 bg-purple-50 rounded-lg">
@@ -43,7 +43,7 @@ function PharmacyDashboard() {
                         </div>
                         <div className="text-left">
                             <h3 className="font-bold text-lg">Inventory Management</h3>
-                            <p className="text-gray-500 text-sm">Update stock levels & prices</p>
+                            <p className="text-muted-foreground text-sm">Update stock levels & prices</p>
                         </div>
                     </div>
                 </button>

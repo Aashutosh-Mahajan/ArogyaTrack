@@ -75,14 +75,14 @@ function ScanPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-background p-6">
             <div className="max-w-2xl mx-auto">
-                <h1 className="text-2xl font-bold text-gray-900 mb-8 text-center">
+                <h1 className="text-2xl font-bold text-foreground mb-8 text-center">
                     Scan Patient QR Code
                 </h1>
 
                 {/* QR Scanner Area */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 text-center">
+                <div className="bg-card rounded-2xl shadow-lg p-8 mb-8 text-center">
                     {isScanning ? (
                         <div className="mb-6">
                             <QRScanner
@@ -98,14 +98,14 @@ function ScanPage() {
                             />
                         </div>
                     ) : (
-                        <div className="w-64 h-64 bg-gray-100 rounded-xl mx-auto mb-6 flex items-center justify-center border-2 border-dashed border-gray-300">
+                        <div className="w-64 h-64 bg-muted rounded-xl mx-auto mb-6 flex items-center justify-center border-2 border-dashed border-border">
                             {loading ? (
                                 <div className="flex flex-col items-center gap-3">
-                                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-teal-500" />
-                                    <p className="text-sm text-gray-500">Looking up patient...</p>
+                                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary" />
+                                    <p className="text-sm text-muted-foreground">Looking up patient...</p>
                                 </div>
                             ) : (
-                                <FiCamera className="w-16 h-16 text-gray-400" />
+                                <FiCamera className="w-16 h-16 text-muted-foreground" />
                             )}
                         </div>
                     )}
@@ -124,7 +124,7 @@ function ScanPage() {
                         disabled={loading}
                         className={`px-6 py-3 rounded-xl font-medium transition-colors ${isScanning
                             ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                            : 'bg-teal-600 text-white hover:bg-teal-700'
+                            : 'bg-primary text-white hover:bg-primary'
                             } disabled:opacity-50`}
                     >
                         {isScanning ? (
@@ -136,9 +136,9 @@ function ScanPage() {
                 </div>
 
                 {/* Manual Input */}
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <FiUser className="text-teal-600" /> Manual Lookup
+                <div className="bg-card rounded-2xl shadow-lg p-6">
+                    <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <FiUser className="text-primary" /> Manual Lookup
                     </h2>
                     <form onSubmit={handleManualSubmit} className="flex gap-4">
                         <input
@@ -146,7 +146,7 @@ function ScanPage() {
                             value={manualInput}
                             onChange={(e) => setManualInput(e.target.value)}
                             placeholder="Enter Patient ID (e.g. HS-2025-000001)..."
-                            className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                            className="flex-1 rounded-lg border border-border px-4 py-2 focus:ring-primary focus:border-primary outline-none"
                         />
                         <button
                             type="submit"
@@ -161,7 +161,7 @@ function ScanPage() {
                             Lookup
                         </button>
                     </form>
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-xs text-muted-foreground mt-2">
                         You can also paste a prescription QR code value (prescription_id|hash) here.
                     </p>
                 </div>

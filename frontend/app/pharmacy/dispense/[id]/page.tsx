@@ -92,9 +92,9 @@ function DispensePage() {
 
     if (!prescription) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-background">
                 <div className="text-center">
-                    <h2 className="text-xl font-semibold text-gray-900">Prescription not found</h2>
+                    <h2 className="text-xl font-semibold text-foreground">Prescription not found</h2>
                     <button onClick={() => router.push('/pharmacy/scan')} className="mt-4 text-purple-600 hover:underline">
                         Back to Scan
                     </button>
@@ -104,17 +104,17 @@ function DispensePage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-background p-6">
             <div className="max-w-4xl mx-auto">
-                <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div className="bg-card rounded-2xl shadow-xl overflow-hidden">
                     {/* Header */}
-                    <div className="bg-teal-600 p-6 text-white">
+                    <div className="bg-primary p-6 text-white">
                         <div className="flex justify-between items-start">
                             <div>
                                 <h1 className="text-2xl font-bold">Prescription</h1>
                                 <p className="opacity-90 mt-1">Dr. {prescription.doctor_name} &bull; {new Date(prescription.created_at).toLocaleDateString()}</p>
                             </div>
-                            <div className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+                            <div className="bg-card/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
                                 Patient: {prescription.patient_name}
                             </div>
                         </div>
@@ -122,25 +122,25 @@ function DispensePage() {
 
                     {/* Medicines List */}
                     <div className="p-6">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                             <FiPackage className="text-purple-600" />
                             Prescribed Medicines
                         </h2>
 
                         <div className="space-y-4">
                             {prescription.medicines.map((med) => (
-                                <div key={med.id} className="border border-gray-200 rounded-xl p-4 hover:border-teal-100 transition">
+                                <div key={med.id} className="border border-border rounded-xl p-4 hover:border-primary/15 transition">
                                     <div className="flex flex-col md:flex-row justify-between gap-4">
                                         <div className="flex-1">
-                                            <h3 className="font-bold text-gray-900 text-lg">{med.medicine_name}</h3>
+                                            <h3 className="font-bold text-foreground text-lg">{med.medicine_name}</h3>
                                             {med.medicine_generic && (
-                                                <p className="text-xs text-gray-400">{med.medicine_generic}</p>
+                                                <p className="text-xs text-muted-foreground">{med.medicine_generic}</p>
                                             )}
-                                            <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
-                                                <span className="bg-gray-100 px-2 py-1 rounded">Dosage: {med.dosage}</span>
-                                                <span className="bg-gray-100 px-2 py-1 rounded">{med.frequency}</span>
-                                                <span className="bg-gray-100 px-2 py-1 rounded">{med.duration_days} days</span>
-                                                <span className="bg-gray-100 px-2 py-1 rounded">Qty: {med.quantity}</span>
+                                            <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
+                                                <span className="bg-muted px-2 py-1 rounded">Dosage: {med.dosage}</span>
+                                                <span className="bg-muted px-2 py-1 rounded">{med.frequency}</span>
+                                                <span className="bg-muted px-2 py-1 rounded">{med.duration_days} days</span>
+                                                <span className="bg-muted px-2 py-1 rounded">Qty: {med.quantity}</span>
                                             </div>
                                         </div>
 
@@ -187,10 +187,10 @@ function DispensePage() {
                         </div>
                     </div>
 
-                    <div className="bg-gray-50 p-6 border-t border-gray-100 flex justify-end">
+                    <div className="bg-background p-6 border-t border-border flex justify-end">
                         <button
                             onClick={() => router.push('/pharmacy/scan')}
-                            className="text-gray-600 hover:text-gray-900 font-medium"
+                            className="text-muted-foreground hover:text-foreground font-medium"
                         >
                             Done / Scan Next
                         </button>

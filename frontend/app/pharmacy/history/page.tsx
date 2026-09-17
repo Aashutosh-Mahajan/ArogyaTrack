@@ -44,22 +44,22 @@ function HistoryPage() {
             case 'dispensed': return 'text-green-600 bg-green-50 border-green-200';
             case 'unavailable': return 'text-red-600 bg-red-50 border-red-200';
             case 'patient_has': return 'text-blue-600 bg-blue-50 border-blue-200';
-            default: return 'text-gray-600 bg-gray-50 border-gray-200';
+            default: return 'text-muted-foreground bg-background border-border';
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-background p-6">
             <div className="max-w-7xl mx-auto">
-                <h1 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
                     <FiClock className="text-purple-600" />
                     Dispensing History
                 </h1>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-gray-600">
-                            <thead className="bg-gray-50 text-gray-900 font-semibold border-b border-gray-200">
+                        <table className="w-full text-left text-sm text-muted-foreground">
+                            <thead className="bg-background text-foreground font-semibold border-b border-border">
                                 <tr>
                                     <th className="px-6 py-4">Date & Time</th>
                                     <th className="px-6 py-4">Medicine</th>
@@ -77,20 +77,20 @@ function HistoryPage() {
                                     </tr>
                                 ) : records.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                                        <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
                                             No history records found.
                                         </td>
                                     </tr>
                                 ) : (
                                     records.map((record) => (
-                                        <tr key={record.id} className="hover:bg-gray-50 transition">
-                                            <td className="px-6 py-4 text-gray-900">
+                                        <tr key={record.id} className="hover:bg-background transition">
+                                            <td className="px-6 py-4 text-foreground">
                                                 {new Date(record.dispensed_at).toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-4 font-medium text-gray-900">
+                                            <td className="px-6 py-4 font-medium text-foreground">
                                                 {record.medicine_name}
                                             </td>
-                                            <td className="px-6 py-4 text-gray-900">{record.quantity_dispensed}</td>
+                                            <td className="px-6 py-4 text-foreground">{record.quantity_dispensed}</td>
                                             <td className="px-6 py-4">
                                                 <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(record.status)}`}>
                                                     {record.status.replace('_', ' ').toUpperCase()}
