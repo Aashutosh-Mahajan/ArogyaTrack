@@ -39,11 +39,14 @@ class PrescriptionSerializer(serializers.ModelSerializer):
     medicines = PrescriptionMedicineSerializer(many=True, read_only=True)
     patient_name = serializers.CharField(source="patient.name", read_only=True)
     doctor_name = serializers.CharField(source="doctor.email", read_only=True)
+    prescription_number = serializers.SerializerMethodField()
+    issued_at = serializers.DateTimeField(source="created_at", read_only=True)
 
     class Meta:
         model = Prescription
         fields = [
             "id",
+            "prescription_number",
             "patient",
             "patient_name",
             "doctor",
@@ -53,9 +56,13 @@ class PrescriptionSerializer(serializers.ModelSerializer):
             "security_hash",
             "status",
             "medicines",
+            "issued_at",
             "created_at",
         ]
         read_only_fields = ["id", "doctor", "qr_code_path", "security_hash", "status", "created_at"]
+
+    def get_prescription_number(self, obj):
+        return f"RX-{str(obj.id)[:8].upper()}"
 
 
 class CreatePrescriptionSerializer(serializers.Serializer):

@@ -2,8 +2,19 @@
 prescriptions/agent_service.py
 ───────────────────────────────────────────────────────
 Calls GPT-5.1 with the assembled patient/medicine context and returns
-a structured safety report.  Gracefully degrades if the API is
-unreachable — never blocks a prescription save.
+a structured safety report.
+
+Fail-open by design: if the API is unreachable or returns something
+unparseable, this returns overall_status="warning" with
+agent_unavailable=True rather than raising — a prescribing doctor is
+never physically blocked from prescribing by a third-party API outage.
+The frontend (create-prescription / create-consultation pages) reads
+agent_unavailable and renders an explicit "AI validation unavailable"
+banner, so the doctor makes the call manually instead of the check
+silently no-op'ing. Do not change this to fail-closed without checking
+with product/clinical stakeholders — blocking prescriptions on an
+external API outage is a worse patient-safety outcome in most cases,
+particularly urgent ones.
 """
 import json
 import logging
