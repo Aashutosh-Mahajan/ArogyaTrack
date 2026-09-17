@@ -106,7 +106,7 @@ export function DynamicMap({ data, center = [20.5937, 78.9629], zoom = 5 }: Dyna
       </div>
 
       {/* Legend */}
-      <div className="absolute bottom-4 right-4 bg-white p-3 rounded-lg shadow-lg z-[1000]">
+      <div className="absolute bottom-4 right-4 bg-card p-3 rounded-lg shadow-lg z-[1000]">
         <p className="font-semibold text-sm mb-2">Severity</p>
         <div className="space-y-1">
           {[

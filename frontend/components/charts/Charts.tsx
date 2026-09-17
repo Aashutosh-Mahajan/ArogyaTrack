@@ -25,11 +25,11 @@ interface ChartProps {
   color?: string;
 }
 
-export function LineChartComponent({ data, dataKey, xAxisKey, color = '#1FA7A0' }: ChartProps) {
+export function LineChartComponent({ data, dataKey, xAxisKey, color = '#1a5c52' }: ChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#f6f4ee" />
         <XAxis dataKey={xAxisKey} tick={{ fontSize: 12 }} />
         <YAxis tick={{ fontSize: 12 }} />
         <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
@@ -47,7 +47,7 @@ export function LineChartComponent({ data, dataKey, xAxisKey, color = '#1FA7A0' 
   );
 }
 
-export function AreaChartComponent({ data, dataKey, xAxisKey, color = '#1FA7A0' }: ChartProps) {
+export function AreaChartComponent({ data, dataKey, xAxisKey, color = '#1a5c52' }: ChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <AreaChart data={data}>
@@ -57,7 +57,7 @@ export function AreaChartComponent({ data, dataKey, xAxisKey, color = '#1FA7A0' 
             <stop offset="95%" stopColor={color} stopOpacity={0.05} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#f6f4ee" />
         <XAxis dataKey={xAxisKey} tick={{ fontSize: 12 }} />
         <YAxis tick={{ fontSize: 12 }} />
         <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
@@ -74,11 +74,11 @@ export function AreaChartComponent({ data, dataKey, xAxisKey, color = '#1FA7A0' 
   );
 }
 
-export function BarChartComponent({ data, dataKey, xAxisKey, color = '#1FA7A0' }: ChartProps) {
+export function BarChartComponent({ data, dataKey, xAxisKey, color = '#1a5c52' }: ChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#f6f4ee" />
         <XAxis dataKey={xAxisKey} tick={{ fontSize: 12 }} />
         <YAxis tick={{ fontSize: 12 }} />
         <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
@@ -106,11 +106,11 @@ export function ForecastChart({ data }: ForecastChartProps) {
       <ComposedChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
         <defs>
           <linearGradient id="forecastGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#1FA7A0" stopOpacity={0.2} />
-            <stop offset="95%" stopColor="#1FA7A0" stopOpacity={0.02} />
+            <stop offset="5%" stopColor="#1a5c52" stopOpacity={0.2} />
+            <stop offset="95%" stopColor="#1a5c52" stopOpacity={0.02} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#f6f4ee" />
         <XAxis
           dataKey="date"
           tick={{ fontSize: 11 }}
@@ -152,7 +152,7 @@ export function ForecastChart({ data }: ForecastChartProps) {
         <Line
           type="monotone"
           dataKey="lower_bound"
-          stroke="#8A9A9A"
+          stroke="#7a756b"
           strokeWidth={1}
           strokeDasharray="4 3"
           dot={false}
@@ -163,7 +163,7 @@ export function ForecastChart({ data }: ForecastChartProps) {
         <Line
           type="monotone"
           dataKey="upper_bound"
-          stroke="#8A9A9A"
+          stroke="#7a756b"
           strokeWidth={1}
           strokeDasharray="4 3"
           dot={false}

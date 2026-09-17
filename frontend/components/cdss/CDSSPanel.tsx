@@ -28,7 +28,7 @@ export function CDSSPanel({ result, onClose }: CDSSPanelProps) {
       High: 'bg-orange-100 text-orange-700',
       Medium: 'bg-yellow-100 text-yellow-700',
     };
-    return map[priority] || 'bg-gray-100 text-gray-700';
+    return map[priority] || 'bg-muted text-foreground/80';
   };
 
   const severityBadge = (severity: string) => {
@@ -36,51 +36,51 @@ export function CDSSPanel({ result, onClose }: CDSSPanelProps) {
     if (s === 'contraindicated') return 'bg-red-100 text-red-700';
     if (s === 'major') return 'bg-orange-100 text-orange-700';
     if (s === 'moderate') return 'bg-yellow-100 text-yellow-700';
-    return 'bg-gray-100 text-gray-600';
+    return 'bg-muted text-muted-foreground';
   };
 
   const confidenceBadge = (confidence: string) => {
     if (confidence === 'High') return 'bg-green-100 text-green-700';
     if (confidence === 'Medium') return 'bg-yellow-100 text-yellow-700';
-    return 'bg-gray-100 text-gray-600';
+    return 'bg-muted text-muted-foreground';
   };
 
   const urgencyBadge = (urgency: string) => {
     if (urgency === 'Urgent') return 'bg-red-100 text-red-700';
     if (urgency === 'Routine') return 'bg-blue-100 text-blue-700';
-    return 'bg-gray-100 text-gray-600';
+    return 'bg-muted text-muted-foreground';
   };
 
   return (
     <div className="space-y-6">
       {/* 1. Risk Level Banner */}
-      <div className={`rounded-2xl border-2 ${risk.border} ${risk.bg} p-6 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden ${risk.pulse ? 'animate-pulse' : ''}`}>
+      <div className={`rounded-2xl border-2 ${risk.border} ${risk.bg} p-6 shadow-lg bg-card/80 backdrop-blur-md overflow-hidden ${risk.pulse ? 'animate-pulse' : ''}`}>
         <div className="h-1 bg-gradient-to-r from-indigo-500 to-blue-500 -mt-6 -mx-6 mb-4" />
         <div className="flex items-center gap-3">
           <FiShield className={`h-8 w-8 ${risk.text}`} />
           <div>
             <span className={`text-2xl font-bold ${risk.text}`}>{result.risk_level.level} RISK</span>
-            <p className="text-sm text-slate-600 mt-1">{result.risk_level.explanation}</p>
+            <p className="text-sm text-muted-foreground mt-1">{result.risk_level.explanation}</p>
           </div>
         </div>
       </div>
 
       {/* 2. Early Warnings */}
       {result.early_warnings && result.early_warnings.length > 0 && (
-        <div className="rounded-2xl shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+        <div className="rounded-2xl shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-indigo-500 to-blue-500" />
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2 mb-4">
+            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
               <FiAlertTriangle className="h-5 w-5 text-amber-500" />
               Early Warnings
             </h3>
             <div className="space-y-3">
               {result.early_warnings.map((w, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50">
+                <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-background">
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityBadge(w.priority)}`}>{w.priority}</span>
                   <div>
-                    <p className="font-medium text-slate-800">{w.flag}</p>
-                    <p className="text-sm text-slate-500">{w.reason}</p>
+                    <p className="font-medium text-foreground">{w.flag}</p>
+                    <p className="text-sm text-muted-foreground">{w.reason}</p>
                   </div>
                 </div>
               ))}
@@ -91,24 +91,24 @@ export function CDSSPanel({ result, onClose }: CDSSPanelProps) {
 
       {/* 3. Drug Interaction Alerts */}
       {result.drug_interaction_alerts && result.drug_interaction_alerts.length > 0 && (
-        <div className="rounded-2xl shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+        <div className="rounded-2xl shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-indigo-500 to-blue-500" />
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2 mb-4">
+            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
               <FiActivity className="h-5 w-5 text-red-500" />
               Drug Interaction Alerts
             </h3>
             <div className="space-y-3">
               {result.drug_interaction_alerts.map((a, i) => (
-                <div key={i} className="p-3 rounded-xl bg-slate-50 space-y-1">
+                <div key={i} className="p-3 rounded-xl bg-background space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-slate-800">{a.drug_a}</span>
-                    <span className="text-slate-400">+</span>
-                    <span className="font-medium text-slate-800">{a.drug_b}</span>
+                    <span className="font-medium text-foreground">{a.drug_a}</span>
+                    <span className="text-muted-foreground">+</span>
+                    <span className="font-medium text-foreground">{a.drug_b}</span>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${severityBadge(a.severity)}`}>{a.severity}</span>
                   </div>
-                  <p className="text-sm text-slate-600">{a.description}</p>
-                  <p className="text-sm text-slate-500 italic">{a.recommendation}</p>
+                  <p className="text-sm text-muted-foreground">{a.description}</p>
+                  <p className="text-sm text-muted-foreground italic">{a.recommendation}</p>
                 </div>
               ))}
             </div>
@@ -117,10 +117,10 @@ export function CDSSPanel({ result, onClose }: CDSSPanelProps) {
       )}
 
       {/* 4. Possible Diagnoses */}
-      <div className="rounded-2xl shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+      <div className="rounded-2xl shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
         <div className="h-1 bg-gradient-to-r from-indigo-500 to-blue-500" />
         <div className="p-6">
-          <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2 mb-4">
+          <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
             <FiCheckCircle className="h-5 w-5 text-indigo-500" />
             Possible Diagnoses
           </h3>
@@ -129,7 +129,7 @@ export function CDSSPanel({ result, onClose }: CDSSPanelProps) {
               const isEdited = editedDiagnoses[i] !== undefined;
               const displayName = isEdited ? editedDiagnoses[i] : dx.disease_name;
               return (
-                <div key={i} className="p-3 rounded-xl bg-slate-50 space-y-2">
+                <div key={i} className="p-3 rounded-xl bg-background space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">{dx.icd_10_code}</span>
                     <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -137,13 +137,13 @@ export function CDSSPanel({ result, onClose }: CDSSPanelProps) {
                         type="text"
                         value={displayName}
                         onChange={(e) => setEditedDiagnoses((prev) => ({ ...prev, [i]: e.target.value }))}
-                        className={`flex-1 text-sm font-medium border rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-400 ${isEdited ? 'bg-yellow-50 border-yellow-300' : 'bg-white border-slate-200'}`}
+                        className={`flex-1 text-sm font-medium border rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-400 ${isEdited ? 'bg-yellow-50 border-yellow-300' : 'bg-card border-border'}`}
                       />
-                      <FiEdit2 className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                      <FiEdit2 className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                     </div>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${confidenceBadge(dx.confidence)}`}>{dx.confidence}</span>
                   </div>
-                  <p className="text-xs text-slate-500">{dx.reasoning}</p>
+                  <p className="text-xs text-muted-foreground">{dx.reasoning}</p>
                 </div>
               );
             })}
@@ -152,28 +152,28 @@ export function CDSSPanel({ result, onClose }: CDSSPanelProps) {
       </div>
 
       {/* 5. Recommended Tests */}
-      <div className="rounded-2xl shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+      <div className="rounded-2xl shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
         <div className="h-1 bg-gradient-to-r from-indigo-500 to-blue-500" />
         <div className="p-6">
-          <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2 mb-4">
-            <FiActivity className="h-5 w-5 text-teal-500" />
+          <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
+            <FiActivity className="h-5 w-5 text-primary" />
             Recommended Tests
           </h3>
           <div className="space-y-3">
             {(result.recommended_tests || []).map((t, i) => (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50">
+              <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-background">
                 <input
                   type="checkbox"
                   checked={!!checkedTests[i]}
                   onChange={() => setCheckedTests((prev) => ({ ...prev, [i]: !prev[i] }))}
-                  className="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  className="mt-1 h-4 w-4 rounded border-border text-indigo-600 focus:ring-indigo-500"
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-slate-800">{t.test_name}</span>
+                    <span className="font-medium text-foreground">{t.test_name}</span>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${urgencyBadge(t.urgency)}`}>{t.urgency}</span>
                   </div>
-                  <p className="text-sm text-slate-500">{t.reason}</p>
+                  <p className="text-sm text-muted-foreground">{t.reason}</p>
                 </div>
               </div>
             ))}
@@ -183,23 +183,23 @@ export function CDSSPanel({ result, onClose }: CDSSPanelProps) {
 
       {/* 6. Lab Insights */}
       {result.lab_insights && result.lab_insights.length > 0 && (
-        <div className="rounded-2xl shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+        <div className="rounded-2xl shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-indigo-500 to-blue-500" />
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2 mb-4">
+            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
               <FiActivity className="h-5 w-5 text-purple-500" />
               Lab Insights
             </h3>
             <div className="space-y-3">
               {result.lab_insights.map((l, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50">
+                <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-background">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       {l.action_needed && <span className="h-2 w-2 rounded-full bg-red-500 flex-shrink-0" />}
-                      <span className="font-medium text-slate-800">{l.parameter}</span>
-                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-700">{l.value}</span>
+                      <span className="font-medium text-foreground">{l.parameter}</span>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-foreground/80">{l.value}</span>
                     </div>
-                    <p className="text-sm text-slate-500 mt-1">{l.interpretation}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{l.interpretation}</p>
                   </div>
                 </div>
               ))}
@@ -213,7 +213,7 @@ export function CDSSPanel({ result, onClose }: CDSSPanelProps) {
         <button
           type="button"
           onClick={onClose}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium transition-colors"
+          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-muted text-muted-foreground hover:bg-muted font-medium transition-colors"
         >
           <FiX className="h-4 w-4" />
           Dismiss AI Suggestions

@@ -18,7 +18,7 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm hover:-translate-y-0.5",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        glass: "bg-white/20 backdrop-blur-md border border-white/30 text-primary-foreground hover:bg-white/30 shadow-glass hover:-translate-y-0.5",
+        glass: "bg-card/20 backdrop-blur-md border border-white/30 text-primary-foreground hover:bg-card/30 shadow-glass hover:-translate-y-0.5",
       },
       size: {
         default: "h-11 px-8 py-2", /* Taller and wider for pill shape */
