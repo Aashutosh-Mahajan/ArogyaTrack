@@ -21,7 +21,7 @@ Cache:     localhost:6379         (Redis)
 
 Install these before starting:
 
-- **Python 3.10+** (for Django backend)
+- **Python 3.10–3.12** (for Django backend — not 3.13+, see `docs/backend-setup.md`)
 - **Node.js 18+** (for Next.js frontend)
 - **PostgreSQL 14+** (database)
 - **Redis** (optional, for caching/Celery)

@@ -6,17 +6,26 @@ Complete guide for setting up the ArogyaTrack Django REST API backend.
 
 ## Prerequisites
 
-| Software | Minimum Version | Installation |
+| Software | Version | Installation |
 |---|---|---|
-| Python | 3.10+ | [python.org](https://www.python.org/downloads/) |
+| Python | **3.10 – 3.12** | [python.org](https://www.python.org/downloads/) |
 | PostgreSQL | 14+ | [postgresql.org](https://www.postgresql.org/download/) |
 | Redis | 5.0+ (optional) | [redis.io](https://redis.io/download/) |
 | Git | 2.30+ | [git-scm.com](https://git-scm.com/) |
 
+> **Not 3.13 or 3.14.** Django 4.2 (pinned in `requirements.txt`) only officially
+> supports Python up to 3.12. On 3.13+, Django's template `Context.__copy__()`
+> breaks under `django.test.Client` (`AttributeError: 'super' object has no
+> attribute 'dicts'`) — this only shows up when running the test suite, not in
+> normal request handling, which makes it easy to miss until CI/tests run. If
+> `python --version` on your machine reports 3.13+, install 3.10–3.12
+> separately and create the venv with that interpreter instead (e.g. on
+> Windows: `py -3.10 -m venv venv`).
+
 Verify your installations:
 
 ```bash
-python --version       # Should output 3.10 or higher
+python --version       # Should output 3.10, 3.11, or 3.12 — not 3.13+
 psql --version         # Should output 14.x or higher
 redis-cli --version    # Optional — 5.x or higher
 ```

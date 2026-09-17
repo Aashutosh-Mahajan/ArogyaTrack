@@ -144,20 +144,20 @@ Every action across the platform — login attempts, record access, prescription
                     ┌─────────────────────────────────────────────────────────────┐
                     │                      CLIENT LAYER                           │
                     │                                                             │
-                    │  ┌───────────────┐  ┌────────────────┐  ┌───────────────┐  │
-                    │  │  Next.js 14   │  │ Flutter Mobile │  │ Vite + React  │  │
-                    │  │  Web App      │  │ Android / iOS  │  │ Admin Panel   │  │
-                    │  │               │  │                │  │               │  │
-                    │  │ • Patient     │  │ • QR Scanner   │  │ • Landing     │  │
-                    │  │ • Doctor      │  │ • Health Cards │  │ • Analytics   │  │
-                    │  │ • Pharmacist  │  │ • Push Alerts  │  │ • Overview    │  │
-                    │  │ • Admin Maps  │  │ • Offline Mode │  │               │  │
-                    │  │               │  │                │  │               │  │
-                    │  │ Port 3000     │  │ Native Build   │  │ Port 5173     │  │
-                    │  └───────┬───────┘  └───────┬────────┘  └───────┬───────┘  │
-                    └──────────┼──────────────────┼──────────────────┼────────────┘
-                               │                  │                  │
-                               └──────────────────┼──────────────────┘
+                    │        ┌───────────────┐       ┌────────────────┐          │
+                    │        │  Next.js 14   │       │ Flutter Mobile │          │
+                    │        │  Web App      │       │ Android / iOS  │          │
+                    │        │               │       │                │          │
+                    │        │ • Patient     │       │ • QR Scanner   │          │
+                    │        │ • Doctor      │       │ • Health Cards │          │
+                    │        │ • Pharmacist  │       │ • Push Alerts  │          │
+                    │        │ • Admin Maps  │       │ • Offline Mode │          │
+                    │        │               │       │                │          │
+                    │        │ Port 3000     │       │ Native Build   │          │
+                    │        └───────┬───────┘       └───────┬────────┘          │
+                    └────────────────┼───────────────────────┼───────────────────┘
+                                     │                       │
+                                     └───────────┬───────────┘
                                                   │
                                        ┌──────────▼──────────┐
                                        │  REST API Gateway   │
@@ -213,7 +213,7 @@ Every action across the platform — login attempts, record access, prescription
 
 The system follows a layered architecture with clear separation of concerns:
 
-- **Client Layer** — Three frontend applications (Next.js web app on port 3000, Flutter mobile for Android/iOS, and a Vite + React landing/admin panel on port 5173) communicate with the backend exclusively through a RESTful JSON API authenticated via JWT bearer tokens.
+- **Client Layer** — Two frontend applications (Next.js web app on port 3000, Flutter mobile for Android/iOS) communicate with the backend through a RESTful JSON API authenticated via JWT — bearer tokens for mobile, httpOnly cookies (with CSRF protection) for web. An early Vite + React prototype previously lived at the repo root; it was never wired to the backend and has been moved to `archive/legacy-vite-admin-panel/`.
 
 - **API & Application Layer** — A Django REST Framework backend (port 8000) exposes all business logic through modular Django apps: Accounts (auth, RBAC, audit), Medical Records (ICD-10 diagnoses, labs, vitals), Prescriptions (QR generation, drug interaction checks, hash verification), Pharmacy (inventory, dispensing, batch tracking), Patients (profiles, health cards, family), Adherence (dose scheduling, reminders, compliance), Surveillance (ML-powered clustering, anomaly detection, forecasting, risk scoring), and Dashboard (health snapshots, alerts, KPIs).
 
@@ -317,12 +317,11 @@ algosmiths/
 │   ├── test_models/            # Model evaluation scripts
 │   └── test_results/           # Evaluation outputs
 │
-├── src/                        # Vite + React admin panel (legacy)
-│   ├── components/             # React components
-│   ├── pages/                  # Page-level components
-│   └── main.jsx                # Application entry point
+├── archive/
+│   └── legacy-vite-admin-panel/ # Unfinished Vite + React prototype, never wired to the backend
 │
-└── README.md                   # This file
+├── docker-compose.yml           # Local dev stack: backend, celery, redis, frontend
+└── README.md                    # This file
 ```
 
 ---
@@ -547,7 +546,6 @@ celery -A config worker --loglevel=info
 | Django API | `http://localhost:8000` |
 | Django Admin Panel | `http://localhost:8000/admin/` |
 | Next.js Frontend | `http://localhost:3000` |
-| Vite Admin Panel | `http://localhost:5173` |
 | PostgreSQL | `localhost:5432` |
 | Redis | `localhost:6379` |
 
