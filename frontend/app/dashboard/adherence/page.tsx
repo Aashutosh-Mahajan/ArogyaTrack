@@ -43,7 +43,7 @@ function AdherenceRing({ pct, size = 100 }: { pct: number; size?: number }) {
   return (
     <div style={{ position: 'relative', width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E8EDED" strokeWidth={8} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth={8} />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none"
           stroke={col} strokeWidth={8}
           strokeDasharray={circ} strokeDashoffset={offset}
@@ -101,7 +101,7 @@ function AdherencePage(): React.JSX.Element {
     return (
       <div style={{ fontFamily: "'DM Sans', sans-serif" }}>
         <div style={{
-          background: 'linear-gradient(130deg, #0D2B29 0%, #1F6F6A 55%, #185E59 100%)',
+          background: 'linear-gradient(130deg, #151109 0%, #1a5c52 55%, #1a5c52 100%)',
           borderRadius: 18, padding: '32px 36px', marginBottom: 28,
         }}>
           <h1 style={{ fontSize: 26, fontWeight: 800, color: '#fff', margin: 0 }}>💊 Medication Adherence</h1>
@@ -109,11 +109,11 @@ function AdherencePage(): React.JSX.Element {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
           {[1, 2].map(i => (
-            <div key={i} style={{ background: '#fff', borderRadius: 16, padding: 28, border: '1px solid #E8EDED' }}>
+            <div key={i} style={{ background: 'hsl(var(--card))', borderRadius: 16, padding: 28, border: '1px solid hsl(var(--border))' }}>
               <div className="animate-pulse" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div style={{ height: 14, background: '#E8EDED', borderRadius: 6, width: '40%' }} />
-                <div style={{ height: 10, background: '#E8EDED', borderRadius: 6, width: '60%' }} />
-                <div style={{ height: 10, background: '#E8EDED', borderRadius: 6, width: '50%' }} />
+                <div style={{ height: 14, background: 'hsl(var(--muted))', borderRadius: 6, width: '40%' }} />
+                <div style={{ height: 10, background: 'hsl(var(--muted))', borderRadius: 6, width: '60%' }} />
+                <div style={{ height: 10, background: 'hsl(var(--muted))', borderRadius: 6, width: '50%' }} />
               </div>
             </div>
           ))}
@@ -135,7 +135,7 @@ function AdherencePage(): React.JSX.Element {
     <div style={{ fontFamily: "'DM Sans', sans-serif" }}>
       {/* ═══ HERO BANNER ═══ */}
       <div style={{
-        background: 'linear-gradient(130deg, #0D2B29 0%, #1F6F6A 55%, #185E59 100%)',
+        background: 'linear-gradient(130deg, #151109 0%, #1a5c52 55%, #1a5c52 100%)',
         borderRadius: 18, padding: '32px 36px', marginBottom: 28,
         position: 'relative', overflow: 'hidden',
       }}>
@@ -164,12 +164,12 @@ function AdherencePage(): React.JSX.Element {
           {[
             { label: 'Doses Taken', value: totalTaken, icon: '✅', color: '#059669' },
             { label: 'Doses Missed', value: totalMissed, icon: '❌', color: '#DC2626' },
-            { label: 'Total Due', value: totalExpected, icon: '📋', color: '#1F6F6A' },
+            { label: 'Total Due', value: totalExpected, icon: '📋', color: '#1a5c52' },
             { label: 'Adherence', value: `${Math.round(overallPct)}%`, icon: '📊', color: pctColor(overallPct) },
           ].map((c, i) => (
             <div key={i} style={{
-              background: '#fff', borderRadius: 14, padding: '18px 20px',
-              border: '1px solid #E8EDED',
+              background: 'hsl(var(--card))', borderRadius: 14, padding: '18px 20px',
+              border: '1px solid hsl(var(--border))',
               display: 'flex', alignItems: 'center', gap: 14,
             }}>
               <div style={{
@@ -180,7 +180,7 @@ function AdherencePage(): React.JSX.Element {
               }}>{c.icon}</div>
               <div>
                 <p style={{ fontSize: 22, fontWeight: 800, color: c.color, margin: 0, lineHeight: 1 }}>{c.value}</p>
-                <p style={{ fontSize: 11, color: '#6B7C7C', marginTop: 3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{c.label}</p>
+                <p style={{ fontSize: 11, color: '#7a756b', marginTop: 3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{c.label}</p>
               </div>
             </div>
           ))}
@@ -190,21 +190,21 @@ function AdherencePage(): React.JSX.Element {
       {/* ═══ UPCOMING & MISSED DOSES ═══ */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20, marginBottom: 28 }}>
         {/* Upcoming Doses */}
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E8EDED', overflow: 'hidden' }}>
+        <div style={{ background: 'hsl(var(--card))', borderRadius: 16, border: '1px solid hsl(var(--border))', overflow: 'hidden' }}>
           
           <div style={{ padding: '20px 24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(31,111,106,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>⏰</div>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1A2B2B', margin: 0 }}>Upcoming Doses</h2>
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: 'hsl(var(--primary) / 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>⏰</div>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'hsl(var(--foreground))', margin: 0 }}>Upcoming Doses</h2>
               {upcoming.length > 0 && (
-                <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(31,111,106,0.08)', color: '#1F6F6A', padding: '2px 8px', borderRadius: 10 }}>{upcoming.length}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, background: 'hsl(var(--primary) / 0.08)', color: '#1a5c52', padding: '2px 8px', borderRadius: 10 }}>{upcoming.length}</span>
               )}
             </div>
 
             {upcoming.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '28px 0' }}>
                 <span style={{ fontSize: 32 }}>✅</span>
-                <p style={{ fontSize: 14, color: '#6B7C7C', marginTop: 8 }}>No upcoming doses in the next 24 hours</p>
+                <p style={{ fontSize: 14, color: '#7a756b', marginTop: 8 }}>No upcoming doses in the next 24 hours</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 320, overflowY: 'auto' }}>
@@ -212,20 +212,20 @@ function AdherencePage(): React.JSX.Element {
                   <div key={dose.id} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '12px 16px', borderRadius: 12,
-                    background: 'rgba(31,111,106,0.04)', border: '1px solid rgba(31,111,106,0.08)',
+                    background: 'hsl(var(--primary) / 0.04)', border: '1px solid hsl(var(--primary) / 0.08)',
                   }}>
                     <div>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: '#1A2B2B', margin: 0 }}>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: 'hsl(var(--foreground))', margin: 0 }}>
                         {dose.medicine_name || (typeof dose.medicine === 'object' ? (dose.medicine as any)?.name : '—')}
                       </p>
-                      <p style={{ fontSize: 12, color: '#6B7C7C', margin: '2px 0 0' }}>{fmtTime(dose.scheduled_time)}</p>
+                      <p style={{ fontSize: 12, color: '#7a756b', margin: '2px 0 0' }}>{fmtTime(dose.scheduled_time)}</p>
                     </div>
                     <button
                       onClick={() => markTaken.mutate({ dose_schedule_id: dose.id })}
                       disabled={markTaken.isPending}
                       style={{
                         padding: '6px 16px', borderRadius: 10, border: 'none',
-                        background: 'linear-gradient(135deg, #1F6F6A, #28857F)',
+                        background: 'linear-gradient(135deg, #1a5c52, #28857F)',
                         color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
                         opacity: markTaken.isPending ? 0.6 : 1,
                       }}
@@ -240,12 +240,12 @@ function AdherencePage(): React.JSX.Element {
         </div>
 
         {/* Missed Doses */}
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E8EDED', overflow: 'hidden' }}>
+        <div style={{ background: 'hsl(var(--card))', borderRadius: 16, border: '1px solid hsl(var(--border))', overflow: 'hidden' }}>
           
           <div style={{ padding: '20px 24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
               <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(220,38,38,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>⚠️</div>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1A2B2B', margin: 0 }}>Missed Doses</h2>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'hsl(var(--foreground))', margin: 0 }}>Missed Doses</h2>
               {missed.length > 0 && (
                 <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(220,38,38,0.06)', color: '#DC2626', padding: '2px 8px', borderRadius: 10 }}>{missed.length}</span>
               )}
@@ -265,10 +265,10 @@ function AdherencePage(): React.JSX.Element {
                     background: 'rgba(220,38,38,0.03)', border: '1px solid rgba(220,38,38,0.08)',
                   }}>
                     <div>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: '#1A2B2B', margin: 0 }}>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: 'hsl(var(--foreground))', margin: 0 }}>
                         {dose.medicine_name || (typeof dose.medicine === 'object' ? (dose.medicine as any)?.name : '—')}
                       </p>
-                      <p style={{ fontSize: 12, color: '#6B7C7C', margin: '2px 0 0' }}>
+                      <p style={{ fontSize: 12, color: '#7a756b', margin: '2px 0 0' }}>
                         {fmtDate(dose.scheduled_time)} at {fmtTime(dose.scheduled_time)}
                       </p>
                     </div>
@@ -281,7 +281,7 @@ function AdherencePage(): React.JSX.Element {
                   </div>
                 ))}
                 {missed.length > 10 && (
-                  <p style={{ fontSize: 12, color: '#6B7C7C', textAlign: 'center', margin: '4px 0 0' }}>
+                  <p style={{ fontSize: 12, color: '#7a756b', textAlign: 'center', margin: '4px 0 0' }}>
                     +{missed.length - 10} more missed doses
                   </p>
                 )}
@@ -293,18 +293,18 @@ function AdherencePage(): React.JSX.Element {
 
       {/* ═══ ADHERENCE TRACKERS ═══ */}
       <div>
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1A2B2B', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: 'hsl(var(--foreground))', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 18 }}>📈</span> Adherence Trackers
         </h2>
 
         {trackers.length === 0 ? (
           <div style={{
-            background: '#fff', borderRadius: 16, padding: '48px 24px',
-            textAlign: 'center', border: '1px solid #E8EDED',
+            background: 'hsl(var(--card))', borderRadius: 16, padding: '48px 24px',
+            textAlign: 'center', border: '1px solid hsl(var(--border))',
           }}>
             <span style={{ fontSize: 48 }}>💊</span>
-            <p style={{ fontSize: 18, fontWeight: 700, color: '#2F3A3A', marginTop: 12 }}>No adherence trackers</p>
-            <p style={{ fontSize: 14, color: '#6B7C7C', marginTop: 4 }}>Trackers are created automatically when your prescriptions are dispensed.</p>
+            <p style={{ fontSize: 18, fontWeight: 700, color: '#1c1712', marginTop: 12 }}>No adherence trackers</p>
+            <p style={{ fontSize: 14, color: '#7a756b', marginTop: 4 }}>Trackers are created automatically when your prescriptions are dispensed.</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
@@ -317,11 +317,11 @@ function AdherencePage(): React.JSX.Element {
 
               return (
                 <div key={t.id} style={{
-                  background: '#fff', borderRadius: 16, overflow: 'hidden',
-                  border: '1px solid #E8EDED',
+                  background: 'hsl(var(--card))', borderRadius: 16, overflow: 'hidden',
+                  border: '1px solid hsl(var(--border))',
                   transition: 'box-shadow 0.2s',
                 }}
-                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 8px 28px rgba(31,111,106,0.08)'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 8px 28px hsl(var(--primary) / 0.08)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
                 >
                   
@@ -332,16 +332,16 @@ function AdherencePage(): React.JSX.Element {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <div style={{
                           width: 42, height: 42, borderRadius: 12,
-                          background: t.is_active ? 'rgba(31,111,106,0.08)' : '#F3F4F6',
+                          background: t.is_active ? 'hsl(var(--primary) / 0.08)' : 'hsl(var(--muted))',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
                         }}>
                           {t.is_active ? '💚' : '📋'}
                         </div>
                         <div>
-                          <p style={{ fontSize: 15, fontWeight: 700, color: '#1A2B2B', margin: 0 }}>
+                          <p style={{ fontSize: 15, fontWeight: 700, color: 'hsl(var(--foreground))', margin: 0 }}>
                             {t.is_active ? 'Active Tracker' : 'Past Tracker'}
                           </p>
-                          <p style={{ fontSize: 12, color: '#6B7C7C', margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <p style={{ fontSize: 12, color: '#7a756b', margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
                             📅 {fmtDate(t.start_date)} – {fmtDate(t.end_date)}
                           </p>
                         </div>
@@ -363,7 +363,7 @@ function AdherencePage(): React.JSX.Element {
                     </div>
 
                     {/* Progress bar */}
-                    <div style={{ position: 'relative', height: 10, borderRadius: 8, background: '#E8EDED', marginBottom: 14, overflow: 'hidden' }}>
+                    <div style={{ position: 'relative', height: 10, borderRadius: 8, background: 'hsl(var(--muted))', marginBottom: 14, overflow: 'hidden' }}>
                       <div style={{
                         height: '100%', borderRadius: 8,
                         width: `${Math.min(pct, 100)}%`,
@@ -374,16 +374,16 @@ function AdherencePage(): React.JSX.Element {
 
                     {/* Stats row */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-                      <span style={{ fontSize: 13, color: '#2F3A3A', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ fontSize: 13, color: '#1c1712', display: 'flex', alignItems: 'center', gap: 5 }}>
                         <span style={{ color: '#059669', fontSize: 14 }}>✓</span>
                         <strong>{taken}</strong> taken
                       </span>
-                      <span style={{ fontSize: 13, color: '#2F3A3A', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ fontSize: 13, color: '#1c1712', display: 'flex', alignItems: 'center', gap: 5 }}>
                         <span style={{ color: '#DC2626', fontSize: 14 }}>✗</span>
                         <strong>{missed_count}</strong> missed
                       </span>
-                      <span style={{ fontSize: 13, color: '#2F3A3A', display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <span style={{ color: '#1F6F6A', fontSize: 14 }}>↗</span>
+                      <span style={{ fontSize: 13, color: '#1c1712', display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <span style={{ color: '#1a5c52', fontSize: 14 }}>↗</span>
                         <strong>{expected}</strong> expected
                       </span>
                     </div>

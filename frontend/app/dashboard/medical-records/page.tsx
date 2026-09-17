@@ -108,14 +108,14 @@ function MedicalRecordsPage(): React.JSX.Element {
     return (
       <div className="space-y-6 animate-pulse">
         <div className="flex justify-between items-center">
-          <div className="h-8 w-48 bg-slate-200 rounded"></div>
-          <div className="h-10 w-24 bg-slate-200 rounded"></div>
+          <div className="h-8 w-48 bg-muted rounded"></div>
+          <div className="h-10 w-24 bg-muted rounded"></div>
         </div>
         <div className="grid gap-6 md:grid-cols-2">
-          <div className="h-48 bg-slate-100 rounded-xl"></div>
-          <div className="h-48 bg-slate-100 rounded-xl"></div>
+          <div className="h-48 bg-muted rounded-xl"></div>
+          <div className="h-48 bg-muted rounded-xl"></div>
         </div>
-        <div className="h-96 bg-slate-100 rounded-xl"></div>
+        <div className="h-96 bg-muted rounded-xl"></div>
       </div>
     );
   }
@@ -124,10 +124,10 @@ function MedicalRecordsPage(): React.JSX.Element {
     <div className="space-y-8 pb-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">
             {t('medical_records_page_title')}
           </h1>
-          <p className="text-slate-500 mt-1">
+          <p className="text-muted-foreground mt-1">
             {t('medical_records_page_subtitle')}
           </p>
         </div>
@@ -135,7 +135,7 @@ function MedicalRecordsPage(): React.JSX.Element {
           variant="outline"
           onClick={() => refetch()}
           disabled={isFetching}
-          className="flex items-center gap-2 bg-white/50 border-slate-200 hover:bg-slate-100 transition-colors"
+          className="flex items-center gap-2 bg-card/50 border-border hover:bg-muted transition-colors"
         >
           <FiRefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
           {t('refresh')}
@@ -145,7 +145,7 @@ function MedicalRecordsPage(): React.JSX.Element {
       {/* Top Cards: Allergies & Chronic Conditions */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Allergies Card */}
-        <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
+        <Card className="border-0 shadow-lg overflow-hidden bg-card/80 backdrop-blur-md">
 
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
@@ -164,10 +164,10 @@ function MedicalRecordsPage(): React.JSX.Element {
                     className="flex items-center justify-between p-3 bg-rose-50/50 border border-rose-100 rounded-xl hover:shadow-sm transition-all"
                   >
                     <div>
-                      <p className="font-semibold text-slate-800">{allergy.allergen}</p>
+                      <p className="font-semibold text-foreground">{allergy.allergen}</p>
                       <p className="text-xs text-rose-600 font-medium mt-0.5">{allergy.reaction_type}</p>
                       {allergy.added_by_name && (
-                        <p className="text-[10px] text-slate-400 mt-1">Added by {allergy.added_by_name}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Added by {allergy.added_by_name}</p>
                       )}
                     </div>
                     <Badge className={`
@@ -175,7 +175,7 @@ function MedicalRecordsPage(): React.JSX.Element {
                         ? 'bg-[#dc2626] text-white hover:bg-[#b91c1c]'
                         : String(allergy.severity).toLowerCase() === 'moderate' || allergy.severity === 2
                           ? 'bg-[#d97706] text-white hover:bg-[#b45309]'
-                          : 'bg-[#1F6F6A] text-white hover:bg-[#185E59]'}
+                          : 'bg-[#1a5c52] text-white hover:bg-[#1a5c52]'}
                                             border-0 uppercase text-[10px] tracking-wider font-bold
                                         `}>
                       {typeof allergy.severity === 'number'
@@ -186,7 +186,7 @@ function MedicalRecordsPage(): React.JSX.Element {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-slate-400">
+              <div className="text-center py-8 text-muted-foreground">
                 <p>{t('no_allergies')}</p>
               </div>
             )}
@@ -194,12 +194,12 @@ function MedicalRecordsPage(): React.JSX.Element {
         </Card>
 
         {/* Chronic Conditions Card */}
-        <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
+        <Card className="border-0 shadow-lg overflow-hidden bg-card/80 backdrop-blur-md">
 
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-teal-50 rounded-lg">
-                <FiClock className="w-5 h-5 text-teal-600" />
+              <div className="p-2 bg-primary/8 rounded-lg">
+                <FiClock className="w-5 h-5 text-primary" />
               </div>
               <CardTitle className="text-xl font-bold">{t('chronic_conditions')}</CardTitle>
             </div>
@@ -210,20 +210,20 @@ function MedicalRecordsPage(): React.JSX.Element {
                 {chronicConditions.map((condition) => (
                   <div
                     key={condition.id}
-                    className="flex items-center justify-between p-3 bg-teal-50/50 border border-teal-100 rounded-xl hover:shadow-sm transition-all"
+                    className="flex items-center justify-between p-3 bg-primary/8 border border-primary/15 rounded-xl hover:shadow-sm transition-all"
                   >
                     <div>
-                      <p className="font-semibold text-slate-800">{condition.disease_name}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">
+                      <p className="font-semibold text-foreground">{condition.disease_name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {t('last_recorded')}: {formatDate(condition.created_at)}
                       </p>
                       {condition.added_by_name && (
-                        <p className="text-[10px] text-slate-400 mt-1">Added by {condition.added_by_name}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Added by {condition.added_by_name}</p>
                       )}
                     </div>
                     <Badge className={`
                                             ${condition.is_active
-                        ? 'bg-[#1F6F6A] text-white hover:bg-[#185E59]'
+                        ? 'bg-[#1a5c52] text-white hover:bg-[#1a5c52]'
                         : 'bg-slate-400 text-white hover:bg-slate-500'}
                                             border-0 uppercase text-[10px] tracking-wider font-bold
                                         `}>
@@ -233,7 +233,7 @@ function MedicalRecordsPage(): React.JSX.Element {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-slate-400">
+              <div className="text-center py-8 text-muted-foreground">
                 <p>{t('no_active_conditions')}</p>
               </div>
             )}
@@ -242,7 +242,7 @@ function MedicalRecordsPage(): React.JSX.Element {
       </div>
 
       {/* Consultation History */}
-      <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
+      <Card className="border-0 shadow-lg overflow-hidden bg-card/80 backdrop-blur-md">
 
         <CardHeader>
           <div className="flex items-center gap-3">
@@ -260,11 +260,11 @@ function MedicalRecordsPage(): React.JSX.Element {
                 return (
                   <div
                     key={record.id}
-                    className="group border border-slate-100 rounded-xl overflow-hidden hover:shadow-md transition-all duration-200 bg-white"
+                    className="group border border-border rounded-xl overflow-hidden hover:shadow-md transition-all duration-200 bg-card"
                   >
                     {/* Collapsed Header View */}
                     <div
-                      className="p-5 cursor-pointer hover:bg-slate-50/50 transition-colors"
+                      className="p-5 cursor-pointer hover:bg-background/50 transition-colors"
                       onClick={() => toggleRecord(record.id)}
                     >
                       <div className="flex items-start justify-between gap-4">
@@ -276,17 +276,17 @@ function MedicalRecordsPage(): React.JSX.Element {
 
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                              <h3 className="font-bold text-slate-800 text-lg">
+                              <h3 className="font-bold text-foreground text-lg">
                                 {formatDoctorName(record.doctor_name)}
                               </h3>
-                              <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 pointer-events-none">
+                              <Badge variant="outline" className="bg-background text-muted-foreground border-border pointer-events-none">
                                 {record.department}
                               </Badge>
                             </div>
-                            <p className="text-sm text-slate-600 font-medium line-clamp-1">
+                            <p className="text-sm text-muted-foreground font-medium line-clamp-1">
                               {record.diagnosis}
                             </p>
-                            <div className="flex sm:hidden items-center gap-2 mt-2 text-xs text-slate-400">
+                            <div className="flex sm:hidden items-center gap-2 mt-2 text-xs text-muted-foreground">
                               <FiCalendar className="w-3 h-3" />
                               {formatDate(record.visit_date)}
                             </div>
@@ -296,7 +296,7 @@ function MedicalRecordsPage(): React.JSX.Element {
                         <div className="flex items-center gap-3">
                           <div className={`
                                                         p-2 rounded-full transition-transform duration-300
-                                                        ${isExpanded ? 'bg-indigo-50 text-indigo-600 rotate-180' : 'text-slate-400 group-hover:bg-slate-100'}
+                                                        ${isExpanded ? 'bg-indigo-50 text-indigo-600 rotate-180' : 'text-muted-foreground group-hover:bg-muted'}
                                                     `}>
                             <FiChevronDown className="h-5 w-5" />
                           </div>
@@ -306,17 +306,17 @@ function MedicalRecordsPage(): React.JSX.Element {
 
                     {/* Expanded Detail View */}
                     {isExpanded && (
-                      <div className="border-t border-slate-100 bg-slate-50/50 p-5 space-y-6 animate-in slide-in-from-top-2 duration-200">
+                      <div className="border-t border-border bg-background/50 p-5 space-y-6 animate-in slide-in-from-top-2 duration-200">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('diagnosis')}</p>
-                            <p className="text-slate-800 font-medium">{record.diagnosis}</p>
+                          <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t('diagnosis')}</p>
+                            <p className="text-foreground font-medium">{record.diagnosis}</p>
                           </div>
 
                           {record.tests_performed && (
-                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('tests_performed')}</p>
-                              <p className="text-slate-800 whitespace-pre-line leading-relaxed">
+                            <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
+                              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t('tests_performed')}</p>
+                              <p className="text-foreground whitespace-pre-line leading-relaxed">
                                 {record.tests_performed}
                               </p>
                             </div>
@@ -324,12 +324,12 @@ function MedicalRecordsPage(): React.JSX.Element {
                         </div>
 
                         {record.prescription && (
-                          <div className="bg-emerald-50/30 p-4 rounded-xl border border-emerald-100">
-                            <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-2">
+                          <div className="bg-primary/8 p-4 rounded-xl border border-primary/15">
+                            <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-2">
                               <FiFileText className="w-3 h-3" />
                               {t('prescription')}
                             </p>
-                            <ul className="list-disc list-inside space-y-1 text-slate-800 leading-relaxed font-medium">
+                            <ul className="list-disc list-inside space-y-1 text-foreground leading-relaxed font-medium">
                               {record.prescription.split(',').map((item: string, i: number) => {
                                 const trimmed = item.trim().replace(/\.+$/, '');
                                 return trimmed ? <li key={i}>{trimmed}</li> : null;
@@ -344,7 +344,7 @@ function MedicalRecordsPage(): React.JSX.Element {
                               <FiFileText className="w-3 h-3" />
                               {t('doctor_notes')}
                             </p>
-                            <p className="text-slate-700 whitespace-pre-line leading-relaxed italic">
+                            <p className="text-foreground/80 whitespace-pre-line leading-relaxed italic">
                               &ldquo;{record.doctor_notes}&rdquo;
                             </p>
                           </div>
@@ -352,7 +352,7 @@ function MedicalRecordsPage(): React.JSX.Element {
 
                         {/* Reports Section - always visible */}
                         <div>
-                          <p className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                          <p className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
                             <FiPaperclip className="w-4 h-4 text-indigo-500" />
                             Reports
                             {record.report_attachments && record.report_attachments.length > 0 && (
@@ -366,16 +366,16 @@ function MedicalRecordsPage(): React.JSX.Element {
                               {record.report_attachments.map((attachment) => (
                                 <div
                                   key={attachment.id}
-                                  className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all"
+                                  className="flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:border-indigo-300 hover:shadow-md transition-all"
                                 >
                                   <div className="p-2 bg-indigo-50 rounded-lg flex-shrink-0">
                                     <FiFileText className="h-4 w-4 text-indigo-600" />
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-slate-700 truncate">
+                                    <p className="text-sm font-semibold text-foreground/80 truncate">
                                       {attachment.file_name}
                                     </p>
-                                    <p className="text-[10px] text-slate-400 uppercase font-medium mt-0.5">
+                                    <p className="text-[10px] text-muted-foreground uppercase font-medium mt-0.5">
                                       {attachment.file_type || 'PDF'} · {formatDate(attachment.uploaded_at)}
                                     </p>
                                   </div>
@@ -399,7 +399,7 @@ function MedicalRecordsPage(): React.JSX.Element {
                                       size="sm"
                                       onClick={() => handleReportAction(attachment.id, attachment.file_name, false)}
                                       disabled={downloadingId === attachment.id}
-                                      className="h-8 w-8 p-0 text-slate-500 hover:bg-slate-50"
+                                      className="h-8 w-8 p-0 text-muted-foreground hover:bg-background"
                                       title="Download"
                                     >
                                       <FiDownload className="h-3.5 w-3.5" />
@@ -409,7 +409,7 @@ function MedicalRecordsPage(): React.JSX.Element {
                               ))}
                             </div>
                           ) : (
-                            <p className="text-sm text-slate-400 italic py-2">No reports uploaded for this visit</p>
+                            <p className="text-sm text-muted-foreground italic py-2">No reports uploaded for this visit</p>
                           )}
                         </div>
                       </div>
@@ -419,12 +419,12 @@ function MedicalRecordsPage(): React.JSX.Element {
               })}
             </div>
           ) : (
-            <div className="text-center py-16 text-slate-500 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-              <div className="bg-white p-4 rounded-full shadow-sm inline-block mb-4">
+            <div className="text-center py-16 text-muted-foreground bg-background/50 rounded-2xl border border-dashed border-border">
+              <div className="bg-card p-4 rounded-full shadow-sm inline-block mb-4">
                 <FiActivity className="h-8 w-8 text-slate-300" />
               </div>
-              <h3 className="font-semibold text-slate-900 text-lg mb-1">{t('empty_records')}</h3>
-              <p className="text-slate-400">{t('empty_records_desc')}</p>
+              <h3 className="font-semibold text-foreground text-lg mb-1">{t('empty_records')}</h3>
+              <p className="text-muted-foreground">{t('empty_records_desc')}</p>
             </div>
           )}
         </CardContent>

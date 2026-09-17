@@ -8,10 +8,7 @@ import { api } from '@/lib/api';
 import type { PatientCard } from '@/types';
 import { FiDownload, FiUser, FiCamera, FiAlertCircle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import axios from 'axios';
 import styles from './PatientCard.module.css';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 // ── Static Data for Visuals ──
 const QR_DATA = [
@@ -74,23 +71,9 @@ function PatientCardPage(): React.JSX.Element {
 
   const handleDownloadPDF = async () => {
     try {
-      const stored = localStorage.getItem('auth-storage');
-      const tokens = stored ? JSON.parse(stored) : null;
-      const accessToken = tokens?.state?.tokens?.access;
+      const response = await api.patients.downloadPatientCardPDF();
 
-      if (!accessToken) {
-        toast.error('Please login again to download');
-        return;
-      }
-
-      const response = await axios.get(`${API_URL}/patients/my-card/pdf/`, {
-        responseType: 'blob',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const blob = new Blob([response as unknown as BlobPart], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -120,10 +103,10 @@ function PatientCardPage(): React.JSX.Element {
     return (
 
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="bg-white p-8 rounded-xl shadow-lg text-center max-w-md w-full">
+        <div className="bg-card p-8 rounded-xl shadow-lg text-center max-w-md w-full">
           <FiAlertCircle className="h-12 w-12 mx-auto mb-4 text-red-400" />
-          <p className="text-gray-600 font-medium">No patient card found.</p>
-          <p className="text-gray-500 text-sm mt-2">Please complete your profile to generate your card.</p>
+          <p className="text-muted-foreground font-medium">No patient card found.</p>
+          <p className="text-muted-foreground text-sm mt-2">Please complete your profile to generate your card.</p>
         </div>
       </div>
 
@@ -136,8 +119,8 @@ function PatientCardPage(): React.JSX.Element {
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Patient Card</h1>
-          <p className="text-gray-600 mt-1">Your official national health digital identity</p>
+          <h1 className="text-3xl font-bold text-foreground">My Patient Card</h1>
+          <p className="text-muted-foreground mt-1">Your official national health digital identity</p>
         </div>
         <Button onClick={handleDownloadPDF} className="flex items-center gap-2 shadow-sm">
           <FiDownload className="h-4 w-4" />

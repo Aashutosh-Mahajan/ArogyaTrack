@@ -21,7 +21,7 @@ function MedicinesPage(): React.JSX.Element {
       <div style={{ fontFamily: "'DM Sans', sans-serif" }}>
         {/* Header */}
         <div style={{
-          background: 'linear-gradient(130deg, #0D2B29 0%, #1F6F6A 55%, #185E59 100%)',
+          background: 'linear-gradient(130deg, #151109 0%, #1a5c52 55%, #1a5c52 100%)',
           borderRadius: 18, padding: '32px 36px', marginBottom: 28,
           position: 'relative', overflow: 'hidden',
         }}>
@@ -32,11 +32,11 @@ function MedicinesPage(): React.JSX.Element {
         {/* Skeleton */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #E8EDED' }}>
+            <div key={i} style={{ background: 'hsl(var(--card))', borderRadius: 16, padding: 24, border: '1px solid hsl(var(--border))' }}>
               <div className="animate-pulse" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ height: 16, background: '#E8EDED', borderRadius: 6, width: '60%' }} />
-                <div style={{ height: 12, background: '#E8EDED', borderRadius: 6, width: '40%' }} />
-                <div style={{ height: 12, background: '#E8EDED', borderRadius: 6, width: '50%' }} />
+                <div style={{ height: 16, background: 'hsl(var(--muted))', borderRadius: 6, width: '60%' }} />
+                <div style={{ height: 12, background: 'hsl(var(--muted))', borderRadius: 6, width: '40%' }} />
+                <div style={{ height: 12, background: 'hsl(var(--muted))', borderRadius: 6, width: '50%' }} />
               </div>
             </div>
           ))}
@@ -49,7 +49,7 @@ function MedicinesPage(): React.JSX.Element {
     <div style={{ fontFamily: "'DM Sans', sans-serif" }}>
       {/* ═══ HEADER BANNER ═══ */}
       <div style={{
-        background: 'linear-gradient(130deg, #0D2B29 0%, #1F6F6A 55%, #185E59 100%)',
+        background: 'linear-gradient(130deg, #151109 0%, #1a5c52 55%, #1a5c52 100%)',
         borderRadius: 18, padding: '32px 36px', marginBottom: 28,
         position: 'relative', overflow: 'hidden',
       }}>
@@ -91,24 +91,24 @@ function MedicinesPage(): React.JSX.Element {
       {/* ═══ EMPTY STATE ═══ */}
       {list.length === 0 ? (
         <div style={{
-          background: '#fff', borderRadius: 16, padding: '60px 24px',
-          textAlign: 'center', border: '1px solid #E8EDED',
+          background: 'hsl(var(--card))', borderRadius: 16, padding: '60px 24px',
+          textAlign: 'center', border: '1px solid hsl(var(--border))',
         }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>💊</div>
-          <p style={{ fontSize: 18, fontWeight: 700, color: '#2F3A3A' }}>No medicines found</p>
-          {search && <p style={{ fontSize: 14, color: '#6B7C7C', marginTop: 6 }}>Try a different search term.</p>}
+          <p style={{ fontSize: 18, fontWeight: 700, color: '#1c1712' }}>No medicines found</p>
+          {search && <p style={{ fontSize: 14, color: '#7a756b', marginTop: 6 }}>Try a different search term.</p>}
         </div>
       ) : (
         /* ═══ MEDICINE GRID ═══ */
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
           {list.map((med) => (
             <div key={med.id} style={{
-              background: '#fff', borderRadius: 16, padding: 0,
-              border: '1px solid #E8EDED', overflow: 'hidden',
+              background: 'hsl(var(--card))', borderRadius: 16, padding: 0,
+              border: '1px solid hsl(var(--border))', overflow: 'hidden',
               transition: 'box-shadow 0.2s, transform 0.2s',
               cursor: 'default',
             }}
-              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 8px 28px rgba(31,111,106,0.10)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 8px 28px hsl(var(--primary) / 0.10)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
             >
 
@@ -118,24 +118,24 @@ function MedicinesPage(): React.JSX.Element {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                     <div style={{
                       width: 40, height: 40, borderRadius: 12,
-                      background: med.is_active ? 'rgba(31,111,106,0.08)' : '#F3F4F6',
+                      background: med.is_active ? 'hsl(var(--primary) / 0.08)' : 'hsl(var(--muted))',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0,
                     }}>
                       <span style={{ fontSize: 18 }}>💊</span>
                     </div>
                     <div style={{ minWidth: 0 }}>
-                      <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1A2B2B', margin: 0, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{med.name}</h3>
+                      <h3 style={{ fontSize: 15, fontWeight: 700, color: 'hsl(var(--foreground))', margin: 0, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{med.name}</h3>
                       {med.generic_name && (
-                        <p style={{ fontSize: 12, color: '#6B7C7C', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{med.generic_name}</p>
+                        <p style={{ fontSize: 12, color: '#7a756b', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{med.generic_name}</p>
                       )}
                     </div>
                   </div>
                   <span style={{
                     fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
                     padding: '4px 10px', borderRadius: 20, flexShrink: 0,
-                    background: med.is_active ? 'rgba(31,111,106,0.1)' : '#F3F4F6',
-                    color: med.is_active ? '#1F6F6A' : '#9CA3AF',
+                    background: med.is_active ? 'hsl(var(--primary) / 0.1)' : 'hsl(var(--muted))',
+                    color: med.is_active ? '#1a5c52' : '#9CA3AF',
                   }}>
                     {med.is_active ? 'Active' : 'Inactive'}
                   </span>
@@ -146,13 +146,13 @@ function MedicinesPage(): React.JSX.Element {
                   {med.drug_class && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 12, fontWeight: 600, color: '#9CA3AF', minWidth: 70, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Class</span>
-                      <span style={{ fontSize: 13, color: '#2F3A3A', fontWeight: 500 }}>{med.drug_class}</span>
+                      <span style={{ fontSize: 13, color: '#1c1712', fontWeight: 500 }}>{med.drug_class}</span>
                     </div>
                   )}
                   {med.therapeutic_category && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 12, fontWeight: 600, color: '#9CA3AF', minWidth: 70, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Category</span>
-                      <span style={{ fontSize: 13, color: '#2F3A3A', fontWeight: 500 }}>{med.therapeutic_category}</span>
+                      <span style={{ fontSize: 13, color: '#1c1712', fontWeight: 500 }}>{med.therapeutic_category}</span>
                     </div>
                   )}
                 </div>
@@ -179,8 +179,8 @@ function MedicinesPage(): React.JSX.Element {
                         <span key={key} style={{
                           fontSize: 12, fontWeight: 600,
                           padding: '4px 10px', borderRadius: 8,
-                          background: 'rgba(31,111,106,0.06)',
-                          color: '#1F6F6A', border: '1px solid rgba(31,111,106,0.12)',
+                          background: 'hsl(var(--primary) / 0.06)',
+                          color: '#1a5c52', border: '1px solid hsl(var(--primary) / 0.12)',
                         }}>
                           {key}: {val}
                         </span>

@@ -46,12 +46,12 @@ function buildStatCards(kpi?: DashboardKPIs) {
     : '';
 
   return [
-    { labelKey: 'kpi_medical_records' as TranslationKey, value: kpi?.total_medical_records ?? 0, ...fmtTrend(bpTrend), accent: '#1F6F6A', customLabel: 'Medical Records' },
+    { labelKey: 'kpi_medical_records' as TranslationKey, value: kpi?.total_medical_records ?? 0, ...fmtTrend(bpTrend), accent: '#1a5c52', customLabel: 'Medical Records' },
     { labelKey: 'kpi_active_prescriptions' as TranslationKey, value: kpi?.active_prescriptions ?? 0, ...fmtTrend(rxTrend), accent: '#7c3aed', href: '/dashboard/prescriptions', customLabel: 'Active Prescriptions' },
     { labelKey: 'kpi_medical_records' as TranslationKey, value: bpVal, trend: bpDate, dir: 'neutral' as string, accent: '#ef4444', customLabel: 'Recent BP (mmHg)' },
     { labelKey: 'kpi_medical_records' as TranslationKey, value: <>{sugarVal} <sub style={{ fontSize: '0.55em', color: '#9CA3AF' }}>mg/dL</sub></>, trend: sugarDate, dir: 'neutral' as string, accent: '#f59e0b', customLabel: 'Blood Sugar' },
     { labelKey: 'kpi_pending_labs' as TranslationKey, value: kpi?.total_medical_records ?? 0, ...fmtTrend(bpTrend), accent: '#d97706', href: '/dashboard/lab-reports', customLabel: 'Pending Lab Reports' },
-    { labelKey: 'kpi_downloads' as TranslationKey, value: kpi?.total_downloads ?? 0, ...fmtTrend(dlTrend), accent: '#185E59', href: '/dashboard/downloads', customLabel: 'Report Downloads' },
+    { labelKey: 'kpi_downloads' as TranslationKey, value: kpi?.total_downloads ?? 0, ...fmtTrend(dlTrend), accent: '#1a5c52', href: '/dashboard/downloads', customLabel: 'Report Downloads' },
   ];
 }
 
@@ -73,7 +73,7 @@ function useCounter(target: number, duration = 1400) {
 
 /* ─── Health Score helpers ─── */
 function getScoreInfo(score: number) {
-  if (score >= 80) return { label: 'Excellent', color: '#4ade80', gradientFrom: '#1F6F6A', gradientTo: '#4ade80' };
+  if (score >= 80) return { label: 'Excellent', color: '#4ade80', gradientFrom: '#1a5c52', gradientTo: '#4ade80' };
   if (score >= 60) return { label: 'Good', color: '#a3e635', gradientFrom: '#4d7c0f', gradientTo: '#a3e635' };
   if (score >= 40) return { label: 'Fair', color: '#f59e0b', gradientFrom: '#92400e', gradientTo: '#f59e0b' };
   return { label: 'Needs Attention', color: '#ef4444', gradientFrom: '#991b1b', gradientTo: '#ef4444' };
@@ -135,7 +135,7 @@ function DetailSection({ icon, title, children }: { icon: string; title: string;
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
         <span style={{ fontSize: 16 }}>{icon}</span>
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#2F3A3A', letterSpacing: '-0.01em' }}>{title}</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'hsl(var(--foreground))', letterSpacing: '-0.01em' }}>{title}</span>
       </div>
       <div style={{ paddingLeft: 28 }}>{children}</div>
     </div>
@@ -233,7 +233,7 @@ function PatientDashboard(): React.JSX.Element {
     <>
       {/* ═══ SECTION 1 — HERO BANNER ═══ */}
       <section className="f1" style={{
-        background: 'linear-gradient(130deg, #0D2B29 0%, #1F6F6A 55%, #185E59 100%)',
+        background: 'linear-gradient(130deg, #151109 0%, #1a5c52 55%, #1a5c52 100%)',
         borderRadius: 22, padding: '36px 40px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         position: 'relative', overflow: 'hidden', minHeight: 220,
@@ -309,7 +309,7 @@ function PatientDashboard(): React.JSX.Element {
               <div style={{ fontSize: 10, color: '#fff', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 800, verticalAlign: 'super' }}>ADHERENCE</div>
               <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{adherencePercentage}%</span>
               <div style={{ width: 72, height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 99, marginTop: 6 }}>
-                <div style={{ width: `${Math.min(adherencePercentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #1F6F6A, #4ade80)', borderRadius: 99, boxShadow: '0 0 6px rgba(74,222,128,0.3)' }} />
+                <div style={{ width: `${Math.min(adherencePercentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #1a5c52, #4ade80)', borderRadius: 99, boxShadow: '0 0 6px rgba(74,222,128,0.3)' }} />
               </div>
             </div>
             {/* Conditions */}
@@ -357,21 +357,21 @@ function PatientDashboard(): React.JSX.Element {
 
         {/* Blood Pressure */}
         <div style={{
-          background: '#fff', borderRadius: 18, padding: '24px 28px',
+          background: 'hsl(var(--card))', borderRadius: 18, padding: '24px 28px',
           boxShadow: '0 2px 10px rgba(47,58,58,0.06)',
           flex: 1, minWidth: 0,
         }}>
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontWeight: 800, color: '#2F3A3A', fontSize: 20 }}>
+            <div style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontWeight: 800, color: 'hsl(var(--foreground))', fontSize: 20 }}>
               Blood Pressure
             </div>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 12, marginTop: 3, fontWeight: 500 }}>
+            <div style={{ fontFamily: 'DM Sans, sans-serif', color: 'hsl(var(--muted-foreground))', fontSize: 12, marginTop: 3, fontWeight: 500 }}>
               Last 6 months
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 13, fontWeight: 600, color: '#6B7C7C' }}>
+          <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 13, fontWeight: 600, color: 'hsl(var(--muted-foreground))' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 12, height: 4, background: '#1F6F6A', borderRadius: 2 }} /> Systolic
+              <span style={{ width: 12, height: 4, background: '#1a5c52', borderRadius: 2 }} /> Systolic
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ width: 12, height: 4, background: '#4ade80', borderRadius: 2 }} /> Diastolic
@@ -381,15 +381,15 @@ function PatientDashboard(): React.JSX.Element {
             <ComposedChart data={bpData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
               <defs>
                 <linearGradient id="bpGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#1F6F6A" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#1F6F6A" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#1a5c52" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="#1a5c52" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#6B7C7C', fontWeight: 500 }} axisLine={false} tickLine={false} interval={0} />
-              <YAxis domain={[60, 170]} tick={{ fontSize: 12, fill: '#6B7C7C', fontWeight: 500 }} axisLine={false} tickLine={false} width={36} />
-              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E8EDED', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
-              <Area type="monotone" dataKey="systolic" stroke="#1F6F6A" strokeWidth={2} fill="url(#bpGrad)" dot={{ fill: '#1F6F6A', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f6f4ee" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} axisLine={false} tickLine={false} interval={0} />
+              <YAxis domain={[60, 170]} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} axisLine={false} tickLine={false} width={36} />
+              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))', color: 'hsl(var(--foreground))', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
+              <Area type="monotone" dataKey="systolic" stroke="#1a5c52" strokeWidth={2} fill="url(#bpGrad)" dot={{ fill: '#1a5c52', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
               <Line type="monotone" dataKey="diastolic" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
             </ComposedChart>
           </ResponsiveContainer>
@@ -397,41 +397,41 @@ function PatientDashboard(): React.JSX.Element {
 
         {/* Blood Sugar */}
         <div style={{
-          background: '#fff', borderRadius: 18, padding: '24px 28px',
+          background: 'hsl(var(--card))', borderRadius: 18, padding: '24px 28px',
           boxShadow: '0 2px 10px rgba(47,58,58,0.06)',
           flex: 1, minWidth: 0,
         }}>
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontWeight: 800, color: '#2F3A3A', fontSize: 20 }}>
+            <div style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontWeight: 800, color: 'hsl(var(--foreground))', fontSize: 20 }}>
               Blood Sugar
             </div>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 12, marginTop: 3, fontWeight: 500 }}>
+            <div style={{ fontFamily: 'DM Sans, sans-serif', color: 'hsl(var(--muted-foreground))', fontSize: 12, marginTop: 3, fontWeight: 500 }}>
               Last 6 months
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
             <span style={{
-              background: 'rgba(31,111,106,0.08)', color: '#1F6F6A',
+              background: 'rgba(31,111,106,0.08)', color: '#1a5c52',
               fontSize: 12, fontWeight: 700,
               padding: '4px 12px', borderRadius: 999,
             }}>
               ↓ Improving trend
             </span>
-            <span style={{ color: '#6B7C7C', fontSize: 13, fontWeight: 600 }}>mg/dL</span>
+            <span style={{ color: 'hsl(var(--muted-foreground))', fontSize: 13, fontWeight: 600 }}>mg/dL</span>
           </div>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={sugarData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
               <defs>
                 <linearGradient id="sgGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#1F6F6A" stopOpacity={0.18} />
-                  <stop offset="95%" stopColor="#1F6F6A" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#1a5c52" stopOpacity={0.18} />
+                  <stop offset="95%" stopColor="#1a5c52" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F2" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#6B7C7C', fontWeight: 500 }} axisLine={false} tickLine={false} interval={0} />
-              <YAxis domain={['auto', 'auto']} tick={{ fontSize: 12, fill: '#6B7C7C', fontWeight: 500 }} axisLine={false} tickLine={false} width={36} />
-              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E8EDED', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
-              <Area type="monotone" dataKey="value" stroke="#185E59" strokeWidth={2} fill="url(#sgGrad)" dot={{ fill: '#185E59', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f6f4ee" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} axisLine={false} tickLine={false} interval={0} />
+              <YAxis domain={['auto', 'auto']} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} axisLine={false} tickLine={false} width={36} />
+              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))', color: 'hsl(var(--foreground))', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
+              <Area type="monotone" dataKey="value" stroke="#1a5c52" strokeWidth={2} fill="url(#sgGrad)" dot={{ fill: '#1a5c52', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -443,19 +443,19 @@ function PatientDashboard(): React.JSX.Element {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M3 12h3l3-9 4 18 3-9h5" stroke="#1F6F6A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M3 12h3l3-9 4 18 3-9h5" stroke="#1a5c52" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: '#2F3A3A', fontSize: 18 }}>
+              <span style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: 'hsl(var(--foreground))', fontSize: 18 }}>
                 {t('recent_records_title')}
               </span>
             </div>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', color: '#6B7C7C', fontSize: 13, marginTop: 3, marginLeft: 24 }}>
+            <div style={{ fontFamily: 'DM Sans, sans-serif', color: 'hsl(var(--muted-foreground))', fontSize: 13, marginTop: 3, marginLeft: 24 }}>
               {t('empty_records_desc')}
             </div>
           </div>
           <a href="/dashboard/medical-records" style={{
             fontFamily: 'DM Sans, sans-serif', fontSize: 12, fontWeight: 600,
-            color: '#1F6F6A', textDecoration: 'none',
+            color: '#1a5c52', textDecoration: 'none',
           }}>
             {t('view_all')} →
           </a>
@@ -474,14 +474,14 @@ function PatientDashboard(): React.JSX.Element {
               >
                 <div className="record-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M3 12h3l3-9 4 18 3-9h5" stroke="#1F6F6A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M3 12h3l3-9 4 18 3-9h5" stroke="#1a5c52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="record-title">{record.diagnosis_summary}</div>
                   <div className="record-meta">
                     <span>{record.doctor_name?.startsWith('Dr') ? record.doctor_name : `Dr. ${record.doctor_name}`}</span>
-                    <span style={{ color: '#D9E5E3' }}>•</span>
+                    <span style={{ color: 'hsl(var(--border))' }}>•</span>
                     <span>{new Date(record.visit_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                   </div>
                   {record.tests_performed && (
@@ -501,7 +501,7 @@ function PatientDashboard(): React.JSX.Element {
               </div>
             ))
           ) : (
-            <div style={{ padding: '40px 20px', textAlign: 'center', color: '#6B7C7C', fontSize: 13 }}>
+            <div style={{ padding: '40px 20px', textAlign: 'center', color: 'hsl(var(--muted-foreground))', fontSize: 13 }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>📋</div>
               No medical records found yet.
             </div>
@@ -522,23 +522,23 @@ function PatientDashboard(): React.JSX.Element {
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: '#fff', borderRadius: 20, width: '100%', maxWidth: 640,
+                background: 'hsl(var(--card))', borderRadius: 20, width: '100%', maxWidth: 640,
                 maxHeight: '85vh', overflowY: 'auto', position: 'relative',
                 boxShadow: '0 25px 60px rgba(0,0,0,0.2)',
               }}
             >
               {/* Header */}
               <div style={{
-                padding: '24px 28px 16px', borderBottom: '1px solid #E2E8E7',
+                padding: '24px 28px 16px', borderBottom: '1px solid hsl(var(--border))',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-                position: 'sticky', top: 0, background: '#fff', borderRadius: '20px 20px 0 0', zIndex: 1,
+                position: 'sticky', top: 0, background: 'hsl(var(--card))', borderRadius: '20px 20px 0 0', zIndex: 1,
               }}>
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#1F6F6A', letterSpacing: '0.14em', marginBottom: 6 }}>MEDICAL RECORD</div>
-                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#2F3A3A', margin: 0, lineHeight: 1.3 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#1a5c52', letterSpacing: '0.14em', marginBottom: 6 }}>MEDICAL RECORD</div>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: 'hsl(var(--foreground))', margin: 0, lineHeight: 1.3 }}>
                     {selectedRecord.diagnosis_summary}
                   </h2>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, fontSize: 13, color: '#6B7C7C' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, fontSize: 13, color: 'hsl(var(--muted-foreground))' }}>
                     <span>{selectedRecord.doctor_name?.startsWith('Dr') ? selectedRecord.doctor_name : `Dr. ${selectedRecord.doctor_name}`}</span>
                     <span>•</span>
                     <span>{selectedRecord.department}</span>
@@ -549,12 +549,12 @@ function PatientDashboard(): React.JSX.Element {
                 <button
                   onClick={() => setSelectedRecord(null)}
                   style={{
-                    width: 32, height: 32, borderRadius: 8, border: '1px solid #E2E8E7',
-                    background: '#fff', cursor: 'pointer', display: 'flex',
+                    width: 32, height: 32, borderRadius: 8, border: '1px solid hsl(var(--border))',
+                    background: 'hsl(var(--muted))', cursor: 'pointer', display: 'flex',
                     alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: 12,
                   }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7C7C" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
                 </button>
               </div>
 
@@ -578,7 +578,7 @@ function PatientDashboard(): React.JSX.Element {
 
                 {/* Diagnosis */}
                 <DetailSection icon="🩺" title="Diagnosis">
-                  <p style={{ fontSize: 14, color: '#2F3A3A', lineHeight: 1.6, margin: 0 }}>
+                  <p style={{ fontSize: 14, color: 'hsl(var(--foreground))', lineHeight: 1.6, margin: 0 }}>
                     {selectedRecord.diagnosis_summary}
                   </p>
                 </DetailSection>
@@ -615,7 +615,7 @@ function PatientDashboard(): React.JSX.Element {
                       {selectedRecord.prescription_text}
                     </p>
                     {selectedRecord.prescriptions_count > 0 && (
-                      <div style={{ marginTop: 10, fontSize: 12, color: '#1F6F6A', fontWeight: 600 }}>
+                      <div style={{ marginTop: 10, fontSize: 12, color: '#1a5c52', fontWeight: 600 }}>
                         {selectedRecord.prescriptions_count} prescription(s) linked
                       </div>
                     )}
@@ -633,30 +633,30 @@ function PatientDashboard(): React.JSX.Element {
                           disabled={downloadingAttId === att.id}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
-                            borderRadius: 10, border: '1px solid #E2E8E7', textDecoration: 'none',
-                            color: '#2F3A3A', transition: 'background 0.15s', background: 'transparent',
+                            borderRadius: 10, border: '1px solid hsl(var(--border))', textDecoration: 'none',
+                            color: 'hsl(var(--foreground))', transition: 'background 0.15s', background: 'transparent',
                             cursor: downloadingAttId === att.id ? 'wait' : 'pointer', width: '100%', textAlign: 'left',
                           }}
                           onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafb'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                         >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F6F6A" strokeWidth="1.5">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a5c52" strokeWidth="1.5">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6" />
                           </svg>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {att.file_name}
                             </div>
-                            <div style={{ fontSize: 11, color: '#6B7C7C', marginTop: 2 }}>
+                            <div style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))', marginTop: 2 }}>
                               {att.file_type} • {new Date(att.uploaded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </div>
                           </div>
                           {downloadingAttId === att.id ? (
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F6F6A" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a5c52" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}>
                               <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                             </svg>
                           ) : (
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F6F6A" strokeWidth="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a5c52" strokeWidth="2">
                               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
                             </svg>
                           )}

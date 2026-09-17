@@ -23,7 +23,7 @@ function getStatusConfig(status: string) {
     case 'low':
       return { label: 'Low', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' };
     default:
-      return { label: 'Normal', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' };
+      return { label: 'Normal', bg: 'bg-primary/8', text: 'text-primary', border: 'border-emerald-200' };
   }
 }
 
@@ -125,10 +125,10 @@ function LabReportsPage(): React.JSX.Element {
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-8 w-48 bg-slate-200 rounded" />
+        <div className="h-8 w-48 bg-muted rounded" />
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-slate-100 rounded-xl" />
+            <div key={i} className="h-24 bg-muted rounded-xl" />
           ))}
         </div>
       </div>
@@ -139,11 +139,11 @@ function LabReportsPage(): React.JSX.Element {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Lab Reports</h1>
+          <h1 className="text-2xl font-bold text-foreground">Lab Reports</h1>
         </div>
-        <div className="rounded-xl border bg-white p-8 text-center">
+        <div className="rounded-xl border bg-card p-8 text-center">
           <FiActivity className="mx-auto h-10 w-10 text-gray-300" />
-          <p className="mt-2 text-sm text-gray-500">Unable to load lab reports.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Unable to load lab reports.</p>
         </div>
       </div>
     );
@@ -153,15 +153,15 @@ function LabReportsPage(): React.JSX.Element {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Lab Reports</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Lab Reports</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             View your lab test results and download reports as PDF.
           </p>
         </div>
         <button
           onClick={() => refetch()}
           disabled={isFetching}
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground/80 shadow-sm hover:bg-background disabled:opacity-50"
         >
           <FiRefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
           Refresh
@@ -170,43 +170,43 @@ function LabReportsPage(): React.JSX.Element {
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border bg-white p-5 shadow-sm">
-          <p className="text-2xl font-bold text-gray-900">{labs?.length ?? 0}</p>
-          <p className="text-xs text-gray-500">Total Tests</p>
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
+          <p className="text-2xl font-bold text-foreground">{labs?.length ?? 0}</p>
+          <p className="text-xs text-muted-foreground">Total Tests</p>
         </div>
-        <div className="rounded-xl border bg-white p-5 shadow-sm">
-          <p className="text-2xl font-bold text-emerald-600">{labs?.filter(l => l.status === 'normal').length ?? 0}</p>
-          <p className="text-xs text-gray-500">Normal Results</p>
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
+          <p className="text-2xl font-bold text-primary">{labs?.filter(l => l.status === 'normal').length ?? 0}</p>
+          <p className="text-xs text-muted-foreground">Normal Results</p>
         </div>
-        <div className="rounded-xl border bg-white p-5 shadow-sm">
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
           <p className="text-2xl font-bold text-red-600">{labs?.filter(l => l.status !== 'normal').length ?? 0}</p>
-          <p className="text-xs text-gray-500">Abnormal Results</p>
+          <p className="text-xs text-muted-foreground">Abnormal Results</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="rounded-xl border bg-white shadow-sm">
+      <div className="rounded-xl border bg-card shadow-sm">
         <div className="border-b px-6 py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+            <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
               <FiActivity className="h-5 w-5 text-primary-600" />
               Your Lab Results
             </h3>
             <div className="flex items-center gap-3">
               <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search tests..."
-                  className="rounded-lg border border-gray-300 pl-9 pr-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none w-52"
+                  className="rounded-lg border border-border pl-9 pr-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none w-52"
                 />
               </div>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none"
+                className="rounded-lg border border-border px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none"
               >
                 <option value="all">All Status</option>
                 <option value="normal">Normal</option>
@@ -222,8 +222,8 @@ function LabReportsPage(): React.JSX.Element {
           {filtered.length === 0 ? (
             <div className="px-6 py-12 text-center">
               <FiInbox className="mx-auto h-10 w-10 text-gray-300" />
-              <p className="mt-2 text-sm font-medium text-gray-500">No lab reports found</p>
-              <p className="text-xs text-gray-400">
+              <p className="mt-2 text-sm font-medium text-muted-foreground">No lab reports found</p>
+              <p className="text-xs text-muted-foreground">
                 {search || statusFilter !== 'all'
                   ? 'Try adjusting your filters'
                   : 'Lab results will appear here after your tests'}
@@ -235,15 +235,15 @@ function LabReportsPage(): React.JSX.Element {
               return (
                 <div
                   key={test.id}
-                  className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-4 px-6 py-4 hover:bg-background transition-colors"
                 >
                   <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${st.bg}`}>
                     <FiActivity className={`h-5 w-5 ${st.text}`} />
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-900">{test.test_name}</p>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <p className="truncate text-sm font-medium text-foreground">{test.test_name}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${st.bg} ${st.text} border ${st.border}`}>
                         {st.label}
                       </span>
@@ -263,7 +263,7 @@ function LabReportsPage(): React.JSX.Element {
                     )}
                     <button
                       onClick={() => handleDownloadPDF(test)}
-                      className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+                      className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground/80 shadow-sm transition-colors hover:bg-background"
                     >
                       <FiDownload className="h-3.5 w-3.5" />
                       PDF
