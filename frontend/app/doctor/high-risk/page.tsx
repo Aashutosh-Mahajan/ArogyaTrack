@@ -36,7 +36,7 @@ const riskBadgeConfig: Record<string, { bg: string; text: string; border: string
   critical: { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-200' },
   high: { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' },
   medium: { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200' },
-  low: { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200' },
+  low: { bg: 'bg-emerald-100', text: 'text-primary', border: 'border-emerald-200' },
 };
 
 function HighRiskPatientsPage() {
@@ -80,17 +80,17 @@ function HighRiskPatientsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
               <span className="p-2 bg-rose-100 rounded-lg">
                 <FiAlertTriangle className="text-rose-600 h-8 w-8" />
               </span>
               {t('high_risk_title')}
             </h1>
-            <p className="text-slate-500 mt-2 max-w-2xl">
+            <p className="text-muted-foreground mt-2 max-w-2xl">
               {t('high_risk_subtitle')}
             </p>
           </div>
-          <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-xl shadow-lg shadow-rose-100/50 border border-rose-100">
+          <div className="flex items-center gap-3 bg-card px-5 py-3 rounded-xl shadow-lg shadow-rose-100/50 border border-rose-100">
             <span className="text-3xl font-bold text-rose-600">{data?.count ?? 0}</span>
             <span className="text-sm font-semibold text-rose-800 uppercase tracking-wider">{t('flagged')}</span>
           </div>
@@ -98,21 +98,21 @@ function HighRiskPatientsPage() {
 
         {/* Search */}
         <div className="relative">
-          <FiSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5" />
+          <FiSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
           <Input
             type="text"
             placeholder={t('search_high_risk')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-14 pr-4 py-6 bg-white border-slate-200 shadow-sm focus:ring-2 focus:ring-rose-500 rounded-xl transition-all"
+            className="w-full pl-14 pr-4 py-6 bg-card border-border shadow-sm focus:ring-2 focus:ring-rose-500 rounded-xl transition-all"
           />
         </div>
 
         {/* Loading */}
         {isLoading && (
-          <div className="bg-white/50 backdrop-blur-sm rounded-xl border border-slate-100 p-12 text-center">
+          <div className="bg-card/50 backdrop-blur-sm rounded-xl border border-border p-12 text-center">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-rose-500 mx-auto mb-4" />
-            <p className="text-slate-600 font-medium">{t('analysing_risk')}</p>
+            <p className="text-muted-foreground font-medium">{t('analysing_risk')}</p>
           </div>
         )}
 
@@ -133,15 +133,15 @@ function HighRiskPatientsPage() {
         {!isLoading && !error && (
           <>
             {filtered.length === 0 ? (
-              <Card className="border-2 border-dashed border-slate-200 bg-slate-50/50">
+              <Card className="border-2 border-dashed border-border bg-background/50">
                 <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
+                  <div className="w-20 h-20 bg-primary/8 rounded-full flex items-center justify-center mb-4">
                     <FiClipboard className="h-10 w-10 text-emerald-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
                     {t('no_high_risk_found')}
                   </h3>
-                  <p className="text-slate-500 max-w-sm mx-auto">
+                  <p className="text-muted-foreground max-w-sm mx-auto">
                     {searchTerm
                       ? t('adjust_search')
                       : t('no_high_risk_desc')}
@@ -155,7 +155,7 @@ function HighRiskPatientsPage() {
                   return (
                     <Card
                       key={patient.patient_id}
-                      className={`group hover:shadow-xl transition-all duration-300 border-0 shadow-md bg-white overflow-hidden relative border-t-4 ${patient.risk_level === 'critical' ? 'border-t-rose-500' :
+                      className={`group hover:shadow-xl transition-all duration-300 border-0 shadow-md bg-card overflow-hidden relative border-t-4 ${patient.risk_level === 'critical' ? 'border-t-rose-500' :
                           patient.risk_level === 'high' ? 'border-t-orange-500' :
                             patient.risk_level === 'medium' ? 'border-t-yellow-500' : 'border-t-emerald-500'
                         }`}
@@ -168,10 +168,10 @@ function HighRiskPatientsPage() {
                               {patient.name.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <h3 className="text-lg font-bold text-slate-900 leading-snug">
+                              <h3 className="text-lg font-bold text-foreground leading-snug">
                                 {patient.name}
                               </h3>
-                              <p className="text-xs font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded inline-block">
+                              <p className="text-xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded inline-block">
                                 {patient.unique_patient_id}
                               </p>
                             </div>
@@ -184,7 +184,7 @@ function HighRiskPatientsPage() {
                         </div>
 
                         {/* Patient Demographics */}
-                        <div className="text-xs text-slate-500 mb-4 flex gap-2 items-center">
+                        <div className="text-xs text-muted-foreground mb-4 flex gap-2 items-center">
                           <span>{patient.age} yrs</span>
                           <span>•</span>
                           <span>{patient.gender}</span>
@@ -194,9 +194,9 @@ function HighRiskPatientsPage() {
 
                         {/* Primary Condition */}
                         {patient.condition && (
-                          <div className="mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold block mb-1">{t('primary_condition')}</span>
-                            <span className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                          <div className="mb-4 bg-background p-3 rounded-lg border border-border">
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold block mb-1">{t('primary_condition')}</span>
+                            <span className="text-sm font-bold text-foreground flex items-center gap-2">
                               <FiActivity className="text-rose-500" /> {patient.condition}
                             </span>
                           </div>
@@ -204,12 +204,12 @@ function HighRiskPatientsPage() {
 
                         {/* Risk factors */}
                         <div className="mb-4">
-                          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold block mb-2">{t('risk_factors')}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold block mb-2">{t('risk_factors')}</span>
                           <div className="flex flex-wrap gap-1.5">
                             {patient.risk_factors.map((factor, i) => (
                               <span
                                 key={i}
-                                className="bg-white border border-slate-200 text-slate-600 text-xs px-2.5 py-1 rounded-md font-medium shadow-sm"
+                                className="bg-card border border-border text-muted-foreground text-xs px-2.5 py-1 rounded-md font-medium shadow-sm"
                               >
                                 {factor}
                               </span>
@@ -218,28 +218,28 @@ function HighRiskPatientsPage() {
                         </div>
 
                         {/* Stats row */}
-                        <div className="grid grid-cols-2 gap-3 mb-6 bg-slate-50/50 p-3 rounded-xl border border-slate-100/50">
+                        <div className="grid grid-cols-2 gap-3 mb-6 bg-background/50 p-3 rounded-xl border border-border/50">
                           <div>
-                            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">BP</span>
-                            <p className={`font-mono font-semibold ${patient.latest_bp_value && patient.latest_bp_value >= 140 ? 'text-rose-600' : 'text-slate-700'}`}>
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">BP</span>
+                            <p className={`font-mono font-semibold ${patient.latest_bp_value && patient.latest_bp_value >= 140 ? 'text-rose-600' : 'text-foreground/80'}`}>
                               {patient.latest_bp ?? '—'}
                             </p>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Sugar</span>
-                            <p className={`font-mono font-semibold ${patient.latest_sugar && patient.latest_sugar > 200 ? 'text-rose-600' : 'text-slate-700'}`}>
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Sugar</span>
+                            <p className={`font-mono font-semibold ${patient.latest_sugar && patient.latest_sugar > 200 ? 'text-rose-600' : 'text-foreground/80'}`}>
                               {patient.latest_sugar ? `${patient.latest_sugar} mg/dL` : '—'}
                             </p>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">{t('abnormal_labs_count')}</span>
-                            <p className={`font-mono font-semibold ${patient.abnormal_labs > 0 ? 'text-rose-600' : 'text-slate-700'}`}>
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{t('abnormal_labs_count')}</span>
+                            <p className={`font-mono font-semibold ${patient.abnormal_labs > 0 ? 'text-rose-600' : 'text-foreground/80'}`}>
                               {patient.abnormal_labs}
                             </p>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Last Visit</span>
-                            <p className="font-mono font-semibold text-slate-700 text-xs mt-0.5">
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Last Visit</span>
+                            <p className="font-mono font-semibold text-foreground/80 text-xs mt-0.5">
                               {patient.last_visit_date
                                 ? new Date(patient.last_visit_date).toLocaleDateString()
                                 : '—'}
@@ -255,7 +255,7 @@ function HighRiskPatientsPage() {
                                 `/doctor/patients/${patient.patient_id}/create-consultation`
                               )
                             }
-                            className="w-full bg-teal-600 hover:bg-teal-700 text-white shadow-md shadow-teal-100"
+                            className="w-full bg-primary hover:bg-primary text-white shadow-md shadow-teal-100"
                           >
                             <FiPlus className="h-4 w-4 mr-1.5" />
                             {t('new_record')}
@@ -265,7 +265,7 @@ function HighRiskPatientsPage() {
                               router.push(`/doctor/patients/${patient.patient_id}`)
                             }
                             variant="outline"
-                            className="w-full border-slate-200 text-slate-700 hover:bg-slate-50"
+                            className="w-full border-border text-foreground/80 hover:bg-background"
                           >
                             <FiClipboard className="h-4 w-4 mr-1.5" />
                             {t('view_history')}

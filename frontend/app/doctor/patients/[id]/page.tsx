@@ -55,16 +55,16 @@ function AddAllergyModal({ patientId, onClose }: { patientId: string; onClose: (
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
             onClick={onClose}>
-            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between p-5 border-b border-slate-100">
-                    <h3 className="text-lg font-bold text-slate-900">Add Allergy</h3>
-                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
-                        <FiX className="h-5 w-5 text-slate-400" />
+            <div className="bg-card rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between p-5 border-b border-border">
+                    <h3 className="text-lg font-bold text-foreground">Add Allergy</h3>
+                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                        <FiX className="h-5 w-5 text-muted-foreground" />
                     </button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); mutation.mutate(); }} className="p-5 space-y-4">
                     <div>
-                        <label className="text-sm font-medium text-slate-700 block mb-1">
+                        <label className="text-sm font-medium text-foreground/80 block mb-1">
                             Allergen <span className="text-rose-500">*</span>
                         </label>
                         <Input
@@ -76,7 +76,7 @@ function AddAllergyModal({ patientId, onClose }: { patientId: string; onClose: (
                         />
                     </div>
                     <div>
-                        <label className="text-sm font-medium text-slate-700 block mb-1">
+                        <label className="text-sm font-medium text-foreground/80 block mb-1">
                             Reaction Type <span className="text-rose-500">*</span>
                         </label>
                         <Input
@@ -88,7 +88,7 @@ function AddAllergyModal({ patientId, onClose }: { patientId: string; onClose: (
                         />
                     </div>
                     <div>
-                        <label className="text-sm font-medium text-slate-700 block mb-1">Severity (1-5)</label>
+                        <label className="text-sm font-medium text-foreground/80 block mb-1">Severity (1-5)</label>
                         <div className="flex gap-2">
                             {[1, 2, 3, 4, 5].map(v => (
                                 <button
@@ -97,14 +97,14 @@ function AddAllergyModal({ patientId, onClose }: { patientId: string; onClose: (
                                     onClick={() => setSeverity(v)}
                                     className={`w-10 h-10 rounded-lg text-sm font-bold border transition-all ${severity === v
                                         ? 'bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-200'
-                                        : 'bg-white text-slate-600 border-slate-200 hover:border-rose-300'
+                                        : 'bg-card text-muted-foreground border-border hover:border-rose-300'
                                         }`}
                                 >
                                     {v}
                                 </button>
                             ))}
                         </div>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                             1 = Mild, 5 = Life-threatening
                         </p>
                     </div>
@@ -149,16 +149,16 @@ function AddConditionModal({ patientId, onClose }: { patientId: string; onClose:
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
             onClick={onClose}>
-            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between p-5 border-b border-slate-100">
-                    <h3 className="text-lg font-bold text-slate-900">Add Chronic Condition</h3>
-                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
-                        <FiX className="h-5 w-5 text-slate-400" />
+            <div className="bg-card rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between p-5 border-b border-border">
+                    <h3 className="text-lg font-bold text-foreground">Add Chronic Condition</h3>
+                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                        <FiX className="h-5 w-5 text-muted-foreground" />
                     </button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); mutation.mutate(); }} className="p-5 space-y-4">
                     <div>
-                        <label className="text-sm font-medium text-slate-700 block mb-1">
+                        <label className="text-sm font-medium text-foreground/80 block mb-1">
                             Disease Name <span className="text-rose-500">*</span>
                         </label>
                         <Input
@@ -170,7 +170,7 @@ function AddConditionModal({ patientId, onClose }: { patientId: string; onClose:
                         />
                     </div>
                     <div>
-                        <label className="text-sm font-medium text-slate-700 block mb-1">
+                        <label className="text-sm font-medium text-foreground/80 block mb-1">
                             ICD-10 Code <span className="text-rose-500">*</span>
                         </label>
                         <Input
@@ -180,12 +180,12 @@ function AddConditionModal({ patientId, onClose }: { patientId: string; onClose:
                             required
                             className="rounded-xl font-mono"
                         />
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                             Format: letter + 2 digits, optional dot + up to 4 chars (e.g. E11, I10, J45.0)
                         </p>
                     </div>
                     <div>
-                        <label className="text-sm font-medium text-slate-700 block mb-1">Diagnosed Date</label>
+                        <label className="text-sm font-medium text-foreground/80 block mb-1">Diagnosed Date</label>
                         <Input
                             type="date"
                             value={diagnosedDate}
@@ -308,8 +308,8 @@ function PatientDetailsPage() {
                     <div className="inline-flex bg-red-100 p-4 rounded-full mb-4">
                         <FiAlertCircle className="h-8 w-8 text-red-600" />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900">Patient Not Found</h2>
-                    <p className="text-gray-500 mt-2">The patient you are looking for does not exist in your list.</p>
+                    <h2 className="text-2xl font-bold text-foreground">Patient Not Found</h2>
+                    <p className="text-muted-foreground mt-2">The patient you are looking for does not exist in your list.</p>
                     <Button
                         className="mt-6"
                         onClick={() => router.push('/doctor/patients')}
@@ -330,13 +330,13 @@ function PatientDetailsPage() {
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                        <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
                             {patient.name}
                             <span className="text-sm font-normal bg-blue-100 text-blue-700 px-3 py-1 rounded-full border border-blue-200">
                                 {patient.unique_patient_id}
                             </span>
                         </h1>
-                        <div className="flex flex-wrap items-center gap-4 mt-2 text-gray-600">
+                        <div className="flex flex-wrap items-center gap-4 mt-2 text-muted-foreground">
                             <span className="flex items-center gap-1"><FiUser className="h-4 w-4" /> {patient.age} yrs, {patient.gender}</span>
                             <span className="flex items-center gap-1"><FiDroplet className="h-4 w-4 text-red-500" /> {patient.blood_group}</span>
                             <span className="flex items-center gap-1"><FiMapPin className="h-4 w-4" /> {patient.district}</span>
@@ -358,11 +358,11 @@ function PatientDetailsPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                     {/* Allergies Card */}
-                    <Card className="border-0 shadow-lg bg-white overflow-hidden">
+                    <Card className="border-0 shadow-lg bg-card overflow-hidden">
                         <div className="h-1 bg-gradient-to-r from-rose-400 to-orange-400" />
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
-                                <CardTitle className="flex items-center gap-2 text-base text-slate-800">
+                                <CardTitle className="flex items-center gap-2 text-base text-foreground">
                                     <FiAlertCircle className="h-5 w-5 text-rose-500" />
                                     Allergies
                                     {allergies && allergies.length > 0 && (
@@ -384,18 +384,18 @@ function PatientDetailsPage() {
                         <CardContent className="pt-0">
                             {loadingAllergies ? (
                                 <div className="space-y-2">
-                                    {[1, 2].map(i => <div key={i} className="h-12 bg-slate-50 rounded-lg animate-pulse" />)}
+                                    {[1, 2].map(i => <div key={i} className="h-12 bg-background rounded-lg animate-pulse" />)}
                                 </div>
                             ) : allergies && allergies.length > 0 ? (
                                 <div className="space-y-2">
                                     {allergies.map(allergy => (
-                                        <div key={allergy.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-rose-200 transition-colors group">
+                                        <div key={allergy.id} className="flex items-center justify-between p-3 rounded-xl bg-background border border-border hover:border-rose-200 transition-colors group">
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-semibold text-sm text-slate-800">{allergy.allergen}</span>
+                                                    <span className="font-semibold text-sm text-foreground">{allergy.allergen}</span>
                                                     <SeverityBadge severity={allergy.severity} />
                                                 </div>
-                                                <p className="text-xs text-slate-500 mt-0.5">
+                                                <p className="text-xs text-muted-foreground mt-0.5">
                                                     Reaction: {allergy.reaction_type || allergy.reaction || '—'}
                                                 </p>
                                             </div>
@@ -413,25 +413,25 @@ function PatientDetailsPage() {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="text-center py-6 text-slate-400">
+                                <div className="text-center py-6 text-muted-foreground">
                                     <FiAlertCircle className="h-8 w-8 mx-auto mb-2 opacity-40" />
                                     <p className="text-sm">No allergies recorded</p>
-                                    <p className="text-xs mt-1">Click "Add" to record patient allergies</p>
+                                    <p className="text-xs mt-1">Click &quot;Add&quot; to record patient allergies</p>
                                 </div>
                             )}
                         </CardContent>
                     </Card>
 
                     {/* Chronic Conditions Card */}
-                    <Card className="border-0 shadow-lg bg-white overflow-hidden">
-                        <div className="h-1 bg-gradient-to-r from-emerald-400 to-teal-400" />
+                    <Card className="border-0 shadow-lg bg-card overflow-hidden">
+                        <div className="h-1 bg-gradient-to-r from-emerald-400 to-primary" />
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
-                                <CardTitle className="flex items-center gap-2 text-base text-slate-800">
+                                <CardTitle className="flex items-center gap-2 text-base text-foreground">
                                     <FiHeart className="h-5 w-5 text-emerald-500" />
                                     Chronic Conditions
                                     {activeConditions.length > 0 && (
-                                        <span className="text-xs bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-bold">
+                                        <span className="text-xs bg-emerald-100 text-primary px-2 py-0.5 rounded-full font-bold">
                                             {activeConditions.length}
                                         </span>
                                     )}
@@ -440,7 +440,7 @@ function PatientDetailsPage() {
                                     size="sm"
                                     variant="outline"
                                     onClick={() => setShowConditionModal(true)}
-                                    className="h-8 text-xs border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                                    className="h-8 text-xs border-emerald-200 text-primary hover:bg-primary/8"
                                 >
                                     <FiPlus className="mr-1 h-3 w-3" /> Add
                                 </Button>
@@ -449,24 +449,24 @@ function PatientDetailsPage() {
                         <CardContent className="pt-0">
                             {loadingConditions ? (
                                 <div className="space-y-2">
-                                    {[1, 2].map(i => <div key={i} className="h-12 bg-slate-50 rounded-lg animate-pulse" />)}
+                                    {[1, 2].map(i => <div key={i} className="h-12 bg-background rounded-lg animate-pulse" />)}
                                 </div>
                             ) : activeConditions.length > 0 ? (
                                 <div className="space-y-2">
                                     {activeConditions.map(condition => (
-                                        <div key={condition.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-emerald-200 transition-colors group">
+                                        <div key={condition.id} className="flex items-center justify-between p-3 rounded-xl bg-background border border-border hover:border-emerald-200 transition-colors group">
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-semibold text-sm text-slate-800">
+                                                    <span className="font-semibold text-sm text-foreground">
                                                         {condition.disease_name || condition.condition_name}
                                                     </span>
                                                     {condition.icd_10_code && condition.icd_10_code !== 'UNKNOWN' && (
-                                                        <span className="text-[10px] font-mono bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded">
+                                                        <span className="text-[10px] font-mono bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
                                                             {condition.icd_10_code}
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-xs text-slate-500 mt-0.5">
+                                                <p className="text-xs text-muted-foreground mt-0.5">
                                                     {condition.diagnosed_date
                                                         ? `Diagnosed: ${format(new Date(condition.diagnosed_date), 'MMM dd, yyyy')}`
                                                         : `Added: ${format(new Date(condition.created_at), 'MMM dd, yyyy')}`
@@ -487,10 +487,10 @@ function PatientDetailsPage() {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="text-center py-6 text-slate-400">
+                                <div className="text-center py-6 text-muted-foreground">
                                     <FiHeart className="h-8 w-8 mx-auto mb-2 opacity-40" />
                                     <p className="text-sm">No chronic conditions recorded</p>
-                                    <p className="text-xs mt-1">Click "Add" to record patient conditions</p>
+                                    <p className="text-xs mt-1">Click &quot;Add&quot; to record patient conditions</p>
                                 </div>
                             )}
                         </CardContent>
@@ -499,7 +499,7 @@ function PatientDetailsPage() {
 
                 {/* Medical History Section */}
                 <div>
-                    <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                         <FiActivity className="text-blue-600" />
                         {t('patient_history')}
                     </h2>
@@ -507,17 +507,17 @@ function PatientDetailsPage() {
                     {loadingRecords ? (
                         <div className="space-y-4">
                             {[1, 2, 3].map(i => (
-                                <div key={i} className="h-32 bg-gray-100 rounded-xl animate-pulse" />
+                                <div key={i} className="h-32 bg-muted rounded-xl animate-pulse" />
                             ))}
                         </div>
                     ) : !recordsData?.results?.length ? (
-                        <Card className="bg-gray-50 border-dashed border-2 border-gray-200 shadow-none">
+                        <Card className="bg-background border-dashed border-2 border-border shadow-none">
                             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                                <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                                    <FiFileText className="h-8 w-8 text-gray-400" />
+                                <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                                    <FiFileText className="h-8 w-8 text-muted-foreground" />
                                 </div>
-                                <h3 className="text-lg font-medium text-gray-900">{t('no_records_found')}</h3>
-                                <p className="text-gray-500 mt-1 mb-6 max-w-sm">
+                                <h3 className="text-lg font-medium text-foreground">{t('no_records_found')}</h3>
+                                <p className="text-muted-foreground mt-1 mb-6 max-w-sm">
                                     There are no recorded visits for this patient yet. Create a new record to get started.
                                 </p>
                                 <Button
@@ -531,7 +531,7 @@ function PatientDetailsPage() {
                     ) : (
                         <div className="space-y-4">
                             {recordsData.results.map((record) => (
-                                <Card key={record.id} className="overflow-hidden hover:shadow-md transition-shadow duration-300 border-gray-200/60">
+                                <Card key={record.id} className="overflow-hidden hover:shadow-md transition-shadow duration-300 border-border/60">
                                     <div className="flex flex-col md:flex-row">
                                         {/* Date Column */}
                                         <div className="bg-blue-50/50 p-4 md:w-48 flex flex-col justify-center items-center md:items-start border-b md:border-b-0 md:border-r border-blue-100">
@@ -548,20 +548,20 @@ function PatientDetailsPage() {
                                         {/* Content Column */}
                                         <div className="p-5 flex-1 space-y-3">
                                             <div>
-                                                <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                                                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                                                     {t('diagnosis_label')}
                                                 </h4>
-                                                <p className="text-gray-900 font-medium">
+                                                <p className="text-foreground font-medium">
                                                     {record.diagnosis}
                                                 </p>
                                             </div>
 
                                             {record.prescription && (
                                                 <div>
-                                                    <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                                                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                                                         {t('treatment_label')}
                                                     </h4>
-                                                    <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
+                                                    <ul className="list-disc list-inside space-y-1 text-foreground/80 text-sm">
                                                         {record.prescription.split(',').map((item: string, i: number) => {
                                                             const trimmed = item.trim().replace(/\.+$/, '');
                                                             return trimmed ? <li key={i}>{trimmed}</li> : null;
@@ -571,7 +571,7 @@ function PatientDetailsPage() {
                                             )}
 
                                             {/* Footer Info */}
-                                            <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                                            <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
                                                 <span>{t('doctor_label')}: {record.doctor_name}</span>
                                                 {record.tests_performed && (
                                                     <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-100">

@@ -78,13 +78,13 @@ const emptyEntry = (): MedicineEntry => ({
 });
 
 const STATUS_COLORS: Record<string, { bg: string; border: string; text: string; badge: string }> = {
-  safe: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-800', badge: 'bg-emerald-600' },
+  safe: { bg: 'bg-primary/8', border: 'border-emerald-200', text: 'text-primary', badge: 'bg-emerald-600' },
   warning: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', badge: 'bg-amber-500' },
   blocked: { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-800', badge: 'bg-rose-600' },
 };
 
 const SEVERITY_COLORS: Record<string, string> = {
-  minor: 'bg-slate-100 text-slate-700',
+  minor: 'bg-muted text-foreground/80',
   moderate: 'bg-amber-100 text-amber-800',
   major: 'bg-orange-100 text-orange-800',
   contraindicated: 'bg-rose-100 text-rose-800',
@@ -246,13 +246,13 @@ function CreatePrescriptionPage() {
     return (
       <DashboardLayout>
         <div className="max-w-2xl mx-auto mt-12 text-center space-y-6">
-          <Card className="bg-emerald-50/50 border border-emerald-100 shadow-xl">
+          <Card className="bg-primary/8 border border-primary/15 shadow-xl">
             <CardContent className="p-12">
               <div className="bg-emerald-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FiCheckCircle className="h-12 w-12 text-emerald-600" />
+                <FiCheckCircle className="h-12 w-12 text-primary" />
               </div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-3">Prescription Created</h2>
-              <p className="text-slate-600 mb-8 text-lg">
+              <h2 className="text-3xl font-bold text-foreground mb-3">Prescription Created</h2>
+              <p className="text-muted-foreground mb-8 text-lg">
                 The prescription has been created with QR code and is ready for dispensing.
               </p>
               <Button
@@ -281,8 +281,8 @@ function CreatePrescriptionPage() {
             <FiArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Create Prescription</h1>
-            <p className="text-slate-500">
+            <h1 className="text-2xl font-bold text-foreground">Create Prescription</h1>
+            <p className="text-muted-foreground">
               {patient ? `${patient.name} (${patient.unique_patient_id})` : 'Loading patient...'}
             </p>
           </div>
@@ -292,14 +292,14 @@ function CreatePrescriptionPage() {
           {/* Left: Medicine entries (2 cols) */}
           <div className="lg:col-span-2 space-y-4">
             {/* Pharmacy selector */}
-            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+            <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
               <div className="h-1 bg-gradient-to-r from-violet-500 to-purple-500" />
-              <CardHeader className="border-b border-slate-100 py-3 px-4">
-                <CardTitle className="text-sm text-slate-800">Target Pharmacy (for stock check)</CardTitle>
+              <CardHeader className="border-b border-border py-3 px-4">
+                <CardTitle className="text-sm text-foreground">Target Pharmacy (for stock check)</CardTitle>
               </CardHeader>
               <CardContent className="p-4">
                 <div className="relative">
-                  <FiSearch className="absolute left-3 top-3 text-slate-400 h-4 w-4" />
+                  <FiSearch className="absolute left-3 top-3 text-muted-foreground h-4 w-4" />
                   <Input
                     placeholder="Search pharmacy by name..."
                     className="pl-9"
@@ -319,13 +319,13 @@ function CreatePrescriptionPage() {
                         setPharmacySearch('');
                         setAgentReport(null);
                       }}
-                      className="absolute right-3 top-3 text-slate-400 hover:text-rose-500"
+                      className="absolute right-3 top-3 text-muted-foreground hover:text-rose-500"
                     >
                       <FiTrash2 className="h-4 w-4" />
                     </button>
                   )}
                   {showPharmacyDropdown && !selectedPharmacyId && pharmacyList && pharmacyList.length > 0 && (
-                    <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div className="absolute z-20 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                       {pharmacyList.map((ph) => (
                         <button
                           key={ph.id}
@@ -338,7 +338,7 @@ function CreatePrescriptionPage() {
                           className="w-full text-left px-3 py-2 hover:bg-violet-50 text-sm"
                         >
                           <span className="font-medium">{ph.name}</span>
-                          <span className="text-slate-400 ml-2 text-xs">{ph.address}</span>
+                          <span className="text-muted-foreground ml-2 text-xs">{ph.address}</span>
                         </button>
                       ))}
                     </div>
@@ -350,28 +350,28 @@ function CreatePrescriptionPage() {
                   </p>
                 )}
                 {!selectedPharmacyId && (
-                  <p className="text-xs text-slate-400 mt-1.5">
+                  <p className="text-xs text-muted-foreground mt-1.5">
                     Optional — select a pharmacy to check medicine stock availability.
                   </p>
                 )}
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+            <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
               <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
-              <CardHeader className="border-b border-slate-100">
-                <CardTitle className="text-lg text-slate-800">Prescribed Medicines</CardTitle>
+              <CardHeader className="border-b border-border">
+                <CardTitle className="text-lg text-foreground">Prescribed Medicines</CardTitle>
               </CardHeader>
               <CardContent className="p-4 space-y-4">
                 {medicines.map((entry, idx) => (
                   <div
                     key={idx}
-                    className="border border-slate-200 rounded-xl p-4 space-y-3 bg-slate-50/50 relative"
+                    className="border border-border rounded-xl p-4 space-y-3 bg-background/50 relative"
                   >
                     {medicines.length > 1 && (
                       <button
                         onClick={() => removeMedicineRow(idx)}
-                        className="absolute top-3 right-3 text-slate-400 hover:text-rose-500"
+                        className="absolute top-3 right-3 text-muted-foreground hover:text-rose-500"
                       >
                         <FiTrash2 className="h-4 w-4" />
                       </button>
@@ -379,11 +379,11 @@ function CreatePrescriptionPage() {
 
                     {/* Medicine search */}
                     <div className="relative">
-                      <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                      <label className="text-xs font-semibold text-muted-foreground mb-1 block">
                         Medicine #{idx + 1}
                       </label>
                       <div className="relative">
-                        <FiSearch className="absolute left-3 top-3 text-slate-400 h-4 w-4" />
+                        <FiSearch className="absolute left-3 top-3 text-muted-foreground h-4 w-4" />
                         <Input
                           placeholder="Search medicine..."
                           className="pl-9"
@@ -401,7 +401,7 @@ function CreatePrescriptionPage() {
                       {activeSearch === idx &&
                         searchResults &&
                         (searchResults as Medicine[]).length > 0 && (
-                          <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          <div className="absolute z-20 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                             {(searchResults as Medicine[]).map((med) => (
                               <button
                                 key={med.id}
@@ -409,14 +409,14 @@ function CreatePrescriptionPage() {
                                 className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm"
                               >
                                 <span className="font-medium">{med.name}</span>
-                                <span className="text-slate-400 ml-2">({med.generic_name})</span>
-                                <span className="text-slate-400 ml-2 text-xs">{med.drug_class}</span>
+                                <span className="text-muted-foreground ml-2">({med.generic_name})</span>
+                                <span className="text-muted-foreground ml-2 text-xs">{med.drug_class}</span>
                               </button>
                             ))}
                           </div>
                         )}
                       {entry.medicine && (
-                        <p className="text-xs text-emerald-600 mt-1">
+                        <p className="text-xs text-primary mt-1">
                           Selected: {entry.medicine.name} ({entry.medicine.generic_name})
                         </p>
                       )}
@@ -425,7 +425,7 @@ function CreatePrescriptionPage() {
                     {/* Dosage / Frequency / Duration */}
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                        <label className="text-xs font-semibold text-muted-foreground mb-1 block">
                           Dosage
                         </label>
                         <Input
@@ -435,7 +435,7 @@ function CreatePrescriptionPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                        <label className="text-xs font-semibold text-muted-foreground mb-1 block">
                           Frequency
                         </label>
                         <Input
@@ -445,7 +445,7 @@ function CreatePrescriptionPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                        <label className="text-xs font-semibold text-muted-foreground mb-1 block">
                           Duration (days)
                         </label>
                         <Input
@@ -462,7 +462,7 @@ function CreatePrescriptionPage() {
                     {/* Quantity / Instructions */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                        <label className="text-xs font-semibold text-muted-foreground mb-1 block">
                           Quantity
                         </label>
                         <Input
@@ -475,7 +475,7 @@ function CreatePrescriptionPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                        <label className="text-xs font-semibold text-muted-foreground mb-1 block">
                           Special Instructions
                         </label>
                         <Input
@@ -540,10 +540,10 @@ function CreatePrescriptionPage() {
           {/* Right: Agent Report Panel (1 col) */}
           <div className="space-y-4">
             {!agentReport && !validateMutation.isPending && (
-              <Card className="border-0 shadow-lg bg-slate-50/80 backdrop-blur-md">
+              <Card className="border-0 shadow-lg bg-background/80 backdrop-blur-md">
                 <CardContent className="p-8 text-center">
                   <FiShield className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                  <p className="text-slate-400 text-sm">
+                  <p className="text-muted-foreground text-sm">
                     Add medicines and click &quot;Validate Prescription&quot; to run AI safety
                     checks.
                   </p>
@@ -572,7 +572,7 @@ function CreatePrescriptionPage() {
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3 mb-3">
                       {agentReport.overall_status === 'safe' && (
-                        <FiCheckCircle className="h-8 w-8 text-emerald-600" />
+                        <FiCheckCircle className="h-8 w-8 text-primary" />
                       )}
                       {agentReport.overall_status === 'warning' && (
                         <FiAlertTriangle className="h-8 w-8 text-amber-600" />
@@ -587,7 +587,7 @@ function CreatePrescriptionPage() {
                           {agentReport.overall_status}
                         </span>
                         {agentReport.agent_unavailable && (
-                          <span className="ml-2 text-xs text-slate-500">(AI unavailable)</span>
+                          <span className="ml-2 text-xs text-muted-foreground">(AI unavailable)</span>
                         )}
                       </div>
                     </div>
@@ -599,9 +599,9 @@ function CreatePrescriptionPage() {
 
                 {/* Per-medicine reports */}
                 {agentReport.medicines.length > 0 && (
-                  <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md">
+                  <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-semibold text-slate-700">
+                      <CardTitle className="text-sm font-semibold text-foreground/80">
                         Medicine Analysis
                       </CardTitle>
                     </CardHeader>
@@ -609,9 +609,9 @@ function CreatePrescriptionPage() {
                       {agentReport.medicines.map((med, idx) => (
                         <div
                           key={idx}
-                          className="border border-slate-100 rounded-lg p-3 space-y-1.5"
+                          className="border border-border rounded-lg p-3 space-y-1.5"
                         >
-                          <p className="font-semibold text-sm text-slate-800">
+                          <p className="font-semibold text-sm text-foreground">
                             {med.medicine_name}
                           </p>
                           {med.allergy_conflict && (
@@ -630,14 +630,14 @@ function CreatePrescriptionPage() {
                             </p>
                           )}
                           {med.recommendation && (
-                            <p className="text-xs text-slate-600 italic">
+                            <p className="text-xs text-muted-foreground italic">
                               {med.recommendation}
                             </p>
                           )}
                           {!med.allergy_conflict &&
                             med.dosage_status === 'appropriate' &&
                             med.stock_status === 'in_stock' && (
-                              <p className="text-xs text-emerald-600">All checks passed</p>
+                              <p className="text-xs text-primary">All checks passed</p>
                             )}
                         </div>
                       ))}
@@ -647,9 +647,9 @@ function CreatePrescriptionPage() {
 
                 {/* Drug interactions */}
                 {agentReport.drug_interactions.length > 0 && (
-                  <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md">
+                  <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-semibold text-slate-700">
+                      <CardTitle className="text-sm font-semibold text-foreground/80">
                         Drug Interactions
                       </CardTitle>
                     </CardHeader>
@@ -657,19 +657,19 @@ function CreatePrescriptionPage() {
                       {agentReport.drug_interactions.map((inter, idx) => (
                         <div
                           key={idx}
-                          className="border border-slate-100 rounded-lg p-3"
+                          className="border border-border rounded-lg p-3"
                         >
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium text-slate-800">
+                            <span className="text-sm font-medium text-foreground">
                               {inter.medicine_a} + {inter.medicine_b}
                             </span>
                             <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${SEVERITY_COLORS[inter.severity] || 'bg-slate-100 text-slate-600'}`}
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${SEVERITY_COLORS[inter.severity] || 'bg-muted text-muted-foreground'}`}
                             >
                               {inter.severity}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-600">{inter.detail}</p>
+                          <p className="text-xs text-muted-foreground">{inter.detail}</p>
                         </div>
                       ))}
                     </CardContent>
@@ -688,18 +688,18 @@ function CreatePrescriptionPage() {
                       {agentReport.alternatives.map((alt, idx) => (
                         <div
                           key={idx}
-                          className="bg-white/80 rounded-lg p-3 border border-blue-100"
+                          className="bg-card/80 rounded-lg p-3 border border-blue-100"
                         >
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-muted-foreground">
                             Instead of{' '}
-                            <span className="font-semibold text-slate-700">
+                            <span className="font-semibold text-foreground/80">
                               {alt.replaces}
                             </span>
                           </p>
                           <p className="text-sm font-semibold text-blue-700 mt-0.5">
                             {alt.suggested_alternative}
                           </p>
-                          <p className="text-xs text-slate-600 mt-0.5">{alt.reason}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{alt.reason}</p>
                         </div>
                       ))}
                     </CardContent>

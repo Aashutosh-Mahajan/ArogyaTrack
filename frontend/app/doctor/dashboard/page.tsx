@@ -133,9 +133,9 @@ function DoctorDashboardPage() {
       label: t('recent_updates'),
       value: summary?.recent_updates ?? 0,
       icon: FiClock,
-      color: 'text-emerald-600',
-      bg: 'bg-emerald-50',
-      border: 'border-emerald-100'
+      color: 'text-primary',
+      bg: 'bg-primary/8',
+      border: 'border-primary/15'
     },
   ];
 
@@ -157,13 +157,13 @@ function DoctorDashboardPage() {
     return (
       <DashboardLayout>
         <div className="space-y-6 animate-pulse">
-          <div className="h-8 w-64 bg-slate-200 rounded-lg mb-4"></div>
+          <div className="h-8 w-64 bg-muted rounded-lg mb-4"></div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 bg-slate-100 rounded-xl"></div>
+              <div key={i} className="h-32 bg-muted rounded-xl"></div>
             ))}
           </div>
-          <div className="h-64 bg-slate-100 rounded-xl"></div>
+          <div className="h-64 bg-muted rounded-xl"></div>
         </div>
       </DashboardLayout>
     );
@@ -175,8 +175,8 @@ function DoctorDashboardPage() {
         {/* Title */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{t('doctor_dashboard_title')}</h1>
-            <p className="text-slate-500 mt-1">
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">{t('doctor_dashboard_title')}</h1>
+            <p className="text-muted-foreground mt-1">
               {t('doctor_dashboard_subtitle')}
             </p>
           </div>
@@ -185,13 +185,13 @@ function DoctorDashboardPage() {
               variant="outline"
               onClick={() => refetchSummary()}
               disabled={isFetchingSummary}
-              className="bg-white/50 border-slate-200 hover:bg-slate-100"
+              className="bg-card/50 border-border hover:bg-muted"
             >
               <FiRefreshCw className={`h-4 w-4 mr-2 ${isFetchingSummary ? 'animate-spin' : ''}`} />
               {t('refresh')}
             </Button>
             <Link href="/doctor/scan-qr">
-              <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white shadow-lg hover:shadow-xl transition-all rounded-full px-6">
+              <Button size="lg" className="bg-primary hover:bg-primary text-white shadow-lg hover:shadow-xl transition-all rounded-full px-6">
                 <FiCamera className="h-4 w-4 mr-2" />
                 {t('scan_patient_qr')}
               </Button>
@@ -204,7 +204,7 @@ function DoctorDashboardPage() {
           {kpiCards.map((kpi) => {
             const Icon = kpi.icon;
             return (
-              <div key={kpi.label} className="group relative overflow-hidden bg-white/80 backdrop-blur-md rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300">
+              <div key={kpi.label} className="group relative overflow-hidden bg-card/80 backdrop-blur-md rounded-2xl p-6 border border-border shadow-sm hover:shadow-md transition-all duration-300">
                 <div className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 duration-500 ${kpi.color}`}>
                   <Icon className="w-16 h-16" />
                 </div>
@@ -212,8 +212,8 @@ function DoctorDashboardPage() {
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${kpi.bg} ${kpi.color} ${kpi.border} border`}>
                     <Icon className="w-6 h-6" />
                   </div>
-                  <p className="text-3xl font-bold text-slate-900 mb-1">{kpi.value}</p>
-                  <p className="text-sm font-medium text-slate-500">{kpi.label}</p>
+                  <p className="text-3xl font-bold text-foreground mb-1">{kpi.value}</p>
+                  <p className="text-sm font-medium text-muted-foreground">{kpi.label}</p>
                 </div>
               </div>
             );
@@ -222,19 +222,19 @@ function DoctorDashboardPage() {
 
         {/* ─── B. HIGH-RISK PATIENTS PREVIEW (top 5) ─── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <Card className="lg:col-span-2 border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md">
+          <Card className="lg:col-span-2 border-0 shadow-lg overflow-hidden bg-card/80 backdrop-blur-md">
             
-            <CardHeader className="border-b border-slate-100/50 pb-4">
+            <CardHeader className="border-b border-border/50 pb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-orange-50 rounded-lg">
                     <FiAlertTriangle className="w-5 h-5 text-orange-600" />
                   </div>
-                  <CardTitle className="text-lg text-slate-800">{t('high_risk_patients')}</CardTitle>
+                  <CardTitle className="text-lg text-foreground">{t('high_risk_patients')}</CardTitle>
                 </div>
                 <Link
                   href="/doctor/high-risk"
-                  className="text-sm font-semibold text-teal-600 hover:text-teal-700 flex items-center gap-1 hover:gap-2 transition-all"
+                  className="text-sm font-semibold text-primary hover:text-primary flex items-center gap-1 hover:gap-2 transition-all"
                 >
                   {t('view_all')} <FiArrowRight className="h-4 w-4" />
                 </Link>
@@ -242,8 +242,8 @@ function DoctorDashboardPage() {
             </CardHeader>
             <CardContent className="p-0">
               {topHighRisk.length === 0 ? (
-                <div className="text-center py-12 text-slate-400">
-                  <div className="bg-slate-50 p-4 rounded-full inline-block mb-3">
+                <div className="text-center py-12 text-muted-foreground">
+                  <div className="bg-background p-4 rounded-full inline-block mb-3">
                     <FiCheckCircle className="h-8 w-8 text-emerald-400" />
                   </div>
                   <p>{t('no_high_risk_patients')}</p>
@@ -255,11 +255,11 @@ function DoctorDashboardPage() {
                     return (
                       <div
                         key={patient.patient_id}
-                        className="flex items-center justify-between p-4 hover:bg-slate-50/50 transition-colors group"
+                        className="flex items-center justify-between p-4 hover:bg-background/50 transition-colors group"
                       >
                         <div className="flex items-center gap-4 min-w-0">
                           <div className="relative">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-600 font-bold text-lg shadow-inner">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-muted-foreground font-bold text-lg shadow-inner">
                               {patient.name.charAt(0)}
                             </div>
                             <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center ${patient.risk_level === 'critical' ? 'bg-red-500' : 'bg-orange-500'}`}>
@@ -267,25 +267,25 @@ function DoctorDashboardPage() {
                             </div>
                           </div>
                           <div className="min-w-0">
-                            <p className="font-bold text-slate-900 truncate group-hover:text-teal-700 transition-colors">
+                            <p className="font-bold text-foreground truncate group-hover:text-primary transition-colors">
                               {patient.name}
                             </p>
-                            <p className="text-sm text-slate-500">
-                              {patient.age} yrs · <span className="font-medium text-slate-700">{patient.condition}</span>
+                            <p className="text-sm text-muted-foreground">
+                              {patient.age} yrs · <span className="font-medium text-foreground/80">{patient.condition}</span>
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 ml-3">
                           {patient.latest_bp && (
                             <div className="hidden sm:flex flex-col items-end">
-                              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">BP</span>
-                              <span className="text-sm font-semibold text-slate-700">{patient.latest_bp}</span>
+                              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">BP</span>
+                              <span className="text-sm font-semibold text-foreground/80">{patient.latest_bp}</span>
                             </div>
                           )}
                           {patient.latest_sugar && (
                             <div className="hidden sm:flex flex-col items-end">
-                              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Sugar</span>
-                              <span className="text-sm font-semibold text-slate-700">{patient.latest_sugar}</span>
+                              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Sugar</span>
+                              <span className="text-sm font-semibold text-foreground/80">{patient.latest_sugar}</span>
                             </div>
                           )}
                           <div className="flex flex-col items-end gap-2">
@@ -295,7 +295,7 @@ function DoctorDashboardPage() {
                               {patient.risk_level}
                             </span>
                             <Link href={`/doctor/patients/${patient.patient_id}`}>
-                              <Button variant="ghost" size="sm" className="h-7 text-xs hover:bg-teal-50 hover:text-teal-700">
+                              <Button variant="ghost" size="sm" className="h-7 text-xs hover:bg-primary/8 hover:text-primary">
                                 {t('view')}
                               </Button>
                             </Link>
@@ -310,41 +310,41 @@ function DoctorDashboardPage() {
           </Card>
 
           {/* ─── C. RECENT ACTIVITY FEED ─── */}
-          <Card className="border-0 shadow-lg overflow-hidden bg-white/80 backdrop-blur-md h-fit">
+          <Card className="border-0 shadow-lg overflow-hidden bg-card/80 backdrop-blur-md h-fit">
             
-            <CardHeader className="border-b border-slate-100/50 pb-4">
+            <CardHeader className="border-b border-border/50 pb-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-50 rounded-lg">
                   <FiActivity className="w-5 h-5 text-blue-600" />
                 </div>
-                <CardTitle className="text-lg text-slate-800">{t('recent_activity')}</CardTitle>
+                <CardTitle className="text-lg text-foreground">{t('recent_activity')}</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="p-0">
               {activities.length === 0 ? (
-                <div className="text-center py-8 text-slate-400">
+                <div className="text-center py-8 text-muted-foreground">
                   <p>{t('no_recent_activity')}</p>
                 </div>
               ) : (
                 <div className="max-h-[500px] overflow-y-auto divide-y divide-slate-100">
                   {activities.map((item, idx) => (
-                    <div key={idx} className="flex items-start gap-4 p-4 hover:bg-slate-50/50 transition-colors">
+                    <div key={idx} className="flex items-start gap-4 p-4 hover:bg-background/50 transition-colors">
                       <div className="mt-1 flex-shrink-0">{activityIcon(item)}</div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-slate-900">
+                        <p className="text-sm font-semibold text-foreground">
                           {item.title}
                         </p>
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
                           {item.description}
                         </p>
-                        <p className="text-[10px] text-slate-400 font-medium mt-2 flex items-center gap-1.5">
+                        <p className="text-[10px] text-muted-foreground font-medium mt-2 flex items-center gap-1.5">
                           <FiClock className="w-3 h-3" />
                           {new Date(item.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
                       <div className="flex items-center flex-shrink-0">
                         <span
-                          className={`h-2.5 w-2.5 rounded-full ring-2 ring-white shadow-sm ${severityDot[item.severity] ?? 'bg-slate-300'
+                          className={`h-2.5 w-2.5 rounded-full ring-2 ring-white shadow-sm ${severityDot[item.severity] ?? 'bg-muted-foreground/30'
                             }`}
                         />
                       </div>

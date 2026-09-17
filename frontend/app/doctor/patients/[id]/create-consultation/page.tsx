@@ -94,13 +94,13 @@ const emptyEntry = (): MedicineEntry => ({
 });
 
 const STATUS_COLORS: Record<string, { bg: string; border: string; text: string; badge: string }> = {
-  safe: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-800', badge: 'bg-emerald-600' },
+  safe: { bg: 'bg-primary/8', border: 'border-emerald-200', text: 'text-primary', badge: 'bg-emerald-600' },
   warning: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', badge: 'bg-amber-500' },
   blocked: { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-800', badge: 'bg-rose-600' },
 };
 
 const SEVERITY_COLORS: Record<string, string> = {
-  minor: 'bg-slate-100 text-slate-700',
+  minor: 'bg-muted text-foreground/80',
   moderate: 'bg-amber-100 text-amber-800',
   major: 'bg-orange-100 text-orange-800',
   contraindicated: 'bg-rose-100 text-rose-800',
@@ -321,17 +321,17 @@ function CreateConsultationPage() {
     return (
       <DashboardLayout>
         <div className="max-w-2xl mx-auto mt-12 text-center space-y-6">
-          <Card className="bg-emerald-50/50 border border-emerald-100 shadow-xl shadow-emerald-50/50 backdrop-blur-md">
+          <Card className="bg-primary/8 border border-primary/15 shadow-xl shadow-emerald-50/50 backdrop-blur-md">
             <CardContent className="p-12">
               <div className="bg-emerald-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                <FiCheckCircle className="h-12 w-12 text-emerald-600" />
+                <FiCheckCircle className="h-12 w-12 text-primary" />
               </div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-3">
+              <h2 className="text-3xl font-bold text-foreground mb-3">
                 {includePrescription && hasValidMedicines
                   ? 'Consultation & Prescription Saved'
                   : t('record_saved_success')}
               </h2>
-              <p className="text-slate-600 mb-8 max-w-md mx-auto text-lg">
+              <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
                 {includePrescription && hasValidMedicines
                   ? 'Visit record and prescription have been created. The prescription QR code is ready for dispensing.'
                   : t('record_saved_desc')}
@@ -358,16 +358,16 @@ function CreateConsultationPage() {
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="ghost" className="shrink-0" onClick={handleBackToPatient}>
-            <FiArrowLeft className="h-6 w-6 text-slate-500" />
+            <FiArrowLeft className="h-6 w-6 text-muted-foreground" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
               <span className="p-2 bg-blue-100 rounded-lg text-blue-600">
                 <FiEdit3 className="h-8 w-8" />
               </span>
               New Consultation
             </h1>
-            <p className="text-slate-500 mt-2 text-lg">
+            <p className="text-muted-foreground mt-2 text-lg">
               {patient ? `${patient.name} (${patient.unique_patient_id})` : t('add_record_subtitle')}
             </p>
           </div>
@@ -378,24 +378,24 @@ function CreateConsultationPage() {
             {/* ═══════════ LEFT COLUMN (2 cols) ═══════════ */}
             <div className="lg:col-span-2 space-y-6">
               {/* ── Visit Details ── */}
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+              <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
                 <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
-                <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
-                  <CardTitle className="flex items-center gap-2 text-xl text-slate-800">
+                <CardHeader className="bg-background/50 border-b border-border pb-4">
+                  <CardTitle className="flex items-center gap-2 text-xl text-foreground">
                     <FiCalendar className="h-5 w-5 text-blue-500" />
                     {t('visit_details')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700 block">{t('visit_date')}</label>
+                    <label className="text-sm font-medium text-foreground/80 block">{t('visit_date')}</label>
                     <div className="relative">
-                      <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         type="datetime-local"
                         value={visitDate}
                         onChange={(e) => setVisitDate(e.target.value)}
-                        className="pl-10 h-12 rounded-xl border-slate-200 focus:ring-2 focus:ring-blue-500"
+                        className="pl-10 h-12 rounded-xl border-border focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
@@ -403,24 +403,24 @@ function CreateConsultationPage() {
               </Card>
 
               {/* ── Clinical Information ── */}
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
-                <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
-                <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
-                  <CardTitle className="flex items-center gap-2 text-xl text-slate-800">
+              <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
+                <div className="h-1 bg-gradient-to-r from-emerald-500 to-primary" />
+                <CardHeader className="bg-background/50 border-b border-border pb-4">
+                  <CardTitle className="flex items-center gap-2 text-xl text-foreground">
                     <FiActivity className="h-5 w-5 text-emerald-500" />
                     Clinical Information
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700 block">
+                    <label className="text-sm font-medium text-foreground/80 block">
                       {t('diagnosis')} <span className="text-rose-500">*</span>
                     </label>
                     <textarea
                       value={diagnosis}
                       onChange={(e) => setDiagnosis(e.target.value)}
                       rows={2}
-                      className="w-full rounded-xl border border-slate-200 p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
+                      className="w-full rounded-xl border border-border p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
                       placeholder="e.g. Acute Viral Fever"
                       required
                     />
@@ -428,45 +428,45 @@ function CreateConsultationPage() {
 
                   <div className="grid gap-6 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700 block">{t('tests_performed')}</label>
+                      <label className="text-sm font-medium text-foreground/80 block">{t('tests_performed')}</label>
                       <textarea
                         value={testsPerformed}
                         onChange={(e) => setTestsPerformed(e.target.value)}
                         rows={3}
-                        className="w-full rounded-xl border border-slate-200 p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
+                        className="w-full rounded-xl border border-border p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
                         placeholder="e.g. CBC, Widal"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700 block">{t('prescription')}</label>
+                      <label className="text-sm font-medium text-foreground/80 block">{t('prescription')}</label>
                       <textarea
                         value={prescriptionNotes}
                         onChange={(e) => setPrescriptionNotes(e.target.value)}
                         rows={3}
-                        className="w-full rounded-xl border border-slate-200 p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
+                        className="w-full rounded-xl border border-border p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
                         placeholder="Free-text treatment notes..."
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700 block">{t('doctor_notes')}</label>
+                    <label className="text-sm font-medium text-foreground/80 block">{t('doctor_notes')}</label>
                     <textarea
                       value={doctorNotes}
                       onChange={(e) => setDoctorNotes(e.target.value)}
                       rows={2}
-                      className="w-full rounded-xl border border-slate-200 p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
+                      className="w-full rounded-xl border border-border p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
                       placeholder="Additional observation notes..."
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700 block">{t('status')}</label>
+                    <label className="text-sm font-medium text-foreground/80 block">{t('status')}</label>
                     <div className="relative">
                       <select
                         value={visitStatus}
                         onChange={(e) => setVisitStatus(e.target.value)}
-                        className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all appearance-none"
+                        className="w-full pl-4 pr-10 py-3 rounded-xl border border-border bg-card focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all appearance-none"
                       >
                         {STATUS_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value}>
@@ -474,7 +474,7 @@ function CreateConsultationPage() {
                           </option>
                         ))}
                       </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                           <path fillRule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
                         </svg>
@@ -485,10 +485,10 @@ function CreateConsultationPage() {
               </Card>
 
               {/* ── Reports Upload ── */}
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+              <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
                 <div className="h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
-                <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
-                  <CardTitle className="flex items-center gap-2 text-xl text-slate-800">
+                <CardHeader className="bg-background/50 border-b border-border pb-4">
+                  <CardTitle className="flex items-center gap-2 text-xl text-foreground">
                     <FiFileText className="h-5 w-5 text-purple-500" />
                     {t('upload_reports')}
                   </CardTitle>
@@ -499,19 +499,19 @@ function CreateConsultationPage() {
                       {reportFiles.map((file, idx) => (
                         <div
                           key={`${file.name}-${idx}`}
-                          className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 bg-slate-50 transition-all hover:border-purple-200 hover:bg-purple-50/50"
+                          className="flex items-center gap-3 rounded-xl border border-border px-4 py-3 bg-background transition-all hover:border-purple-200 hover:bg-purple-50/50"
                         >
                           <div className="h-10 w-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                             <FiFile className="h-5 w-5 text-purple-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-700 truncate">{file.name}</p>
-                            <p className="text-xs text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                            <p className="text-sm font-medium text-foreground/80 truncate">{file.name}</p>
+                            <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                           </div>
                           <button
                             type="button"
                             onClick={() => setReportFiles((prev) => prev.filter((_, i) => i !== idx))}
-                            className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-full transition-colors"
+                            className="text-muted-foreground hover:text-rose-500 hover:bg-rose-50 p-2 rounded-full transition-colors"
                           >
                             <FiX className="h-4 w-4" />
                           </button>
@@ -522,15 +522,15 @@ function CreateConsultationPage() {
                   {reportFiles.length < MAX_REPORT_FILES && (
                     <div
                       onClick={() => fileInputRef.current?.click()}
-                      className="group cursor-pointer border-2 border-dashed border-slate-300 rounded-xl p-6 transition-all hover:border-purple-400 hover:bg-purple-50/30 flex flex-col items-center justify-center text-center space-y-2"
+                      className="group cursor-pointer border-2 border-dashed border-border rounded-xl p-6 transition-all hover:border-purple-400 hover:bg-purple-50/30 flex flex-col items-center justify-center text-center space-y-2"
                     >
-                      <div className="h-10 w-10 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-                        <FiUpload className="h-5 w-5 text-slate-400 group-hover:text-purple-600" />
+                      <div className="h-10 w-10 bg-muted rounded-full flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                        <FiUpload className="h-5 w-5 text-muted-foreground group-hover:text-purple-600" />
                       </div>
-                      <p className="text-slate-700 font-medium group-hover:text-purple-700 text-sm">
+                      <p className="text-foreground/80 font-medium group-hover:text-purple-700 text-sm">
                         {reportFiles.length === 0 ? t('click_upload') : t('add_more_files')}
                       </p>
-                      <p className="text-xs text-slate-500">{t('upload_reports_desc')}</p>
+                      <p className="text-xs text-muted-foreground">{t('upload_reports_desc')}</p>
                     </div>
                   )}
                   <input
@@ -561,7 +561,7 @@ function CreateConsultationPage() {
               </Card>
 
               {/* ══════════ PRESCRIPTION TOGGLE ══════════ */}
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+              <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
                 <div className="h-1 bg-gradient-to-r from-indigo-500 to-violet-500" />
                 <CardContent className="p-6">
                   <label className="flex items-center gap-4 cursor-pointer select-none">
@@ -575,15 +575,15 @@ function CreateConsultationPage() {
                         }}
                         className="sr-only peer"
                       />
-                      <div className="w-12 h-7 bg-slate-200 rounded-full peer-checked:bg-indigo-600 transition-colors" />
-                      <div className="absolute left-1 top-1 w-5 h-5 bg-white rounded-full shadow peer-checked:translate-x-5 transition-transform" />
+                      <div className="w-12 h-7 bg-muted rounded-full peer-checked:bg-indigo-600 transition-colors" />
+                      <div className="absolute left-1 top-1 w-5 h-5 bg-card rounded-full shadow peer-checked:translate-x-5 transition-transform" />
                     </div>
                     <div>
-                      <span className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                      <span className="text-lg font-semibold text-foreground flex items-center gap-2">
                         <FiPackage className="h-5 w-5 text-indigo-500" />
                         Add Digital Prescription
                       </span>
-                      <p className="text-sm text-slate-500 mt-0.5">
+                      <p className="text-sm text-muted-foreground mt-0.5">
                         Add medicine details with AI safety validation and QR-based dispensing
                       </p>
                     </div>
@@ -595,14 +595,14 @@ function CreateConsultationPage() {
               {includePrescription && (
                 <>
                   {/* Pharmacy selector */}
-                  <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+                  <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
                     <div className="h-1 bg-gradient-to-r from-violet-500 to-purple-500" />
-                    <CardHeader className="border-b border-slate-100 py-3 px-4">
-                      <CardTitle className="text-sm text-slate-800">Target Pharmacy (for stock check)</CardTitle>
+                    <CardHeader className="border-b border-border py-3 px-4">
+                      <CardTitle className="text-sm text-foreground">Target Pharmacy (for stock check)</CardTitle>
                     </CardHeader>
                     <CardContent className="p-4">
                       <div className="relative">
-                        <FiSearch className="absolute left-3 top-3 text-slate-400 h-4 w-4" />
+                        <FiSearch className="absolute left-3 top-3 text-muted-foreground h-4 w-4" />
                         <Input
                           placeholder="Search pharmacy by name..."
                           className="pl-9"
@@ -623,13 +623,13 @@ function CreateConsultationPage() {
                               setPharmacySearch('');
                               setAgentReport(null);
                             }}
-                            className="absolute right-3 top-3 text-slate-400 hover:text-rose-500"
+                            className="absolute right-3 top-3 text-muted-foreground hover:text-rose-500"
                           >
                             <FiTrash2 className="h-4 w-4" />
                           </button>
                         )}
                         {showPharmacyDropdown && !selectedPharmacyId && pharmacyList && pharmacyList.length > 0 && (
-                          <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          <div className="absolute z-20 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                             {pharmacyList.map((ph) => (
                               <button
                                 key={ph.id}
@@ -643,7 +643,7 @@ function CreateConsultationPage() {
                                 className="w-full text-left px-3 py-2 hover:bg-violet-50 text-sm"
                               >
                                 <span className="font-medium">{ph.name}</span>
-                                <span className="text-slate-400 ml-2 text-xs">{ph.address}</span>
+                                <span className="text-muted-foreground ml-2 text-xs">{ph.address}</span>
                               </button>
                             ))}
                           </div>
@@ -655,7 +655,7 @@ function CreateConsultationPage() {
                         </p>
                       )}
                       {!selectedPharmacyId && (
-                        <p className="text-xs text-slate-400 mt-1.5">
+                        <p className="text-xs text-muted-foreground mt-1.5">
                           Optional — select a pharmacy to check medicine stock availability.
                         </p>
                       )}
@@ -663,33 +663,33 @@ function CreateConsultationPage() {
                   </Card>
 
                   {/* Medicine entries */}
-                  <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+                  <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
                     <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
-                    <CardHeader className="border-b border-slate-100">
-                      <CardTitle className="text-lg text-slate-800">Prescribed Medicines</CardTitle>
+                    <CardHeader className="border-b border-border">
+                      <CardTitle className="text-lg text-foreground">Prescribed Medicines</CardTitle>
                     </CardHeader>
                     <CardContent className="p-4 space-y-4">
                       {medicines.map((entry, idx) => (
                         <div
                           key={idx}
-                          className="border border-slate-200 rounded-xl p-4 space-y-3 bg-slate-50/50 relative"
+                          className="border border-border rounded-xl p-4 space-y-3 bg-background/50 relative"
                         >
                           {medicines.length > 1 && (
                             <button
                               type="button"
                               onClick={() => removeMedicineRow(idx)}
-                              className="absolute top-3 right-3 text-slate-400 hover:text-rose-500"
+                              className="absolute top-3 right-3 text-muted-foreground hover:text-rose-500"
                             >
                               <FiTrash2 className="h-4 w-4" />
                             </button>
                           )}
                           {/* Medicine search */}
                           <div className="relative">
-                            <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                            <label className="text-xs font-semibold text-muted-foreground mb-1 block">
                               Medicine #{idx + 1}
                             </label>
                             <div className="relative">
-                              <FiSearch className="absolute left-3 top-3 text-slate-400 h-4 w-4" />
+                              <FiSearch className="absolute left-3 top-3 text-muted-foreground h-4 w-4" />
                               <Input
                                 placeholder="Search medicine..."
                                 className="pl-9"
@@ -703,7 +703,7 @@ function CreateConsultationPage() {
                               />
                             </div>
                             {activeSearch === idx && searchResults && (searchResults as Medicine[]).length > 0 && (
-                              <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                              <div className="absolute z-20 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                 {(searchResults as Medicine[]).map((med) => (
                                   <button
                                     key={med.id}
@@ -712,14 +712,14 @@ function CreateConsultationPage() {
                                     className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm"
                                   >
                                     <span className="font-medium">{med.name}</span>
-                                    <span className="text-slate-400 ml-2">({med.generic_name})</span>
-                                    <span className="text-slate-400 ml-2 text-xs">{med.drug_class}</span>
+                                    <span className="text-muted-foreground ml-2">({med.generic_name})</span>
+                                    <span className="text-muted-foreground ml-2 text-xs">{med.drug_class}</span>
                                   </button>
                                 ))}
                               </div>
                             )}
                             {entry.medicine && (
-                              <p className="text-xs text-emerald-600 mt-1">
+                              <p className="text-xs text-primary mt-1">
                                 Selected: {entry.medicine.name} ({entry.medicine.generic_name})
                               </p>
                             )}
@@ -727,7 +727,7 @@ function CreateConsultationPage() {
                           {/* Dosage / Frequency / Duration */}
                           <div className="grid grid-cols-3 gap-3">
                             <div>
-                              <label className="text-xs font-semibold text-slate-600 mb-1 block">Dosage</label>
+                              <label className="text-xs font-semibold text-muted-foreground mb-1 block">Dosage</label>
                               <Input
                                 placeholder="e.g. 500mg"
                                 value={entry.dosage}
@@ -735,7 +735,7 @@ function CreateConsultationPage() {
                               />
                             </div>
                             <div>
-                              <label className="text-xs font-semibold text-slate-600 mb-1 block">Frequency</label>
+                              <label className="text-xs font-semibold text-muted-foreground mb-1 block">Frequency</label>
                               <Input
                                 placeholder="e.g. 3 times daily"
                                 value={entry.frequency}
@@ -743,7 +743,7 @@ function CreateConsultationPage() {
                               />
                             </div>
                             <div>
-                              <label className="text-xs font-semibold text-slate-600 mb-1 block">Duration (days)</label>
+                              <label className="text-xs font-semibold text-muted-foreground mb-1 block">Duration (days)</label>
                               <Input
                                 type="number"
                                 min={1}
@@ -755,7 +755,7 @@ function CreateConsultationPage() {
                           {/* Quantity / Instructions */}
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="text-xs font-semibold text-slate-600 mb-1 block">Quantity</label>
+                              <label className="text-xs font-semibold text-muted-foreground mb-1 block">Quantity</label>
                               <Input
                                 type="number"
                                 min={1}
@@ -764,7 +764,7 @@ function CreateConsultationPage() {
                               />
                             </div>
                             <div>
-                              <label className="text-xs font-semibold text-slate-600 mb-1 block">Special Instructions</label>
+                              <label className="text-xs font-semibold text-muted-foreground mb-1 block">Special Instructions</label>
                               <Input
                                 placeholder="e.g. After meals"
                                 value={entry.special_instructions}
@@ -834,20 +834,20 @@ function CreateConsultationPage() {
             <div className="space-y-4">
               {/* Patient info card */}
               {patient && (
-                <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md">
+                <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
                         <FiUser className="h-5 w-5 text-blue-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-900">{patient.name}</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="font-semibold text-foreground">{patient.name}</p>
+                        <p className="text-xs text-muted-foreground">
                           {patient.age} yrs &middot; {patient.gender} &middot; {patient.blood_group}
                         </p>
                       </div>
                     </div>
-                    <div className="text-xs text-slate-500 space-y-0.5">
+                    <div className="text-xs text-muted-foreground space-y-0.5">
                       <p>ID: {patient.unique_patient_id}</p>
                       <p>District: {patient.district}</p>
                       <p>Visits: {patient.visit_count}</p>
@@ -858,10 +858,10 @@ function CreateConsultationPage() {
 
               {/* AI Agent report */}
               {includePrescription && !agentReport && !validateMutation.isPending && (
-                <Card className="border-0 shadow-lg bg-slate-50/80 backdrop-blur-md">
+                <Card className="border-0 shadow-lg bg-background/80 backdrop-blur-md">
                   <CardContent className="p-8 text-center">
                     <FiShield className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-400 text-sm">
+                    <p className="text-muted-foreground text-sm">
                       Add medicines and click &quot;Validate Prescription&quot; to run AI safety checks.
                     </p>
                   </CardContent>
@@ -888,7 +888,7 @@ function CreateConsultationPage() {
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3 mb-3">
-                        {agentReport.overall_status === 'safe' && <FiCheckCircle className="h-8 w-8 text-emerald-600" />}
+                        {agentReport.overall_status === 'safe' && <FiCheckCircle className="h-8 w-8 text-primary" />}
                         {agentReport.overall_status === 'warning' && <FiAlertTriangle className="h-8 w-8 text-amber-600" />}
                         {agentReport.overall_status === 'blocked' && <FiAlertCircle className="h-8 w-8 text-rose-600" />}
                         <div>
@@ -898,7 +898,7 @@ function CreateConsultationPage() {
                             {agentReport.overall_status}
                           </span>
                           {agentReport.agent_unavailable && (
-                            <span className="ml-2 text-xs text-slate-500">(AI unavailable)</span>
+                            <span className="ml-2 text-xs text-muted-foreground">(AI unavailable)</span>
                           )}
                         </div>
                       </div>
@@ -910,14 +910,14 @@ function CreateConsultationPage() {
 
                   {/* Per-medicine reports */}
                   {agentReport.medicines.length > 0 && (
-                    <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md">
+                    <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-semibold text-slate-700">Medicine Analysis</CardTitle>
+                        <CardTitle className="text-sm font-semibold text-foreground/80">Medicine Analysis</CardTitle>
                       </CardHeader>
                       <CardContent className="p-3 space-y-2">
                         {agentReport.medicines.map((med, idx) => (
-                          <div key={idx} className="border border-slate-100 rounded-lg p-3 space-y-1.5">
-                            <p className="font-semibold text-sm text-slate-800">{med.medicine_name}</p>
+                          <div key={idx} className="border border-border rounded-lg p-3 space-y-1.5">
+                            <p className="font-semibold text-sm text-foreground">{med.medicine_name}</p>
                             {med.allergy_conflict && (
                               <p className="text-xs bg-rose-50 text-rose-700 px-2 py-1 rounded">
                                 Allergy: {med.allergy_detail}
@@ -934,12 +934,12 @@ function CreateConsultationPage() {
                               </p>
                             )}
                             {med.recommendation && (
-                              <p className="text-xs text-slate-600 italic">{med.recommendation}</p>
+                              <p className="text-xs text-muted-foreground italic">{med.recommendation}</p>
                             )}
                             {!med.allergy_conflict &&
                               med.dosage_status === 'appropriate' &&
                               med.stock_status === 'in_stock' && (
-                                <p className="text-xs text-emerald-600">All checks passed</p>
+                                <p className="text-xs text-primary">All checks passed</p>
                               )}
                           </div>
                         ))}
@@ -949,24 +949,24 @@ function CreateConsultationPage() {
 
                   {/* Drug interactions */}
                   {agentReport.drug_interactions.length > 0 && (
-                    <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md">
+                    <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-semibold text-slate-700">Drug Interactions</CardTitle>
+                        <CardTitle className="text-sm font-semibold text-foreground/80">Drug Interactions</CardTitle>
                       </CardHeader>
                       <CardContent className="p-3 space-y-2">
                         {agentReport.drug_interactions.map((inter, idx) => (
-                          <div key={idx} className="border border-slate-100 rounded-lg p-3">
+                          <div key={idx} className="border border-border rounded-lg p-3">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-sm font-medium text-slate-800">
+                              <span className="text-sm font-medium text-foreground">
                                 {inter.medicine_a} + {inter.medicine_b}
                               </span>
                               <span
-                                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${SEVERITY_COLORS[inter.severity] || 'bg-slate-100 text-slate-600'}`}
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${SEVERITY_COLORS[inter.severity] || 'bg-muted text-muted-foreground'}`}
                               >
                                 {inter.severity}
                               </span>
                             </div>
-                            <p className="text-xs text-slate-600">{inter.detail}</p>
+                            <p className="text-xs text-muted-foreground">{inter.detail}</p>
                           </div>
                         ))}
                       </CardContent>
@@ -981,12 +981,12 @@ function CreateConsultationPage() {
                       </CardHeader>
                       <CardContent className="p-3 space-y-2">
                         {agentReport.alternatives.map((alt, idx) => (
-                          <div key={idx} className="bg-white/80 rounded-lg p-3 border border-blue-100">
-                            <p className="text-xs text-slate-500">
-                              Instead of <span className="font-semibold text-slate-700">{alt.replaces}</span>
+                          <div key={idx} className="bg-card/80 rounded-lg p-3 border border-blue-100">
+                            <p className="text-xs text-muted-foreground">
+                              Instead of <span className="font-semibold text-foreground/80">{alt.replaces}</span>
                             </p>
                             <p className="text-sm font-semibold text-blue-700 mt-0.5">{alt.suggested_alternative}</p>
-                            <p className="text-xs text-slate-600 mt-0.5">{alt.reason}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{alt.reason}</p>
                           </div>
                         ))}
                       </CardContent>
@@ -1018,10 +1018,10 @@ function CreateConsultationPage() {
 
               {/* When prescription is off, show a simpler info card */}
               {!includePrescription && (
-                <Card className="border-0 shadow-lg bg-slate-50/80 backdrop-blur-md">
+                <Card className="border-0 shadow-lg bg-background/80 backdrop-blur-md">
                   <CardContent className="p-6 text-center">
                     <FiPackage className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-400 text-sm">
+                    <p className="text-muted-foreground text-sm">
                       Toggle &quot;Add Digital Prescription&quot; to include medicines with AI safety validation.
                     </p>
                   </CardContent>

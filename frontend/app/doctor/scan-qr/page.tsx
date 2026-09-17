@@ -193,7 +193,7 @@ function ScanQRPage() {
         {/* Loading Overlay */}
         {isLoading && (
           <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
-            <div className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4">
+            <div className="bg-card rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4">
               <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
               <p className="text-sm font-medium text-text-dark">Fetching patient records...</p>
             </div>
@@ -201,8 +201,8 @@ function ScanQRPage() {
         )}
 
         {!patientData && (
-          <Card className="border-0 shadow-xl overflow-hidden bg-white/90 backdrop-blur-md">
-            <div className="h-1.5 bg-gradient-to-r from-primary to-teal-400"></div>
+          <Card className="border-0 shadow-xl overflow-hidden bg-card/90 backdrop-blur-md">
+            <div className="h-1.5 bg-gradient-to-r from-primary to-emerald-400"></div>
 
             {/* Tab Switcher */}
             <div className="flex border-b border-border-light">
@@ -271,7 +271,7 @@ function ScanQRPage() {
                       </div>
                       <div className="space-y-2">
                         <p className="text-text-dark font-semibold">Ready to Scan</p>
-                        <p className="text-text-muted text-sm">Position the patient's health card QR code in front of your camera</p>
+                        <p className="text-text-muted text-sm">Position the patient&apos;s health card QR code in front of your camera</p>
                       </div>
                       <Button
                         onClick={startScanning}
@@ -355,7 +355,7 @@ function ScanQRPage() {
                           placeholder="e.g. HS-202X-XXXXX"
                           value={manualPatientId}
                           onChange={(e) => setManualPatientId(e.target.value.toUpperCase())}
-                          className="pl-11 font-mono text-sm uppercase h-14 rounded-2xl border-border-light focus:border-primary bg-light-bg/50 focus:bg-white"
+                          className="pl-11 font-mono text-sm uppercase h-14 rounded-2xl border-border-light focus:border-primary bg-light-bg/50 focus:bg-card"
                         />
                       </div>
                     </div>
@@ -377,7 +377,7 @@ function ScanQRPage() {
                       <div>
                         <p className="text-xs font-semibold text-text-dark">Where to find the Patient ID?</p>
                         <p className="text-xs text-text-muted mt-1">
-                          The Universal Patient ID is printed on the patient's health card, starting with "HS-"
+                          The Universal Patient ID is printed on the patient&apos;s health card, starting with &quot;HS-&quot;
                         </p>
                       </div>
                     </div>
@@ -409,8 +409,8 @@ function ScanQRPage() {
             </div>
 
             {/* Patient Info Card */}
-            <Card className="border-0 shadow-xl overflow-hidden bg-gradient-to-br from-primary/5 via-teal-50 to-primary/5">
-              <div className="h-1.5 bg-gradient-to-r from-primary to-teal-400"></div>
+            <Card className="border-0 shadow-xl overflow-hidden bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5">
+              <div className="h-1.5 bg-gradient-to-r from-primary to-emerald-400"></div>
               <CardContent className="p-6 md:p-8">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="flex items-center gap-5">
@@ -449,7 +449,7 @@ function ScanQRPage() {
                     </div>
                   </div>
                   {patientData.patient?.phone && (
-                    <div className="bg-white/80 px-4 py-2.5 rounded-2xl text-sm text-text-dark font-medium border border-border-light shadow-sm">
+                    <div className="bg-card/80 px-4 py-2.5 rounded-2xl text-sm text-text-dark font-medium border border-border-light shadow-sm">
                       📱 {patientData.patient.phone}
                     </div>
                   )}
@@ -483,8 +483,8 @@ function ScanQRPage() {
             <div className="grid gap-6 md:grid-cols-2">
               {/* Vitals Summary */}
               {patientData.latest_vitals && (
-                <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-md overflow-hidden">
-                  <div className="h-1 bg-gradient-to-r from-primary to-teal-400"></div>
+                <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
+                  <div className="h-1 bg-gradient-to-r from-primary to-emerald-400"></div>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2 text-text-dark">
                       <FiActivity className="text-primary" /> {t('current_vitals')}
@@ -544,7 +544,7 @@ function ScanQRPage() {
                   <CardContent>
                     <div className="space-y-2">
                       {patientData.allergies.map((allergy: any, idx: number) => (
-                        <div key={idx} className="flex items-center gap-3 bg-white/70 p-3 rounded-xl border border-red-100/50">
+                        <div key={idx} className="flex items-center gap-3 bg-card/70 p-3 rounded-xl border border-red-100/50">
                           <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></div>
                           <p className="text-sm text-red-800 font-medium">
                             {allergy.allergen} <span className="text-red-500 font-normal">— {allergy.reaction_type}</span>
@@ -568,7 +568,7 @@ function ScanQRPage() {
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
                       {patientData.chronic_conditions.map((condition: any, idx: number) => (
-                        <span key={idx} className="px-3.5 py-2 bg-white/80 text-amber-800 text-sm font-semibold rounded-full border border-amber-200 shadow-sm">
+                        <span key={idx} className="px-3.5 py-2 bg-card/80 text-amber-800 text-sm font-semibold rounded-full border border-amber-200 shadow-sm">
                           {condition.disease_name || condition.condition_name}
                         </span>
                       ))}
@@ -579,8 +579,8 @@ function ScanQRPage() {
             </div>
 
             {/* Medical Records */}
-            <Card className="border-0 shadow-xl overflow-hidden bg-white/90 backdrop-blur-md">
-              <div className="h-1.5 bg-gradient-to-r from-primary to-teal-400"></div>
+            <Card className="border-0 shadow-xl overflow-hidden bg-card/90 backdrop-blur-md">
+              <div className="h-1.5 bg-gradient-to-r from-primary to-emerald-400"></div>
               <CardHeader className="border-b border-border-light">
                 <CardTitle className="text-text-dark flex items-center gap-2">
                   <span className="text-2xl">📋</span> {t('medical_records_history')}
@@ -591,7 +591,7 @@ function ScanQRPage() {
                 {patientData.visit_records && patientData.visit_records.length > 0 ? (
                   <div className="space-y-5">
                     {patientData.visit_records.map((record: any) => (
-                      <div key={record.id} className="relative pl-6 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary/20 hover:before:bg-primary before:transition-colors before:rounded-full bg-white p-6 rounded-2xl shadow-sm border border-border-light hover:shadow-md transition-all">
+                      <div key={record.id} className="relative pl-6 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary/20 hover:before:bg-primary before:transition-colors before:rounded-full bg-card p-6 rounded-2xl shadow-sm border border-border-light hover:shadow-md transition-all">
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-2">
                           <div>
                             <p className="font-bold text-lg text-text-dark">Dr. {record.doctor_name}</p>
@@ -634,7 +634,7 @@ function ScanQRPage() {
                           {record.doctor_notes && (
                             <div className="bg-amber-50/50 border-l-2 border-amber-300 pl-3 py-2 rounded-r-xl">
                               <p className="text-xs font-bold text-amber-700 uppercase mb-1 tracking-wider">{t('doctor_notes')}</p>
-                              <p className="text-sm text-amber-900 italic">"{record.doctor_notes}"</p>
+                              <p className="text-sm text-amber-900 italic">&quot;{record.doctor_notes}&quot;</p>
                             </div>
                           )}
 
@@ -669,7 +669,7 @@ function ScanQRPage() {
                   // Fallback to old medical records format
                   <div className="space-y-5">
                     {patientData.medical_records.map((record: any) => (
-                      <div key={record.id} className="relative pl-6 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary/20 hover:before:bg-primary before:transition-colors before:rounded-full bg-white p-6 rounded-2xl shadow-sm border border-border-light hover:shadow-md transition-all">
+                      <div key={record.id} className="relative pl-6 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary/20 hover:before:bg-primary before:transition-colors before:rounded-full bg-card p-6 rounded-2xl shadow-sm border border-border-light hover:shadow-md transition-all">
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <p className="text-sm text-text-muted font-medium mb-1">
@@ -725,7 +725,7 @@ function ScanQRPage() {
 
             {/* Prescriptions */}
             {patientData.prescriptions && patientData.prescriptions.length > 0 && (
-              <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-md overflow-hidden">
+              <Card className="border-0 shadow-xl bg-card/90 backdrop-blur-md overflow-hidden">
                 <div className="h-1 bg-gradient-to-r from-violet-400 to-purple-400"></div>
                 <CardHeader>
                   <CardTitle className="text-text-dark flex items-center gap-2">

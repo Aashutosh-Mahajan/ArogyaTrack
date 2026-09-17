@@ -117,15 +117,15 @@ function CreatePatientRecordPage() {
     return (
       <DashboardLayout>
         <div className="max-w-2xl mx-auto mt-12 text-center space-y-6">
-          <Card className="bg-emerald-50/50 border border-emerald-100 shadow-xl shadow-emerald-50/50 backdrop-blur-md">
+          <Card className="bg-primary/8 border border-primary/15 shadow-xl shadow-emerald-50/50 backdrop-blur-md">
             <CardContent className="p-12">
               <div className="bg-emerald-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                <FiCheckCircle className="h-12 w-12 text-emerald-600" />
+                <FiCheckCircle className="h-12 w-12 text-primary" />
               </div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-3">
+              <h2 className="text-3xl font-bold text-foreground mb-3">
                 {t('record_saved_success')}
               </h2>
-              <p className="text-slate-600 mb-8 max-w-md mx-auto text-lg">
+              <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
                 {t('record_saved_desc')}
               </p>
               <div className="flex justify-center gap-4">
@@ -146,16 +146,16 @@ function CreatePatientRecordPage() {
       <div className="max-w-4xl mx-auto space-y-8 pb-12">
         <div className="text-center sm:text-left flex flex-col sm:flex-row items-center gap-4">
           <Button variant="ghost" className="shrink-0" onClick={handleBackToPatient}>
-            <FiArrowLeft className="h-6 w-6 text-slate-500" />
+            <FiArrowLeft className="h-6 w-6 text-muted-foreground" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
               <span className="p-2 bg-blue-100 rounded-lg text-blue-600">
                 <FiEdit3 className="h-8 w-8" />
               </span>
               {t('add_record_title')}
             </h1>
-            <p className="text-slate-500 mt-2 text-lg">
+            <p className="text-muted-foreground mt-2 text-lg">
               {patient ? `${patient.name} (${patient.unique_patient_id})` : t('add_record_subtitle')}
             </p>
           </div>
@@ -164,26 +164,26 @@ function CreatePatientRecordPage() {
         <form onSubmit={handleSubmit}>
           <div className="grid gap-8">
             {/* Date Section (Patient is fixed) */}
-            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+            <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
               <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
-                <CardTitle className="flex items-center gap-2 text-xl text-slate-800">
+              <CardHeader className="bg-background/50 border-b border-border pb-4">
+                <CardTitle className="flex items-center gap-2 text-xl text-foreground">
                   <FiCalendar className="h-5 w-5 text-blue-500" />
                   {t('visit_details')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 block">
+                  <label className="text-sm font-medium text-foreground/80 block">
                     {t('visit_date')}
                   </label>
                   <div className="relative">
-                    <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       type="datetime-local"
                       value={visitDate}
                       onChange={(e) => setVisitDate(e.target.value)}
-                      className="pl-10 h-12 rounded-xl border-slate-200 focus:ring-2 focus:ring-blue-500"
+                      className="pl-10 h-12 rounded-xl border-border focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
@@ -191,24 +191,24 @@ function CreatePatientRecordPage() {
             </Card>
 
             {/* Clinical Details */}
-            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
-              <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
-                <CardTitle className="flex items-center gap-2 text-xl text-slate-800">
+            <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-emerald-500 to-primary" />
+              <CardHeader className="bg-background/50 border-b border-border pb-4">
+                <CardTitle className="flex items-center gap-2 text-xl text-foreground">
                   <FiActivity className="h-5 w-5 text-emerald-500" />
                   Clinical Information
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 block">
+                  <label className="text-sm font-medium text-foreground/80 block">
                     {t('diagnosis')} <span className="text-rose-500">*</span>
                   </label>
                   <textarea
                     value={diagnosis}
                     onChange={(e) => setDiagnosis(e.target.value)}
                     rows={2}
-                    className="w-full rounded-xl border border-slate-200 p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
+                    className="w-full rounded-xl border border-border p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
                     placeholder="e.g. Acute Viral Fever"
                     required
                   />
@@ -216,59 +216,59 @@ function CreatePatientRecordPage() {
 
                 <div className="grid gap-6 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700 block">
+                    <label className="text-sm font-medium text-foreground/80 block">
                       {t('prescription')}
                     </label>
                     <textarea
                       value={prescription}
                       onChange={(e) => setPrescription(e.target.value)}
                       rows={4}
-                      className="w-full rounded-xl border border-slate-200 p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
+                      className="w-full rounded-xl border border-border p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
                       placeholder="e.g. Tab Paracetamol 500mg"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700 block">
+                    <label className="text-sm font-medium text-foreground/80 block">
                       {t('tests_performed')}
                     </label>
                     <textarea
                       value={testsPerformed}
                       onChange={(e) => setTestsPerformed(e.target.value)}
                       rows={4}
-                      className="w-full rounded-xl border border-slate-200 p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
+                      className="w-full rounded-xl border border-border p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
                       placeholder="e.g. CBC, Widal"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 block">
+                  <label className="text-sm font-medium text-foreground/80 block">
                     {t('doctor_notes')}
                   </label>
                   <textarea
                     value={doctorNotes}
                     onChange={(e) => setDoctorNotes(e.target.value)}
                     rows={3}
-                    className="w-full rounded-xl border border-slate-200 p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
+                    className="w-full rounded-xl border border-border p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
                     placeholder="Additional observation notes..."
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700 block">
+                  <label className="text-sm font-medium text-foreground/80 block">
                     {t('status')}
                   </label>
                   <div className="relative">
                     <select
                       value={visitStatus}
                       onChange={(e) => setVisitStatus(e.target.value)}
-                      className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all appearance-none"
+                      className="w-full pl-4 pr-10 py-3 rounded-xl border border-border bg-card focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all appearance-none"
                     >
                       {STATUS_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
                       ))}
                     </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"> <path fillRule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" /> </svg>
                     </div>
                   </div>
@@ -277,10 +277,10 @@ function CreatePatientRecordPage() {
             </Card>
 
             {/* File Upload */}
-            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-md overflow-hidden">
+            <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
               <div className="h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
-                <CardTitle className="flex items-center gap-2 text-xl text-slate-800">
+              <CardHeader className="bg-background/50 border-b border-border pb-4">
+                <CardTitle className="flex items-center gap-2 text-xl text-foreground">
                   <FiFileText className="h-5 w-5 text-purple-500" />
                   {t('upload_reports')}
                 </CardTitle>
@@ -291,14 +291,14 @@ function CreatePatientRecordPage() {
                     {reportFiles.map((file, idx) => (
                       <div
                         key={`${file.name}-${idx}`}
-                        className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 bg-slate-50 transition-all hover:border-purple-200 hover:bg-purple-50/50"
+                        className="flex items-center gap-3 rounded-xl border border-border px-4 py-3 bg-background transition-all hover:border-purple-200 hover:bg-purple-50/50"
                       >
                         <div className="h-10 w-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           <FiFile className="h-5 w-5 text-purple-600" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-700 truncate">{file.name}</p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-sm font-medium text-foreground/80 truncate">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">
                             {(file.size / 1024 / 1024).toFixed(2)} MB
                           </p>
                         </div>
@@ -309,7 +309,7 @@ function CreatePatientRecordPage() {
                               prev.filter((_, i) => i !== idx)
                             )
                           }
-                          className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-full transition-colors"
+                          className="text-muted-foreground hover:text-rose-500 hover:bg-rose-50 p-2 rounded-full transition-colors"
                         >
                           <FiX className="h-4 w-4" />
                         </button>
@@ -321,16 +321,16 @@ function CreatePatientRecordPage() {
                 {reportFiles.length < MAX_REPORT_FILES && (
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="group cursor-pointer border-2 border-dashed border-slate-300 rounded-xl p-8 transition-all hover:border-purple-400 hover:bg-purple-50/30 flex flex-col items-center justify-center text-center space-y-3"
+                    className="group cursor-pointer border-2 border-dashed border-border rounded-xl p-8 transition-all hover:border-purple-400 hover:bg-purple-50/30 flex flex-col items-center justify-center text-center space-y-3"
                   >
-                    <div className="h-12 w-12 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
-                      <FiUpload className="h-6 w-6 text-slate-400 group-hover:text-purple-600" />
+                    <div className="h-12 w-12 bg-muted rounded-full flex items-center justify-center group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
+                      <FiUpload className="h-6 w-6 text-muted-foreground group-hover:text-purple-600" />
                     </div>
                     <div>
-                      <p className="text-slate-700 font-medium group-hover:text-purple-700 transition-colors">
+                      <p className="text-foreground/80 font-medium group-hover:text-purple-700 transition-colors">
                         {reportFiles.length === 0 ? t('click_upload') : t('add_more_files')}
                       </p>
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         {t('upload_reports_desc')}
                       </p>
                     </div>
