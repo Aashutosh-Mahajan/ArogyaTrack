@@ -30,7 +30,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           flex: 1,
           overflowY: 'auto',
           padding: '24px 28px',
-          background: '#EEF3F2',
+          background: 'hsl(var(--background))',
         }}>
           {children}
         </main>

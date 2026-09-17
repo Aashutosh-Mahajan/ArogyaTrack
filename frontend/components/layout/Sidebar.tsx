@@ -7,6 +7,7 @@ import { useLanguage } from '@/components/providers/LanguageProvider';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/lib/api';
 import type { TranslationKey } from '@/lib/translations';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 /* ─── SVG Icons (20px stroke) ─── */
 const icons: Record<string, React.ReactNode> = {
@@ -229,7 +230,7 @@ export function Sidebar() {
       width: 290,
       minWidth: 290,
       height: '100vh',
-      background: '#081c19',
+      background: '#181410',
       display: 'flex',
       flexDirection: 'column',
       position: 'fixed',
@@ -242,7 +243,7 @@ export function Sidebar() {
       <div style={{
         position: 'absolute', width: 300, height: 300,
         top: -100, left: -80, borderRadius: '50%', pointerEvents: 'none',
-        background: 'radial-gradient(circle, rgba(31,111,106,0.15) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(90,168,140,0.15) 0%, transparent 70%)',
       }} />
       <div style={{
         position: 'absolute', width: 200, height: 200,
@@ -254,9 +255,9 @@ export function Sidebar() {
       <Link href="/" style={{ padding: '28px 26px 22px', display: 'flex', alignItems: 'center', gap: 13, position: 'relative', textDecoration: 'none' }}>
         <div style={{
           width: 57, height: 57, borderRadius: 18,
-          background: 'linear-gradient(135deg, #22856e 0%, #1a6b5a 100%)',
+          background: 'linear-gradient(135deg, #4a8a6f 0%, #3a6f58 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 8px 24px rgba(31,111,106,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
+          boxShadow: '0 8px 24px rgba(90,168,140,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
           flexShrink: 0,
         }}>
           <svg width="29" height="29" viewBox="0 0 24 24" fill="none">
@@ -302,10 +303,10 @@ export function Sidebar() {
                 fontSize: 15, fontWeight: active ? 600 : 450,
                 color: active ? '#ffffff' : 'rgba(255,255,255,0.9)',
                 background: active
-                  ? 'linear-gradient(135deg, rgba(31,111,106,0.55) 0%, rgba(34,133,110,0.35) 100%)'
+                  ? 'linear-gradient(135deg, rgba(90,168,140,0.55) 0%, rgba(90,168,140,0.35) 100%)'
                   : 'transparent',
                 boxShadow: active
-                  ? '0 4px 16px rgba(31,111,106,0.2), inset 0 1px 0 rgba(255,255,255,0.06)'
+                  ? '0 4px 16px rgba(90,168,140,0.2), inset 0 1px 0 rgba(255,255,255,0.06)'
                   : 'none',
                 borderLeft: '3px solid transparent',
                 position: 'relative',
@@ -348,6 +349,12 @@ export function Sidebar() {
 
       {/* ── Bottom Separator ── */}
       <div style={{ margin: '0 22px', height: 1, background: 'rgba(255,255,255,0.06)' }} />
+
+      {/* ── Theme toggle ── */}
+      <div style={{ padding: '14px 26px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>Appearance</span>
+        <ThemeToggle className="text-white/80" />
+      </div>
 
       {/* ── Logout ── */}
       <div style={{ padding: '12px 14px 24px', position: 'relative' }}>
