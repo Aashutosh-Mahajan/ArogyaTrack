@@ -17,21 +17,21 @@ function LoadingSkeleton({ height = 'h-[200px]', rows }: { height?: string; rows
     return (
       <div className="space-y-3 animate-pulse">
         {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex items-center justify-between p-3 bg-gray-100/50 rounded-lg">
+          <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
             <div className="space-y-2 flex-1">
-              <div className="h-4 bg-gray-200 rounded w-1/3" />
-              <div className="h-3 bg-gray-200 rounded w-1/4" />
+              <div className="h-4 bg-muted rounded w-1/3" />
+              <div className="h-3 bg-muted rounded w-1/4" />
             </div>
-            <div className="h-6 bg-gray-200 rounded w-16" />
+            <div className="h-6 bg-muted rounded w-16" />
           </div>
         ))}
       </div>
     );
   }
   return (
-    <div className={`${height} bg-gray-100/50 animate-pulse rounded-lg flex items-center justify-center`}>
+    <div className={`${height} bg-muted/50 animate-pulse rounded-lg flex items-center justify-center`}>
       <div className="flex flex-col items-center gap-2">
-        <FiActivity className="h-6 w-6 text-gray-400 animate-spin" />
+        <FiActivity className="h-6 w-6 text-muted-foreground animate-spin" />
       </div>
     </div>
   );
@@ -78,19 +78,19 @@ function AlertsPage(): React.JSX.Element {
       critical: 'bg-rose-100 text-rose-800 border-rose-200 hover:bg-rose-200',
       high: 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200',
       medium: 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200',
-      low: 'bg-slate-100 text-slate-800 border-slate-200 hover:bg-slate-200',
+      low: 'bg-muted text-foreground border-border hover:bg-muted',
     };
-    return map[severity] || 'bg-slate-100 text-slate-800 border-slate-200';
+    return map[severity] || 'bg-muted text-foreground border-border';
   };
 
   const getStatusColor = (status: string) => {
     const map: Record<string, string> = {
       active: 'bg-rose-50 text-rose-700 border-rose-100',
       acknowledged: 'bg-amber-50 text-amber-700 border-amber-100',
-      resolved: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-      false_positive: 'bg-slate-50 text-slate-600 border-slate-100',
+      resolved: 'bg-primary/8 text-primary border-primary/15',
+      false_positive: 'bg-background text-muted-foreground border-border',
     };
-    return map[status] || 'bg-gray-50 text-gray-600 border-gray-100';
+    return map[status] || 'bg-background text-muted-foreground border-border';
   };
 
   return (
@@ -98,23 +98,23 @@ function AlertsPage(): React.JSX.Element {
       <div className="space-y-6 pb-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">{t('alerts_management_title')}</h1>
-            <p className="text-slate-600 mt-1">{t('alerts_management_desc')}</p>
+            <h1 className="text-3xl font-bold text-foreground">{t('alerts_management_title')}</h1>
+            <p className="text-muted-foreground mt-1">{t('alerts_management_desc')}</p>
           </div>
           <Button
             variant="outline"
             onClick={() => refetch()}
-            className="bg-white/80 backdrop-blur-sm border-slate-200 hover:bg-slate-50 shadow-sm"
+            className="bg-card/80 backdrop-blur-sm border-border hover:bg-background shadow-sm"
           >
             <FiRefreshCw className="mr-2 h-4 w-4" /> {t('refresh_data')}
           </Button>
         </div>
 
         {/* Filters */}
-        <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-md overflow-hidden">
+        <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-rose-400 to-orange-400" />
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4">
-            <CardTitle className="flex items-center text-base text-slate-800">
+          <CardHeader className="bg-background/50 border-b border-border py-4">
+            <CardTitle className="flex items-center text-base text-foreground">
               <FiFilter className="mr-2 text-rose-500" /> {t('filters')}
             </CardTitle>
           </CardHeader>
@@ -123,7 +123,7 @@ function AlertsPage(): React.JSX.Element {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-rose-500 outline-none"
+                className="px-3 py-2 border border-border rounded-xl text-sm bg-card focus:ring-2 focus:ring-rose-500 outline-none"
               >
                 <option value="">{t('all_status')}</option>
                 <option value="active">{t('active')}</option>
@@ -134,7 +134,7 @@ function AlertsPage(): React.JSX.Element {
               <select
                 value={severityFilter}
                 onChange={(e) => setSeverityFilter(e.target.value)}
-                className="px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-rose-500 outline-none"
+                className="px-3 py-2 border border-border rounded-xl text-sm bg-card focus:ring-2 focus:ring-rose-500 outline-none"
               >
                 <option value="">{t('all_severity')}</option>
                 <option value="critical">{t('critical')}</option>
@@ -142,9 +142,9 @@ function AlertsPage(): React.JSX.Element {
                 <option value="medium">{t('medium')}</option>
                 <option value="low">{t('low')}</option>
               </select>
-              <div className="sm:ml-auto flex items-center px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
-                <FiAlertTriangle className="mr-2 text-slate-400" />
-                <span className="text-sm font-medium text-slate-600">
+              <div className="sm:ml-auto flex items-center px-4 py-2 bg-background rounded-xl border border-border">
+                <FiAlertTriangle className="mr-2 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">
                   {alerts?.count || 0} {t('alerts_found')}
                 </span>
               </div>
@@ -158,7 +158,7 @@ function AlertsPage(): React.JSX.Element {
             <LoadingSkeleton rows={5} />
           ) : alerts?.results && alerts.results.length > 0 ? (
             alerts.results.map((alert) => (
-              <Card key={alert.id} className={`border-0 shadow-md transition-shadow hover:shadow-lg ${alert.status === 'active' ? 'bg-rose-50/30' : 'bg-white'}`}>
+              <Card key={alert.id} className={`border-0 shadow-md transition-shadow hover:shadow-lg ${alert.status === 'active' ? 'bg-rose-50/30' : 'bg-card'}`}>
                 <CardContent className="p-5">
                   <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <div className="flex-1 space-y-3">
@@ -166,21 +166,21 @@ function AlertsPage(): React.JSX.Element {
                         <Badge variant="outline" className={`${getSeverityBadge(alert.severity)} uppercase tracking-wider font-bold`}>
                           {alert.severity}
                         </Badge>
-                        <Badge variant="outline" className="bg-white text-slate-600 border-slate-200">{alert.alert_type}</Badge>
+                        <Badge variant="outline" className="bg-card text-muted-foreground border-border">{alert.alert_type}</Badge>
                         <span className={`text-xs px-2.5 py-0.5 rounded-full border font-medium ${getStatusColor(alert.status)}`}>
                           {alert.status_display || alert.status}
                         </span>
-                        <span className="text-xs text-slate-400 font-mono bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
+                        <span className="text-xs text-muted-foreground font-mono bg-background px-2 py-0.5 rounded border border-border">
                           {t('confidence')}: {(alert.confidence * 100).toFixed(0)}%
                         </span>
-                        <span className="text-xs text-slate-400 font-mono bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
+                        <span className="text-xs text-muted-foreground font-mono bg-background px-2 py-0.5 rounded border border-border">
                           {t('level')} {alert.escalation_level}
                         </span>
                       </div>
 
                       <div>
-                        <h3 className="text-lg font-bold text-slate-800 leading-tight">{alert.title}</h3>
-                        <p className="text-sm text-slate-600 mt-1 leading-relaxed">{alert.description}</p>
+                        <h3 className="text-lg font-bold text-foreground leading-tight">{alert.title}</h3>
+                        <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{alert.description}</p>
                       </div>
 
                       {alert.recommended_actions && (
@@ -190,9 +190,9 @@ function AlertsPage(): React.JSX.Element {
                         </div>
                       )}
 
-                      <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                         {alert.affected_regions_data?.map((r) => (
-                          <span key={r.id} className="flex items-center bg-white px-2 py-1 rounded border border-slate-200 shadow-sm text-slate-500">
+                          <span key={r.id} className="flex items-center bg-card px-2 py-1 rounded border border-border shadow-sm text-muted-foreground">
                             <FiMapPin className="mr-1" /> {r.name}
                           </span>
                         ))}
@@ -200,7 +200,7 @@ function AlertsPage(): React.JSX.Element {
                           <FiActivity className="mr-1" /> {new Date(alert.generated_at).toLocaleString()}
                         </span>
                         {alert.acknowledged_by_email && (
-                          <span className="flex items-center text-emerald-600 font-medium">
+                          <span className="flex items-center text-primary font-medium">
                             <FiCheckCircle className="mr-1" /> {t('ack_by')}: {alert.acknowledged_by_email}
                           </span>
                         )}
@@ -238,8 +238,8 @@ function AlertsPage(): React.JSX.Element {
               </Card>
             ))
           ) : (
-            <Card className="border-0 shadow-sm bg-slate-50/50">
-              <CardContent className="py-16 text-center text-slate-400 flex flex-col items-center">
+            <Card className="border-0 shadow-sm bg-background/50">
+              <CardContent className="py-16 text-center text-muted-foreground flex flex-col items-center">
                 <FiAlertTriangle className="h-12 w-12 mb-4 opacity-20" />
                 <p>{t('no_alerts_found')}</p>
               </CardContent>

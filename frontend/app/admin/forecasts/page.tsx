@@ -70,8 +70,8 @@ function ForecastsPage(): React.JSX.Element {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Forecasts</h1>
-            <p className="text-gray-600 mt-1">Prophet time-series forecasting with environmental regressors</p>
+            <h1 className="text-3xl font-bold text-foreground">Forecasts</h1>
+            <p className="text-muted-foreground mt-1">Prophet time-series forecasting with environmental regressors</p>
           </div>
           <div className="flex items-center gap-3">
             <select value={pipelineDisease} onChange={(e) => setPipelineDisease(e.target.value)}
@@ -145,7 +145,7 @@ function ForecastsPage(): React.JSX.Element {
             {chartData.length > 0 ? (
               <ForecastChart data={chartData} />
             ) : (
-              <div className="h-[350px] flex items-center justify-center text-gray-500">
+              <div className="h-[350px] flex items-center justify-center text-muted-foreground">
                 No forecast data available — run the ML pipeline to generate forecasts
               </div>
             )}
@@ -176,14 +176,14 @@ function ForecastsPage(): React.JSX.Element {
                   </thead>
                   <tbody>
                     {forecasts.results.map((f) => (
-                      <tr key={f.id} className="border-b hover:bg-gray-50">
+                      <tr key={f.id} className="border-b hover:bg-background">
                         <td className="py-3">{f.region_details?.name || 'National'}</td>
                         <td className="py-3">{f.disease_name}</td>
                         <td className="py-3">{f.forecast_date}</td>
                         <td className="py-3">{f.prediction_date}</td>
                         <td className="py-3 text-right font-semibold">{Math.round(f.predicted_cases).toLocaleString()}</td>
-                        <td className="py-3 text-right text-gray-500">{Math.round(f.lower_bound).toLocaleString()}</td>
-                        <td className="py-3 text-right text-gray-500">{Math.round(f.upper_bound).toLocaleString()}</td>
+                        <td className="py-3 text-right text-muted-foreground">{Math.round(f.lower_bound).toLocaleString()}</td>
+                        <td className="py-3 text-right text-muted-foreground">{Math.round(f.upper_bound).toLocaleString()}</td>
                         <td className="py-3 text-right font-mono">{(f.confidence * 100).toFixed(0)}%</td>
                         <td className="py-3 text-right">
                           <Badge variant="outline">{f.horizon_days}d</Badge>
@@ -194,7 +194,7 @@ function ForecastsPage(): React.JSX.Element {
                 </table>
               </div>
             ) : (
-              <p className="text-center py-8 text-gray-500">
+              <p className="text-center py-8 text-muted-foreground">
                 No forecast data available. Run the ML pipeline to generate forecasts.
               </p>
             )}

@@ -40,8 +40,8 @@ function ClustersPage(): React.JSX.Element {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Disease Clusters</h1>
-            <p className="text-gray-600 mt-1">DBSCAN geo-clustering analysis results</p>
+            <h1 className="text-3xl font-bold text-foreground">Disease Clusters</h1>
+            <p className="text-muted-foreground mt-1">DBSCAN geo-clustering analysis results</p>
           </div>
           <Button variant="outline" onClick={() => refetch()}>
             <FiRefreshCw className="mr-2 h-4 w-4" /> Refresh
@@ -69,7 +69,7 @@ function ClustersPage(): React.JSX.Element {
                   className="rounded" />
                 Active only
               </label>
-              <span className="text-sm text-gray-500 ml-auto self-center">
+              <span className="text-sm text-muted-foreground ml-auto self-center">
                 {clusters?.count || 0} clusters found
               </span>
             </div>
@@ -93,43 +93,43 @@ function ClustersPage(): React.JSX.Element {
                 <CardContent>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Total Cases</span>
+                      <span className="text-muted-foreground">Total Cases</span>
                       <span className="font-semibold">{cluster.total_cases.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Population</span>
+                      <span className="text-muted-foreground">Population</span>
                       <span className="font-medium">{cluster.total_population?.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Radius</span>
+                      <span className="text-muted-foreground">Radius</span>
                       <span className="font-medium">{cluster.radius_km.toFixed(1)} km</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Centroid</span>
+                      <span className="text-muted-foreground">Centroid</span>
                       <span className="font-mono text-xs">
                         {cluster.centroid_lat.toFixed(4)}, {cluster.centroid_lon.toFixed(4)}
                       </span>
                     </div>
                     {cluster.growth_rate !== null && cluster.growth_rate !== undefined && (
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Growth Rate</span>
+                        <span className="text-muted-foreground">Growth Rate</span>
                         <span className={`font-medium ${cluster.growth_rate > 0 ? 'text-red-600' : 'text-green-600'}`}>
                           {cluster.growth_rate > 0 ? '+' : ''}{cluster.growth_rate.toFixed(1)}%
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Status</span>
+                      <span className="text-muted-foreground">Status</span>
                       <Badge variant={cluster.is_active ? 'destructive' : 'secondary'}>
                         {cluster.is_active ? 'Active' : 'Inactive'}
                       </Badge>
                     </div>
                     {cluster.affected_region_names && cluster.affected_region_names.length > 0 && (
                       <div className="pt-2 border-t">
-                        <p className="text-xs text-gray-500 mb-1">Affected Regions:</p>
+                        <p className="text-xs text-muted-foreground mb-1">Affected Regions:</p>
                         <div className="flex flex-wrap gap-1">
                           {cluster.affected_region_names.map((name, i) => (
-                            <span key={i} className="text-xs bg-gray-100 px-2 py-0.5 rounded">
+                            <span key={i} className="text-xs bg-muted px-2 py-0.5 rounded">
                               {name}
                             </span>
                           ))}
@@ -143,7 +143,7 @@ function ClustersPage(): React.JSX.Element {
           </div>
         ) : (
           <Card>
-            <CardContent className="py-12 text-center text-gray-500">
+            <CardContent className="py-12 text-center text-muted-foreground">
               <FiMapPin className="mx-auto h-12 w-12 text-gray-300 mb-4" />
               <p>No clusters found matching the current filters.</p>
             </CardContent>

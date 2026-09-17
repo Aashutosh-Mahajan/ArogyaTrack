@@ -13,7 +13,7 @@ import { FiTrendingUp, FiShield, FiZap, FiActivity, FiCpu, FiLayers } from 'reac
 import { BarChartComponent } from '@/components/charts/Charts';
 
 const RISK_LEVEL_COLORS: Record<number, string> = {
-  0: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  0: 'bg-emerald-100 text-primary border-emerald-200',
   1: 'bg-amber-100 text-amber-800 border-amber-200',
   2: 'bg-orange-100 text-orange-800 border-orange-200',
   3: 'bg-rose-100 text-rose-800 border-rose-200',
@@ -24,21 +24,21 @@ function LoadingSkeleton({ height = 'h-[300px]', rows }: { height?: string; rows
     return (
       <div className="space-y-3 animate-pulse">
         {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex items-center justify-between p-3 bg-gray-100/50 rounded-lg">
+          <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
             <div className="space-y-2 flex-1">
-              <div className="h-4 bg-gray-200 rounded w-1/3" />
-              <div className="h-3 bg-gray-200 rounded w-1/4" />
+              <div className="h-4 bg-muted rounded w-1/3" />
+              <div className="h-3 bg-muted rounded w-1/4" />
             </div>
-            <div className="h-6 bg-gray-200 rounded w-16" />
+            <div className="h-6 bg-muted rounded w-16" />
           </div>
         ))}
       </div>
     );
   }
   return (
-    <div className={`${height} bg-gray-100/50 animate-pulse rounded-lg flex items-center justify-center`}>
+    <div className={`${height} bg-muted/50 animate-pulse rounded-lg flex items-center justify-center`}>
       <div className="flex flex-col items-center gap-2">
-        <FiActivity className="h-6 w-6 text-gray-400 animate-spin" />
+        <FiActivity className="h-6 w-6 text-muted-foreground animate-spin" />
       </div>
     </div>
   );
@@ -95,13 +95,13 @@ function AnalyticsPage(): React.JSX.Element {
       <div className="space-y-6 pb-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">{t('analytics_title')}</h1>
-            <p className="text-slate-600 mt-1">{t('analytics_subtitle')}</p>
+            <h1 className="text-3xl font-bold text-foreground">{t('analytics_title')}</h1>
+            <p className="text-muted-foreground mt-1">{t('analytics_subtitle')}</p>
           </div>
           <select
             value={selectedDisease}
             onChange={(e) => setSelectedDisease(e.target.value)}
-            className="px-4 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
+            className="px-4 py-2 border border-border rounded-xl text-sm bg-card focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
           >
             <option value="">{t('all_diseases')}</option>
             <option value="A90">Dengue Fever</option>
@@ -117,10 +117,10 @@ function AnalyticsPage(): React.JSX.Element {
         </div>
 
         {/* ML Models Info */}
-        <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-md overflow-hidden">
+        <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100">
-            <CardTitle className="flex items-center text-slate-800">
+          <CardHeader className="bg-background/50 border-b border-border">
+            <CardTitle className="flex items-center text-foreground">
               <FiCpu className="mr-2 text-indigo-600" />
               {t('deployed_ml_models')}
             </CardTitle>
@@ -132,14 +132,14 @@ function AnalyticsPage(): React.JSX.Element {
             ) : mlModels ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {(Array.isArray(mlModels) ? mlModels : []).map((model: any, idx: number) => (
-                  <div key={idx} className="p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-indigo-100 transition-colors">
+                  <div key={idx} className="p-4 bg-background rounded-xl border border-border hover:border-indigo-100 transition-colors">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="font-bold text-sm text-slate-800">{model.name}</p>
-                      <Badge variant={model.loaded ? 'secondary' : 'destructive'} className={model.loaded ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : ''}>
+                      <p className="font-bold text-sm text-foreground">{model.name}</p>
+                      <Badge variant={model.loaded ? 'secondary' : 'destructive'} className={model.loaded ? 'bg-emerald-100 text-primary hover:bg-emerald-200' : ''}>
                         {model.loaded ? t('active') : t('inactive')}
                       </Badge>
                     </div>
-                    <p className="text-xs text-slate-500 mb-2 font-mono bg-slate-100 inline-block px-1.5 py-0.5 rounded">{model.version}</p>
+                    <p className="text-xs text-muted-foreground mb-2 font-mono bg-muted inline-block px-1.5 py-0.5 rounded">{model.version}</p>
                     {model.n_features && (
                       <p className="text-xs text-indigo-600 mb-2 font-medium flex items-center">
                         <FiLayers className="mr-1" />
@@ -147,23 +147,23 @@ function AnalyticsPage(): React.JSX.Element {
                       </p>
                     )}
                     {model.corrector_available !== undefined && (
-                      <p className="text-xs mb-1 text-slate-600">
-                        {t('gb_corrector')}: <span className={model.corrector_available ? 'text-emerald-600 font-bold' : 'text-rose-500 font-bold'}>{model.corrector_available ? 'Yes' : 'No'}</span>
-                        {model.scoring_method && <span className="text-slate-400 ml-1">({model.scoring_method})</span>}
+                      <p className="text-xs mb-1 text-muted-foreground">
+                        {t('gb_corrector')}: <span className={model.corrector_available ? 'text-primary font-bold' : 'text-rose-500 font-bold'}>{model.corrector_available ? 'Yes' : 'No'}</span>
+                        {model.scoring_method && <span className="text-muted-foreground ml-1">({model.scoring_method})</span>}
                       </p>
                     )}
                     {model.xgb_available !== undefined && (
-                      <p className="text-xs mb-1 text-slate-600">
-                        {t('xgboost_component')}: <span className={model.xgb_available ? 'text-emerald-600 font-bold' : 'text-rose-500 font-bold'}>{model.xgb_available ? 'Yes' : 'No'}</span>
+                      <p className="text-xs mb-1 text-muted-foreground">
+                        {t('xgboost_component')}: <span className={model.xgb_available ? 'text-primary font-bold' : 'text-rose-500 font-bold'}>{model.xgb_available ? 'Yes' : 'No'}</span>
                       </p>
                     )}
                     {model.risk_tiers && (
-                      <div className="text-xs mb-2 space-y-1 mt-3 pt-2 border-t border-slate-200">
-                        <p className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider mb-1">{t('risk_tiers')}</p>
+                      <div className="text-xs mb-2 space-y-1 mt-3 pt-2 border-t border-border">
+                        <p className="text-muted-foreground font-semibold uppercase text-[10px] tracking-wider mb-1">{t('risk_tiers')}</p>
                         {Object.entries(model.risk_tiers).map(([tier, range]: [string, any]) => (
                           <div key={tier} className="flex justify-between items-center">
-                            <span className="capitalize text-slate-600 font-medium">{tier}:</span>
-                            <span className="font-mono text-slate-500 bg-slate-100 px-1 rounded text-[10px]">{Array.isArray(range) ? range.join(', ') : range}</span>
+                            <span className="capitalize text-muted-foreground font-medium">{tier}:</span>
+                            <span className="font-mono text-muted-foreground bg-muted px-1 rounded text-[10px]">{Array.isArray(range) ? range.join(', ') : range}</span>
                           </div>
                         ))}
                       </div>
@@ -172,16 +172,16 @@ function AnalyticsPage(): React.JSX.Element {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-slate-400">No ML models found</div>
+              <div className="text-center py-8 text-muted-foreground">No ML models found</div>
             )}
           </CardContent>
         </Card>
 
         {/* Disease Statistics Chart */}
         <div className="grid gap-6 md:grid-cols-2">
-          <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-md overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b border-slate-100">
-              <CardTitle className="flex items-center text-slate-800">
+          <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
+            <CardHeader className="bg-background/50 border-b border-border">
+              <CardTitle className="flex items-center text-foreground">
                 <FiTrendingUp className="mr-2 text-indigo-500" /> {t('disease_case_distribution')}
               </CardTitle>
             </CardHeader>
@@ -199,16 +199,16 @@ function AnalyticsPage(): React.JSX.Element {
                   color="#6366f1"
                 />
               ) : (
-                <div className="h-[300px] flex items-center justify-center text-slate-400">
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                   {t('no_disease_data')}
                 </div>
               )}
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-md overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b border-slate-100">
-              <CardTitle className="flex items-center text-slate-800">
+          <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
+            <CardHeader className="bg-background/50 border-b border-border">
+              <CardTitle className="flex items-center text-foreground">
                 <FiActivity className="mr-2 text-rose-500" /> {t('trending_diseases')}
               </CardTitle>
               <CardDescription>{t('trending_growth_desc')}</CardDescription>
@@ -227,7 +227,7 @@ function AnalyticsPage(): React.JSX.Element {
                   color="#ef4444"
                 />
               ) : (
-                <div className="h-[300px] flex items-center justify-center text-slate-400">
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                   {t('no_trending_data')}
                 </div>
               )}
@@ -236,10 +236,10 @@ function AnalyticsPage(): React.JSX.Element {
         </div>
 
         {/* Risk Scores Table */}
-        <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-md overflow-hidden">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100">
-            <CardTitle className="flex items-center text-slate-800">
-              <FiShield className="mr-2 text-emerald-600" /> {t('regional_risk_assessment')}
+        <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
+          <CardHeader className="bg-background/50 border-b border-border">
+            <CardTitle className="flex items-center text-foreground">
+              <FiShield className="mr-2 text-primary" /> {t('regional_risk_assessment')}
             </CardTitle>
             <CardDescription>{t('risk_score_desc')} ({riskScores?.count || 0} records)</CardDescription>
           </CardHeader>
@@ -249,8 +249,8 @@ function AnalyticsPage(): React.JSX.Element {
             ) : riskScores?.results && riskScores.results.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-50 text-slate-500">
-                    <tr className="text-left border-b border-slate-100">
+                  <thead className="bg-background text-muted-foreground">
+                    <tr className="text-left border-b border-border">
                       <th className="px-6 py-3 font-semibold">{t('regions')}</th>
                       <th className="px-6 py-3 font-semibold">{t('diagnosis')}</th>
                       <th className="px-6 py-3 font-semibold">{t('date')}</th>
@@ -260,13 +260,13 @@ function AnalyticsPage(): React.JSX.Element {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {riskScores.results.map((s) => (
-                      <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-6 py-4 font-medium text-slate-900">{s.region_details?.name || 'Unknown'}</td>
-                        <td className="px-6 py-4 text-slate-600">{s.disease_name}</td>
-                        <td className="px-6 py-4 text-slate-500 font-mono text-xs">{s.calculation_date}</td>
-                        <td className="px-6 py-4 text-right font-mono text-slate-700">{(s.risk_probability * 100).toFixed(1)}%</td>
+                      <tr key={s.id} className="hover:bg-background/50 transition-colors">
+                        <td className="px-6 py-4 font-medium text-foreground">{s.region_details?.name || 'Unknown'}</td>
+                        <td className="px-6 py-4 text-muted-foreground">{s.disease_name}</td>
+                        <td className="px-6 py-4 text-muted-foreground font-mono text-xs">{s.calculation_date}</td>
+                        <td className="px-6 py-4 text-right font-mono text-foreground/80">{(s.risk_probability * 100).toFixed(1)}%</td>
                         <td className="px-6 py-4 text-right">
-                          <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${RISK_LEVEL_COLORS[s.risk_level] || 'bg-gray-100 border-gray-200'}`}>
+                          <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${RISK_LEVEL_COLORS[s.risk_level] || 'bg-muted border-border'}`}>
                             {getRiskLabel(s.risk_level)}
                           </span>
                         </td>
@@ -276,15 +276,15 @@ function AnalyticsPage(): React.JSX.Element {
                 </table>
               </div>
             ) : (
-              <p className="text-center py-12 text-slate-400">{t('no_risk_scores')}</p>
+              <p className="text-center py-12 text-muted-foreground">{t('no_risk_scores')}</p>
             )}
           </CardContent>
         </Card>
 
         {/* Anomalies Table */}
-        <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-md overflow-hidden">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100">
-            <CardTitle className="flex items-center text-slate-800">
+        <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
+          <CardHeader className="bg-background/50 border-b border-border">
+            <CardTitle className="flex items-center text-foreground">
               <FiZap className="mr-2 text-amber-500" /> {t('anomaly_detection_results')}
             </CardTitle>
             <CardDescription>{t('anomaly_detection_desc')} ({anomalies?.count || 0} records)</CardDescription>
@@ -295,8 +295,8 @@ function AnalyticsPage(): React.JSX.Element {
             ) : anomalies?.results && anomalies.results.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-50 text-slate-500">
-                    <tr className="text-left border-b border-slate-100">
+                  <thead className="bg-background text-muted-foreground">
+                    <tr className="text-left border-b border-border">
                       <th className="px-6 py-3 font-semibold">{t('regions')}</th>
                       <th className="px-6 py-3 font-semibold">{t('diagnosis')}</th>
                       <th className="px-6 py-3 font-semibold">{t('detected')}</th>
@@ -309,16 +309,16 @@ function AnalyticsPage(): React.JSX.Element {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {anomalies.results.map((a) => (
-                      <tr key={a.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-6 py-4 font-medium text-slate-900">{a.region_details?.name || 'Unknown'}</td>
-                        <td className="px-6 py-4 text-slate-600">{a.disease_name}</td>
-                        <td className="px-6 py-4 text-slate-500 font-mono text-xs">{new Date(a.detection_date).toLocaleDateString()}</td>
-                        <td className="px-6 py-4 text-right font-bold text-slate-800">{a.actual_cases}</td>
-                        <td className="px-6 py-4 text-right text-slate-500 font-mono">{a.expected_cases.toFixed(0)}</td>
+                      <tr key={a.id} className="hover:bg-background/50 transition-colors">
+                        <td className="px-6 py-4 font-medium text-foreground">{a.region_details?.name || 'Unknown'}</td>
+                        <td className="px-6 py-4 text-muted-foreground">{a.disease_name}</td>
+                        <td className="px-6 py-4 text-muted-foreground font-mono text-xs">{new Date(a.detection_date).toLocaleDateString()}</td>
+                        <td className="px-6 py-4 text-right font-bold text-foreground">{a.actual_cases}</td>
+                        <td className="px-6 py-4 text-right text-muted-foreground font-mono">{a.expected_cases.toFixed(0)}</td>
                         <td className="px-6 py-4 text-right font-bold text-rose-600">+{a.deviation_percentage.toFixed(1)}%</td>
-                        <td className="px-6 py-4 text-right font-mono text-xs text-slate-400">{a.anomaly_score.toFixed(3)}</td>
+                        <td className="px-6 py-4 text-right font-mono text-xs text-muted-foreground">{a.anomaly_score.toFixed(3)}</td>
                         <td className="px-6 py-4 text-right">
-                          <Badge variant={a.is_resolved ? 'secondary' : 'destructive'} className={a.is_resolved ? 'bg-slate-100 text-slate-600' : 'bg-rose-100 text-rose-800'}>
+                          <Badge variant={a.is_resolved ? 'secondary' : 'destructive'} className={a.is_resolved ? 'bg-muted text-muted-foreground' : 'bg-rose-100 text-rose-800'}>
                             {a.is_resolved ? t('resolved') : t('active')}
                           </Badge>
                         </td>
@@ -328,7 +328,7 @@ function AnalyticsPage(): React.JSX.Element {
                 </table>
               </div>
             ) : (
-              <p className="text-center py-12 text-slate-400">{t('no_anomalies')}</p>
+              <p className="text-center py-12 text-muted-foreground">{t('no_anomalies')}</p>
             )}
           </CardContent>
         </Card>
