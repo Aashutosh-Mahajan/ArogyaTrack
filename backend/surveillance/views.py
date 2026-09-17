@@ -19,7 +19,6 @@ from .serializers import (
 )
 from .tasks import (
     run_clustering_analysis, generate_forecasts_for_region,
-    detect_anomalies_for_region, calculate_risk_scores_for_region,
     evaluate_and_generate_alerts, run_complete_ml_pipeline
 )
 from .services import MLModelInfoService

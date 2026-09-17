@@ -19,7 +19,8 @@ import random
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from django.core.management.base import BaseCommand
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
@@ -90,6 +91,11 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        if not settings.DEBUG:
+            raise CommandError(
+                "Refusing to seed fixed-password demo accounts (admin@demo.com / demo123, etc.) "
+                "outside DEBUG mode — this would create predictable-password accounts on a real deployment."
+            )
         regions_limit = options['regions']
         days = options['days']
         clear_data = options['clear']
