@@ -2,9 +2,15 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.views import TokenRefreshView
 from django_ratelimit.decorators import ratelimit
+from django.conf import settings
+from django.middleware.csrf import get_token
 from django.utils.decorators import method_decorator
 
+from .cookies import set_auth_cookies, set_access_cookie, clear_auth_cookies
 from .permissions import IsAdmin
 from .serializers import (
     SendOTPSerializer,
@@ -39,7 +45,57 @@ class VerifyOTPView(APIView):
         serializer = VerifyOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         tokens = serializer.save()
-        return Response(tokens, status=status.HTTP_200_OK)
+        response = Response(tokens, status=status.HTTP_200_OK)
+        set_auth_cookies(response, tokens["access"], tokens["refresh"])
+        get_token(request)  # primes the csrftoken cookie for subsequent cookie-authenticated requests
+        return response
+
+
+class CookieTokenRefreshView(TokenRefreshView):
+    """
+    Mobile clients: POST {"refresh": "<token>"} in the body, get {"access": "..."} back — unchanged
+    behavior, identical to the stock simplejwt TokenRefreshView.
+
+    Web clients: the refresh cookie is used automatically when the body omits "refresh", and the
+    new access token is written back into the access-token cookie instead of only the JSON body,
+    so the browser never needs to read or store the raw value.
+    """
+
+    def post(self, request, *args, **kwargs):
+        data = request.data.copy() if hasattr(request.data, "copy") else dict(request.data)
+        used_cookie = False
+        if not data.get("refresh"):
+            cookie_refresh = request.COOKIES.get(settings.AUTH_COOKIE_REFRESH)
+            if cookie_refresh:
+                data["refresh"] = cookie_refresh
+                used_cookie = True
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        response = Response(serializer.validated_data, status=status.HTTP_200_OK)
+        access = serializer.validated_data.get("access")
+        if access and used_cookie:
+            set_access_cookie(response, access)
+        return response
+
+
+class LogoutView(APIView):
+    """Blacklist the caller's refresh token so it can no longer be used to mint new access tokens."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        refresh_token = request.data.get("refresh") or request.COOKIES.get(settings.AUTH_COOKIE_REFRESH)
+        if refresh_token:
+            try:
+                RefreshToken(refresh_token).blacklist()
+            except TokenError:
+                # Already expired/invalid/blacklisted — logout still succeeds client-side.
+                pass
+        response = Response({"detail": "Logged out."}, status=status.HTTP_200_OK)
+        clear_auth_cookies(response)
+        return response
 
 
 @method_decorator(ratelimit(key='ip', rate='5/h', method='POST'), name='dispatch')
@@ -128,7 +184,10 @@ class PasswordLoginView(APIView):
         serializer = PasswordLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         tokens = serializer.save()
-        return Response(tokens, status=status.HTTP_200_OK)
+        response = Response(tokens, status=status.HTTP_200_OK)
+        set_auth_cookies(response, tokens["access"], tokens["refresh"])
+        get_token(request)  # primes the csrftoken cookie for subsequent cookie-authenticated requests
+        return response
 
 
 class PasswordResetRequestView(APIView):

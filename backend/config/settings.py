@@ -1,8 +1,10 @@
 import os
+import warnings
 from datetime import timedelta
 from pathlib import Path
 from typing import List
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -10,15 +12,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables from .env if present
 load_dotenv(BASE_DIR / ".env")
 
-SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_ME")
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "django-insecure-local-dev-only-do-not-use-in-production"
+    else:
+        raise ImproperlyConfigured("SECRET_KEY environment variable must be set when DEBUG=False.")
 
 # OpenAI API Key for AI prescription safety agent
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
+# Extra hosts (e.g. a developer's LAN IP for testing the mobile app) are opt-in
+# via env, never hardcoded, so they don't silently ship to every environment.
+_dev_extra_hosts = (
+    [h.strip() for h in os.getenv("DEV_ALLOWED_HOSTS", "").split(",") if h.strip()] if DEBUG else []
+)
 ALLOWED_HOSTS: List[str] = [
     host.strip() for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host.strip()
-] + ["172.18.18.111", "0.0.0.0"]
+] + _dev_extra_hosts
 
 # Applications
 INSTALLED_APPS = [
@@ -30,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
+    "rest_framework_simplejwt.token_blacklist",
     "accounts",
     "patients",
     "medical",
@@ -85,7 +99,11 @@ if DATABASE_URL:
         "default": dj_database_url.parse(DATABASE_URL, conn_max_age=0)
     }
 else:
-    # Use individual environment variables
+    if not DEBUG:
+        raise ImproperlyConfigured(
+            "DATABASE_URL (or DB_* variables) must be explicitly configured when DEBUG=False."
+        )
+    # Use individual environment variables (local dev only)
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -104,13 +122,29 @@ else:
 # For Neon cloud specifically, ensure SSL is required
 if "neon.tech" in DATABASES["default"].get("HOST", ""):
     DATABASES["default"].setdefault("OPTIONS", {})["sslmode"] = "require"
+    if DEBUG:
+        warnings.warn(
+            "DEBUG=True while DATABASE_URL points at a cloud Neon database. "
+            "This enables permissive CORS/CSRF settings against a shared database — "
+            "set DEBUG=False for anything other than isolated local development.",
+            RuntimeWarning,
+        )
 
 # Cache / Redis
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 # Use local memory cache in development (no Redis needed)
-# Switch to RedisCache in production by setting USE_REDIS_CACHE=true
-if os.getenv("USE_REDIS_CACHE", "false").lower() == "true":
+# Redis is required outside DEBUG: LocMemCache is per-process, so rate limiting
+# (accounts.middleware.RateLimitMiddleware) silently stops working across
+# multiple worker processes without it.
+USE_REDIS_CACHE = os.getenv("USE_REDIS_CACHE", "false").lower() == "true"
+if not USE_REDIS_CACHE and not DEBUG:
+    raise ImproperlyConfigured(
+        "USE_REDIS_CACHE must be set to 'true' when DEBUG=False; the in-memory cache "
+        "does not work correctly across multiple worker processes."
+    )
+
+if USE_REDIS_CACHE:
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.redis.RedisCache",
@@ -129,13 +163,12 @@ else:
 RATELIMIT_USE_CACHE = "default"
 
 # Password validation
-# AUTH_PASSWORD_VALIDATORS = [
-#     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-#     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-#     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-#     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
-# ]
-AUTH_PASSWORD_VALIDATORS = []
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
 
 # Internationalization
 LANGUAGE_CODE = "en-us"
@@ -157,26 +190,44 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 FILE_UPLOAD_PERMISSIONS = 0o644
 FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
 
+# Auth cookies (web clients only — mobile keeps using the Authorization header).
+# See accounts/authentication.py and accounts/cookies.py.
+AUTH_COOKIE_ACCESS = "access_token"
+AUTH_COOKIE_REFRESH = "refresh_token"
+AUTH_COOKIE_SECURE = not DEBUG
+AUTH_COOKIE_SAMESITE = "Lax"
+
 # Rest Framework
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "accounts.authentication.CookieJWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 100,
+    # DRF's test client defaults to multipart, which silently mangles nested
+    # data (lists/dicts) instead of erroring — every real endpoint here is a
+    # JSON API, so tests should exercise that by default too.
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
 }
 
 # JWT settings
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    if DEBUG:
+        JWT_SECRET = SECRET_KEY
+    else:
+        raise ImproperlyConfigured("JWT_SECRET environment variable must be set when DEBUG=False.")
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),  # 60 minutes
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),    # 1 day
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": True,
     "ALGORITHM": "HS256",
-    "SIGNING_KEY": os.getenv("JWT_SECRET", SECRET_KEY),
+    "SIGNING_KEY": JWT_SECRET,
     "AUTH_HEADER_TYPES": ("Bearer",),
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
@@ -192,7 +243,11 @@ AUTH_USER_MODEL = "accounts.User"
 # For development, allowing common development ports
 
 if DEBUG:
-    # Development: Allow localhost on common ports + LAN IP for mobile app
+    # Development: Allow localhost on common ports + any dev LAN origins from env
+    # (e.g. DEV_LAN_ORIGINS="http://192.168.1.5:8000" when testing the mobile app
+    # against this machine) — never hardcoded, so a developer's IP doesn't ship
+    # to every environment.
+    _dev_lan_origins = [o.strip() for o in os.getenv("DEV_LAN_ORIGINS", "").split(",") if o.strip()]
     CORS_ALLOWED_ORIGINS = [
         "http://localhost:3000",
         "http://localhost:3001",
@@ -200,8 +255,7 @@ if DEBUG:
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
         "http://127.0.0.1:3002",
-        "http://172.18.18.111:8000",
-    ]
+    ] + _dev_lan_origins
     CORS_ALLOW_ALL_ORIGINS = True
 else:
     # Production: Use environment variable
@@ -210,6 +264,14 @@ else:
         for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
         if origin.strip()
     ]
+
+# CSRF/session cookies must be Secure outside local (non-HTTPS) dev, and the
+# CSRF cookie must stay JS-readable (default) so the web frontend's axios
+# client can echo it back as the X-CSRFToken header on cookie-authenticated
+# requests — see accounts/authentication.py.
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = not DEBUG
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
@@ -241,8 +303,7 @@ if DEBUG:
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
         "http://127.0.0.1:3002",
-        "http://172.18.18.111:8000",
-    ]
+    ] + _dev_lan_origins
 else:
     CSRF_TRUSTED_ORIGINS = [
         origin.strip()

@@ -1,12 +1,11 @@
 from django.urls import path
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .views import (
     SendOTPView,
     VerifyOTPView,
+    LogoutView,
+    CookieTokenRefreshView,
     DoctorRegistrationView,
     PatientRegistrationView,
     PharmacistRegistrationView,
@@ -24,10 +23,11 @@ from .views import (
 urlpatterns = [
     # JWT Token endpoints
     path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("token/refresh/", CookieTokenRefreshView.as_view(), name="token_refresh"),
     # Auth
     path("send-otp/", SendOTPView.as_view(), name="send-otp"),
     path("verify-otp/", VerifyOTPView.as_view(), name="verify-otp"),
+    path("logout/", LogoutView.as_view(), name="logout"),
     path("register/doctor/", DoctorRegistrationView.as_view(), name="register-doctor"),
     path("register/patient/", PatientRegistrationView.as_view(), name="register-patient"),
     path("register/pharmacist/", PharmacistRegistrationView.as_view(), name="register-pharmacist"),
