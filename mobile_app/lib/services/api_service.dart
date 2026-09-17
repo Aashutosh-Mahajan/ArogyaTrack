@@ -73,6 +73,8 @@ class ApiService {
 
   Future<String?> getAccessToken() => _storage.read(key: 'access_token');
 
+  Future<String?> getRefreshToken() => _storage.read(key: 'refresh_token');
+
   // GET
   Future<Response> get(String path, {Map<String, dynamic>? params}) =>
       dio.get(path, queryParameters: params);

@@ -172,7 +172,9 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     try {
-      await _api.post('/auth/logout/');
+      final refresh = await _api.getRefreshToken();
+      await _api.post('/auth/logout/',
+          data: refresh != null ? {'refresh': refresh} : null);
     } catch (_) {}
     await _api.clearTokens();
     _user = null;
