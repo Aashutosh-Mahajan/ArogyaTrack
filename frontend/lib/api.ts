@@ -50,19 +50,17 @@ class ApiClient {
       headers: {
         'Content-Type': 'application/json',
       },
+      // Auth is carried entirely by httpOnly cookies the backend sets on
+      // login/refresh — this client never reads or stores the token values
+      // itself, which is what keeps them safe from XSS. withCredentials
+      // sends those cookies; xsrfCookieName/xsrfHeaderName make axios echo
+      // Django's (JS-readable, non-sensitive) CSRF cookie back as a header
+      // on state-changing requests, as accounts.authentication.CookieJWTAuthentication
+      // requires.
+      withCredentials: true,
+      xsrfCookieName: 'csrftoken',
+      xsrfHeaderName: 'X-CSRFToken',
     });
-
-    // Request interceptor
-    this.client.interceptors.request.use(
-      (config) => {
-        const tokens = this.getTokens();
-        if (tokens?.access) {
-          config.headers.Authorization = `Bearer ${tokens.access}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
 
     // Response interceptor
     this.client.interceptors.response.use(
@@ -70,27 +68,14 @@ class ApiClient {
       async (error) => {
         const originalRequest = error.config;
 
-        // Handle token refresh
+        // Handle token refresh — the refresh cookie is sent automatically;
+        // a successful call re-sets the access cookie server-side.
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
 
           try {
-            const tokens = this.getTokens();
-            if (tokens?.refresh) {
-              const response = await axios.post(`${API_URL}/auth/token/refresh/`, {
-                refresh: tokens.refresh,
-              });
-
-              const newTokens = {
-                access: response.data.access,
-                refresh: tokens.refresh,
-              };
-
-              this.setTokens(newTokens);
-              originalRequest.headers.Authorization = `Bearer ${newTokens.access}`;
-
-              return this.client(originalRequest);
-            }
+            await axios.post(`${API_URL}/auth/token/refresh/`, {}, { withCredentials: true });
+            return this.client(originalRequest);
           } catch (refreshError) {
             this.clearAuth();
             window.location.href = '/login';
@@ -116,33 +101,6 @@ class ApiClient {
         return Promise.reject(error);
       }
     );
-  }
-
-  private getTokens() {
-    if (typeof window === 'undefined') return null;
-    try {
-      const stored = localStorage.getItem('auth-storage');
-      if (!stored) return null;
-      const parsed = JSON.parse(stored);
-      return parsed?.state?.tokens || null;
-    } catch {
-      return null;
-    }
-  }
-
-  private setTokens(tokens: { access: string; refresh: string }) {
-    if (typeof window === 'undefined') return;
-    try {
-      const stored = localStorage.getItem('auth-storage');
-      if (!stored) return;
-      const parsed = JSON.parse(stored);
-      if (parsed?.state) {
-        parsed.state.tokens = tokens;
-        localStorage.setItem('auth-storage', JSON.stringify(parsed));
-      }
-    } catch {
-      // ignore
-    }
   }
 
   private clearAuth() {
@@ -265,8 +223,6 @@ export const api = {
       apiClient.post('/auth/password-reset/confirm/', { email, otp, new_password }),
     getCurrentUser: () => apiClient.get('/auth/me/'),
     logout: () => apiClient.post('/auth/logout/'),
-    refreshToken: (refresh: string) =>
-      apiClient.post('/auth/token/refresh/', { refresh }),
   },
 
   // Patient
@@ -315,7 +271,6 @@ export const api = {
     getPatientHistory: (profileId: string) =>
       apiClient.get(`/doctors/patient-history/${profileId}/`),
     scanQR: (token: string) => apiClient.post('/doctors/scan-health-card/', { token }),
-    scanPatientQR: (signedToken: string) => apiClient.get(`/patients/qr/${signedToken}/`),
     createRecord: (data: any) => apiClient.post('/doctors/medical-records/', data),
     addDiagnosis: (recordId: number, data: any) =>
       apiClient.post(`/doctors/patients/${recordId}/conditions/`, data),
@@ -381,8 +336,6 @@ export const api = {
       apiClient.get('/prescriptions/medicines/', { params }),
     create: (data: any) => apiClient.post('/prescriptions/create/', data),
     validate: (data: any) => apiClient.post('/prescriptions/validate/', data),
-    validateHash: (prescriptionNumber: string, hash: string) =>
-      apiClient.post('/prescriptions/validate-hash/', { prescription_number: prescriptionNumber, hash }),
     verifyQR: (prescriptionId: string, hash: string) =>
       apiClient.post('/prescriptions/verify-qr/', { prescription_id: prescriptionId, hash }),
   },
