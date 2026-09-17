@@ -1,8 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone',
   images: {
-    domains: ['localhost', 'api.example.com'],
+    domains: ['localhost'].concat(
+      process.env.NEXT_PUBLIC_IMAGE_DOMAINS
+        ? process.env.NEXT_PUBLIC_IMAGE_DOMAINS.split(',').map((d) => d.trim()).filter(Boolean)
+        : []
+    ),
     unoptimized: process.env.NODE_ENV === 'development',
   },
   env: {
