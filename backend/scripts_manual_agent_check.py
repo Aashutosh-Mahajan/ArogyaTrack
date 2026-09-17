@@ -1,7 +1,21 @@
 """
-Test script for the AI Prescription Safety Agent.
+Manual smoke-check script for the AI Prescription Safety Agent.
 Run from backend dir:
-    python test_agent.py
+    python scripts_manual_agent_check.py
+
+NOT a Django/unittest test — it is a plain top-level script with no
+if __name__ == "__main__" guard, and it writes real rows (doctor,
+patient, prescriptions) using get_or_create() with WHATEVER database
+DATABASE_URL currently points to.
+
+IMPORTANT: do not rename this file back to something matching Django's
+`test*.py` discovery pattern (e.g. test_agent.py). Doing so previously
+caused `manage.py test` to import this module — and therefore execute
+all of its top-level code — during test *discovery*, which happens
+before Django's test runner switches the connection to the isolated
+test database. The practical effect was that running the test suite
+silently wrote this script's dummy doctor/patient/prescription data
+into the real (Neon) database on every run.
 """
 import os, sys, django
 
