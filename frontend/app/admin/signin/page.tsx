@@ -36,7 +36,7 @@ export default function AdminSignInPage() {
         toast.error('Access restricted to administrators only');
         return;
       }
-      setAuth(response.user, { access: response.access, refresh: response.refresh });
+      setAuth(response.user);
       toast.success('Admin access granted');
       router.push('/admin');
     } catch (error: any) {
@@ -72,7 +72,7 @@ export default function AdminSignInPage() {
         {/* Title */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white font-syne mb-1">Admin Access</h1>
-          <p className="text-sm text-slate-400 font-dm">Surveillance dashboard &amp; system control</p>
+          <p className="text-sm text-muted-foreground font-dm">Surveillance dashboard &amp; system control</p>
         </div>
 
         {/* Red Warning Banner */}
@@ -87,18 +87,18 @@ export default function AdminSignInPage() {
         </div>
 
         {/* Form Card */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8 space-y-6">
+        <div className="rounded-2xl border border-white/10 bg-card/5 backdrop-blur-sm p-8 space-y-6">
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             {/* Email */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-300">Official Email</label>
               <div className="relative group">
-                <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-teal-400 transition-colors" />
+                <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
                   {...form.register('email')}
                   type="email"
                   placeholder="admin@health.gov.in"
-                  className="pl-11 h-12 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-teal-500 focus:ring-teal-500/20 rounded-xl"
+                  className="pl-11 h-12 bg-card/5 border-white/10 text-white placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 rounded-xl"
                 />
               </div>
               {form.formState.errors.email && <p className="text-xs text-red-400">{form.formState.errors.email.message}</p>}
@@ -108,14 +108,14 @@ export default function AdminSignInPage() {
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-300">Password</label>
               <div className="relative group">
-                <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-teal-400 transition-colors" />
+                <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
                   {...form.register('password')}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
-                  className="pl-11 pr-11 h-12 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-teal-500 focus:ring-teal-500/20 rounded-xl"
+                  className="pl-11 pr-11 h-12 bg-card/5 border-white/10 text-white placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 rounded-xl"
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-slate-300">
                   {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
                 </button>
               </div>
@@ -131,7 +131,7 @@ export default function AdminSignInPage() {
                   {...form.register('access_key')}
                   type="password"
                   placeholder="Enter admin access key"
-                  className="pl-11 h-12 bg-white/5 border-amber-500/30 text-white placeholder:text-slate-500 focus:border-amber-400 focus:ring-amber-400/20 rounded-xl"
+                  className="pl-11 h-12 bg-card/5 border-amber-500/30 text-white placeholder:text-muted-foreground focus:border-amber-400 focus:ring-amber-400/20 rounded-xl"
                 />
               </div>
               {form.formState.errors.access_key && <p className="text-xs text-red-400">{form.formState.errors.access_key.message}</p>}
@@ -148,12 +148,12 @@ export default function AdminSignInPage() {
         </div>
 
         {/* Monitoring notice */}
-        <p className="text-center text-[11px] text-slate-500 mt-6 font-dm">
+        <p className="text-center text-[11px] text-muted-foreground mt-6 font-dm">
           All login attempts are monitored &amp; logged for security compliance.
         </p>
 
         <div className="text-center mt-4">
-          <Link href="/signup" className="text-xs text-slate-500 hover:text-slate-300">← Back to role selection</Link>
+          <Link href="/signup" className="text-xs text-muted-foreground hover:text-slate-300">← Back to role selection</Link>
         </div>
       </motion.div>
     </div>
