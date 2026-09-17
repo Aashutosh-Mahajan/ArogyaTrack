@@ -45,13 +45,18 @@ app.conf.beat_schedule = {
     },
     # Send adherence reminders - every hour
     'send-adherence-reminders': {
-        'task': 'adherence.tasks.send_daily_reminders',
+        'task': 'adherence.tasks.send_medication_reminders',
         'schedule': crontab(minute=0),
     },
     # Check refill reminders - daily at 9 AM
     'send-refill-reminders': {
         'task': 'adherence.tasks.send_refill_reminders',
         'schedule': crontab(hour=9, minute=0),
+    },
+    # Flag patients with low medication adherence - daily at 10 AM
+    'flag-low-adherence-patients': {
+        'task': 'adherence.tasks.flag_low_adherence_patients',
+        'schedule': crontab(hour=10, minute=0),
     },
     # Environmental data sync - daily at 6 AM
     'environmental-data-sync': {
