@@ -23,11 +23,11 @@ function SecuritySkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="rounded-xl border bg-white p-6">
-          <div className="h-5 w-40 bg-gray-200 rounded mb-4" />
+        <div key={i} className="rounded-xl border bg-card p-6">
+          <div className="h-5 w-40 bg-muted rounded mb-4" />
           <div className="space-y-3">
-            <div className="h-4 w-full bg-gray-100 rounded" />
-            <div className="h-4 w-3/4 bg-gray-100 rounded" />
+            <div className="h-4 w-full bg-muted rounded" />
+            <div className="h-4 w-3/4 bg-muted rounded" />
           </div>
         </div>
       ))}
@@ -83,7 +83,7 @@ function ChangePasswordForm() {
     >
       {/* Old password */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-foreground/80 mb-1">
           Current Password
         </label>
         <div className="relative">
@@ -91,13 +91,13 @@ function ChangePasswordForm() {
             type={showOld ? 'text' : 'password'}
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 pr-10 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none"
+            className="w-full rounded-lg border border-border px-4 py-2.5 pr-10 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none"
             placeholder="Enter current password"
           />
           <button
             type="button"
             onClick={() => setShowOld(!showOld)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
           >
             {showOld ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
           </button>
@@ -106,7 +106,7 @@ function ChangePasswordForm() {
 
       {/* New password */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-foreground/80 mb-1">
           New Password
         </label>
         <div className="relative">
@@ -114,13 +114,13 @@ function ChangePasswordForm() {
             type={showNew ? 'text' : 'password'}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 pr-10 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none"
+            className="w-full rounded-lg border border-border px-4 py-2.5 pr-10 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none"
             placeholder="Minimum 8 characters"
           />
           <button
             type="button"
             onClick={() => setShowNew(!showNew)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
           >
             {showNew ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
           </button>
@@ -132,7 +132,7 @@ function ChangePasswordForm() {
 
       {/* Confirm password */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-foreground/80 mb-1">
           Confirm New Password
         </label>
         <div className="relative">
@@ -140,13 +140,13 @@ function ChangePasswordForm() {
             type={showConfirm ? 'text' : 'password'}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 pr-10 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none"
+            className="w-full rounded-lg border border-border px-4 py-2.5 pr-10 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none"
             placeholder="Re-enter new password"
           />
           <button
             type="button"
             onClick={() => setShowConfirm(!showConfirm)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
           >
             {showConfirm ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
           </button>
@@ -204,9 +204,9 @@ export function SecuritySettings() {
   if (isLoading) return <SecuritySkeleton />;
   if (isError || !data) {
     return (
-      <div className="rounded-xl border bg-white p-8 text-center">
-        <FiShield className="mx-auto h-10 w-10 text-gray-300" />
-        <p className="mt-2 text-sm text-gray-500">Unable to load security settings.</p>
+      <div className="rounded-xl border bg-card p-8 text-center">
+        <FiShield className="mx-auto h-10 w-10 text-muted-foreground/40" />
+        <p className="mt-2 text-sm text-muted-foreground">Unable to load security settings.</p>
       </div>
     );
   }
@@ -214,9 +214,9 @@ export function SecuritySettings() {
   return (
     <div className="space-y-6">
       {/* ── Login & Password Info ──────────────────────────── */}
-      <div className="rounded-xl border bg-white shadow-sm">
+      <div className="rounded-xl border bg-card shadow-sm">
         <div className="border-b px-6 py-4">
-          <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+          <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
             <FiShield className="h-5 w-5 text-primary-600" />
             Account Security
           </h3>
@@ -228,8 +228,8 @@ export function SecuritySettings() {
                 <FiClock className="h-4 w-4 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">Last Login</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm font-medium text-foreground">Last Login</p>
+                <p className="text-xs text-muted-foreground">
                   {data.last_login
                     ? new Date(data.last_login).toLocaleString()
                     : 'Never'}
@@ -244,8 +244,8 @@ export function SecuritySettings() {
                 <FiLock className="h-4 w-4 text-green-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">Password Last Changed</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm font-medium text-foreground">Password Last Changed</p>
+                <p className="text-xs text-muted-foreground">
                   {data.password_last_changed
                     ? new Date(data.password_last_changed).toLocaleString()
                     : 'Never changed'}
@@ -260,8 +260,8 @@ export function SecuritySettings() {
                 <FiSmartphone className="h-4 w-4 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">Two-Factor Authentication</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm font-medium text-foreground">Two-Factor Authentication</p>
+                <p className="text-xs text-muted-foreground">
                   {data.is_2fa_enabled ? 'Enabled' : 'Disabled'}
                 </p>
               </div>
@@ -278,7 +278,7 @@ export function SecuritySettings() {
                 }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${
                     data.is_2fa_enabled ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
@@ -289,12 +289,12 @@ export function SecuritySettings() {
       </div>
 
       {/* ── Active Sessions ────────────────────────────────── */}
-      <div className="rounded-xl border bg-white shadow-sm">
+      <div className="rounded-xl border bg-card shadow-sm">
         <div className="border-b px-6 py-4">
-          <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+          <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
             <FiMonitor className="h-5 w-5 text-primary-600" />
             Active Sessions
-            <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+            <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
               {data.active_sessions.length}
             </span>
           </h3>
@@ -302,22 +302,22 @@ export function SecuritySettings() {
         <div className="divide-y">
           {data.active_sessions.length === 0 ? (
             <div className="px-6 py-8 text-center">
-              <FiMonitor className="mx-auto h-8 w-8 text-gray-300" />
-              <p className="mt-2 text-sm text-gray-500">No active sessions found.</p>
+              <FiMonitor className="mx-auto h-8 w-8 text-muted-foreground/40" />
+              <p className="mt-2 text-sm text-muted-foreground">No active sessions found.</p>
             </div>
           ) : (
             data.active_sessions.map((session) => (
               <div key={session.id} className="flex items-center justify-between px-6 py-3.5">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-50">
-                    <FiMonitor className="h-4 w-4 text-gray-500" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-background">
+                    <FiMonitor className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{session.device}</p>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <p className="text-sm font-medium text-foreground">{session.device}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <FiGlobe className="h-3 w-3" />
                       <span>{session.ip_address}</span>
-                      <span className="text-gray-300">•</span>
+                      <span className="text-muted-foreground/40">•</span>
                       <span>{timeAgo(session.last_active)}</span>
                     </div>
                   </div>
@@ -333,9 +333,9 @@ export function SecuritySettings() {
       </div>
 
       {/* ── Change Password ────────────────────────────────── */}
-      <div className="rounded-xl border bg-white shadow-sm">
+      <div className="rounded-xl border bg-card shadow-sm">
         <div className="border-b px-6 py-4">
-          <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+          <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
             <FiLock className="h-5 w-5 text-primary-600" />
             Change Password
           </h3>

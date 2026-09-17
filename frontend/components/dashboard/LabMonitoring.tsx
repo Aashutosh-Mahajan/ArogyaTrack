@@ -30,15 +30,15 @@ const STATUS_CONFIG = {
   },
   normal: {
     label: 'Normal',
-    badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    valueBg: 'text-slate-900',
+    badge: 'bg-primary/8 text-primary border-emerald-200',
+    valueBg: 'text-foreground',
   },
 } as const;
 
 function TrendArrow({ trend, status }: { trend: 'up' | 'down' | null; status: string }) {
-  if (!trend) return <FiMinus className="h-4 w-4 text-slate-300" />;
+  if (!trend) return <FiMinus className="h-4 w-4 text-muted-foreground/40" />;
 
-  let color = 'text-slate-500';
+  let color = 'text-muted-foreground';
   if (status === 'high') {
     color = trend === 'up' ? 'text-rose-500' : 'text-emerald-500';
   } else if (status === 'low') {
@@ -67,11 +67,11 @@ function LabTestRow({ test }: { test: LabTest }) {
   };
 
   return (
-    <div className="group flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-indigo-100 hover:bg-slate-50/50 transition-all bg-white">
+    <div className="group flex items-center gap-4 p-4 rounded-xl border border-border hover:border-indigo-100 hover:bg-background/50 transition-all bg-card">
       {/* Test name + date */}
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-slate-800 truncate">{test.test_name}</p>
-        <p className="text-xs text-slate-500 mt-1 font-medium">
+        <p className="font-bold text-foreground truncate">{test.test_name}</p>
+        <p className="text-xs text-muted-foreground mt-1 font-medium">
           {new Date(test.tested_at).toLocaleDateString('en-IN', {
             day: 'numeric',
             month: 'short',
@@ -85,13 +85,13 @@ function LabTestRow({ test }: { test: LabTest }) {
         <span className={`text-lg font-bold ${cfg.valueBg}`}>
           {test.value}
         </span>
-        <span className="text-sm text-slate-500 ml-1 font-medium">{test.unit}</span>
+        <span className="text-sm text-muted-foreground ml-1 font-medium">{test.unit}</span>
       </div>
 
       {/* Normal range */}
       <div className="hidden sm:block text-center shrink-0 w-28">
-        <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Range</p>
-        <p className="text-xs text-slate-600 font-semibold bg-slate-100 px-2 py-0.5 rounded-full mt-0.5 inline-block">
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Range</p>
+        <p className="text-xs text-muted-foreground font-semibold bg-muted px-2 py-0.5 rounded-full mt-0.5 inline-block">
           {test.normal_min} – {test.normal_max}
         </p>
       </div>
@@ -118,7 +118,7 @@ function LabTestRow({ test }: { test: LabTest }) {
           title={test.report_url ? t('download') : t('no_report_available')}
           className={`p-2 rounded-lg transition ${test.report_url
             ? 'text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700'
-            : 'text-slate-300 cursor-not-allowed'
+            : 'text-muted-foreground/40 cursor-not-allowed'
             }`}
         >
           <FiDownload className="h-4 w-4" />
@@ -136,17 +136,17 @@ function LabSkeleton() {
       {[...Array(4)].map((_, i) => (
         <div
           key={i}
-          className="animate-pulse flex items-center gap-4 p-4 rounded-xl border border-slate-100 bg-white"
+          className="animate-pulse flex items-center gap-4 p-4 rounded-xl border border-border bg-card"
         >
           <div className="flex-1">
-            <div className="h-4 w-32 bg-slate-200 rounded" />
-            <div className="h-3 w-20 bg-slate-100 rounded mt-2" />
+            <div className="h-4 w-32 bg-muted rounded" />
+            <div className="h-3 w-20 bg-muted rounded mt-2" />
           </div>
-          <div className="h-6 w-16 bg-slate-200 rounded" />
-          <div className="hidden sm:block h-5 w-24 bg-slate-100 rounded" />
-          <div className="h-6 w-16 bg-slate-200 rounded-full" />
-          <div className="h-4 w-4 bg-slate-100 rounded" />
-          <div className="h-8 w-8 bg-slate-100 rounded-lg" />
+          <div className="h-6 w-16 bg-muted rounded" />
+          <div className="hidden sm:block h-5 w-24 bg-muted rounded" />
+          <div className="h-6 w-16 bg-muted rounded-full" />
+          <div className="h-4 w-4 bg-muted rounded" />
+          <div className="h-8 w-8 bg-muted rounded-lg" />
         </div>
       ))}
     </div>
@@ -175,8 +175,8 @@ export function LabMonitoring() {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-50 rounded-lg">
-              <FiActivity className="w-5 h-5 text-emerald-600" />
+            <div className="p-2 bg-primary/8 rounded-lg">
+              <FiActivity className="w-5 h-5 text-primary" />
             </div>
             <div>
               <CardTitle className="text-lg">{t('lab_title')}</CardTitle>
@@ -185,7 +185,7 @@ export function LabMonitoring() {
           </div>
 
           {/* Legend - Desktop */}
-          <div className="hidden md:flex items-center gap-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <div className="hidden md:flex items-center gap-4 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-rose-500 shadow-sm shadow-rose-200"></span>
               High
@@ -206,15 +206,15 @@ export function LabMonitoring() {
         {isLoading ? (
           <LabSkeleton />
         ) : isError ? (
-          <div className="text-center py-12 text-slate-500 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-            <FiActivity className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-            <p className="font-semibold text-slate-700">{t('failed_load')}</p>
-            <p className="text-sm mt-1 text-slate-400">{t('try_again')}</p>
+          <div className="text-center py-12 text-muted-foreground bg-background/50 rounded-2xl border border-dashed border-border">
+            <FiActivity className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+            <p className="font-semibold text-foreground/80">{t('failed_load')}</p>
+            <p className="text-sm mt-1 text-muted-foreground">{t('try_again')}</p>
           </div>
         ) : labs && labs.length > 0 ? (
           <>
             {/* Column headers (desktop) */}
-            <div className="hidden sm:flex items-center gap-4 px-4 pb-1 text-[10px] text-slate-400 uppercase tracking-wider font-bold">
+            <div className="hidden sm:flex items-center gap-4 px-4 pb-1 text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
               <div className="flex-1">Test Name</div>
               <div className="text-right shrink-0 w-24">Result</div>
               <div className="text-center shrink-0 w-28">Ref Range</div>
@@ -230,12 +230,12 @@ export function LabMonitoring() {
             </div>
           </>
         ) : (
-          <div className="text-center py-12 text-slate-500 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-            <div className="bg-white p-3 rounded-full shadow-sm inline-block mb-3">
-              <FiFileText className="h-6 w-6 text-slate-300" />
+          <div className="text-center py-12 text-muted-foreground bg-background/50 rounded-2xl border border-dashed border-border">
+            <div className="bg-card p-3 rounded-full shadow-sm inline-block mb-3">
+              <FiFileText className="h-6 w-6 text-muted-foreground/40" />
             </div>
-            <p className="font-semibold text-slate-700">No lab results yet</p>
-            <p className="text-sm mt-1 text-slate-400">
+            <p className="font-semibold text-foreground/80">No lab results yet</p>
+            <p className="text-sm mt-1 text-muted-foreground">
               Your test reports will appear here automatically.
             </p>
           </div>

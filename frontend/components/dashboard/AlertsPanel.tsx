@@ -107,7 +107,7 @@ function AlertRow({
   return (
     <div
       className={`group relative flex items-start gap-4 p-4 rounded-xl border transition-all ${alert.is_read
-        ? 'border-slate-100 bg-white hover:border-slate-200'
+        ? 'border-border bg-card hover:border-border'
         : `${cfg.border} ${cfg.bg}`
         }`}
     >
@@ -120,7 +120,7 @@ function AlertRow({
 
       {/* Icon */}
       <div
-        className={`shrink-0 p-2.5 rounded-xl ${alert.is_read ? 'bg-slate-100 text-slate-400' : cfg.badge
+        className={`shrink-0 p-2.5 rounded-xl ${alert.is_read ? 'bg-muted text-muted-foreground' : cfg.badge
           }`}
       >
         <Icon className="h-5 w-5" />
@@ -130,7 +130,7 @@ function AlertRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-1">
           <h4
-            className={`text-[17px] font-extrabold ${alert.is_read ? 'text-slate-500' : 'text-slate-800'
+            className={`text-[17px] font-extrabold ${alert.is_read ? 'text-muted-foreground' : 'text-foreground'
               }`}
           >
             {alert.title}
@@ -143,18 +143,18 @@ function AlertRow({
         </div>
 
         <p
-          className={`text-sm leading-relaxed ${alert.is_read ? 'text-slate-400' : 'text-slate-600'
+          className={`text-sm leading-relaxed ${alert.is_read ? 'text-muted-foreground' : 'text-muted-foreground'
             }`}
         >
           {alert.message}
         </p>
 
         <div className="flex items-center gap-2 mt-2">
-          <p className="text-xs text-slate-400 font-medium">
+          <p className="text-xs text-muted-foreground font-medium">
             <TimeAgo dateStr={alert.created_at} />
           </p>
-          <span className="text-slate-300">•</span>
-          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+          <span className="text-muted-foreground/40">•</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
             {ALERT_TYPE_LABEL[alert.alert_type] ?? alert.alert_type}
           </span>
         </div>
@@ -166,7 +166,7 @@ function AlertRow({
           <button
             onClick={() => onMarkRead(alert.id)}
             title={t('mark_read')}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition"
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/8 transition"
           >
             <FiCheck className="h-4 w-4" />
           </button>
@@ -174,7 +174,7 @@ function AlertRow({
         <button
           onClick={() => onDismiss(alert.id)}
           title={t('dismiss')}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+          className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-600 hover:bg-rose-50 transition"
         >
           <FiX className="h-4 w-4" />
         </button>
@@ -191,13 +191,13 @@ function AlertsSkeleton() {
       {[...Array(3)].map((_, i) => (
         <div
           key={i}
-          className="animate-pulse flex items-start gap-4 p-4 rounded-xl border border-slate-100 bg-white"
+          className="animate-pulse flex items-start gap-4 p-4 rounded-xl border border-border bg-card"
         >
-          <div className="h-10 w-10 bg-slate-200 rounded-xl shrink-0" />
+          <div className="h-10 w-10 bg-muted rounded-xl shrink-0" />
           <div className="flex-1 space-y-2">
-            <div className="h-4 w-1/3 bg-slate-200 rounded" />
-            <div className="h-3 w-full bg-slate-100 rounded" />
-            <div className="h-3 w-24 bg-slate-100 rounded" />
+            <div className="h-4 w-1/3 bg-muted rounded" />
+            <div className="h-3 w-full bg-muted rounded" />
+            <div className="h-3 w-24 bg-muted rounded" />
           </div>
         </div>
       ))}
@@ -253,7 +253,7 @@ export function AlertsPanel() {
               <FiBell className="w-[22px] h-[22px] text-rose-600" />
             </div>
             <div>
-              <CardTitle className="text-[23px] text-[#0d3b2e]">{t('alerts_title')}</CardTitle>
+              <CardTitle className="text-[23px] text-foreground">{t('alerts_title')}</CardTitle>
               <p className="text-[16px] text-muted-foreground mt-0.5">{t('alerts_subtitle')}</p>
             </div>
           </div>
@@ -270,10 +270,10 @@ export function AlertsPanel() {
         {isLoading ? (
           <AlertsSkeleton />
         ) : isError ? (
-          <div className="text-center py-12 text-slate-500 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-            <FiAlertCircle className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-            <p className="font-semibold text-slate-700">{t('failed_load')}</p>
-            <p className="text-sm mt-1 text-slate-400">{t('try_again')}</p>
+          <div className="text-center py-12 text-muted-foreground bg-background/50 rounded-2xl border border-dashed border-border">
+            <FiAlertCircle className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+            <p className="font-semibold text-foreground/80">{t('failed_load')}</p>
+            <p className="text-sm mt-1 text-muted-foreground">{t('try_again')}</p>
           </div>
         ) : alerts && alerts.length > 0 ? (
           <div className="space-y-3">
@@ -287,12 +287,12 @@ export function AlertsPanel() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 text-slate-500 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-            <div className="bg-white p-3 rounded-full shadow-sm inline-block mb-3">
+          <div className="text-center py-12 text-muted-foreground bg-background/50 rounded-2xl border border-dashed border-border">
+            <div className="bg-card p-3 rounded-full shadow-sm inline-block mb-3">
               <FiShield className="h-6 w-6 text-emerald-500" />
             </div>
-            <p className="font-semibold text-emerald-600">{t('all_clear')}</p>
-            <p className="text-sm mt-1 text-slate-400">
+            <p className="font-semibold text-primary">{t('all_clear')}</p>
+            <p className="text-sm mt-1 text-muted-foreground">
               {t('all_clear_desc')}
             </p>
           </div>

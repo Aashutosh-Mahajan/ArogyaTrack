@@ -79,8 +79,8 @@ function CustomTooltip({
   const locale = language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-IN';
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm border border-slate-200 rounded-xl shadow-xl px-4 py-3 text-xs">
-      <p className="text-slate-400 font-bold uppercase tracking-wider mb-1.5">
+    <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-xl px-4 py-3 text-xs">
+      <p className="text-muted-foreground font-bold uppercase tracking-wider mb-1.5">
         {new Date(label as string).toLocaleDateString(locale, {
           day: 'numeric',
           month: 'short',
@@ -91,19 +91,19 @@ function CustomTooltip({
         <div className="space-y-1">
           <p className="text-rose-600 font-bold flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-            {t('systolic')}: {primary?.value} <span className="text-slate-400 font-normal">{unit}</span>
+            {t('systolic')}: {primary?.value} <span className="text-muted-foreground font-normal">{unit}</span>
           </p>
           {secondary?.value != null && (
             <p className="text-orange-500 font-bold flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-              {t('diastolic')}: {secondary.value} <span className="text-slate-400 font-normal">{unit}</span>
+              {t('diastolic')}: {secondary.value} <span className="text-muted-foreground font-normal">{unit}</span>
             </p>
           )}
         </div>
       ) : (
         <p className="font-bold flex items-center gap-2" style={{ color: primary?.color }}>
           <span className="w-2 h-2 rounded-full" style={{ backgroundColor: primary?.color }}></span>
-          {primary?.value} <span className="text-slate-400 font-normal">{unit}</span>
+          {primary?.value} <span className="text-muted-foreground font-normal">{unit}</span>
         </p>
       )}
     </div>
@@ -116,7 +116,7 @@ function MetricChart({ series }: { series: HealthTrendSeries }) {
   const { t, language } = useLanguage();
 
   const cfg = CHART_CONFIG[series.metric] ?? {
-    color: '#6b7280',
+    color: '#7a756b',
     gradientFrom: '#f3f4f6',
     gradientTo: '#fff',
   };
@@ -132,7 +132,7 @@ function MetricChart({ series }: { series: HealthTrendSeries }) {
 
   return (
     <div
-      className="group relative rounded-2xl border border-slate-100 bg-white p-5 transition-all hover:shadow-md hover:border-slate-200 overflow-hidden"
+      className="group relative rounded-2xl border border-border bg-card p-5 transition-all hover:shadow-md hover:border-border overflow-hidden"
     >
       <div className="absolute top-0 right-0 p-5 opacity-5 group-hover:opacity-10 transition-opacity">
         <FiActivity className="w-24 h-24 text-current" style={{ color: cfg.color }} />
@@ -140,14 +140,14 @@ function MetricChart({ series }: { series: HealthTrendSeries }) {
 
       <div className="relative z-10 flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+          <h3 className="text-base font-bold text-foreground flex items-center gap-2">
             <span className="w-1 h-4 rounded-full" style={{ backgroundColor: cfg.color }}></span>
             {series.label}
           </h3>
-          <p className="text-xs text-slate-500 font-medium ml-3">{series.unit}</p>
+          <p className="text-xs text-muted-foreground font-medium ml-3">{series.unit}</p>
         </div>
         {hasData && (
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground bg-background px-2 py-1 rounded-lg">
             {series.data.length} {t('reading_s')}
           </span>
         )}
@@ -163,20 +163,20 @@ function MetricChart({ series }: { series: HealthTrendSeries }) {
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="#f1f5f9"
+                  stroke="#f6f4ee"
                   vertical={false}
                 />
                 <XAxis
                   dataKey="date"
                   tickFormatter={formatDate}
-                  tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 500 }}
+                  tick={{ fontSize: 10, fill: '#7a756b', fontWeight: 500 }}
                   axisLine={false}
                   tickLine={false}
                   minTickGap={30}
                   dy={10}
                 />
                 <YAxis
-                  tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 500 }}
+                  tick={{ fontSize: 10, fill: '#7a756b', fontWeight: 500 }}
                   axisLine={false}
                   tickLine={false}
                   width={30}
@@ -185,7 +185,7 @@ function MetricChart({ series }: { series: HealthTrendSeries }) {
                   content={
                     <CustomTooltip unit={series.unit} metric={series.metric} />
                   }
-                  cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  cursor={{ stroke: '#cfc7b8', strokeWidth: 1, strokeDasharray: '4 4' }}
                 />
                 <Legend
                   verticalAlign="top"
@@ -232,20 +232,20 @@ function MetricChart({ series }: { series: HealthTrendSeries }) {
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="#f1f5f9"
+                  stroke="#f6f4ee"
                   vertical={false}
                 />
                 <XAxis
                   dataKey="date"
                   tickFormatter={formatDate}
-                  tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 500 }}
+                  tick={{ fontSize: 10, fill: '#7a756b', fontWeight: 500 }}
                   axisLine={false}
                   tickLine={false}
                   minTickGap={30}
                   dy={10}
                 />
                 <YAxis
-                  tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 500 }}
+                  tick={{ fontSize: 10, fill: '#7a756b', fontWeight: 500 }}
                   axisLine={false}
                   tickLine={false}
                   width={30}
@@ -255,7 +255,7 @@ function MetricChart({ series }: { series: HealthTrendSeries }) {
                   content={
                     <CustomTooltip unit={series.unit} metric={series.metric} />
                   }
-                  cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  cursor={{ stroke: '#cfc7b8', strokeWidth: 1, strokeDasharray: '4 4' }}
                 />
                 <Area
                   type="monotone"
@@ -272,8 +272,8 @@ function MetricChart({ series }: { series: HealthTrendSeries }) {
           </ResponsiveContainer>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center h-[200px] text-slate-400 text-sm bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-          <FiBarChart2 className="w-8 h-8 text-slate-300 mb-2" />
+        <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground text-sm bg-background/50 rounded-xl border border-dashed border-border">
+          <FiBarChart2 className="w-8 h-8 text-muted-foreground/40 mb-2" />
           <p className="font-medium">{t('no_data_period')}</p>
         </div>
       )}
@@ -289,11 +289,11 @@ function TrendsSkeleton() {
       {[...Array(4)].map((_, i) => (
         <div
           key={i}
-          className="animate-pulse rounded-2xl border border-slate-100 bg-white p-5"
+          className="animate-pulse rounded-2xl border border-border bg-card p-5"
         >
-          <div className="h-5 w-32 bg-slate-200 rounded mb-2" />
-          <div className="h-3 w-16 bg-slate-100 rounded mb-6" />
-          <div className="h-[200px] bg-slate-100 rounded-xl" />
+          <div className="h-5 w-32 bg-muted rounded mb-2" />
+          <div className="h-3 w-16 bg-muted rounded mb-6" />
+          <div className="h-[200px] bg-muted rounded-xl" />
         </div>
       ))}
     </div>
@@ -332,8 +332,8 @@ export function HealthTrends() {
       <CardHeader className="pb-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-teal-50 rounded-lg">
-              <FiTrendingUp className="w-5 h-5 text-teal-600" />
+            <div className="p-2 bg-primary/8 rounded-lg">
+              <FiTrendingUp className="w-5 h-5 text-primary" />
             </div>
             <div>
               <CardTitle className="text-lg">{t('trends_title')}</CardTitle>
@@ -342,14 +342,14 @@ export function HealthTrends() {
           </div>
 
           {/* Period toggle */}
-          <div className="flex items-center p-1 bg-slate-100 rounded-lg">
+          <div className="flex items-center p-1 bg-muted rounded-lg">
             {PERIOD_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => setPeriod(opt.value)}
                 className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${period === opt.value
-                    ? 'bg-white text-teal-700 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                    ? 'bg-card text-primary shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground/80 hover:bg-muted/50'
                   }`}
               >
                 {opt.label}
@@ -363,10 +363,10 @@ export function HealthTrends() {
         {isLoading ? (
           <TrendsSkeleton />
         ) : isError ? (
-          <div className="text-center py-12 text-slate-500 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-            <FiTrendingUp className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-            <p className="font-semibold text-slate-700">{t('failed_load')}</p>
-            <p className="text-sm mt-1 text-slate-400">{t('try_again')}</p>
+          <div className="text-center py-12 text-muted-foreground bg-background/50 rounded-2xl border border-dashed border-border">
+            <FiTrendingUp className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+            <p className="font-semibold text-foreground/80">{t('failed_load')}</p>
+            <p className="text-sm mt-1 text-muted-foreground">{t('try_again')}</p>
           </div>
         ) : orderedTrends.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -375,10 +375,10 @@ export function HealthTrends() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 text-slate-500 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-            <FiBarChart2 className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-            <p className="font-semibold text-slate-700">{t('empty_trends')}</p>
-            <p className="text-sm mt-1 text-slate-400">
+          <div className="text-center py-12 text-muted-foreground bg-background/50 rounded-2xl border border-dashed border-border">
+            <FiBarChart2 className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+            <p className="font-semibold text-foreground/80">{t('empty_trends')}</p>
+            <p className="text-sm mt-1 text-muted-foreground">
               {t('empty_trends_desc')}
             </p>
           </div>

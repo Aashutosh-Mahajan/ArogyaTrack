@@ -24,7 +24,7 @@ function riskColor(level: string) {
     case 'Medium':
       return { badge: 'bg-orange-100 text-orange-700 border-orange-200', dot: 'bg-orange-500', ring: 'stroke-orange-500' };
     default:
-      return { badge: 'bg-emerald-100 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500', ring: 'stroke-emerald-500' };
+      return { badge: 'bg-emerald-100 text-primary border-emerald-200', dot: 'bg-emerald-500', ring: 'stroke-emerald-500' };
   }
 }
 
@@ -46,7 +46,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
 
   if (isLoading) {
     return (
-      <div className="animate-pulse h-48 bg-white/50 rounded-3xl border border-white/40 shadow-sm" />
+      <div className="animate-pulse h-48 bg-card/50 rounded-3xl border border-white/40 shadow-sm" />
     );
   }
 
@@ -67,7 +67,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
         <div className="bar" />
         <h2 className="text-xl">{t('welcome_back')}, {displayName}</h2>
       </div>
-      <div className="hidden sm:flex text-sm font-semibold text-[#D1D5DB] bg-[#0B0F19] border border-[rgba(16,185,129,0.2)] px-4 py-2 rounded-lg items-center gap-2">
+      <div className="hidden sm:flex text-sm font-semibold text-[#cfc7b8] bg-[#0B0F19] border border-[rgba(16,185,129,0.2)] px-4 py-2 rounded-lg items-center gap-2">
         <FiShield className="w-4 h-4 text-[#10B981]" />
         National Health ID: {summary.health_id?.slice(0, 12) || 'XXXX-XXXX'}
       </div>

@@ -18,7 +18,7 @@ import toast from 'react-hot-toast';
 /* ── Constants ────────────────────────────────────────────── */
 
 const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
-  medical_record: { icon: FiFileText, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  medical_record: { icon: FiFileText, color: 'text-primary', bg: 'bg-primary/8' },
   visit_attachment: { icon: FiFileText, color: 'text-blue-600', bg: 'bg-blue-50' },
   lab_report: { icon: FiActivity, color: 'text-purple-600', bg: 'bg-purple-50' },
 };
@@ -28,17 +28,17 @@ const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: 
 function DownloadSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
-      <div className="rounded-xl border bg-white p-6">
-        <div className="h-5 w-56 bg-gray-200 rounded mb-4" />
+      <div className="rounded-xl border bg-card p-6">
+        <div className="h-5 w-56 bg-muted rounded mb-4" />
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-lg bg-gray-100" />
+              <div className="h-10 w-10 rounded-lg bg-muted" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 w-3/4 bg-gray-100 rounded" />
-                <div className="h-3 w-1/2 bg-gray-50 rounded" />
+                <div className="h-4 w-3/4 bg-muted rounded" />
+                <div className="h-3 w-1/2 bg-background rounded" />
               </div>
-              <div className="h-8 w-24 bg-gray-100 rounded-lg" />
+              <div className="h-8 w-24 bg-muted rounded-lg" />
             </div>
           ))}
         </div>
@@ -111,21 +111,21 @@ export function DownloadCenter() {
           <title>Visit Record \u2013 ${visitDate}</title>
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px; color: #1a1a1a; font-size: 14px; }
+            body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px; color: #1c1712; font-size: 14px; }
             .header { border-bottom: 2px solid #2563eb; padding-bottom: 16px; margin-bottom: 24px; }
             .header h1 { font-size: 20px; color: #1e40af; }
-            .header p { color: #6b7280; margin-top: 4px; font-size: 13px; }
+            .header p { color: #7a756b; margin-top: 4px; font-size: 13px; }
             .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-            .label { font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-            .value { font-size: 14px; color: #111827; }
+            .label { font-size: 11px; font-weight: 600; color: #7a756b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+            .value { font-size: 14px; color: #1c1712; }
             .section { margin-bottom: 20px; }
-            .section-title { font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; margin-bottom: 8px; }
+            .section-title { font-size: 12px; font-weight: 700; color: #7a756b; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e3ddd0; padding-bottom: 4px; margin-bottom: 8px; }
             .section-body { font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
             .status { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
             .completed { background: #dcfce7; color: #166534; }
             .follow_up { background: #ffedd5; color: #9a3412; }
             .critical { background: #fee2e2; color: #991b1b; }
-            .footer { margin-top: 32px; text-align: center; font-size: 11px; color: #9ca3af; }
+            .footer { margin-top: 32px; text-align: center; font-size: 11px; color: #7a756b; }
           </style>
         </head>
         <body>
@@ -211,9 +211,9 @@ export function DownloadCenter() {
 
   if (isError) {
     return (
-      <div className="rounded-xl border bg-white p-8 text-center">
-        <FiDownload className="mx-auto h-10 w-10 text-gray-300" />
-        <p className="mt-2 text-sm text-gray-500">Unable to load downloads.</p>
+      <div className="rounded-xl border bg-card p-8 text-center">
+        <FiDownload className="mx-auto h-10 w-10 text-muted-foreground/40" />
+        <p className="mt-2 text-sm text-muted-foreground">Unable to load downloads.</p>
       </div>
     );
   }
@@ -222,29 +222,29 @@ export function DownloadCenter() {
     <div className="space-y-6">
       {/* ── Header KPI ────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border bg-white p-5 shadow-sm">
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50">
               <FiFile className="h-5 w-5 text-primary-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{items?.length ?? 0}</p>
-              <p className="text-xs text-gray-500">Available Files</p>
+              <p className="text-2xl font-bold text-foreground">{items?.length ?? 0}</p>
+              <p className="text-xs text-muted-foreground">Available Files</p>
             </div>
           </div>
         </div>
-        <div className="rounded-xl border bg-white p-5 shadow-sm">
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
               <FiDownload className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{kpis?.total_downloads ?? 0}</p>
-              <p className="text-xs text-gray-500">Total Downloads</p>
+              <p className="text-2xl font-bold text-foreground">{kpis?.total_downloads ?? 0}</p>
+              <p className="text-xs text-muted-foreground">Total Downloads</p>
             </div>
           </div>
         </div>
-        <div className="rounded-xl border bg-white p-5 shadow-sm">
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50">
               <FiArchive className="h-5 w-5 text-green-600" />
@@ -257,37 +257,37 @@ export function DownloadCenter() {
               >
                 {downloadingAll ? 'Creating ZIP…' : 'Download All Records'}
               </button>
-              <p className="text-xs text-gray-500">ZIP Archive</p>
+              <p className="text-xs text-muted-foreground">ZIP Archive</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* ── Filters ───────────────────────────────────────── */}
-      <div className="rounded-xl border bg-white shadow-sm">
+      <div className="rounded-xl border bg-card shadow-sm">
         <div className="border-b px-6 py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+            <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
               <FiDownload className="h-5 w-5 text-primary-600" />
               Your Files
             </h3>
             <div className="flex items-center gap-3">
               {/* Search */}
               <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search files…"
-                  className="rounded-lg border border-gray-300 pl-9 pr-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none w-52"
+                  className="rounded-lg border border-border pl-9 pr-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none w-52"
                 />
               </div>
               {/* Type filter */}
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none"
+                className="rounded-lg border border-border px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none"
               >
                 <option value="all">All Types</option>
                 <option value="medical_record">Medical Records</option>
@@ -302,9 +302,9 @@ export function DownloadCenter() {
         <div className="divide-y">
           {filtered.length === 0 ? (
             <div className="px-6 py-12 text-center">
-              <FiInbox className="mx-auto h-10 w-10 text-gray-300" />
-              <p className="mt-2 text-sm font-medium text-gray-500">No files found</p>
-              <p className="text-xs text-gray-400">
+              <FiInbox className="mx-auto h-10 w-10 text-muted-foreground/40" />
+              <p className="mt-2 text-sm font-medium text-muted-foreground">No files found</p>
+              <p className="text-xs text-muted-foreground">
                 {search || typeFilter !== 'all'
                   ? 'Try adjusting your filters'
                   : 'Medical records and lab reports will appear here'}
@@ -319,20 +319,20 @@ export function DownloadCenter() {
               return (
                 <div
                   key={`${item.type}-${item.id}`}
-                  className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-4 px-6 py-4 hover:bg-background transition-colors"
                 >
                   <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${cfg.bg}`}>
                     <TypeIcon className={`h-5 w-5 ${cfg.color}`} />
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-900">{item.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-600">
+                    <p className="truncate text-sm font-medium text-foreground">{item.title}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                         {item.type_label}
                       </span>
                       <span>{item.visit_info}</span>
-                      <span className="text-gray-300">•</span>
+                      <span className="text-muted-foreground/40">•</span>
                       <span>{new Date(item.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
@@ -340,7 +340,7 @@ export function DownloadCenter() {
                   <button
                     onClick={() => handleDownload(item)}
                     disabled={isDownloading}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground/80 shadow-sm transition-colors hover:bg-background disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <FiDownload className={`h-3.5 w-3.5 ${isDownloading ? 'animate-bounce' : ''}`} />
                     {isDownloading ? 'Downloading…' : 'Download'}

@@ -43,11 +43,11 @@ function Section({
 }) {
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+      <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
         <Icon className="h-3.5 w-3.5" />
         {title}
       </div>
-      <div className="text-sm text-gray-800 leading-relaxed">{children}</div>
+      <div className="text-sm text-foreground leading-relaxed">{children}</div>
     </div>
   );
 }
@@ -124,22 +124,22 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
           <title>Visit Record – ${visitDate}</title>
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px; color: #1a1a1a; font-size: 14px; }
+            body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px; color: #1c1712; font-size: 14px; }
             .header { border-bottom: 2px solid #2563eb; padding-bottom: 16px; margin-bottom: 24px; }
             .header h1 { font-size: 20px; color: #1e40af; }
-            .header p { color: #6b7280; margin-top: 4px; font-size: 13px; }
+            .header p { color: #7a756b; margin-top: 4px; font-size: 13px; }
             .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
             .field { }
-            .label { font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-            .value { font-size: 14px; color: #111827; }
+            .label { font-size: 11px; font-weight: 600; color: #7a756b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+            .value { font-size: 14px; color: #1c1712; }
             .section { margin-bottom: 20px; }
-            .section-title { font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; margin-bottom: 8px; }
+            .section-title { font-size: 12px; font-weight: 700; color: #7a756b; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e3ddd0; padding-bottom: 4px; margin-bottom: 8px; }
             .section-body { font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
             .status { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
             .completed { background: #dcfce7; color: #166534; }
             .follow_up { background: #ffedd5; color: #9a3412; }
             .critical { background: #fee2e2; color: #991b1b; }
-            .footer { margin-top: 32px; text-align: center; font-size: 11px; color: #9ca3af; }
+            .footer { margin-top: 32px; text-align: center; font-size: 11px; color: #7a756b; }
           </style>
         </head>
         <body>
@@ -180,7 +180,7 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-lg max-h-[85vh] -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-lg max-h-[85vh] -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-card shadow-2xl overflow-hidden flex flex-col data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 shrink-0">
             <div className="flex items-center justify-between">
@@ -198,7 +198,7 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
                 </Dialog.Description>
               </div>
               <Dialog.Close asChild>
-                <button className="text-white/80 hover:text-white rounded-full p-1 hover:bg-white/10 transition-colors">
+                <button className="text-white/80 hover:text-white rounded-full p-1 hover:bg-card/10 transition-colors">
                   <FiX className="h-5 w-5" />
                 </button>
               </Dialog.Close>
@@ -209,23 +209,23 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
           <div className="flex-1 overflow-y-auto p-6 space-y-5">
             {/* Meta row */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-100">
+              <div className="flex items-center gap-3 p-3 rounded-xl border border-border">
                 <div className="bg-blue-50 text-blue-600 p-2 rounded-lg">
                   <FiUser className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Doctor</p>
-                  <p className="text-sm font-semibold text-gray-900">{record.doctor_name?.startsWith('Dr') ? record.doctor_name : `Dr. ${record.doctor_name}`}</p>
+                  <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Doctor</p>
+                  <p className="text-sm font-semibold text-foreground">{record.doctor_name?.startsWith('Dr') ? record.doctor_name : `Dr. ${record.doctor_name}`}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-100">
+              <div className="flex items-center gap-3 p-3 rounded-xl border border-border">
                 <div className="bg-purple-50 text-purple-600 p-2 rounded-lg">
                   <FiActivity className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Department</p>
-                  <p className="text-sm font-semibold text-gray-900">{record.department}</p>
+                  <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Department</p>
+                  <p className="text-sm font-semibold text-foreground">{record.department}</p>
                 </div>
               </div>
             </div>
@@ -236,7 +236,7 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
                 <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
                 {st.label}
               </span>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-muted-foreground">
                 {record.prescriptions_count} prescription item{record.prescriptions_count !== 1 ? 's' : ''}
               </span>
             </div>
@@ -271,7 +271,7 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
 
             {/* 📂 Reports Section */}
             <div className="space-y-1.5">
-              <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <FiPaperclip className="h-3.5 w-3.5" />
                 Reports
                 {record.attachments.length > 0 && (
@@ -285,16 +285,16 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
                   {record.attachments.map((att) => (
                     <div
                       key={att.id}
-                      className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-blue-50/40 transition-colors"
+                      className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-blue-50/40 transition-colors"
                     >
                       <div className="h-9 w-9 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0">
                         <FiFileText className="h-4 w-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">
+                        <p className="text-sm font-medium text-foreground truncate">
                           📄 {att.file_name}
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {att.uploaded_by_name && (
                             <span className="mr-2">👨‍⚕️ {att.uploaded_by_name}</span>
                           )}
@@ -325,7 +325,7 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
                           size="sm"
                           onClick={() => handleDownloadReport(att.id, att.file_name, false)}
                           disabled={downloadingId === att.id}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors h-auto"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-muted transition-colors h-auto"
                           title="Download"
                         >
                           {downloadingId === att.id ? (
@@ -339,13 +339,13 @@ export function RecordDetailModal({ open, onOpenChange, record }: RecordDetailMo
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-400 italic py-2">No reports uploaded for this visit</p>
+                <p className="text-sm text-muted-foreground italic py-2">No reports uploaded for this visit</p>
               )}
             </div>
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-gray-100 shrink-0">
+          <div className="px-6 py-4 border-t border-border shrink-0">
             <Button
               onClick={handleDownloadPDF}
               className="w-full gap-2"

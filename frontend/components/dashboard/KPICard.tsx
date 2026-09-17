@@ -43,9 +43,9 @@ export function KPICard({
   lastUpdated,
   href,
 }: KPICardProps) {
-  let trendColor = 'text-gray-500';
+  let trendColor = 'text-muted-foreground';
   let TrendIcon = FiMinus;
-  let TrendBg = 'bg-gray-100';
+  let TrendBg = 'bg-muted';
 
   if (trend) {
     if (trend.direction === 'up') {
@@ -61,7 +61,7 @@ export function KPICard({
 
   return (
     <Card
-      className="group relative overflow-hidden backdrop-blur-md bg-white/60 border border-white/40 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full"
+      className="group relative overflow-hidden backdrop-blur-md bg-card/60 border border-white/40 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full"
     >
       <CardContent className="p-5 flex flex-col h-full">
         <div className="flex items-start justify-between mb-4">
@@ -77,7 +77,7 @@ export function KPICard({
               </div>
             )}
             {href && (
-              <Link href={href} className="text-slate-400 hover:text-primary-600 transition-colors" aria-label={title}>
+              <Link href={href} className="text-muted-foreground hover:text-primary-600 transition-colors" aria-label={title}>
                 <FiChevronRight className="h-5 w-5" />
               </Link>
             )}
@@ -85,14 +85,14 @@ export function KPICard({
         </div>
 
         <div className="space-y-1 flex-1">
-          <p className="text-3xl font-display font-bold text-slate-800 tracking-tight">
+          <p className="text-3xl font-display font-bold text-foreground tracking-tight">
             {value}
           </p>
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>
         </div>
 
         {trend && (
-          <div className="mt-4 pt-3  border-slate-100">
+          <div className="mt-4 pt-3  border-border">
             <p className={`text-xs ${trendColor} font-medium flex items-center gap-1`}>
               <span className="opacity-70">vs last month</span>
             </p>

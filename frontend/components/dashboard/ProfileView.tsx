@@ -20,12 +20,12 @@ import {
 function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value?: string | null }) {
   return (
     <div className="flex items-start gap-3 py-2.5">
-      <div className="bg-gray-100 p-2 rounded-lg mt-0.5">
-        <Icon className="h-4 w-4 text-gray-500" />
+      <div className="bg-muted p-2 rounded-lg mt-0.5">
+        <Icon className="h-4 w-4 text-muted-foreground" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>
-        <p className="text-sm text-gray-900 mt-0.5">{value || '—'}</p>
+        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{label}</p>
+        <p className="text-sm text-foreground mt-0.5">{value || '—'}</p>
       </div>
     </div>
   );
@@ -103,9 +103,9 @@ export function ProfileView() {
           <Card key={i}>
             <CardContent className="p-6">
               <div className="animate-pulse space-y-4">
-                <div className="h-4 bg-gray-200 rounded w-1/3" />
-                <div className="h-3 bg-gray-200 rounded w-2/3" />
-                <div className="h-3 bg-gray-200 rounded w-1/2" />
+                <div className="h-4 bg-muted rounded w-1/3" />
+                <div className="h-3 bg-muted rounded w-2/3" />
+                <div className="h-3 bg-muted rounded w-1/2" />
               </div>
             </CardContent>
           </Card>
@@ -117,8 +117,8 @@ export function ProfileView() {
   if (!profile) {
     return (
       <Card>
-        <CardContent className="p-8 text-center text-gray-500">
-          <FiAlertCircle className="mx-auto h-10 w-10 mb-3 text-gray-400" />
+        <CardContent className="p-8 text-center text-muted-foreground">
+          <FiAlertCircle className="mx-auto h-10 w-10 mb-3 text-muted-foreground" />
           <p className="text-lg font-medium">No profile found</p>
           <p className="text-sm mt-1">Please create a profile to get started.</p>
         </CardContent>
@@ -178,19 +178,19 @@ export function ProfileView() {
             /* ── Edit form ── */
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Full Name</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Full Name</label>
                 <Input value={form.name || ''} onChange={(e) => onChange('name', e.target.value)} />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Date of Birth</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Date of Birth</label>
                 <Input type="date" value={form.date_of_birth || ''} onChange={(e) => onChange('date_of_birth', e.target.value)} />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Blood Group</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Blood Group</label>
                 <Input value={form.blood_group || ''} onChange={(e) => onChange('blood_group', e.target.value)} />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Phone</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Phone</label>
                 <Input value={form.phone || ''} onChange={(e) => onChange('phone', e.target.value)} />
               </div>
             </div>
@@ -219,19 +219,19 @@ export function ProfileView() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Address</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Address</label>
                 <Input value={form.address || ''} onChange={(e) => onChange('address', e.target.value)} />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">District</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">District</label>
                 <Input value={form.district || ''} onChange={(e) => onChange('district', e.target.value)} />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">State</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">State</label>
                 <Input value={form.state || ''} onChange={(e) => onChange('state', e.target.value)} />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Pin Code</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Pin Code</label>
                 <Input value={form.pincode || ''} onChange={(e) => onChange('pincode', e.target.value)} />
               </div>
             </div>
@@ -267,15 +267,15 @@ export function ProfileView() {
               />
               <div className="flex items-center justify-between py-2">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Data Sharing</p>
-                  <p className="text-xs text-gray-500">Allow anonymized data for public health research</p>
+                  <p className="text-sm font-medium text-foreground">Data Sharing</p>
+                  <p className="text-xs text-muted-foreground">Allow anonymized data for public health research</p>
                 </div>
                 <Badge variant={patientProfile.data_sharing_enabled ? 'success' : 'outline'}>
                   {patientProfile.data_sharing_enabled ? 'Enabled' : 'Disabled'}
                 </Badge>
               </div>
               {patientProfile.last_consent_update && (
-                <p className="text-xs text-gray-400 pt-2 border-t">
+                <p className="text-xs text-muted-foreground pt-2 border-t">
                   Last consent update: {formatDate(patientProfile.last_consent_update)}
                 </p>
               )}
@@ -314,11 +314,11 @@ function ConsentRow({ label, accepted, date }: { label: string; accepted: boolea
         {accepted ? (
           <FiCheckCircle className="h-4 w-4 text-green-500" />
         ) : (
-          <FiAlertCircle className="h-4 w-4 text-gray-400" />
+          <FiAlertCircle className="h-4 w-4 text-muted-foreground" />
         )}
         <div>
-          <p className="text-sm font-medium text-gray-900">{label}</p>
-          {date && <p className="text-xs text-gray-500">Accepted on {formatDate(date)}</p>}
+          <p className="text-sm font-medium text-foreground">{label}</p>
+          {date && <p className="text-xs text-muted-foreground">Accepted on {formatDate(date)}</p>}
         </div>
       </div>
       <Badge variant={accepted ? 'success' : 'destructive'}>

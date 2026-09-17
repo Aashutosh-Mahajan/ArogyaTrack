@@ -81,11 +81,11 @@ export function CurrentDiseases() {
                         <div className="flex flex-col my-auto gap-1 mt-2">
                             <div className="flex justify-between items-center">
                                 <span className="text-[1.3rem] font-bold text-[#FFFFFF] leading-none">
-                                    {latestBP.value} <span className="text-[10px] text-[#9CA3AF] font-normal tracking-wide">mmHg</span>
+                                    {latestBP.value} <span className="text-[10px] text-[#7a756b] font-normal tracking-wide">mmHg</span>
                                 </span>
                                 <StatusBadge status={getBPStatus(latestBP.value)} value={latestBP.value} unit="mmHg" />
                             </div>
-                            <p className="text-[10px] text-[#9CA3AF] font-medium">
+                            <p className="text-[10px] text-[#7a756b] font-medium">
                                 {new Date(latestBP.date).toLocaleDateString(locale)}
                             </p>
                         </div>
@@ -101,11 +101,11 @@ export function CurrentDiseases() {
                         <div className="flex flex-col my-auto gap-1 mt-2">
                             <div className="flex justify-between items-center">
                                 <span className="text-[1.3rem] font-bold text-[#FFFFFF] leading-none">
-                                    {latestSugar.value} <span className="text-[10px] text-[#9CA3AF] font-normal tracking-wide">mg/dL</span>
+                                    {latestSugar.value} <span className="text-[10px] text-[#7a756b] font-normal tracking-wide">mg/dL</span>
                                 </span>
                                 <StatusBadge status={getSugarStatus(latestSugar.value)} value={latestSugar.value} unit="mg/dL" />
                             </div>
-                            <p className="text-[10px] text-[#9CA3AF] font-medium">
+                            <p className="text-[10px] text-[#7a756b] font-medium">
                                 {new Date(latestSugar.date).toLocaleDateString(locale)}
                             </p>
                         </div>

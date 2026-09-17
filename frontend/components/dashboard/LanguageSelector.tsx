@@ -16,8 +16,8 @@ export function LanguageSelector() {
 
     return (
         <Select value={language} onValueChange={(val: any) => setLanguage(val)}>
-            <SelectTrigger className="w-[140px] bg-white/90 backdrop-blur-sm border-gray-200 shadow-sm">
-                <Globe className="h-4 w-4 text-gray-500" />
+            <SelectTrigger className="w-[140px] bg-card/90 backdrop-blur-sm border-border shadow-sm">
+                <Globe className="h-4 w-4 text-muted-foreground" />
                 <SelectValue placeholder="Language" />
             </SelectTrigger>
             <SelectContent>

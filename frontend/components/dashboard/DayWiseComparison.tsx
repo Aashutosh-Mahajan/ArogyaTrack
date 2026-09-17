@@ -17,7 +17,7 @@ const TREND_CONFIG: Record<TrendType, { label: string; color: string; bgColor: s
   rapid_increase: { label: 'Rapid Increase', color: 'text-rose-700', bgColor: 'bg-rose-50', borderColor: 'border-rose-200', icon: FiTrendingUp },
   gradual_increase: { label: 'Gradual Increase', color: 'text-orange-700', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', icon: FiTrendingUp },
   stable: { label: 'Stable', color: 'text-blue-700', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', icon: FiMinus },
-  gradual_decrease: { label: 'Gradual Decrease', color: 'text-emerald-700', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200', icon: FiTrendingDown },
+  gradual_decrease: { label: 'Gradual Decrease', color: 'text-primary', bgColor: 'bg-primary/8', borderColor: 'border-emerald-200', icon: FiTrendingDown },
   rapid_decrease: { label: 'Rapid Decrease', color: 'text-green-700', bgColor: 'bg-green-50', borderColor: 'border-green-200', icon: FiTrendingDown },
 };
 
@@ -40,7 +40,7 @@ function MiniBarChart({ values, maxVal }: { values: number[]; maxVal: number }) 
         <div
           key={i}
           className={`w-5 rounded-t-sm transition-all ${
-            i === 0 ? 'bg-blue-500' : 'bg-slate-200'
+            i === 0 ? 'bg-blue-500' : 'bg-muted'
           }`}
           style={{ height: `${Math.max((v / safeMax) * 100, 4)}%` }}
           title={`${v} cases`}
@@ -54,7 +54,7 @@ function DayLabel({ dateStr }: { dateStr: string }) {
   const d = new Date(dateStr + 'T00:00:00');
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   return (
-    <span className="text-[10px] text-slate-400 font-medium">
+    <span className="text-[10px] text-muted-foreground font-medium">
       {dayNames[d.getDay()]}
     </span>
   );
@@ -62,10 +62,10 @@ function DayLabel({ dateStr }: { dateStr: string }) {
 
 function CaseDelta({ today, yesterday }: { today: number; yesterday: number }) {
   const diff = today - yesterday;
-  if (diff === 0) return <span className="text-xs text-slate-400">—</span>;
+  if (diff === 0) return <span className="text-xs text-muted-foreground">—</span>;
   const isUp = diff > 0;
   return (
-    <span className={`text-xs font-bold ${isUp ? 'text-rose-600' : 'text-emerald-600'}`}>
+    <span className={`text-xs font-bold ${isUp ? 'text-rose-600' : 'text-primary'}`}>
       {isUp ? '+' : ''}{diff}
     </span>
   );
@@ -80,20 +80,20 @@ function DiseaseSummaryRow({ summary, dates, onToggle, isExpanded }: {
   const maxCases = Math.max(...summary.day_totals.map(d => d.cases), 1);
 
   return (
-    <div className="border border-slate-100 rounded-xl overflow-hidden bg-white hover:shadow-md transition-shadow">
+    <div className="border border-border rounded-xl overflow-hidden bg-card hover:shadow-md transition-shadow">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50/50 transition-colors"
+        className="w-full flex items-center justify-between p-4 text-left hover:bg-background/50 transition-colors"
       >
         <div className="flex items-center gap-4 flex-1 min-w-0">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-bold text-sm text-slate-800 truncate">{summary.disease_name}</p>
-              <span className="text-[10px] text-slate-400 font-mono bg-slate-100 px-1.5 py-0.5 rounded">{summary.disease_code}</span>
+              <p className="font-bold text-sm text-foreground truncate">{summary.disease_name}</p>
+              <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">{summary.disease_code}</span>
             </div>
-            <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
               <span>{summary.regions_affected} region{summary.regions_affected !== 1 ? 's' : ''}</span>
-              <span className="text-slate-300">|</span>
+              <span className="text-muted-foreground/40">|</span>
               <span>{summary.total_cases_7d.toLocaleString()} total (7d)</span>
             </div>
           </div>
@@ -112,22 +112,22 @@ function DiseaseSummaryRow({ summary, dates, onToggle, isExpanded }: {
 
           {/* Today's cases */}
           <div className="text-right min-w-[80px]">
-            <p className="text-lg font-bold text-slate-800">{summary.today_cases.toLocaleString()}</p>
-            <p className="text-[10px] text-slate-400 uppercase">Today</p>
+            <p className="text-lg font-bold text-foreground">{summary.today_cases.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground uppercase">Today</p>
           </div>
 
           <TrendBadge trend={summary.trend} />
         </div>
 
-        <div className="ml-3 text-slate-400">
+        <div className="ml-3 text-muted-foreground">
           {isExpanded ? <FiChevronUp className="h-4 w-4" /> : <FiChevronDown className="h-4 w-4" />}
         </div>
       </button>
 
       {/* Day-by-day breakdown header */}
       {isExpanded && (
-        <div className="border-t border-slate-100 bg-slate-50/30 px-4 py-2">
-          <div className="grid grid-cols-[1fr_repeat(7,minmax(60px,1fr))_100px] gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+        <div className="border-t border-border bg-background/30 px-4 py-2">
+          <div className="grid grid-cols-[1fr_repeat(7,minmax(60px,1fr))_100px] gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
             <span>Region / City</span>
             {dates.map((d, i) => {
               const dt = new Date(d + 'T00:00:00');
@@ -147,11 +147,11 @@ function RegionRow({ comparison, dates }: {
   dates: string[];
 }) {
   return (
-    <div className="grid grid-cols-[1fr_repeat(7,minmax(60px,1fr))_100px] gap-2 items-center px-4 py-2.5 border-t border-slate-50 hover:bg-slate-50/50 transition-colors">
+    <div className="grid grid-cols-[1fr_repeat(7,minmax(60px,1fr))_100px] gap-2 items-center px-4 py-2.5 border-t border-slate-50 hover:bg-background/50 transition-colors">
       {/* Region info */}
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-slate-700 truncate">{comparison.region_name}</p>
-        <p className="text-[10px] text-slate-400 truncate">
+        <p className="text-sm font-semibold text-foreground/80 truncate">{comparison.region_name}</p>
+        <p className="text-[10px] text-muted-foreground truncate">
           {comparison.district}, {comparison.state}
         </p>
       </div>
@@ -163,7 +163,7 @@ function RegionRow({ comparison, dates }: {
         const isToday = idx === 0;
         return (
           <div key={dd.date} className={`text-center ${isToday ? 'bg-blue-50 rounded-lg py-1' : ''}`}>
-            <p className={`text-sm font-bold ${isToday ? 'text-blue-700' : 'text-slate-700'}`}>
+            <p className={`text-sm font-bold ${isToday ? 'text-blue-700' : 'text-foreground/80'}`}>
               {dd.cases}
             </p>
             {idx > 0 && idx < comparison.day_data.length && (
@@ -214,16 +214,16 @@ export function DayWiseComparison() {
   }, {} as Record<string, number>);
 
   return (
-    <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-md overflow-hidden">
+    <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
       
-      <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+      <CardHeader className="bg-background/50 border-b border-border">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <CardTitle className="flex items-center text-xl text-slate-800">
+            <CardTitle className="flex items-center text-xl text-foreground">
               <FiCalendar className="mr-2 text-indigo-600" />
               Day-Wise Case Comparison
             </CardTitle>
-            <CardDescription className="text-slate-500">
+            <CardDescription className="text-muted-foreground">
               {data?.reference_date
                 ? `Comparing ${data.dates.length} days ending ${new Date(data.reference_date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`
                 : 'Compare disease cases across regions day by day'}
@@ -234,7 +234,7 @@ export function DayWiseComparison() {
             <select
               value={selectedDisease}
               onChange={(e) => setSelectedDisease(e.target.value)}
-              className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+              className="px-3 py-2 border border-border rounded-lg text-sm bg-card focus:ring-2 focus:ring-indigo-500 outline-none"
             >
               <option value="">All Diseases</option>
               <option value="A90">Dengue (A90)</option>
@@ -250,7 +250,7 @@ export function DayWiseComparison() {
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+              className="px-3 py-2 border border-border rounded-lg text-sm bg-card focus:ring-2 focus:ring-indigo-500 outline-none"
             >
               <option value="">All States</option>
               {(data?.available_states || []).map(s => (
@@ -272,7 +272,7 @@ export function DayWiseComparison() {
                 </span>
               );
             })}
-            <span className="text-xs text-slate-400 ml-1">
+            <span className="text-xs text-muted-foreground ml-1">
               {data.disease_summaries.length} disease{data.disease_summaries.length !== 1 ? 's' : ''} tracked
             </span>
           </div>
@@ -283,19 +283,19 @@ export function DayWiseComparison() {
         {isLoading && (
           <div className="space-y-3 animate-pulse">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-20 bg-slate-100/50 rounded-xl" />
+              <div key={i} className="h-20 bg-muted/50 rounded-xl" />
             ))}
           </div>
         )}
 
         {isError && (
-          <div className="text-center py-12 text-slate-400">
+          <div className="text-center py-12 text-muted-foreground">
             Failed to load comparison data. Please try again.
           </div>
         )}
 
         {!isLoading && !isError && data && data.disease_summaries.length === 0 && (
-          <div className="text-center py-12 text-slate-400 flex flex-col items-center">
+          <div className="text-center py-12 text-muted-foreground flex flex-col items-center">
             <FiCalendar className="h-8 w-8 mb-2 opacity-30" />
             No surveillance data available for comparison
           </div>
@@ -317,7 +317,7 @@ export function DayWiseComparison() {
                   />
 
                   {isExpanded && regions.length > 0 && (
-                    <div className="ml-4 mr-1 border-l-2 border-indigo-200 bg-white rounded-b-xl overflow-hidden shadow-inner">
+                    <div className="ml-4 mr-1 border-l-2 border-indigo-200 bg-card rounded-b-xl overflow-hidden shadow-inner">
                       <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
                         {regions.map(r => (
                           <RegionRow

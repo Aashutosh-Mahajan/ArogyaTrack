@@ -26,11 +26,11 @@ export function PharmacyTrends() {
 
     return (
         <Card className="border-0 shadow-lg overflow-hidden h-full">
-            <div className="h-1 bg-gradient-to-r from-teal-400 to-emerald-400"></div>
+            <div className="h-1 bg-gradient-to-r from-primary to-emerald-400"></div>
             <CardHeader className="pb-2">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-teal-50 rounded-lg">
-                        <FiTrendingUp className="w-5 h-5 text-teal-600" />
+                    <div className="p-2 bg-primary/8 rounded-lg">
+                        <FiTrendingUp className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                         <CardTitle className="text-lg">Dispensing Trends</CardTitle>
@@ -41,10 +41,10 @@ export function PharmacyTrends() {
             <CardContent>
                 {isLoading ? (
                     <div className="h-[300px] w-full mt-4 flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-500" />
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
                     </div>
                 ) : trendData.length === 0 ? (
-                    <div className="h-[300px] w-full mt-4 flex items-center justify-center text-gray-400">
+                    <div className="h-[300px] w-full mt-4 flex items-center justify-center text-muted-foreground">
                         No dispensing data yet
                     </div>
                 ) : (
@@ -61,11 +61,11 @@ export function PharmacyTrends() {
                             >
                                 <defs>
                                     <linearGradient id="colorDispensed" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#1a5c52" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#1a5c52" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f6f4ee" />
                                 <XAxis
                                     dataKey="name"
                                     axisLine={false}
@@ -85,7 +85,7 @@ export function PharmacyTrends() {
                                 <Area
                                     type="monotone"
                                     dataKey="dispensed"
-                                    stroke="#14b8a6"
+                                    stroke="#1a5c52"
                                     fillOpacity={1}
                                     fill="url(#colorDispensed)"
                                     strokeWidth={3}

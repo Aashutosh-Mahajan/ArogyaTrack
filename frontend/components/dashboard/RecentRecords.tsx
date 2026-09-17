@@ -159,7 +159,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50"
                 onClick={() => setModalOpen(true)}
                 title={t('view')}
               >
@@ -168,7 +168,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground/80 hover:bg-muted"
                 onClick={() => setExpanded((prev) => !prev)}
                 title={expanded ? t('collapse') : t('expand')}
               >
@@ -184,11 +184,11 @@ function RecordCard({ record }: { record: RecentRecord }) {
 
         {/* Expanded section */}
         {expanded && (
-          <div className="px-5 pb-5 pt-0 mt-1 border-t border-[rgba(16,185,129,0.1)] bg-white/5 space-y-4 animate-in slide-in-from-top-2 duration-300">
+          <div className="px-5 pb-5 pt-0 mt-1 border-t border-[rgba(16,185,129,0.1)] bg-card/5 space-y-4 animate-in slide-in-from-top-2 duration-300">
             <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Diagnosis */}
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a756b] mb-1.5">
                   {t('diagnosis')}
                 </p>
                 <p className="text-sm text-white leading-relaxed font-medium">
@@ -198,7 +198,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
 
               {/* Tests */}
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a756b] mb-1.5">
                   {t('tests_performed')}
                 </p>
                 <p className="text-sm text-white leading-relaxed font-medium">
@@ -210,11 +210,11 @@ function RecordCard({ record }: { record: RecentRecord }) {
               {record.prescription_text && (
                 <div className="sm:col-span-2">
                   <div className="bg-[#0B0F19] border border-[rgba(16,185,129,0.1)] rounded-xl p-3 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-2 flex items-center gap-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a756b] mb-2 flex items-center gap-2">
                       <FiFileText className="w-3 h-3" />
                       {t('prescription')}
                     </p>
-                    <ul className="list-disc list-inside space-y-1 text-sm text-[#D1D5DB] leading-relaxed">
+                    <ul className="list-disc list-inside space-y-1 text-sm text-[#cfc7b8] leading-relaxed">
                       {record.prescription_text.split(',').map((item: string, i: number) => {
                         const trimmed = item.trim().replace(/\.+$/, '');
                         return trimmed ? <li key={i}>{trimmed}</li> : null;
@@ -228,7 +228,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
             {/* 📂 Reports Section */}
             <div className="sm:col-span-2">
               <div className="flex items-center gap-2 mb-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF]">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a756b]">
                   {t('reports')}
                 </p>
                 {record.attachments.length > 0 && (
@@ -252,7 +252,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
                         <p className="text-xs font-semibold text-white truncate">
                           {att.file_name}
                         </p>
-                        <p className="text-[10px] text-[#9CA3AF] mt-0.5 lowercase">
+                        <p className="text-[10px] text-[#7a756b] mt-0.5 lowercase">
                           {att.file_type.split('/')[1] || 'file'} • {new Date(att.uploaded_at).toLocaleDateString()}
                         </p>
                       </div>
@@ -262,7 +262,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
                           size="icon"
                           onClick={() => handleDownloadReport(att.id, att.file_name, true)}
                           disabled={downloadingId === att.id}
-                          className="h-8 w-8 text-[#10B981] hover:bg-white/5"
+                          className="h-8 w-8 text-[#10B981] hover:bg-card/5"
                           title={t('view')}
                         >
                           <FiEye className="h-4 w-4" />
@@ -272,7 +272,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
                           size="icon"
                           onClick={() => handleDownloadReport(att.id, att.file_name, false)}
                           disabled={downloadingId === att.id}
-                          className="h-8 w-8 text-[#9CA3AF] hover:bg-white/5"
+                          className="h-8 w-8 text-[#7a756b] hover:bg-card/5"
                           title={t('download')}
                         >
                           <FiDownload className="h-4 w-4" />
@@ -283,7 +283,7 @@ function RecordCard({ record }: { record: RecentRecord }) {
                 </div>
               ) : (
                 <div className="text-center py-4 bg-[#0B0F19]/50 rounded-xl border border-dashed border-white/10">
-                  <p className="text-xs text-[#9CA3AF] italic">{t('no_reports')}</p>
+                  <p className="text-xs text-[#7a756b] italic">{t('no_reports')}</p>
                 </div>
               )}
             </div>
@@ -333,7 +333,7 @@ export function RecentRecords() {
             size="icon"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="hover:bg-white/5 text-[#9CA3AF] hover:text-white"
+            className="hover:bg-card/5 text-[#7a756b] hover:text-white"
             title={t('refresh')}
           >
             <FiRefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
@@ -355,10 +355,10 @@ export function RecentRecords() {
                 className="animate-pulse rounded-2xl border border-[rgba(16,185,129,0.1)] p-5 bg-[#0B0F19]"
               >
                 <div className="flex gap-4">
-                  <div className="hidden sm:block h-12 w-12 bg-white/5 rounded-xl" />
+                  <div className="hidden sm:block h-12 w-12 bg-card/5 rounded-xl" />
                   <div className="flex-1 space-y-3">
-                    <div className="h-4 w-1/3 bg-white/10 rounded" />
-                    <div className="h-3 w-1/2 bg-white/5 rounded" />
+                    <div className="h-4 w-1/3 bg-card/10 rounded" />
+                    <div className="h-3 w-1/2 bg-card/5 rounded" />
                   </div>
                 </div>
               </div>
@@ -368,11 +368,11 @@ export function RecentRecords() {
           records.map((record) => <RecordCard key={record.id} record={record} />)
         ) : (
           <div className="text-center py-16 bg-[#0B0F19]/50 rounded-2xl border border-dashed border-[rgba(16,185,129,0.2)]">
-            <div className="bg-white/5 p-4 rounded-full shadow-sm inline-block mb-4">
-              <FiFileText className="h-8 w-8 text-[#9CA3AF]" />
+            <div className="bg-card/5 p-4 rounded-full shadow-sm inline-block mb-4">
+              <FiFileText className="h-8 w-8 text-[#7a756b]" />
             </div>
             <p className="font-semibold text-white">{t('empty_records')}</p>
-            <p className="text-sm text-[#9CA3AF] mt-1 max-w-xs mx-auto">
+            <p className="text-sm text-[#7a756b] mt-1 max-w-xs mx-auto">
               {t('empty_records_desc')}
             </p>
           </div>

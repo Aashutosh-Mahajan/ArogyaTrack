@@ -24,7 +24,7 @@ export function PharmacyKPIGrid() {
                 {[...Array(4)].map((_, i) => (
                     <div
                         key={i}
-                        className="animate-pulse bg-white rounded-xl border border-gray-100 p-5 h-32"
+                        className="animate-pulse bg-card rounded-xl border border-border p-5 h-32"
                     />
                 ))}
             </div>
