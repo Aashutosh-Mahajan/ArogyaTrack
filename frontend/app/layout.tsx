@@ -1,11 +1,18 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter, Syne, DM_Sans } from 'next/font/google';
+import { Fraunces, Plus_Jakarta_Sans } from 'next/font/google';
 import { Providers } from './providers';
+import { ThemeProvider } from './theme-provider';
 
-const inter = Inter({ subsets: ['latin'] });
-const syne = Syne({ subsets: ['latin'], variable: '--font-syne' });
-const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm' });
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-fraunces',
+  axes: ['opsz', 'SOFT', 'WONK'],
+});
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-jakarta',
+});
 
 export const metadata: Metadata = {
   title: 'ArogyaTrack - National Health Surveillance',
@@ -18,9 +25,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} ${syne.variable} ${dmSans.variable}`}>
-        <Providers>{children}</Providers>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${plusJakarta.className} ${fraunces.variable} ${plusJakarta.variable}`}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <Providers>{children}</Providers>
+          <div className="grain-overlay" aria-hidden="true" />
+        </ThemeProvider>
       </body>
     </html>
   );
