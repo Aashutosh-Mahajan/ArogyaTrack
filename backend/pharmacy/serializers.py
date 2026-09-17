@@ -1,3 +1,5 @@
+from django.db import transaction
+
 from rest_framework import serializers
 
 from prescriptions.models import Prescription, PrescriptionMedicine, PrescriptionService
@@ -90,68 +92,77 @@ class DispenseMedicineSerializer(serializers.Serializer):
     def save(self, **kwargs):
         from django.utils import timezone
 
-        pm = self.context["prescription_medicine"]
         pharmacist = self.context["request"].user
         pharmacy = self.context.get("pharmacy")
 
-        # Update prescription medicine status
         status_map = {
             "dispensed": PrescriptionMedicine.DispenseStatus.DISPENSED,
             "unavailable": PrescriptionMedicine.DispenseStatus.UNAVAILABLE,
             "patient_has": PrescriptionMedicine.DispenseStatus.PATIENT_HAS,
         }
 
-        pm.dispense_status = status_map[self.validated_data["status"]]
-        if pm.dispense_status == PrescriptionMedicine.DispenseStatus.DISPENSED:
-            pm.dispensed_at = timezone.now()
-        pm.save()
+        with transaction.atomic():
+            # Re-fetch and lock the row: validate() ran before this transaction
+            # started, so without a lock + re-check here, two concurrent dispense
+            # requests for the same medicine could both pass the "not yet
+            # dispensed" check and double-dispense.
+            pm = PrescriptionMedicine.objects.select_for_update().get(
+                id=self.context["prescription_medicine"].id
+            )
+            if pm.dispense_status == PrescriptionMedicine.DispenseStatus.DISPENSED:
+                raise serializers.ValidationError("This medicine has already been dispensed")
 
-        # Create dispensing record
-        record = DispensingRecord.objects.create(
-            prescription=pm.prescription,
-            prescription_medicine=pm,
-            pharmacy=pharmacy,
-            pharmacist=pharmacist,
-            status=self.validated_data["status"],
-            quantity_dispensed=self.validated_data.get("quantity_dispensed", 0),
-            notes=self.validated_data.get("notes", ""),
-        )
+            pm.dispense_status = status_map[self.validated_data["status"]]
+            if pm.dispense_status == PrescriptionMedicine.DispenseStatus.DISPENSED:
+                pm.dispensed_at = timezone.now()
+            pm.save()
 
-        # Update prescription status
-        PrescriptionService.update_prescription_status(pm.prescription)
+            # Create dispensing record
+            record = DispensingRecord.objects.create(
+                prescription=pm.prescription,
+                prescription_medicine=pm,
+                pharmacy=pharmacy,
+                pharmacist=pharmacist,
+                status=self.validated_data["status"],
+                quantity_dispensed=self.validated_data.get("quantity_dispensed", 0),
+                notes=self.validated_data.get("notes", ""),
+            )
 
-        # Log dispensing
-        from accounts.audit import AuditService
+            # Update prescription status
+            PrescriptionService.update_prescription_status(pm.prescription)
 
-        AuditService.log_event(
-            event_type="prescription_dispensed",
-            action="Pharmacist dispensed medicine",
-            user=pharmacist,
-            resource_type="Prescription",
-            resource_id=str(pm.prescription.id),
-            details={
-                "medicine": pm.medicine.name,
-                "status": self.validated_data["status"],
-                "pharmacy": pharmacy.name if pharmacy else "Unknown",
-            },
-        )
+            # Log dispensing
+            from accounts.audit import AuditService
 
-        # Check if prescription is partially fulfilled
-        if pm.prescription.status == Prescription.Status.PARTIALLY_DISPENSED:
-            # TODO: Send notification to patient about partial fulfillment
-            pass
+            AuditService.log_event(
+                event_type="prescription_dispensed",
+                action="Pharmacist dispensed medicine",
+                user=pharmacist,
+                resource_type="Prescription",
+                resource_id=str(pm.prescription.id),
+                details={
+                    "medicine": pm.medicine.name,
+                    "status": self.validated_data["status"],
+                    "pharmacy": pharmacy.name if pharmacy else "Unknown",
+                },
+            )
 
-        # Activate adherence tracker if fully or partially dispensed
-        if pm.prescription.status in [Prescription.Status.FULLY_DISPENSED, Prescription.Status.PARTIALLY_DISPENSED]:
-            prescription = pm.prescription
-            has_tracker = hasattr(prescription, "adherence_tracker")
-            has_dispensed = prescription.prescription_medicines.filter(
-                dispense_status=PrescriptionMedicine.DispenseStatus.DISPENSED
-            ).exists()
+            # Check if prescription is partially fulfilled
+            if pm.prescription.status == Prescription.Status.PARTIALLY_DISPENSED:
+                # TODO: Send notification to patient about partial fulfillment
+                pass
 
-            if has_dispensed and not has_tracker:
-                # Create adherence tracker once per prescription after first dispense
-                AdherenceService.activate_tracker(prescription)
+            # Activate adherence tracker if fully or partially dispensed
+            if pm.prescription.status in [Prescription.Status.FULLY_DISPENSED, Prescription.Status.PARTIALLY_DISPENSED]:
+                prescription = pm.prescription
+                has_tracker = hasattr(prescription, "adherence_tracker")
+                has_dispensed = prescription.prescription_medicines.filter(
+                    dispense_status=PrescriptionMedicine.DispenseStatus.DISPENSED
+                ).exists()
+
+                if has_dispensed and not has_tracker:
+                    # Create adherence tracker once per prescription after first dispense
+                    AdherenceService.activate_tracker(prescription)
 
         return record
 

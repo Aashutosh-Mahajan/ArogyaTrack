@@ -202,6 +202,8 @@ class PharmacyDetailView(APIView):
 
     def get(self, request):
         pharmacy = get_object_or_404(Pharmacy, owner=request.user)
+        return Response(PharmacySerializer(pharmacy).data)
+
 
 class PharmacyInventoryView(APIView):
     """
