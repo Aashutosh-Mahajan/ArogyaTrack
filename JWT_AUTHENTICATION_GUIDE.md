@@ -14,9 +14,38 @@ The Health Surveillance System now uses **JWT (JSON Web Tokens)** for authentica
 
 ### Security Features
 - HS256 algorithm
-- Bearer token authentication
+- Bearer token authentication (mobile app, API scripts)
+- httpOnly cookie authentication (web frontend — see below)
 - Automatic token expiration
 - Secure signing with secret key
+
+### Transport: mobile (Bearer header) vs. web (httpOnly cookies)
+
+Two authentication transports are supported simultaneously by
+`accounts.authentication.CookieJWTAuthentication`:
+
+- **Mobile app / API clients**: send `Authorization: Bearer <access_token>`
+  exactly as documented below. Tokens are returned in the JSON response body
+  on login/OTP-verify/refresh and stored in `flutter_secure_storage`. Nothing
+  about this path changed.
+- **Web frontend**: never sees the raw token values. On login, OTP-verify,
+  and refresh, the backend *also* sets `access_token`/`refresh_token` as
+  `httpOnly`, `Secure` (outside `DEBUG`), `SameSite=Lax` cookies
+  (`backend/accounts/cookies.py`). The Next.js app sends requests with
+  `withCredentials: true` and never reads or stores a token in
+  `localStorage`/JS memory — this is what closes the XSS token-theft
+  exposure a `localStorage`-based token store has.
+  - Because cookies are attached to requests automatically by the browser,
+    the cookie-auth path is vulnerable to CSRF unless checked explicitly.
+    `CookieJWTAuthentication.enforce_csrf()` runs Django's standard CSRF
+    check on every cookie-authenticated request. The backend also sets a
+    non-`httpOnly` `csrftoken` cookie at login, which axios echoes back as
+    the `X-CSRFToken` header (`xsrfCookieName`/`xsrfHeaderName` in
+    `frontend/lib/api.ts`) — this is the same double-submit-cookie pattern
+    Django's own CSRF middleware implements.
+  - `POST /api/auth/token/refresh/` accepts *either* a `{"refresh": "..."}`
+    body (mobile) or falls back to the `refresh_token` cookie when the body
+    omits it (web) — see `CookieTokenRefreshView` in `backend/accounts/views.py`.
 
 ### Configuration Location
 File: `backend/config/settings.py`
