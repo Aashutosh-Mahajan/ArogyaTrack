@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { Suspense, useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { FiMail, FiShield, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
 import Link from 'next/link';
 
-export default function VerifyEmailPage() {
+function VerifyEmailPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
@@ -142,13 +142,13 @@ export default function VerifyEmailPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-50 via-white to-emerald-50 p-4">
         <div className="w-full max-w-md text-center">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-card rounded-2xl shadow-xl p-8">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
               <FiCheckCircle className="w-10 h-10 text-green-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Email Verified!</h1>
-            <p className="text-gray-600 mb-4">
-              Your email <span className="font-semibold text-gray-800">{email}</span> has been verified successfully.
+            <h1 className="text-2xl font-bold text-foreground mb-2">Email Verified!</h1>
+            <p className="text-muted-foreground mb-4">
+              Your email <span className="font-semibold text-foreground">{email}</span> has been verified successfully.
             </p>
             {role === 'doctor' ? (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
@@ -158,7 +158,7 @@ export default function VerifyEmailPage() {
                 </p>
               </div>
             ) : (
-              <p className="text-gray-500 text-sm mb-6">
+              <p className="text-muted-foreground text-sm mb-6">
                 Redirecting you to the login page...
               </p>
             )}
@@ -177,14 +177,14 @@ export default function VerifyEmailPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-card rounded-2xl shadow-xl p-8">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
               <FiShield className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Verify Your Email</h1>
-            <p className="text-gray-600 text-sm">
+            <h1 className="text-2xl font-bold text-foreground mb-2">Verify Your Email</h1>
+            <p className="text-muted-foreground text-sm">
               We&apos;ve sent a 6-digit verification code to
             </p>
             <div className="flex items-center justify-center gap-2 mt-2">
@@ -195,7 +195,7 @@ export default function VerifyEmailPage() {
 
           {/* OTP Input */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
+            <label className="block text-sm font-medium text-foreground/80 mb-3 text-center">
               Enter verification code
             </label>
             <div className="flex justify-center gap-3" onPaste={handlePaste}>
@@ -212,7 +212,7 @@ export default function VerifyEmailPage() {
                   className={`w-12 h-14 text-center text-xl font-bold border-2 rounded-xl outline-none transition-all ${
                     digit
                       ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-gray-300 bg-white text-gray-900'
+                      : 'border-border bg-card text-foreground'
                   } focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200`}
                   disabled={loading}
                 />
@@ -254,15 +254,15 @@ export default function VerifyEmailPage() {
                 {resending ? 'Sending...' : 'Resend verification code'}
               </button>
             ) : (
-              <p className="text-gray-500 text-sm">
+              <p className="text-muted-foreground text-sm">
                 Resend code in <span className="font-semibold text-indigo-600">{countdown}s</span>
               </p>
             )}
           </div>
 
           {/* Help text */}
-          <div className="mt-6 bg-gray-50 rounded-lg p-4">
-            <p className="text-xs text-gray-500 text-center">
+          <div className="mt-6 bg-background rounded-lg p-4">
+            <p className="text-xs text-muted-foreground text-center">
               Didn&apos;t receive the email? Check your spam folder or click resend above.
               The code expires in 5 minutes.
             </p>
@@ -272,7 +272,7 @@ export default function VerifyEmailPage() {
           <div className="mt-4 text-center">
             <Link
               href="/signup"
-              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground/80"
             >
               <FiArrowLeft className="w-3 h-3" />
               Back to Sign Up
@@ -281,5 +281,13 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={null}>
+      <VerifyEmailPageContent />
+    </Suspense>
   );
 }

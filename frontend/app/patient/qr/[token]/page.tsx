@@ -37,11 +37,11 @@ export default function QRScanLandingPage() {
   // Doctor authenticated – show redirecting
   if (isAuthenticated && user?.role === 'doctor') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center">
             <div className="loading-dots"><span></span><span></span><span></span></div>
-            <p className="mt-4 text-gray-600">Redirecting to patient records...</p>
+            <p className="mt-4 text-muted-foreground">Redirecting to patient records...</p>
           </CardContent>
         </Card>
       </div>
@@ -51,7 +51,7 @@ export default function QRScanLandingPage() {
   // Non-doctor authenticated user
   if (isAuthenticated && user?.role !== 'doctor') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Card className="max-w-md w-full shadow-xl">
           <CardHeader className="text-center">
             <div className="w-14 h-14 mx-auto mb-2 rounded-xl bg-red-100 flex items-center justify-center">
@@ -60,7 +60,7 @@ export default function QRScanLandingPage() {
             <CardTitle className="text-2xl text-red-600">Access Denied</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Only authorized doctors can access patient records via QR scan.
             </p>
             <Link href="/dashboard">
@@ -83,8 +83,8 @@ export default function QRScanLandingPage() {
           <CardTitle className="text-2xl">Patient QR Verification</CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-4">
-          <p className="text-gray-600">
-            This QR code links to a patient's health records. 
+          <p className="text-muted-foreground">
+            This QR code links to a patient&apos;s health records. 
             Please sign in with a <strong>doctor account</strong> to access the records.
           </p>
           <Link href="/login">
@@ -93,7 +93,7 @@ export default function QRScanLandingPage() {
               Sign In as Doctor
             </Button>
           </Link>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             Health Surveillance System • Secure & Tamper-proof
           </p>
         </CardContent>

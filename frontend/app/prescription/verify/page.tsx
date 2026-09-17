@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ interface VerifyResult {
   prescription: Prescription;
 }
 
-export default function VerifyPrescriptionPage() {
+function VerifyPrescriptionPageContent() {
   const searchParams = useSearchParams();
   const [qrInput, setQrInput] = useState('');
   const [result, setResult] = useState<VerifyResult | null>(null);
@@ -82,9 +82,9 @@ export default function VerifyPrescriptionPage() {
       case 'partially_dispensed':
         return { label: 'Partially Dispensed', className: 'bg-amber-100 text-amber-700' };
       case 'fully_dispensed':
-        return { label: 'Fully Dispensed', className: 'bg-emerald-100 text-emerald-700' };
+        return { label: 'Fully Dispensed', className: 'bg-emerald-100 text-primary' };
       default:
-        return { label: status, className: 'bg-slate-100 text-slate-700' };
+        return { label: status, className: 'bg-muted text-foreground/80' };
     }
   };
 
@@ -93,13 +93,13 @@ export default function VerifyPrescriptionPage() {
       case 'pending':
         return { label: 'Pending', className: 'bg-amber-50 text-amber-700 border-amber-200' };
       case 'dispensed':
-        return { label: 'Dispensed', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+        return { label: 'Dispensed', className: 'bg-primary/8 text-primary border-emerald-200' };
       case 'unavailable':
         return { label: 'Unavailable', className: 'bg-rose-50 text-rose-700 border-rose-200' };
       case 'patient_has':
-        return { label: 'Patient Has', className: 'bg-slate-50 text-slate-700 border-slate-200' };
+        return { label: 'Patient Has', className: 'bg-background text-foreground/80 border-border' };
       default:
-        return { label: status, className: 'bg-slate-50 text-slate-700 border-slate-200' };
+        return { label: status, className: 'bg-background text-foreground/80 border-border' };
     }
   };
 
@@ -111,8 +111,8 @@ export default function VerifyPrescriptionPage() {
           <div className="inline-flex bg-blue-100 p-4 rounded-full mb-4">
             <FiShield className="h-8 w-8 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900">Verify Prescription</h1>
-          <p className="text-slate-500 mt-2">
+          <h1 className="text-3xl font-bold text-foreground">Verify Prescription</h1>
+          <p className="text-muted-foreground mt-2">
             Scan a prescription QR code or enter the verification data to check authenticity
           </p>
         </div>
@@ -146,7 +146,7 @@ export default function VerifyPrescriptionPage() {
         {loading && (
           <div className="text-center py-12">
             <FiLoader className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-            <p className="text-slate-500">Verifying prescription...</p>
+            <p className="text-muted-foreground">Verifying prescription...</p>
           </div>
         )}
 
@@ -167,12 +167,12 @@ export default function VerifyPrescriptionPage() {
         {result && (
           <div className="space-y-6">
             {/* Verified Badge */}
-            <Card className="border-emerald-200 bg-emerald-50">
+            <Card className="border-emerald-200 bg-primary/8">
               <CardContent className="flex items-center gap-3 py-6">
-                <FiCheckCircle className="h-6 w-6 text-emerald-600 flex-shrink-0" />
+                <FiCheckCircle className="h-6 w-6 text-primary flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-emerald-800">Prescription Verified</h3>
-                  <p className="text-emerald-600 text-sm">
+                  <h3 className="font-semibold text-primary">Prescription Verified</h3>
+                  <p className="text-primary text-sm">
                     This prescription is authentic and has not been tampered with.
                   </p>
                 </div>
@@ -195,22 +195,22 @@ export default function VerifyPrescriptionPage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Patient</p>
-                    <p className="text-slate-900 flex items-center gap-1 mt-1">
-                      <FiUser className="h-4 w-4 text-slate-400" />
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Patient</p>
+                    <p className="text-foreground flex items-center gap-1 mt-1">
+                      <FiUser className="h-4 w-4 text-muted-foreground" />
                       {result.prescription.patient_name || 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Doctor</p>
-                    <p className="text-slate-900 mt-1">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Doctor</p>
+                    <p className="text-foreground mt-1">
                       {result.prescription.doctor_name || 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Date</p>
-                    <p className="text-slate-900 flex items-center gap-1 mt-1">
-                      <FiCalendar className="h-4 w-4 text-slate-400" />
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</p>
+                    <p className="text-foreground flex items-center gap-1 mt-1">
+                      <FiCalendar className="h-4 w-4 text-muted-foreground" />
                       {new Date(result.prescription.created_at).toLocaleDateString('en-IN', {
                         year: 'numeric',
                         month: 'long',
@@ -222,27 +222,27 @@ export default function VerifyPrescriptionPage() {
 
                 {/* Medicines */}
                 <div className="mt-6">
-                  <h4 className="text-sm font-semibold text-slate-700 mb-3">Prescribed Medicines</h4>
+                  <h4 className="text-sm font-semibold text-foreground/80 mb-3">Prescribed Medicines</h4>
                   <div className="space-y-3">
                     {result.prescription.medicines?.map((med: PrescriptionMedicine, idx: number) => {
                       const dispense = getDispenseConfig(med.dispense_status);
                       return (
                         <div
                           key={med.id || idx}
-                          className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100"
+                          className="flex items-center justify-between p-3 bg-background rounded-lg border border-border"
                         >
                           <div>
-                            <p className="font-medium text-slate-900">
+                            <p className="font-medium text-foreground">
                               {med.medicine_name || (typeof med.medicine === 'string' ? med.medicine : 'Medicine')}
                             </p>
                             {med.medicine_generic && (
-                              <p className="text-xs text-slate-500">{med.medicine_generic}</p>
+                              <p className="text-xs text-muted-foreground">{med.medicine_generic}</p>
                             )}
-                            <p className="text-sm text-slate-600 mt-1">
+                            <p className="text-sm text-muted-foreground mt-1">
                               {med.dosage} &middot; {med.frequency} &middot; {med.duration_days} days
                             </p>
                             {med.special_instructions && (
-                              <p className="text-xs text-slate-500 mt-1 italic">{med.special_instructions}</p>
+                              <p className="text-xs text-muted-foreground mt-1 italic">{med.special_instructions}</p>
                             )}
                           </div>
                           <Badge className={`${dispense.className} border`}>
@@ -273,5 +273,13 @@ export default function VerifyPrescriptionPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function VerifyPrescriptionPage() {
+  return (
+    <Suspense fallback={null}>
+      <VerifyPrescriptionPageContent />
+    </Suspense>
   );
 }

@@ -91,7 +91,7 @@ export default function ForgotPasswordPage() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Email</label>
                   <div className="relative">
-                    <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       {...emailForm.register('email')}
                       type="email"
@@ -124,15 +124,15 @@ export default function ForgotPasswordPage() {
             {step === 'reset' && (
               <form onSubmit={resetForm.handleSubmit(onResetSubmit)} className="space-y-4">
                 <div className="text-center mb-2">
-                  <p className="text-sm text-gray-500">
-                    Code sent to <span className="font-semibold text-gray-700">{email}</span>
+                  <p className="text-sm text-muted-foreground">
+                    Code sent to <span className="font-semibold text-foreground/80">{email}</span>
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Verification Code</label>
                   <div className="relative">
-                    <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       {...resetForm.register('otp')}
                       type="text"
@@ -151,7 +151,7 @@ export default function ForgotPasswordPage() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">New Password</label>
                   <div className="relative">
-                    <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       {...resetForm.register('newPassword')}
                       type={showPassword ? 'text' : 'password'}
@@ -161,7 +161,7 @@ export default function ForgotPasswordPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                     >
                       {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
                     </button>
@@ -176,7 +176,7 @@ export default function ForgotPasswordPage() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Confirm New Password</label>
                   <div className="relative">
-                    <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       {...resetForm.register('confirmPassword')}
                       type={showPassword ? 'text' : 'password'}
@@ -215,7 +215,7 @@ export default function ForgotPasswordPage() {
                 <div className="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center">
                   <FiCheckCircle className="w-8 h-8 text-green-600" />
                 </div>
-                <p className="text-gray-600 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Your password has been reset. You can now sign in with your new password.
                 </p>
                 <Button className="w-full" onClick={() => router.push('/login')}>
@@ -227,7 +227,7 @@ export default function ForgotPasswordPage() {
         </Card>
 
         <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-gray-600 hover:text-gray-900">
+          <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
             ← Back to Home
           </Link>
         </div>
