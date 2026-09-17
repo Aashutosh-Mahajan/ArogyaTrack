@@ -193,21 +193,21 @@ export default function PatientRegisterPage() {
   const strengthWidth = passwordStrength === 'weak' ? '33%' : passwordStrength === 'medium' ? '66%' : '100%';
 
   const inputClass = (field: string) =>
-    `mt-1 block w-full h-11 rounded-xl border ${errors[field] ? 'border-red-400' : 'border-slate-200'} bg-white px-4 text-sm focus:border-teal-500 focus:ring-teal-500/20 transition-all ${abhaStatus === 'verified' ? 'bg-slate-50' : ''}`;
+    `mt-1 block w-full h-11 rounded-xl border ${errors[field] ? 'border-red-400' : 'border-border'} bg-card px-4 text-sm focus:border-primary focus:ring-primary/20 transition-all ${abhaStatus === 'verified' ? 'bg-background' : ''}`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-teal-50/30 py-10 px-4">
+    <div className="min-h-screen bg-background py-10 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-700 to-emerald-600 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center">
               <FiActivity className="w-4 h-4 text-white" />
             </div>
-            <span className="font-syne font-bold text-lg text-slate-900">ArogyaTrack</span>
+            <span className="font-syne font-bold text-lg text-foreground">ArogyaTrack</span>
           </Link>
-          <h1 className="text-3xl font-bold text-slate-900 font-syne mb-1">Patient Registration</h1>
-          <p className="text-sm text-slate-500 font-dm">Create your secure healthcare account</p>
+          <h1 className="text-3xl font-bold text-foreground font-syne mb-1">Patient Registration</h1>
+          <p className="text-sm text-muted-foreground font-dm">Create your secure healthcare account</p>
         </div>
 
         <MultiStepProgress steps={STEPS} current={step} />
@@ -217,15 +217,15 @@ export default function PatientRegisterPage() {
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            className="mb-6 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm"
+            className="mb-6 p-4 rounded-2xl bg-card border border-border shadow-sm"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center">
-                <FiUser className="w-5 h-5 text-teal-700" />
+              <div className="w-12 h-12 rounded-full bg-primary/12 flex items-center justify-center">
+                <FiUser className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-semibold text-slate-900">{formData.first_name} {formData.last_name}</p>
-                <div className="flex items-center gap-3 text-xs text-slate-500">
+                <p className="font-semibold text-foreground">{formData.first_name} {formData.last_name}</p>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   {formData.blood_group && <span className="flex items-center gap-1"><FiHeart className="w-3 h-3 text-red-400" />{formData.blood_group}</span>}
                   {formData.email && <span className="flex items-center gap-1"><FiMail className="w-3 h-3" />{formData.email}</span>}
                 </div>
@@ -235,7 +235,7 @@ export default function PatientRegisterPage() {
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-8">
             <AnimatePresence mode="wait">
               {/* ── Step 1: Personal Info ── */}
               {step === 0 && (
@@ -243,15 +243,15 @@ export default function PatientRegisterPage() {
                   {/* ABHA */}
                   {!abhaHidden && (
                     <div className="p-5 rounded-xl bg-blue-50 border border-blue-200">
-                      <h3 className="text-sm font-semibold text-slate-900 mb-1">ABHA ID Verification</h3>
-                      <p className="text-xs text-slate-500 mb-3">Auto-fill details with your national health ID</p>
+                      <h3 className="text-sm font-semibold text-foreground mb-1">ABHA ID Verification</h3>
+                      <p className="text-xs text-muted-foreground mb-3">Auto-fill details with your national health ID</p>
                       <div className="flex gap-2">
                         <input
                           type="text"
                           value={abhaId}
                           onChange={(e) => { setAbhaId(e.target.value); setAbhaStatus('idle'); }}
                           placeholder="12-3456-7890-1234"
-                          className="flex-1 h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-blue-500"
+                          className="flex-1 h-10 rounded-lg border border-border px-3 text-sm focus:border-blue-500"
                         />
                         <button type="button" onClick={handleAbhaVerify} disabled={abhaVerifying} className="px-4 h-10 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:bg-gray-400">
                           {abhaVerifying ? 'Verifying…' : 'Verify'}
@@ -265,12 +265,12 @@ export default function PatientRegisterPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">First Name <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-foreground/80">First Name <span className="text-red-500">*</span></label>
                       <input type="text" name="first_name" value={formData.first_name} onChange={handleChange} className={inputClass('first_name')} />
                       {errors.first_name && <p className="text-xs text-red-500 mt-1">{errors.first_name}</p>}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">Last Name <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-foreground/80">Last Name <span className="text-red-500">*</span></label>
                       <input type="text" name="last_name" value={formData.last_name} onChange={handleChange} className={inputClass('last_name')} />
                       {errors.last_name && <p className="text-xs text-red-500 mt-1">{errors.last_name}</p>}
                     </div>
@@ -278,12 +278,12 @@ export default function PatientRegisterPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">Date of Birth <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-foreground/80">Date of Birth <span className="text-red-500">*</span></label>
                       <input type="date" name="date_of_birth" value={formData.date_of_birth} onChange={handleChange} className={inputClass('date_of_birth')} />
                       {errors.date_of_birth && <p className="text-xs text-red-500 mt-1">{errors.date_of_birth}</p>}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">Gender</label>
+                      <label className="block text-sm font-medium text-foreground/80">Gender</label>
                       <select name="gender" value={formData.gender} onChange={handleChange} className={inputClass('gender')}>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
@@ -293,7 +293,7 @@ export default function PatientRegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">Blood Group <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-foreground/80">Blood Group <span className="text-red-500">*</span></label>
                     <select name="blood_group" value={formData.blood_group} onChange={handleChange} className={inputClass('blood_group')}>
                       <option value="">Select</option>
                       {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => <option key={bg} value={bg}>{bg}</option>)}
@@ -306,11 +306,11 @@ export default function PatientRegisterPage() {
               {/* ── Step 2: Medical History ── */}
               {step === 1 && (
                 <motion.div key="s1med" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
-                  <h3 className="text-lg font-bold text-slate-900">Help doctors understand you better</h3>
+                  <h3 className="text-lg font-bold text-foreground">Help doctors understand you better</h3>
 
                   {/* Existing Medical Conditions */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-800 mb-2">Existing Medical Conditions</label>
+                    <label className="block text-sm font-semibold text-foreground mb-2">Existing Medical Conditions</label>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {CONDITION_OPTIONS.map((opt) => {
                         const active = conditions.includes(opt);
@@ -324,7 +324,7 @@ export default function PatientRegisterPage() {
                               setConditions((c) => active ? c.filter((x) => x !== opt) : [...c, opt]);
                             }}
                             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                              active ? 'bg-teal-600 text-white border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                              active ? 'bg-primary text-white border-transparent' : 'bg-card text-muted-foreground border-border hover:border-primary/50'
                             }`}
                           >
                             {opt}
@@ -338,12 +338,12 @@ export default function PatientRegisterPage() {
                         value={customCondition}
                         onChange={(e) => setCustomCondition(e.target.value)}
                         placeholder="Add custom condition..."
-                        className="flex-1 h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm focus:border-teal-500"
+                        className="flex-1 h-10 rounded-xl border border-border bg-background px-4 text-sm focus:border-primary"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') { e.preventDefault(); if (customCondition.trim()) { setConditions((c) => [...c, customCondition.trim()]); setCustomCondition(''); } }
                         }}
                       />
-                      <button type="button" onClick={() => { if (customCondition.trim()) { setConditions((c) => [...c, customCondition.trim()]); setCustomCondition(''); } }} className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100">
+                      <button type="button" onClick={() => { if (customCondition.trim()) { setConditions((c) => [...c, customCondition.trim()]); setCustomCondition(''); } }} className="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:bg-muted">
                         <FiPlus className="w-4 h-4" />
                       </button>
                     </div>
@@ -351,7 +351,7 @@ export default function PatientRegisterPage() {
 
                   {/* Known Allergies */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-800 mb-2">Known Allergies</label>
+                    <label className="block text-sm font-semibold text-foreground mb-2">Known Allergies</label>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {ALLERGY_OPTIONS.map((opt) => {
                         const active = allergies.includes(opt);
@@ -365,7 +365,7 @@ export default function PatientRegisterPage() {
                               setAllergies((a) => active ? a.filter((x) => x !== opt) : [...a, opt]);
                             }}
                             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                              active ? 'bg-teal-600 text-white border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                              active ? 'bg-primary text-white border-transparent' : 'bg-card text-muted-foreground border-border hover:border-primary/50'
                             }`}
                           >
                             {opt}
@@ -379,12 +379,12 @@ export default function PatientRegisterPage() {
                         value={customAllergy}
                         onChange={(e) => setCustomAllergy(e.target.value)}
                         placeholder="Add custom allergy..."
-                        className="flex-1 h-10 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm focus:border-teal-500"
+                        className="flex-1 h-10 rounded-xl border border-border bg-background px-4 text-sm focus:border-primary"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') { e.preventDefault(); if (customAllergy.trim()) { setAllergies((a) => [...a, customAllergy.trim()]); setCustomAllergy(''); } }
                         }}
                       />
-                      <button type="button" onClick={() => { if (customAllergy.trim()) { setAllergies((a) => [...a, customAllergy.trim()]); setCustomAllergy(''); } }} className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100">
+                      <button type="button" onClick={() => { if (customAllergy.trim()) { setAllergies((a) => [...a, customAllergy.trim()]); setCustomAllergy(''); } }} className="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:bg-muted">
                         <FiPlus className="w-4 h-4" />
                       </button>
                     </div>
@@ -392,25 +392,25 @@ export default function PatientRegisterPage() {
 
                   {/* Past Surgeries */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-800 mb-2">Past Surgeries / Hospitalizations</label>
+                    <label className="block text-sm font-semibold text-foreground mb-2">Past Surgeries / Hospitalizations</label>
                     <textarea
                       value={pastSurgeries}
                       onChange={(e) => setPastSurgeries(e.target.value)}
                       rows={3}
                       placeholder="E.g. Appendectomy 2019, Hospitalized for pneumonia 2022..."
-                      className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-teal-500 focus:ring-teal-500/20"
+                      className="mt-1 block w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:border-primary focus:ring-primary/20"
                     />
                   </div>
 
                   {/* Current Medications */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-800 mb-2">Current Medications</label>
+                    <label className="block text-sm font-semibold text-foreground mb-2">Current Medications</label>
                     <textarea
                       value={currentMedications}
                       onChange={(e) => setCurrentMedications(e.target.value)}
                       rows={2}
                       placeholder="E.g. Metformin 500mg twice daily, Amlodipine 5mg once daily..."
-                      className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-teal-500 focus:ring-teal-500/20"
+                      className="mt-1 block w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:border-primary focus:ring-primary/20"
                     />
                   </div>
                 </motion.div>
@@ -421,17 +421,17 @@ export default function PatientRegisterPage() {
                 <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">Email <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-foreground/80">Email <span className="text-red-500">*</span></label>
                       <div className="relative">
-                        <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                        <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                         <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@email.com" className={`${inputClass('email')} pl-10`} />
                       </div>
                       {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">Phone <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-foreground/80">Phone <span className="text-red-500">*</span></label>
                       <div className="relative">
-                        <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                        <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                         <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="9876543210" className={`${inputClass('phone')} pl-10`} />
                       </div>
                       {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
@@ -439,24 +439,24 @@ export default function PatientRegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">Full Address <span className="text-red-500">*</span></label>
-                    <textarea name="address" value={formData.address} onChange={handleChange} rows={2} className={`mt-1 block w-full rounded-xl border ${errors.address ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-3 text-sm focus:border-teal-500 focus:ring-teal-500/20`} />
+                    <label className="block text-sm font-medium text-foreground/80">Full Address <span className="text-red-500">*</span></label>
+                    <textarea name="address" value={formData.address} onChange={handleChange} rows={2} className={`mt-1 block w-full rounded-xl border ${errors.address ? 'border-red-400' : 'border-border'} bg-card px-4 py-3 text-sm focus:border-primary focus:ring-primary/20`} />
                     {errors.address && <p className="text-xs text-red-500 mt-1">{errors.address}</p>}
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">District <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-foreground/80">District <span className="text-red-500">*</span></label>
                       <input type="text" name="district" value={formData.district} onChange={handleChange} className={inputClass('district')} />
                       {errors.district && <p className="text-xs text-red-500 mt-1">{errors.district}</p>}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">State <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-foreground/80">State <span className="text-red-500">*</span></label>
                       <input type="text" name="state" value={formData.state} onChange={handleChange} className={inputClass('state')} />
                       {errors.state && <p className="text-xs text-red-500 mt-1">{errors.state}</p>}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">Pincode <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-foreground/80">Pincode <span className="text-red-500">*</span></label>
                       <input type="text" name="pincode" value={formData.pincode} onChange={handleChange} maxLength={6} className={inputClass('pincode')} />
                       {errors.pincode && <p className="text-xs text-red-500 mt-1">{errors.pincode}</p>}
                     </div>
@@ -468,9 +468,9 @@ export default function PatientRegisterPage() {
               {step === 3 && (
                 <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">Password <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-foreground/80">Password <span className="text-red-500">*</span></label>
                     <div className="relative">
-                      <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                      <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                       <input
                         type={showPassword ? 'text' : 'password'}
                         name="password"
@@ -478,38 +478,38 @@ export default function PatientRegisterPage() {
                         onChange={handleChange}
                         className={`${inputClass('password')} pl-10 pr-10`}
                       />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
                         {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
                       </button>
                     </div>
                     {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
                     {formData.password && (
                       <div className="mt-2 flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                           <div className={`h-full ${strengthColor} transition-all`} style={{ width: strengthWidth }} />
                         </div>
-                        <span className="text-[10px] font-medium capitalize text-slate-500">{passwordStrength}</span>
+                        <span className="text-[10px] font-medium capitalize text-muted-foreground">{passwordStrength}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Aadhar Upload */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Aadhar / ID Proof <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-foreground/80 mb-1">Aadhar / ID Proof <span className="text-red-500">*</span></label>
                     {!(formData as any).aadhar_id_proof ? (
                       <div
-                        className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer hover:border-teal-400 hover:bg-teal-50/50 transition-colors ${errors.aadhar_id_proof ? 'border-red-400' : 'border-slate-300'}`}
+                        className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer hover:border-primary/60 hover:bg-primary/8 transition-colors ${errors.aadhar_id_proof ? 'border-red-400' : 'border-border'}`}
                         onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = '.jpg,.jpeg,.png,.pdf'; i.onchange = handleFileChange as any; i.click(); }}
                       >
-                        <FiUploadCloud className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-                        <p className="text-sm text-slate-500">Drag &amp; drop or <span className="text-teal-600 font-medium">browse</span></p>
-                        <p className="text-xs text-slate-400 mt-1">JPG, PNG, PDF (max 5MB)</p>
+                        <FiUploadCloud className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">Drag &amp; drop or <span className="text-primary font-medium">browse</span></p>
+                        <p className="text-xs text-muted-foreground mt-1">JPG, PNG, PDF (max 5MB)</p>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                        <FiCheckCircle className="w-5 h-5 text-emerald-600" />
-                        <span className="text-sm text-emerald-800 truncate flex-1">{((formData as any).aadhar_id_proof as File).name}</span>
-                        <button type="button" onClick={() => { setFormData((p) => ({ ...p, aadhar_id_proof: undefined })); setPreviewUrl(null); }} className="p-1 text-emerald-600 hover:bg-emerald-100 rounded-full">
+                      <div className="flex items-center gap-3 p-3 bg-primary/8 border border-emerald-200 rounded-xl">
+                        <FiCheckCircle className="w-5 h-5 text-primary" />
+                        <span className="text-sm text-primary truncate flex-1">{((formData as any).aadhar_id_proof as File).name}</span>
+                        <button type="button" onClick={() => { setFormData((p) => ({ ...p, aadhar_id_proof: undefined })); setPreviewUrl(null); }} className="p-1 text-primary hover:bg-primary/12 rounded-full">
                           <FiX className="w-4 h-4" />
                         </button>
                       </div>
@@ -531,9 +531,9 @@ export default function PatientRegisterPage() {
                           name={c.name}
                           checked={(formData as any)[c.name] || false}
                           onChange={handleChange}
-                          className="mt-0.5 w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                          className="mt-0.5 w-4 h-4 rounded border-border text-primary focus:ring-primary"
                         />
-                        <span className={`text-sm ${errors[c.name] ? 'text-red-500' : 'text-slate-600'}`}>{c.label}</span>
+                        <span className={`text-sm ${errors[c.name] ? 'text-red-500' : 'text-muted-foreground'}`}>{c.label}</span>
                       </label>
                     ))}
                   </div>
@@ -542,23 +542,23 @@ export default function PatientRegisterPage() {
             </AnimatePresence>
 
             {/* Navigation */}
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-100">
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
               {step > 0 ? (
-                <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
+                <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted transition-colors">
                   <FiArrowLeft className="w-4 h-4" /> Back
                 </button>
               ) : (
-                <Link href="/signup" className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-600">
+                <Link href="/signup" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-muted-foreground">
                   <FiArrowLeft className="w-4 h-4" /> Role selection
                 </Link>
               )}
 
               {step < STEPS.length - 1 ? (
-                <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 h-11 rounded-xl text-sm font-medium bg-teal-700 text-white hover:bg-teal-800 shadow-lg shadow-teal-700/20 transition-all">
+                <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 h-11 rounded-xl text-sm font-medium bg-primary text-white hover:opacity-90 shadow-lg shadow-teal-700/20 transition-all">
                   Next <FiArrowRight className="w-4 h-4" />
                 </button>
               ) : (
-                <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 h-11 rounded-xl text-sm font-medium bg-teal-700 text-white hover:bg-teal-800 shadow-lg shadow-teal-700/20 transition-all disabled:opacity-60">
+                <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 h-11 rounded-xl text-sm font-medium bg-primary text-white hover:opacity-90 shadow-lg shadow-teal-700/20 transition-all disabled:opacity-60">
                   {loading ? 'Creating account…' : 'Create Account'} <FiCheckCircle className="w-4 h-4" />
                 </button>
               )}
@@ -566,9 +566,9 @@ export default function PatientRegisterPage() {
           </div>
         </form>
 
-        <p className="text-center text-sm text-slate-500 mt-6">
+        <p className="text-center text-sm text-muted-foreground mt-6">
           Already have an account?{' '}
-          <Link href="/patient/signin" className="text-teal-700 font-semibold hover:underline">Sign in</Link>
+          <Link href="/patient/signin" className="text-primary font-semibold hover:underline">Sign in</Link>
         </p>
       </div>
     </div>

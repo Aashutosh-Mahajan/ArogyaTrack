@@ -133,21 +133,21 @@ export default function DoctorRegisterPage() {
   const strengthWidth = passwordStrength === 'weak' ? '33%' : passwordStrength === 'medium' ? '66%' : '100%';
 
   const inputClass = (field: string) =>
-    `mt-1 block w-full h-11 rounded-xl border ${errors[field] ? 'border-red-400' : 'border-slate-200'} bg-white px-4 text-sm focus:border-teal-500 focus:ring-teal-500/20 transition-all`;
+    `mt-1 block w-full h-11 rounded-xl border ${errors[field] ? 'border-red-400' : 'border-border'} bg-card px-4 text-sm focus:border-primary focus:ring-primary/20 transition-all`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-teal-50/30 py-10 px-4">
+    <div className="min-h-screen bg-background py-10 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-700 to-emerald-600 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center">
               <FiActivity className="w-4 h-4 text-white" />
             </div>
-            <span className="font-syne font-bold text-lg text-slate-900">ArogyaTrack</span>
+            <span className="font-syne font-bold text-lg text-foreground">ArogyaTrack</span>
           </Link>
-          <h1 className="text-3xl font-bold text-slate-900 font-syne mb-1">Doctor Registration</h1>
-          <p className="text-sm text-slate-500 font-dm">Join the ArogyaTrack practitioner network</p>
+          <h1 className="text-3xl font-bold text-foreground font-syne mb-1">Doctor Registration</h1>
+          <p className="text-sm text-muted-foreground font-dm">Join the ArogyaTrack practitioner network</p>
         </div>
 
         {/* Amber warning */}
@@ -162,32 +162,32 @@ export default function DoctorRegisterPage() {
         <MultiStepProgress steps={STEPS} current={step} />
 
         <form onSubmit={handleSubmit}>
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-8">
             <AnimatePresence mode="wait">
               {/* ── Step 1: Personal Info ── */}
               {step === 0 && (
                 <motion.div key="d0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">First Name <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-foreground/80">First Name <span className="text-red-500">*</span></label>
                       <input type="text" name="first_name" value={formData.first_name} onChange={handleChange} className={inputClass('first_name')} />
                       {errors.first_name && <p className="text-xs text-red-500 mt-1">{errors.first_name}</p>}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">Last Name <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-foreground/80">Last Name <span className="text-red-500">*</span></label>
                       <input type="text" name="last_name" value={formData.last_name} onChange={handleChange} className={inputClass('last_name')} />
                       {errors.last_name && <p className="text-xs text-red-500 mt-1">{errors.last_name}</p>}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">Email <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-foreground/80">Email <span className="text-red-500">*</span></label>
                     <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="doctor@hospital.in" className={inputClass('email')} />
                     {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">Phone <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-foreground/80">Phone <span className="text-red-500">*</span></label>
                     <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="9876543210" className={inputClass('phone')} />
                     {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
                   </div>
@@ -198,14 +198,14 @@ export default function DoctorRegisterPage() {
               {step === 1 && (
                 <motion.div key="d1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">Medical License Number <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-foreground/80">Medical License Number <span className="text-red-500">*</span></label>
                     <input type="text" name="license_number" value={formData.license_number} onChange={handleChange} placeholder="e.g. MCI-12345" className={inputClass('license_number')} />
                     {errors.license_number && <p className="text-xs text-red-500 mt-1">{errors.license_number}</p>}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">Degree <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-foreground/80">Degree <span className="text-red-500">*</span></label>
                       <select name="degree" value={formData.degree} onChange={handleChange} className={inputClass('degree')}>
                         <option value="">Select degree</option>
                         {DEGREES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -213,27 +213,27 @@ export default function DoctorRegisterPage() {
                       {errors.degree && <p className="text-xs text-red-500 mt-1">{errors.degree}</p>}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700">Experience (years) <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-foreground/80">Experience (years) <span className="text-red-500">*</span></label>
                       <input type="number" name="experience_years" value={formData.experience_years} onChange={handleChange} min={0} max={60} className={inputClass('experience_years')} />
                       {errors.experience_years && <p className="text-xs text-red-500 mt-1">{errors.experience_years}</p>}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Specialization(s) <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-foreground/80 mb-2">Specialization(s) <span className="text-red-500">*</span></label>
                     <ChipSelect options={SPECIALIZATIONS} selected={specializations} onChange={setSpecializations} />
                     {errors.specialization && <p className="text-xs text-red-500 mt-2">{errors.specialization}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">Hospital / Clinic Name <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-foreground/80">Hospital / Clinic Name <span className="text-red-500">*</span></label>
                     <input type="text" name="hospital_name" value={formData.hospital_name} onChange={handleChange} className={inputClass('hospital_name')} />
                     {errors.hospital_name && <p className="text-xs text-red-500 mt-1">{errors.hospital_name}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">Hospital Address</label>
-                    <textarea name="hospital_address" value={formData.hospital_address} onChange={handleChange} rows={2} className="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-teal-500 focus:ring-teal-500/20" />
+                    <label className="block text-sm font-medium text-foreground/80">Hospital Address</label>
+                    <textarea name="hospital_address" value={formData.hospital_address} onChange={handleChange} rows={2} className="mt-1 block w-full rounded-xl border border-border bg-card px-4 py-3 text-sm focus:border-primary focus:ring-primary/20" />
                   </div>
                 </motion.div>
               )}
@@ -242,9 +242,9 @@ export default function DoctorRegisterPage() {
               {step === 2 && (
                 <motion.div key="d2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">Password <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-foreground/80">Password <span className="text-red-500">*</span></label>
                     <div className="relative">
-                      <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                      <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                       <input
                         type={showPassword ? 'text' : 'password'}
                         name="password"
@@ -252,17 +252,17 @@ export default function DoctorRegisterPage() {
                         onChange={handleChange}
                         className={`${inputClass('password')} pl-10 pr-10`}
                       />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
                         {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
                       </button>
                     </div>
                     {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
                     {formData.password && (
                       <div className="mt-2 flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                           <div className={`h-full ${strengthColor} transition-all`} style={{ width: strengthWidth }} />
                         </div>
-                        <span className="text-[10px] font-medium capitalize text-slate-500">{passwordStrength}</span>
+                        <span className="text-[10px] font-medium capitalize text-muted-foreground">{passwordStrength}</span>
                       </div>
                     )}
                   </div>
@@ -294,9 +294,9 @@ export default function DoctorRegisterPage() {
                       name="terms_accepted"
                       checked={formData.terms_accepted || false}
                       onChange={handleChange}
-                      className="mt-0.5 w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                      className="mt-0.5 w-4 h-4 rounded border-border text-primary focus:ring-primary"
                     />
-                    <span className={`text-sm ${errors.terms_accepted ? 'text-red-500' : 'text-slate-600'}`}>
+                    <span className={`text-sm ${errors.terms_accepted ? 'text-red-500' : 'text-muted-foreground'}`}>
                       I accept the Terms of Service &amp; confirm the accuracy of submitted documents
                     </span>
                   </label>
@@ -305,23 +305,23 @@ export default function DoctorRegisterPage() {
             </AnimatePresence>
 
             {/* Navigation */}
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-100">
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
               {step > 0 ? (
-                <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
+                <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted transition-colors">
                   <FiArrowLeft className="w-4 h-4" /> Back
                 </button>
               ) : (
-                <Link href="/signup" className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-600">
+                <Link href="/signup" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-muted-foreground">
                   <FiArrowLeft className="w-4 h-4" /> Role selection
                 </Link>
               )}
 
               {step < STEPS.length - 1 ? (
-                <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 h-11 rounded-xl text-sm font-medium bg-teal-700 text-white hover:bg-teal-800 shadow-lg shadow-teal-700/20 transition-all">
+                <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 h-11 rounded-xl text-sm font-medium bg-primary text-white hover:opacity-90 shadow-lg shadow-teal-700/20 transition-all">
                   Next <FiArrowRight className="w-4 h-4" />
                 </button>
               ) : (
-                <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 h-11 rounded-xl text-sm font-medium bg-teal-700 text-white hover:bg-teal-800 shadow-lg shadow-teal-700/20 transition-all disabled:opacity-60">
+                <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 h-11 rounded-xl text-sm font-medium bg-primary text-white hover:opacity-90 shadow-lg shadow-teal-700/20 transition-all disabled:opacity-60">
                   {loading ? 'Submitting…' : 'Submit for Verification'} <FiCheckCircle className="w-4 h-4" />
                 </button>
               )}
@@ -329,9 +329,9 @@ export default function DoctorRegisterPage() {
           </div>
         </form>
 
-        <p className="text-center text-sm text-slate-500 mt-6">
+        <p className="text-center text-sm text-muted-foreground mt-6">
           Already registered?{' '}
-          <Link href="/doctor/signin" className="text-teal-700 font-semibold hover:underline">Sign in</Link>
+          <Link href="/doctor/signin" className="text-primary font-semibold hover:underline">Sign in</Link>
         </p>
       </div>
     </div>
