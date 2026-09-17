@@ -20,20 +20,20 @@ export default function MultiStepProgress({ steps, current }: Props) {
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                   done
-                    ? 'bg-teal-600 text-white'
+                    ? 'bg-primary text-white'
                     : active
-                    ? 'bg-teal-600 text-white ring-4 ring-teal-600/20'
-                    : 'bg-gray-200 text-gray-500'
+                    ? 'bg-primary text-white ring-4 ring-teal-600/20'
+                    : 'bg-muted text-muted-foreground'
                 }`}
               >
                 {done ? <FiCheck className="w-4 h-4" /> : i + 1}
               </div>
-              <span className={`text-[10px] font-medium whitespace-nowrap ${active || done ? 'text-teal-700' : 'text-gray-400'}`}>
+              <span className={`text-[10px] font-medium whitespace-nowrap ${active || done ? 'text-primary' : 'text-muted-foreground'}`}>
                 {label}
               </span>
             </div>
             {i < steps.length - 1 && (
-              <div className={`flex-1 h-0.5 mx-2 ${i < current ? 'bg-teal-600' : 'bg-gray-200'}`} />
+              <div className={`flex-1 h-0.5 mx-2 ${i < current ? 'bg-primary' : 'bg-muted'}`} />
             )}
           </React.Fragment>
         );
