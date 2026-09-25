@@ -1,103 +1,74 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { FiShield, FiLogIn } from 'react-icons/fi';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { Loader2, LogIn, ShieldCheck, ShieldX } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+import { Logo } from '@/components/brand/Logo';
+import { roleHome } from '@/lib/roles';
+import { t } from '@/lib/i18n';
 
 /**
- * QR Scan Landing Page: /patient/qr/[token]/
- *
- * When a doctor scans a patient's QR code, this page is loaded.
- * - If the user is an authenticated doctor → redirect to doctor scan results
- * - If not authenticated → show login prompt
- * - If not a doctor → show 403 forbidden
+ * Landing page for health-card links (/patient/qr/<token>).
+ * Doctors are forwarded to the scanner with the token; pharmacists to the
+ * dispensing view; everyone else is told the records stay private.
  */
 export default function QRScanLandingPage() {
-  const params = useParams();
+  const { token } = useParams<{ token: string }>();
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
-
-  const token = params.token as string;
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.role === 'doctor') {
-        // Doctor is authenticated – redirect to scanner with pre-filled token
-        // Store token in sessionStorage so the scan-qr page can pick it up
-        sessionStorage.setItem('qr_scan_token', token);
-        router.push('/doctor/scan-qr');
-      }
+    if (useAuthStore.persist.hasHydrated()) setHydrated(true);
+    return useAuthStore.persist.onFinishHydration(() => setHydrated(true));
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated || !isAuthenticated || !user) return;
+    if (user.role === 'doctor') {
+      sessionStorage.setItem('qr_scan_token', decodeURIComponent(token));
+      router.replace('/doctor/scan-qr');
+    } else if (user.role === 'pharmacist') {
+      sessionStorage.setItem('pharmacy_scan_query', JSON.stringify({ token: decodeURIComponent(token) }));
+      router.replace('/pharmacy/dispense/patient');
     }
-  }, [isAuthenticated, user, token, router]);
+  }, [hydrated, isAuthenticated, user, token, router]);
 
-  // Doctor authenticated – show redirecting
-  if (isAuthenticated && user?.role === 'doctor') {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Card className="max-w-md w-full">
-          <CardContent className="p-8 text-center">
-            <div className="loading-dots"><span></span><span></span><span></span></div>
-            <p className="mt-4 text-muted-foreground">Redirecting to patient records...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const forwarding = hydrated && isAuthenticated && (user?.role === 'doctor' || user?.role === 'pharmacist');
 
-  // Non-doctor authenticated user
-  if (isAuthenticated && user?.role !== 'doctor') {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <Card className="max-w-md w-full shadow-xl">
-          <CardHeader className="text-center">
-            <div className="w-14 h-14 mx-auto mb-2 rounded-xl bg-red-100 flex items-center justify-center">
-              <FiShield className="h-7 w-7 text-red-600" />
-            </div>
-            <CardTitle className="text-2xl text-red-600">Access Denied</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <p className="text-muted-foreground">
-              Only authorized doctors can access patient records via QR scan.
-            </p>
-            <Link href="/dashboard">
-              <Button className="w-full">Go to Dashboard</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Not authenticated – prompt login
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
-      <Card className="max-w-md w-full shadow-xl">
-        <CardHeader className="text-center">
-          <div className="w-14 h-14 mx-auto mb-2 rounded-xl bg-blue-100 flex items-center justify-center">
-            <FiShield className="h-7 w-7 text-blue-600" />
-          </div>
-          <CardTitle className="text-2xl">Patient QR Verification</CardTitle>
-        </CardHeader>
-        <CardContent className="text-center space-y-4">
-          <p className="text-muted-foreground">
-            This QR code links to a patient&apos;s health records. 
-            Please sign in with a <strong>doctor account</strong> to access the records.
-          </p>
-          <Link href="/login">
-            <Button className="w-full" size="lg">
-              <FiLogIn className="mr-2 h-4 w-4" />
-              Sign In as Doctor
-            </Button>
-          </Link>
-          <p className="text-xs text-muted-foreground">
-            Health Surveillance System • Secure & Tamper-proof
-          </p>
-        </CardContent>
-      </Card>
+    <div className="flex min-h-dvh flex-col bg-background">
+      <header className="px-5 py-5 md:px-10"><Logo /></header>
+      <main id="main" className="flex flex-1 items-center justify-center px-5 pb-16">
+        <div className="w-full max-w-md rounded-2xl border bg-card p-8 text-center shadow-sm">
+          {!hydrated || forwarding ? (
+            <>
+              <Loader2 className="mx-auto h-7 w-7 animate-spin text-primary" />
+              <p className="mt-4 text-[14px] text-muted-foreground">{t("Opening this health card…")}</p>
+            </>
+          ) : isAuthenticated ? (
+            <>
+              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-destructive/10 text-destructive"><ShieldX className="h-6 w-6" /></span>
+              <h1 className="mt-4 text-[20px] font-semibold">{t("Records stay private")}</h1>
+              <p className="mt-2 text-[14px] text-muted-foreground">{t("Only verified doctors and pharmacists can open a patient's records from their health card.")}</p>
+              <Link href={roleHome(user?.role)} className="mt-6 inline-flex h-10 items-center rounded-[10px] bg-primary px-4 text-[13.5px] font-medium text-primary-foreground shadow-button">{t("Go to my dashboard")}</Link>
+            </>
+          ) : (
+            <>
+              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary"><ShieldCheck className="h-6 w-6" /></span>
+              <h1 className="mt-4 text-[20px] font-semibold">{t("ArogyaTrack health card")}</h1>
+              <p className="mt-2 text-[14px] text-muted-foreground">{t("This card belongs to a registered patient. Doctors and pharmacists can sign in to open it. Access is logged.")}</p>
+              <div className="mt-6 flex justify-center gap-2">
+                <Link href="/doctor/signin" className="inline-flex h-10 items-center gap-2 rounded-[10px] bg-primary px-4 text-[13.5px] font-medium text-primary-foreground shadow-button"><LogIn className="h-4 w-4" />{' '}{t("Doctor sign-in")}</Link>
+                <Link href="/pharmacist/signin" className="inline-flex h-10 items-center rounded-[10px] border px-4 text-[13.5px] font-medium hover:bg-muted">{t("Pharmacist")}</Link>
+              </div>
+              <p className="mt-4 text-xs text-muted-foreground">{t("After signing in, scan the card again.")}</p>
+            </>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
