@@ -1,434 +1,231 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { AlertTriangle, CalendarDays, ChevronRight, FileText, Loader2, Paperclip, Search, Stethoscope, X } from 'lucide-react';
 import { withAuth } from '@/components/auth/withAuth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
-import type { PaginatedResponse, MedicalRecord, Allergy, ChronicCondition } from '@/types';
-import {
-  FiActivity,
-  FiCalendar,
-  FiChevronDown,
-  FiChevronUp,
-  FiDownload,
-  FiFileText,
-  FiRefreshCw,
-  FiAlertCircle,
-  FiClock,
-  FiPaperclip,
-  FiEye,
-} from 'react-icons/fi';
-import { formatDate } from '@/lib/utils';
 import { useLanguage } from '@/components/providers/LanguageProvider';
-import toast from 'react-hot-toast';
+import { EmptyState, ErrorState, PageHeader, Panel, SkeletonRows, StatusPill } from '@/components/ui/page';
+import { RecordDetailModal, doctorLabel, visitToRecent } from '@/components/dashboard/RecordDetailModal';
+import { fieldClass } from '@/components/auth/FormKit';
+import type { Allergy, ChronicCondition, MedicalRecord, RecentRecord } from '@/types';
+import { t as tr, intlLocale, tn } from '@/lib/i18n';
+
+const PAGE = 20;
+
+function useDebounced<T>(value: T, ms = 300) {
+  const [v, setV] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setV(value), ms);
+    return () => clearTimeout(t);
+  }, [value, ms]);
+  return v;
+}
+
+const severityLabel = (s: number | string) => {
+  const n = typeof s === 'number' ? s : s === 'severe' ? 3 : s === 'moderate' ? 2 : 1;
+  return n >= 3 ? { label: tr("Severe"), tone: 'danger' as const } : n === 2 ? { label: tr("Moderate"), tone: 'warning' as const } : { label: tr("Mild"), tone: 'neutral' as const };
+};
 
 function MedicalRecordsPage(): React.JSX.Element {
   const { t } = useLanguage();
-  const queryClient = useQueryClient();
-  const [expandedRecords, setExpandedRecords] = useState<Set<number>>(new Set());
-  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const [search, setSearch] = useState('');
+  const [year, setYear] = useState('');
+  const [selected, setSelected] = useState<RecentRecord | null>(null);
+  const q = useDebounced(search.trim());
 
-  const handleReportAction = async (attachmentId: number, fileName: string, isView: boolean) => {
-    setDownloadingId(attachmentId);
-    try {
-      const disposition = isView ? 'inline' : 'attachment';
-      const blob = await api.medical.downloadReport(attachmentId, disposition);
-      const url = window.URL.createObjectURL(blob);
-      if (isView) {
-        window.open(url, '_blank');
-        setTimeout(() => window.URL.revokeObjectURL(url), 60000);
-      } else {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        toast.success('Report downloaded successfully');
-        api.dashboard.logDownload({
-          file_type: 'visit_attachment',
-          file_id: attachmentId,
-          file_name: fileName,
-        }).then(() => {
-          queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] });
-          queryClient.invalidateQueries({ queryKey: ['dashboard-downloads'] });
-        }).catch(() => {});
-      }
-    } catch (error: any) {
-      if (error.response?.status === 401) toast.error('Session expired. Please login again.');
-      else if (error.response?.status === 403) toast.error('You do not have permission to access this file.');
-      else if (error.response?.status === 404) toast.error('File not found.');
-      else toast.error('Failed to download report.');
-    } finally {
-      setDownloadingId(null);
+  const visits = useInfiniteQuery({
+    queryKey: ['visit-records', q, year],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      api.medical.getRecords({ search: q || undefined, year: year || undefined, limit: PAGE, offset: pageParam }) as Promise<{ count: number; results: MedicalRecord[] }>,
+    getNextPageParam: (last, all) => {
+      const loaded = all.reduce((n, p) => n + p.results.length, 0);
+      return loaded < last.count ? loaded : undefined;
+    },
+  });
+  const diagnoses = useQuery({ queryKey: ['my-diagnoses'], queryFn: () => api.medical.getMyDiagnoses({ limit: 50 }) });
+  const allergies = useQuery<Allergy[]>({ queryKey: ['patient-allergies'], queryFn: () => api.medical.getAllergies() });
+  const conditions = useQuery<ChronicCondition[]>({ queryKey: ['patient-chronic-conditions'], queryFn: () => api.medical.getChronicConditions() });
+
+  const records = useMemo(() => visits.data?.pages.flatMap((p) => p.results) ?? [], [visits.data]);
+  const total = visits.data?.pages[0]?.count ?? 0;
+
+  const grouped = useMemo(() => {
+    const m = new Map<string, MedicalRecord[]>();
+    for (const r of records) {
+      const y = String(new Date(r.visit_date).getFullYear());
+      m.set(y, [...(m.get(y) ?? []), r]);
     }
-  };
+    return Array.from(m.entries());
+  }, [records]);
 
-  const { data: records, isLoading: isLoadingRecords, refetch, isFetching } = useQuery<PaginatedResponse<MedicalRecord>>({
-    queryKey: ['medical-records-all'],
-    queryFn: () => api.medical.getRecords(),
-    refetchInterval: 30000,
-    staleTime: 10000,
-  });
-
-  const { data: allergies, isLoading: isLoadingAllergies } = useQuery<Allergy[]>({
-    queryKey: ['allergies'],
-    queryFn: () => api.medical.getAllergies(),
-  });
-
-  const { data: chronicConditions, isLoading: isLoadingConditions } = useQuery<ChronicCondition[]>({
-    queryKey: ['chronic-conditions'],
-    queryFn: () => api.medical.getChronicConditions(),
-  });
-
-  const isLoading = isLoadingRecords || isLoadingAllergies || isLoadingConditions;
-
-  const toggleRecord = (recordId: number) => {
-    setExpandedRecords((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(recordId)) {
-        newSet.delete(recordId);
-      } else {
-        newSet.add(recordId);
-      }
-      return newSet;
-    });
-  };
-
-  const formatDoctorName = (name: string) => {
-    if (!name) return '';
-    return name.replace(/^Dr\.\s*Dr\.\s*/i, 'Dr. ').trim();
-  };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6 animate-pulse">
-        <div className="flex justify-between items-center">
-          <div className="h-8 w-48 bg-muted rounded"></div>
-          <div className="h-10 w-24 bg-muted rounded"></div>
-        </div>
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="h-48 bg-muted rounded-xl"></div>
-          <div className="h-48 bg-muted rounded-xl"></div>
-        </div>
-        <div className="h-96 bg-muted rounded-xl"></div>
-      </div>
-    );
-  }
+  const years = useMemo(() => {
+    const now = new Date().getFullYear();
+    return Array.from({ length: 6 }, (_, i) => String(now - i));
+  }, []);
 
   return (
-    <div className="space-y-8 pb-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">
-            {t('medical_records_page_title')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('medical_records_page_subtitle')}
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="flex items-center gap-2 bg-card/50 border-border hover:bg-muted transition-colors"
-        >
-          <FiRefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-          {t('refresh')}
-        </Button>
-      </div>
+    <div>
+      <PageHeader title={t("Medical Records")} description={t("Complete history of your medical consultations")} />
 
-      {/* Top Cards: Allergies & Chronic Conditions */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Allergies Card */}
-        <Card className="border-0 shadow-lg overflow-hidden bg-card/80 backdrop-blur-md">
-
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-rose-50 rounded-lg">
-                <FiAlertCircle className="w-5 h-5 text-rose-600" />
-              </div>
-              <CardTitle className="text-xl font-bold">{t('allergies_title')}</CardTitle>
+      <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
+        <div className="min-w-0 space-y-4">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={tr("Search diagnosis, doctor, department or test")}
+                className={`${fieldClass()} pl-10 pr-9`}
+                aria-label={tr("Search records")}
+              />
+              {search && (
+                <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground hover:bg-muted" aria-label={tr("Clear search")}>
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
-          </CardHeader>
-          <CardContent>
-            {allergies && allergies.length > 0 ? (
-              <div className="space-y-3">
-                {allergies.map((allergy) => (
-                  <div
-                    key={allergy.id}
-                    className="flex items-center justify-between p-3 bg-rose-50/50 border border-rose-100 rounded-xl hover:shadow-sm transition-all"
-                  >
-                    <div>
-                      <p className="font-semibold text-foreground">{allergy.allergen}</p>
-                      <p className="text-xs text-rose-600 font-medium mt-0.5">{allergy.reaction_type}</p>
-                      {allergy.added_by_name && (
-                        <p className="text-[10px] text-muted-foreground mt-1">Added by {allergy.added_by_name}</p>
-                      )}
-                    </div>
-                    <Badge className={`
-                                            ${String(allergy.severity).toLowerCase() === 'severe' || allergy.severity === 3
-                        ? 'bg-[#dc2626] text-white hover:bg-[#b91c1c]'
-                        : String(allergy.severity).toLowerCase() === 'moderate' || allergy.severity === 2
-                          ? 'bg-[#d97706] text-white hover:bg-[#b45309]'
-                          : 'bg-[#1a5c52] text-white hover:bg-[#1a5c52]'}
-                                            border-0 uppercase text-[10px] tracking-wider font-bold
-                                        `}>
-                      {typeof allergy.severity === 'number'
-                        ? (allergy.severity === 3 ? t('high') : allergy.severity === 2 ? t('medium') : t('low'))
-                        : allergy.severity}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>{t('no_allergies')}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Chronic Conditions Card */}
-        <Card className="border-0 shadow-lg overflow-hidden bg-card/80 backdrop-blur-md">
-
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/8 rounded-lg">
-                <FiClock className="w-5 h-5 text-primary" />
-              </div>
-              <CardTitle className="text-xl font-bold">{t('chronic_conditions')}</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {chronicConditions && chronicConditions.length > 0 ? (
-              <div className="space-y-3">
-                {chronicConditions.map((condition) => (
-                  <div
-                    key={condition.id}
-                    className="flex items-center justify-between p-3 bg-primary/8 border border-primary/15 rounded-xl hover:shadow-sm transition-all"
-                  >
-                    <div>
-                      <p className="font-semibold text-foreground">{condition.disease_name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {t('last_recorded')}: {formatDate(condition.created_at)}
-                      </p>
-                      {condition.added_by_name && (
-                        <p className="text-[10px] text-muted-foreground mt-1">Added by {condition.added_by_name}</p>
-                      )}
-                    </div>
-                    <Badge className={`
-                                            ${condition.is_active
-                        ? 'bg-[#1a5c52] text-white hover:bg-[#1a5c52]'
-                        : 'bg-slate-400 text-white hover:bg-slate-500'}
-                                            border-0 uppercase text-[10px] tracking-wider font-bold
-                                        `}>
-                      {condition.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>{t('no_active_conditions')}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Consultation History */}
-      <Card className="border-0 shadow-lg overflow-hidden bg-card/80 backdrop-blur-md">
-
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-50 rounded-lg">
-              <FiActivity className="w-5 h-5 text-indigo-600" />
-            </div>
-            <CardTitle className="text-lg">{t('consultation_history')}</CardTitle>
+            <select value={year} onChange={(e) => setYear(e.target.value)} className={`${fieldClass()} sm:w-40`} aria-label={tr("Filter by year")}>
+              <option value="">{tr("All years")}</option>
+              {years.map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
           </div>
-        </CardHeader>
-        <CardContent>
-          {records?.results && records.results.length > 0 ? (
-            <div className="space-y-4">
-              {records.results.map((record) => {
-                const isExpanded = expandedRecords.has(record.id);
-                return (
-                  <div
-                    key={record.id}
-                    className="group border border-border rounded-xl overflow-hidden hover:shadow-md transition-all duration-200 bg-card"
-                  >
-                    {/* Collapsed Header View */}
-                    <div
-                      className="p-5 cursor-pointer hover:bg-background/50 transition-colors"
-                      onClick={() => toggleRecord(record.id)}
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-4 flex-1">
-                          <div className="hidden sm:flex flex-col items-center justify-center h-12 w-12 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-xs shrink-0 border border-indigo-100">
-                            <span className="text-lg">{new Date(record.visit_date).getDate()}</span>
-                            <span className="uppercase">{new Date(record.visit_date).toLocaleDateString('en-US', { month: 'short' })}</span>
-                          </div>
 
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                              <h3 className="font-bold text-foreground text-lg">
-                                {formatDoctorName(record.doctor_name)}
-                              </h3>
-                              <Badge variant="outline" className="bg-background text-muted-foreground border-border pointer-events-none">
-                                {record.department}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground font-medium line-clamp-1">
-                              {record.diagnosis}
-                            </p>
-                            <div className="flex sm:hidden items-center gap-2 mt-2 text-xs text-muted-foreground">
-                              <FiCalendar className="w-3 h-3" />
-                              {formatDate(record.visit_date)}
-                            </div>
-                          </div>
-                        </div>
+          <div className="text-[13px] text-muted-foreground">
+            {visits.isLoading ? tr("Loading consultations…") : q || year ? tn(total, '1 consultation matches your filters', '{count} consultations match your filters') : tn(total, '1 consultation', '{count} consultations')}
+          </div>
 
-                        <div className="flex items-center gap-3">
-                          <div className={`
-                                                        p-2 rounded-full transition-transform duration-300
-                                                        ${isExpanded ? 'bg-indigo-50 text-indigo-600 rotate-180' : 'text-muted-foreground group-hover:bg-muted'}
-                                                    `}>
-                            <FiChevronDown className="h-5 w-5" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Expanded Detail View */}
-                    {isExpanded && (
-                      <div className="border-t border-border bg-background/50 p-5 space-y-6 animate-in slide-in-from-top-2 duration-200">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
-                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t('diagnosis')}</p>
-                            <p className="text-foreground font-medium">{record.diagnosis}</p>
-                          </div>
-
-                          {record.tests_performed && (
-                            <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
-                              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t('tests_performed')}</p>
-                              <p className="text-foreground whitespace-pre-line leading-relaxed">
-                                {record.tests_performed}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-
-                        {record.prescription && (
-                          <div className="bg-primary/8 p-4 rounded-xl border border-primary/15">
-                            <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-2">
-                              <FiFileText className="w-3 h-3" />
-                              {t('prescription')}
-                            </p>
-                            <ul className="list-disc list-inside space-y-1 text-foreground leading-relaxed font-medium">
-                              {record.prescription.split(',').map((item: string, i: number) => {
-                                const trimmed = item.trim().replace(/\.+$/, '');
-                                return trimmed ? <li key={i}>{trimmed}</li> : null;
-                              })}
-                            </ul>
-                          </div>
-                        )}
-
-                        {record.doctor_notes && (
-                          <div className="bg-amber-50/30 p-4 rounded-xl border border-amber-100">
-                            <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-2 flex items-center gap-2">
-                              <FiFileText className="w-3 h-3" />
-                              {t('doctor_notes')}
-                            </p>
-                            <p className="text-foreground/80 whitespace-pre-line leading-relaxed italic">
-                              &ldquo;{record.doctor_notes}&rdquo;
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Reports Section - always visible */}
-                        <div>
-                          <p className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                            <FiPaperclip className="w-4 h-4 text-indigo-500" />
-                            Reports
-                            {record.report_attachments && record.report_attachments.length > 0 && (
-                              <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 px-2 h-5 min-w-[1.25rem]">
-                                {record.report_attachments.length}
-                              </Badge>
-                            )}
-                          </p>
-                          {record.report_attachments && record.report_attachments.length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              {record.report_attachments.map((attachment) => (
-                                <div
-                                  key={attachment.id}
-                                  className="flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:border-indigo-300 hover:shadow-md transition-all"
-                                >
-                                  <div className="p-2 bg-indigo-50 rounded-lg flex-shrink-0">
-                                    <FiFileText className="h-4 w-4 text-indigo-600" />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-foreground/80 truncate">
-                                      {attachment.file_name}
-                                    </p>
-                                    <p className="text-[10px] text-muted-foreground uppercase font-medium mt-0.5">
-                                      {attachment.file_type || 'PDF'} · {formatDate(attachment.uploaded_at)}
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center gap-1 flex-shrink-0">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleReportAction(attachment.id, attachment.file_name, true)}
-                                      disabled={downloadingId === attachment.id}
-                                      className="h-8 w-8 p-0 text-indigo-600 hover:bg-indigo-50"
-                                      title="Open in new tab"
-                                    >
-                                      {downloadingId === attachment.id ? (
-                                        <FiRefreshCw className="h-3.5 w-3.5 animate-spin" />
-                                      ) : (
-                                        <FiEye className="h-3.5 w-3.5" />
-                                      )}
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleReportAction(attachment.id, attachment.file_name, false)}
-                                      disabled={downloadingId === attachment.id}
-                                      className="h-8 w-8 p-0 text-muted-foreground hover:bg-background"
-                                      title="Download"
-                                    >
-                                      <FiDownload className="h-3.5 w-3.5" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-sm text-muted-foreground italic py-2">No reports uploaded for this visit</p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+          {visits.isLoading ? (
+            <div className="rounded-2xl border bg-card p-5"><SkeletonRows rows={5} /></div>
+          ) : visits.isError ? (
+            <ErrorState onRetry={() => visits.refetch()} />
+          ) : records.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              title={q || year ? tr("No consultations match") : t("No medical records yet")}
+              description={q || year ? tr("Try a different search term or year.") : t("Your visit records will appear here")}
+            />
           ) : (
-            <div className="text-center py-16 text-muted-foreground bg-background/50 rounded-2xl border border-dashed border-border">
-              <div className="bg-card p-4 rounded-full shadow-sm inline-block mb-4">
-                <FiActivity className="h-8 w-8 text-slate-300" />
-              </div>
-              <h3 className="font-semibold text-foreground text-lg mb-1">{t('empty_records')}</h3>
-              <p className="text-muted-foreground">{t('empty_records_desc')}</p>
+            <div className="space-y-6">
+              {grouped.map(([y, list]) => (
+                <section key={y}>
+                  <h2 className="kicker mb-2 px-1">{y}</h2>
+                  <ul className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+                    {list.map((r) => {
+                      const d = new Date(r.visit_date);
+                      const attachments = r.report_attachments?.length ?? 0;
+                      return (
+                        <li key={r.id} className="border-b last:border-0">
+                          <button onClick={() => setSelected(visitToRecent(r))} className="flex w-full items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-muted/50 md:px-5">
+                            <span className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl border bg-muted/40">
+                              <span className="tabular text-[17px] font-semibold leading-none">{d.getDate()}</span>
+                              <span className="mt-0.5 text-[10px] font-medium uppercase text-muted-foreground">{d.toLocaleDateString(intlLocale(), { month: 'short' })}</span>
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-[15px] font-semibold first-letter:uppercase">{r.diagnosis || tr("Consultation")}</span>
+                              <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground">
+                                <span className="inline-flex items-center gap-1"><Stethoscope className="h-3.5 w-3.5" /> {doctorLabel(r.doctor_name)}</span>
+                                {r.department && <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11.5px]">{tr(r.department)}</span>}
+                                {attachments > 0 && (
+                                  <span className="inline-flex items-center gap-1"><Paperclip className="h-3.5 w-3.5" /> {attachments}</span>
+                                )}
+                              </span>
+                            </span>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ))}
+              {visits.hasNextPage && (
+                <button
+                  onClick={() => visits.fetchNextPage()}
+                  disabled={visits.isFetchingNextPage}
+                  className="mx-auto flex h-10 items-center gap-2 rounded-[10px] border bg-card px-4 text-[13.5px] font-medium shadow-sm hover:bg-muted disabled:opacity-60"
+                >
+                  {visits.isFetchingNextPage && <Loader2 className="h-4 w-4 animate-spin" />}{' '}{tr("Load older consultations")}</button>
+              )}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        <aside className="space-y-4">
+          <Panel title={t("Allergies")} icon={AlertTriangle}>
+            {allergies.isLoading ? (
+              <SkeletonRows rows={2} />
+            ) : allergies.data?.length ? (
+              <ul className="space-y-2">
+                {allergies.data.map((a) => {
+                  const sv = severityLabel(a.severity);
+                  return (
+                    <li key={a.id} className="flex items-start justify-between gap-3 rounded-xl border p-3">
+                      <div className="min-w-0">
+                        <div className="text-[14px] font-medium">{a.allergen}</div>
+                        <div className="text-xs text-muted-foreground">{a.reaction_type}{a.added_by_name ? ` · ${a.added_by_name}` : ''}</div>
+                      </div>
+                      <StatusPill tone={sv.tone}>{sv.label}</StatusPill>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="text-[13.5px] text-muted-foreground">{t("No allergies recorded")}</p>
+            )}
+          </Panel>
+
+          <Panel title={t("Chronic Conditions")} icon={CalendarDays}>
+            {conditions.isLoading ? (
+              <SkeletonRows rows={2} />
+            ) : conditions.data?.length ? (
+              <ul className="space-y-2">
+                {conditions.data.map((c) => (
+                  <li key={c.id} className="flex items-start justify-between gap-3 rounded-xl border p-3">
+                    <div className="min-w-0">
+                      <div className="text-[14px] font-medium">{c.disease_name || c.icd_10_code}</div>
+                      <div className="text-xs text-muted-foreground">{c.added_by_name ? tr("ICD-10 {icd_10_code} · {added_by_name}", { icd_10_code: c.icd_10_code, added_by_name: c.added_by_name }) : tr("ICD-10 {icd_10_code}", { icd_10_code: c.icd_10_code })}</div>
+                    </div>
+                    <StatusPill tone={c.is_active ? 'primary' : 'neutral'}>{c.is_active ? tr("Active") : tr("Resolved")}</StatusPill>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-[13.5px] text-muted-foreground">{t("No active chronic conditions recorded.")}</p>
+            )}
+          </Panel>
+
+          <Panel title={tr("Diagnoses")} description={tr("Coded diagnoses recorded by your doctors")} icon={Stethoscope}>
+            {diagnoses.isLoading ? (
+              <SkeletonRows rows={2} />
+            ) : diagnoses.data?.results?.length ? (
+              <ul className="space-y-2">
+                {diagnoses.data.results.map((rec: any) => (
+                  <li key={rec.id} className="rounded-xl border p-3">
+                    <div className="flex flex-wrap gap-1.5">
+                      {(rec.diagnoses || []).map((dx: any, i: number) => (
+                        <span key={i} className="tag" title={`ICD-10 ${dx.icd_10_code}`}>{dx.disease_name || dx.icd_10_code}</span>
+                      ))}
+                      {!rec.diagnoses?.length && <span className="text-[13px] text-muted-foreground">{tr("No coded diagnosis")}</span>}
+                    </div>
+                    {rec.symptoms && <p className="mt-2 line-clamp-2 text-[13px] text-muted-foreground">{rec.symptoms}</p>}
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      {rec.doctor?.name ? doctorLabel(rec.doctor.name) : tr("Doctor")} · {new Date(rec.created_at).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-[13.5px] text-muted-foreground">{tr("No coded diagnoses yet.")}</p>
+            )}
+          </Panel>
+        </aside>
+      </div>
+
+      {selected && <RecordDetailModal open onOpenChange={(o) => !o && setSelected(null)} record={selected} />}
     </div>
   );
 }
