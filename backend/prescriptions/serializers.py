@@ -7,6 +7,23 @@ from patients.models import Profile
 from .models import Medicine, Prescription, PrescriptionMedicine, PrescriptionService
 
 
+
+def _check_medicine_ids(ids):
+    """Reject a medicine listed twice (naming it) or one that is unknown/inactive."""
+    seen, dupes = set(), []
+    for mid in map(str, ids):
+        if mid in seen and mid not in dupes:
+            dupes.append(mid)
+        seen.add(mid)
+    if dupes:
+        names = ", ".join(Medicine.objects.filter(id__in=dupes).values_list("name", flat=True)) or "A medicine"
+        raise serializers.ValidationError(
+            f"{names} is listed more than once. Combine it into one line with the total dose and quantity."
+        )
+    if Medicine.objects.filter(id__in=seen, is_active=True).count() != len(seen):
+        raise serializers.ValidationError("One or more medicines are invalid or inactive")
+
+
 class MedicineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Medicine
@@ -38,7 +55,8 @@ class PrescriptionMedicineSerializer(serializers.ModelSerializer):
 class PrescriptionSerializer(serializers.ModelSerializer):
     medicines = PrescriptionMedicineSerializer(many=True, read_only=True)
     patient_name = serializers.CharField(source="patient.name", read_only=True)
-    doctor_name = serializers.CharField(source="doctor.email", read_only=True)
+    doctor_name = serializers.SerializerMethodField()
+    doctor_email = serializers.EmailField(source="doctor.email", read_only=True)
     prescription_number = serializers.SerializerMethodField()
     issued_at = serializers.DateTimeField(source="created_at", read_only=True)
 
@@ -51,6 +69,7 @@ class PrescriptionSerializer(serializers.ModelSerializer):
             "patient_name",
             "doctor",
             "doctor_name",
+            "doctor_email",
             "medical_record",
             "qr_code_path",
             "security_hash",
@@ -63,6 +82,12 @@ class PrescriptionSerializer(serializers.ModelSerializer):
 
     def get_prescription_number(self, obj):
         return f"RX-{str(obj.id)[:8].upper()}"
+
+    def get_doctor_name(self, obj):
+        if not obj.doctor:
+            return None
+        name = f"{obj.doctor.get_first_name()} {obj.doctor.get_last_name()}".strip()
+        return name or obj.doctor.email
 
 
 class CreatePrescriptionSerializer(serializers.Serializer):
@@ -89,11 +114,7 @@ class CreatePrescriptionSerializer(serializers.Serializer):
             raise serializers.ValidationError("At least one medicine is required")
 
         # Validate medicine IDs
-        medicine_ids = [m["medicine"].id for m in value]
-        existing_count = Medicine.objects.filter(id__in=medicine_ids, is_active=True).count()
-
-        if existing_count != len(medicine_ids):
-            raise serializers.ValidationError("One or more medicines are invalid or inactive")
+        _check_medicine_ids(m["medicine"].id for m in value)
 
         return value
 
@@ -167,9 +188,7 @@ class CheckInteractionsSerializer(serializers.Serializer):
     medicine_ids = serializers.ListField(child=serializers.UUIDField(), min_length=2)
 
     def validate_medicine_ids(self, value):
-        existing_count = Medicine.objects.filter(id__in=value, is_active=True).count()
-        if existing_count != len(value):
-            raise serializers.ValidationError("One or more medicines are invalid or inactive")
+        _check_medicine_ids(value)
         return value
 
     def check_interactions(self):
@@ -192,9 +211,7 @@ class CheckAllergiesSerializer(serializers.Serializer):
         return value
 
     def validate_medicine_ids(self, value):
-        existing_count = Medicine.objects.filter(id__in=value, is_active=True).count()
-        if existing_count != len(value):
-            raise serializers.ValidationError("One or more medicines are invalid or inactive")
+        _check_medicine_ids(value)
         return value
 
     def check_allergies(self):
@@ -228,8 +245,5 @@ class ValidatePrescriptionSerializer(serializers.Serializer):
     def validate_medicines(self, value):
         if not value:
             raise serializers.ValidationError("At least one medicine is required")
-        medicine_ids = [m["medicine_id"] for m in value]
-        existing = Medicine.objects.filter(id__in=medicine_ids, is_active=True).count()
-        if existing != len(medicine_ids):
-            raise serializers.ValidationError("One or more medicines are invalid or inactive")
+        _check_medicine_ids(m["medicine_id"] for m in value)
         return value
