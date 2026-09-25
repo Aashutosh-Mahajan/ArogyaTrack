@@ -1,173 +1,87 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
-import { withAuth } from '@/components/auth/withAuth';
-import { QRScanner } from '@/components/pharmacy/QRScanner';
-import { FiCamera, FiX, FiSearch, FiUser, FiAlertCircle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { ClipboardList, CreditCard, Keyboard, Loader2 } from 'lucide-react';
+import { withAuth } from '@/components/auth/withAuth';
+import { api } from '@/lib/api';
+import { QRScanner } from '@/components/pharmacy/QRScanner';
+import { PageHeader, Panel } from '@/components/ui/page';
+import { fieldClass } from '@/components/auth/FormKit';
+import { extractError } from '@/components/auth/SignInForm';
+import { cn } from '@/lib/utils';
+import { t } from '@/lib/i18n';
+
+type Mode = 'rx' | 'card' | 'id';
+
+const MODES: { k: Mode; l: string; icon: typeof ClipboardList; hint: string }[] = [
+  { k: 'rx', get l() { return t("Prescription QR"); }, icon: ClipboardList, get hint() { return t("Scan the QR the patient shows from their prescription."); } },
+  { k: 'card', get l() { return t("Health card"); }, icon: CreditCard, get hint() { return t("Scan the patient’s health card to see all their prescriptions."); } },
+  { k: 'id', get l() { return t("Patient ID"); }, icon: Keyboard, get hint() { return t("Type the ID printed on the health card."); } },
+];
 
 function ScanPage() {
-    const router = useRouter();
-    const [loading, setLoading] = useState(false);
-    const [manualInput, setManualInput] = useState('');
-    const [isScanning, setIsScanning] = useState(false);
-    const [cameraError, setCameraError] = useState('');
+  const router = useRouter();
+  const [mode, setMode] = useState<Mode>('rx');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [manual, setManual] = useState('');
+  const [key, setKey] = useState(0);
 
-    // Handle decoded QR data — could be a JWT token (patient health card) or prescription_id|hash or patient ID
-    const processQRData = async (data: string) => {
-        if (loading) return;
-        setLoading(true);
-        setCameraError('');
+  const openPatient = (payload: { token?: string; patient_id?: string }) => {
+    sessionStorage.setItem('pharmacy_scan_query', JSON.stringify(payload));
+    router.push('/pharmacy/dispense/patient');
+  };
 
-        try {
-            const trimmed = data.trim();
+  const handle = useCallback(
+    async (text: string) => {
+      setError(null);
+      if (mode === 'card') return openPatient({ token: text });
+      setBusy(true);
+      try {
+        const res: any = await api.pharmacy.scanPrescription(text);
+        if (res.warning) toast(res.warning);
+        router.push(`/pharmacy/dispense/${res.prescription.id}`);
+      } catch (e: any) {
+        const d = e?.response?.data;
+        setError(d?.qr_data?.[0] || extractError(e, t("That QR is not a valid ArogyaTrack prescription.")));
+        setKey((k) => k + 1);
+      } finally {
+        setBusy(false);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mode]
+  );
 
-            // Determine type of input
-            const isJWT = trimmed.split('.').length === 3; // JWT tokens have exactly 3 dot-separated parts
-            const isPrescriptionQR = trimmed.includes('|');
+  const current = MODES.find((m) => m.k === mode)!;
 
-            if (isPrescriptionQR) {
-                // prescription_id|hash format
-                const response = await api.pharmacy.scanPrescription(trimmed) as any;
-                const prescriptionId = response?.prescription?.id;
-                if (prescriptionId) {
-                    toast.success('Prescription scanned successfully');
-                    router.push(`/pharmacy/dispense/${prescriptionId}`);
-                    return;
-                }
-            }
-
-            // For JWT tokens, use scanPatient with token
-            // For anything else (HS-IDs, UUIDs, etc.), use scanPatient with patient_id
-            const payload: { token?: string; patient_id?: string } = {};
-            if (isJWT) {
-                payload.token = trimmed;
-            } else {
-                payload.patient_id = trimmed;
-            }
-
-            const response = await api.pharmacy.scanPatient(payload) as any;
-            if (response?.patient?.id) {
-                toast.success(`Patient found: ${response.patient.name}`);
-                sessionStorage.setItem('pharmacy_scan_result', JSON.stringify(response));
-                router.push(`/pharmacy/dispense/patient`);
-                return;
-            }
-
-            toast.error('Could not identify the scanned code');
-        } catch (error: any) {
-            console.error('Scan failed:', error);
-            const detail = error?.response?.data?.detail;
-            const msg = typeof detail === 'string' ? detail : 'Patient not found. Please check the ID and try again.';
-            toast.error(msg);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleManualSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (manualInput.trim()) {
-            processQRData(manualInput.trim());
-        }
-    };
-
-    return (
-        <div className="min-h-screen bg-background p-6">
-            <div className="max-w-2xl mx-auto">
-                <h1 className="text-2xl font-bold text-foreground mb-8 text-center">
-                    Scan Patient QR Code
-                </h1>
-
-                {/* QR Scanner Area */}
-                <div className="bg-card rounded-2xl shadow-lg p-8 mb-8 text-center">
-                    {isScanning ? (
-                        <div className="mb-6">
-                            <QRScanner
-                                isActive={isScanning}
-                                onScan={(data) => {
-                                    setIsScanning(false);
-                                    processQRData(data);
-                                }}
-                                onError={(err) => {
-                                    setCameraError(err);
-                                    setIsScanning(false);
-                                }}
-                            />
-                        </div>
-                    ) : (
-                        <div className="w-64 h-64 bg-muted rounded-xl mx-auto mb-6 flex items-center justify-center border-2 border-dashed border-border">
-                            {loading ? (
-                                <div className="flex flex-col items-center gap-3">
-                                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary" />
-                                    <p className="text-sm text-muted-foreground">Looking up patient...</p>
-                                </div>
-                            ) : (
-                                <FiCamera className="w-16 h-16 text-muted-foreground" />
-                            )}
-                        </div>
-                    )}
-
-                    {cameraError && (
-                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">
-                            <FiAlertCircle /> {cameraError}
-                        </div>
-                    )}
-
-                    <button
-                        onClick={() => {
-                            setCameraError('');
-                            setIsScanning(!isScanning);
-                        }}
-                        disabled={loading}
-                        className={`px-6 py-3 rounded-xl font-medium transition-colors ${isScanning
-                            ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                            : 'bg-primary text-white hover:bg-primary'
-                            } disabled:opacity-50`}
-                    >
-                        {isScanning ? (
-                            <span className="flex items-center gap-2"><FiX /> Stop Scanning</span>
-                        ) : (
-                            <span className="flex items-center gap-2"><FiCamera /> Start Camera</span>
-                        )}
-                    </button>
-                </div>
-
-                {/* Manual Input */}
-                <div className="bg-card rounded-2xl shadow-lg p-6">
-                    <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                        <FiUser className="text-primary" /> Manual Lookup
-                    </h2>
-                    <form onSubmit={handleManualSubmit} className="flex gap-4">
-                        <input
-                            type="text"
-                            value={manualInput}
-                            onChange={(e) => setManualInput(e.target.value)}
-                            placeholder="Enter Patient ID (e.g. HS-2025-000001)..."
-                            className="flex-1 rounded-lg border border-border px-4 py-2 focus:ring-primary focus:border-primary outline-none"
-                        />
-                        <button
-                            type="submit"
-                            disabled={loading || !manualInput.trim()}
-                            className="bg-gray-900 text-white px-6 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2"
-                        >
-                            {loading ? (
-                                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                            ) : (
-                                <FiSearch />
-                            )}
-                            Lookup
-                        </button>
-                    </form>
-                    <p className="text-xs text-muted-foreground mt-2">
-                        You can also paste a prescription QR code value (prescription_id|hash) here.
-                    </p>
-                </div>
-            </div>
-        </div>
-    );
+  return (
+    <div className="mx-auto max-w-2xl">
+      <PageHeader title={t("Scan")} description={t("Verify a prescription's signature, or pull up every prescription for a patient.")} />
+      <div className="mb-5 grid grid-cols-3 gap-2 rounded-xl border bg-card p-1 shadow-sm">
+        {MODES.map((m) => (
+          <button key={m.k} onClick={() => { setMode(m.k); setError(null); setKey((k) => k + 1); }} className={cn('inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors', mode === m.k ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>
+            <m.icon className="h-4 w-4" /> <span className="hidden sm:inline">{m.l}</span>
+          </button>
+        ))}
+      </div>
+      <Panel title={current.l} description={current.hint} icon={current.icon}>
+        {mode === 'id' ? (
+          <form onSubmit={(e) => { e.preventDefault(); if (manual.trim()) openPatient({ patient_id: manual.trim().toUpperCase() }); }} className="flex gap-2">
+            <input value={manual} onChange={(e) => setManual(e.target.value)} placeholder="HS-2026-XXXXXX" className={`${fieldClass()} font-mono uppercase`} aria-label={t("Patient ID")} autoFocus />
+            <button type="submit" disabled={!manual.trim()} className="h-11 shrink-0 rounded-[10px] bg-primary px-4 text-[13.5px] font-medium text-primary-foreground shadow-button disabled:opacity-60">{t("Find")}</button>
+          </form>
+        ) : busy ? (
+          <div className="flex h-64 flex-col items-center justify-center gap-3"><Loader2 className="h-6 w-6 animate-spin text-primary" /><p className="text-[13.5px] text-muted-foreground">{t("Verifying signature…")}</p></div>
+        ) : (
+          <QRScanner key={`${mode}-${key}`} isActive={false} onScan={handle} />
+        )}
+        {error && <p role="alert" className="mt-4 rounded-xl border border-destructive/25 bg-destructive/5 px-3.5 py-3 text-[13.5px] text-destructive">{error}</p>}
+      </Panel>
+    </div>
+  );
 }
 
 export default withAuth(ScanPage, ['pharmacist']);
