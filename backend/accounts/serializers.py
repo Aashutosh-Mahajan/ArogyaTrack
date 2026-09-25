@@ -319,6 +319,25 @@ class DoctorRegistrationSerializer(serializers.Serializer):
         return user
 
 
+# ICD-10 codes for conditions offered as quick picks at sign-up; anything
+# else is stored as R69 ("illness, unspecified") for a doctor to refine.
+SELF_REPORTED_ICD10 = {
+    'diabetes': 'E11.9',
+    'hypertension': 'I10',
+    'heart disease': 'I51.9',
+    'asthma': 'J45.909',
+    'thyroid disorder': 'E07.9',
+    'kidney disease': 'N18.9',
+    'liver disease': 'K76.9',
+    'cancer': 'C80.1',
+}
+
+
+def _split_list(raw):
+    items = [x.strip() for x in (raw or '').split(',')]
+    return [x for x in dict.fromkeys(items) if x and x.lower() != 'none']
+
+
 class PatientRegistrationSerializer(serializers.Serializer):
     """Production-grade patient registration with comprehensive fields."""
     
@@ -346,7 +365,9 @@ class PatientRegistrationSerializer(serializers.Serializer):
     terms_accepted = serializers.BooleanField()
     consent_store_data = serializers.BooleanField()
     consent_doctor_access = serializers.BooleanField()
-    abha_verified = serializers.BooleanField(required=False, default=False)  # NEW: ABHA FEATURE
+    # Self-reported history captured at sign-up (comma-separated lists)
+    existing_conditions = serializers.CharField(required=False, allow_blank=True, default='')
+    known_allergies = serializers.CharField(required=False, allow_blank=True, default='')
 
     def validate_email(self, value):
         value = value.lower()
@@ -425,14 +446,15 @@ class PatientRegistrationSerializer(serializers.Serializer):
         consent_store_data = validated_data.pop('consent_store_data')
         consent_doctor_access = validated_data.pop('consent_doctor_access')
         aadhar_id_proof = validated_data.pop('aadhar_id_proof', None)
-        abha_verified = validated_data.pop('abha_verified', False)  # NEW: ABHA FEATURE
+        existing_conditions = _split_list(validated_data.pop('existing_conditions', ''))
+        known_allergies = _split_list(validated_data.pop('known_allergies', ''))
         
         with transaction.atomic():
             # Create User
             user = User.objects.create(
                 email=email,
                 role=User.Role.PATIENT,
-                verification_status=User.VerificationStatus.VERIFIED if abha_verified else User.VerificationStatus.PENDING  # NEW: ABHA FEATURE
+                verification_status=User.VerificationStatus.PENDING,
             )
             user.set_password(password)
             user.save()
@@ -474,6 +496,20 @@ class PatientRegistrationSerializer(serializers.Serializer):
                 last_consent_update=now
             )
             
+            # Self-reported allergies and conditions become real records
+            # that doctors see (and can edit) in the patient's history.
+            from medical.models import Allergy, ChronicCondition
+            for allergen in known_allergies:
+                Allergy.objects.create(
+                    profile=profile, allergen=allergen,
+                    reaction_type='Self-reported', severity=1,
+                )
+            for name in existing_conditions:
+                ChronicCondition.objects.create(
+                    profile=profile, disease_name=name,
+                    icd_10_code=SELF_REPORTED_ICD10.get(name.lower(), 'R69'),
+                )
+
             # Assign to Patient group
             _assign_group(user, 'Patient')
             
@@ -551,6 +587,7 @@ class PasswordLoginSerializer(serializers.Serializer):
                 "last_name": user.get_last_name(),
                 "role": user.role,
                 "verification_status": user.verification_status,
+                "approval_status": user.get_approval_status(),
             },
             "access": str(refresh.access_token),
             "refresh": str(refresh),
@@ -600,7 +637,8 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         new_password = self.validated_data['new_password']
         
         user.set_password(new_password)
-        user.save(update_fields=['password'])
+        user.password_last_changed = timezone.now()
+        user.save(update_fields=['password', 'password_last_changed'])
         
         return {"detail": "Password reset successful"}
 
@@ -638,16 +676,37 @@ class EmailVerificationSerializer(serializers.Serializer):
 
 class DoctorProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source="user.email", read_only=True)
+    email_verified = serializers.SerializerMethodField()
+    approved_by_email = serializers.EmailField(source="approved_by.email", read_only=True, default=None)
+    documents = serializers.SerializerMethodField()
 
     class Meta:
         model = DoctorProfile
         fields = [
-            "id", "email", "first_name", "last_name",
+            "id", "email", "email_verified", "first_name", "last_name",
             "medical_license", "specialization", "phone",
-            "approval_status", "approved_by", "approved_at",
-            "created_at", "updated_at",
+            "degree", "degree_other", "experience_years", "clinic_name", "clinic_address",
+            "approval_status", "approved_by", "approved_by_email", "approved_at",
+            "documents", "created_at", "updated_at",
         ]
         read_only_fields = fields
+
+    def get_email_verified(self, obj):
+        return obj.user.verification_status == User.VerificationStatus.VERIFIED
+
+    def get_documents(self, obj):
+        request = self.context.get("request")
+        docs = []
+        for field, label in (
+            ("license_certificate", "Medical licence"),
+            ("degree_certificate", "Degree certificate"),
+            ("government_id", "Government ID"),
+        ):
+            f = getattr(obj, field, None)
+            if f:
+                url = f.url
+                docs.append({"label": label, "url": request.build_absolute_uri(url) if request else url})
+        return docs
 
 
 class DoctorApprovalSerializer(serializers.Serializer):
@@ -670,13 +729,22 @@ class DoctorApprovalSerializer(serializers.Serializer):
 
 
 class UserListSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    approval_status = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
-            "id", "email", "role", "verification_status",
-            "is_active", "is_staff", "date_joined",
+            "id", "email", "name", "role", "verification_status", "approval_status",
+            "is_active", "is_staff", "is_2fa_enabled", "date_joined", "last_login",
         ]
         read_only_fields = fields
+
+    def get_name(self, obj):
+        return f"{obj.get_first_name()} {obj.get_last_name()}".strip()
+
+    def get_approval_status(self, obj):
+        return obj.get_approval_status()
 
 class PharmacistRegistrationSerializer(serializers.Serializer):
     """Production-grade pharmacist registration."""
