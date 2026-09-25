@@ -1,237 +1,153 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { api } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import toast from 'react-hot-toast';
-import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowLeft, FiCheckCircle } from 'react-icons/fi';
 import Link from 'next/link';
-
-const emailSchema = z.object({
-  email: z.string().email('Invalid email address'),
-});
-
-const resetSchema = z.object({
-  otp: z.string().length(6, 'OTP must be 6 digits'),
-  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string(),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
-
-type EmailFormData = z.infer<typeof emailSchema>;
-type ResetFormData = z.infer<typeof resetSchema>;
+import { useRouter } from 'next/navigation';
+import { AlertCircle, KeyRound, Loader2, Mail } from 'lucide-react';
+import { api } from '@/lib/api';
+import SplitSignInLayout from '@/components/auth/SplitSignInLayout';
+import { AuthHeading, extractError } from '@/components/auth/SignInForm';
+import { OtpInput } from '@/components/auth/OtpInput';
+import { Field, PasswordInput, fieldClass } from '@/components/auth/FormKit';
+import { t } from '@/lib/i18n';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
-  const [step, setStep] = useState<'email' | 'reset' | 'success'>('email');
+  const [step, setStep] = useState<'email' | 'reset'>('email');
   const [email, setEmail] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const emailForm = useForm<EmailFormData>({
-    resolver: zodResolver(emailSchema),
-  });
-
-  const resetForm = useForm<ResetFormData>({
-    resolver: zodResolver(resetSchema),
-  });
-
-  const onEmailSubmit = async (data: EmailFormData) => {
+  const requestCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFieldErrors({ email: t("Enter a valid email address") });
+      return;
+    }
+    setFieldErrors({});
+    setLoading(true);
+    setError(null);
     try {
-      await api.auth.requestPasswordReset(data.email);
-      setEmail(data.email);
+      await api.auth.requestPasswordReset(email.trim().toLowerCase());
+    } catch {
+      // The response is the same either way, so accounts can't be enumerated.
+    } finally {
+      setLoading(false);
       setStep('reset');
-      toast.success('If the email exists, an OTP has been sent.');
-    } catch (error) {
-      // Still show success to prevent email enumeration
-      setEmail(data.email);
-      setStep('reset');
-      toast.success('If the email exists, an OTP has been sent.');
     }
   };
 
-  const onResetSubmit = async (data: ResetFormData) => {
+  const reset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const fe: Record<string, string> = {};
+    if (code.length !== 6) fe.code = t("Enter the 6-digit code");
+    if (password.length < 8) fe.password = t("Use at least 8 characters");
+    if (password !== confirm) fe.confirm = t("Passwords do not match");
+    setFieldErrors(fe);
+    if (Object.keys(fe).length) return;
+    setLoading(true);
+    setError(null);
     try {
-      await api.auth.confirmPasswordReset(email, data.otp, data.newPassword);
-      setStep('success');
-      toast.success('Password reset successful!');
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.otp?.[0] ||
-        error?.response?.data?.detail ||
-        'Password reset failed. Please try again.';
-      toast.error(msg);
+      await api.auth.confirmPasswordReset(email.trim().toLowerCase(), code, password);
+      router.push('/login?message=reset');
+    } catch (err: any) {
+      const d = err?.response?.data;
+      setError(d?.otp?.[0] || d?.new_password?.[0] || extractError(err, t("Reset failed. Request a new code and try again.")));
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-xl">
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-3xl font-bold">
-              {step === 'success' ? 'Password Reset!' : 'Reset Password'}
-            </CardTitle>
-            <CardDescription>
-              {step === 'email' && 'Enter your email to receive a reset code'}
-              {step === 'reset' && 'Enter the code and set your new password'}
-              {step === 'success' && 'Your password has been changed successfully'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {step === 'email' && (
-              <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email</label>
-                  <div className="relative">
-                    <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      {...emailForm.register('email')}
-                      type="email"
-                      placeholder="your.email@example.com"
-                      className="pl-10"
-                      autoComplete="email"
-                    />
-                  </div>
-                  {emailForm.formState.errors.email && (
-                    <p className="text-sm text-red-600">
-                      {emailForm.formState.errors.email.message}
-                    </p>
-                  )}
+    <SplitSignInLayout backHref="/login" backLabel={t("Sign in")}>
+      <span className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <KeyRound className="h-6 w-6" />
+      </span>
+      {step === 'email' ? (
+        <>
+          <AuthHeading title={t("Reset your password")} description={t("Enter the email on your account and we will send a reset code.")} />
+          <form onSubmit={requestCode} className="space-y-4" noValidate>
+            <Field label={t("Email")} error={fieldErrors.email}>
+              {(id) => (
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    id={id}
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className={`${fieldClass(!!fieldErrors.email)} pl-10`}
+                  />
                 </div>
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={emailForm.formState.isSubmitting}
-                >
-                  {emailForm.formState.isSubmitting ? 'Sending...' : 'Send Reset Code'}
-                </Button>
-                <div className="text-center text-sm">
-                  <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1">
-                    <FiArrowLeft className="w-3 h-3" /> Back to Sign In
-                  </Link>
-                </div>
-              </form>
-            )}
-
-            {step === 'reset' && (
-              <form onSubmit={resetForm.handleSubmit(onResetSubmit)} className="space-y-4">
-                <div className="text-center mb-2">
-                  <p className="text-sm text-muted-foreground">
-                    Code sent to <span className="font-semibold text-foreground/80">{email}</span>
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Verification Code</label>
-                  <div className="relative">
-                    <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      {...resetForm.register('otp')}
-                      type="text"
-                      placeholder="000000"
-                      maxLength={6}
-                      className="pl-10 tracking-[0.3em] text-center text-lg font-mono"
-                    />
-                  </div>
-                  {resetForm.formState.errors.otp && (
-                    <p className="text-sm text-red-600">
-                      {resetForm.formState.errors.otp.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">New Password</label>
-                  <div className="relative">
-                    <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      {...resetForm.register('newPassword')}
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      className="pl-10 pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
-                    >
-                      {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {resetForm.formState.errors.newPassword && (
-                    <p className="text-sm text-red-600">
-                      {resetForm.formState.errors.newPassword.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Confirm New Password</label>
-                  <div className="relative">
-                    <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      {...resetForm.register('confirmPassword')}
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      className="pl-10"
-                    />
-                  </div>
-                  {resetForm.formState.errors.confirmPassword && (
-                    <p className="text-sm text-red-600">
-                      {resetForm.formState.errors.confirmPassword.message}
-                    </p>
-                  )}
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={resetForm.formState.isSubmitting}
-                >
-                  {resetForm.formState.isSubmitting ? 'Resetting...' : 'Reset Password'}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => setStep('email')}
-                >
-                  <FiArrowLeft className="mr-2" /> Back
-                </Button>
-              </form>
-            )}
-
-            {step === 'success' && (
-              <div className="text-center space-y-6">
-                <div className="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center">
-                  <FiCheckCircle className="w-8 h-8 text-green-600" />
-                </div>
-                <p className="text-muted-foreground text-sm">
-                  Your password has been reset. You can now sign in with your new password.
-                </p>
-                <Button className="w-full" onClick={() => router.push('/login')}>
-                  Go to Sign In
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
-            ← Back to Home
-          </Link>
-        </div>
-      </div>
-    </div>
+              )}
+            </Field>
+            <button type="submit" disabled={loading} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-primary text-[14.5px] font-medium text-primary-foreground shadow-button disabled:opacity-70">
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />{' '}{t("Sending…")}</>
+              ) : (
+                t('Send reset code')
+              )}
+            </button>
+          </form>
+        </>
+      ) : (
+        <>
+          <AuthHeading
+            title={t("Choose a new password")}
+            description={
+              <>{t('If an account exists for {email}, a 6-digit code is on its way.', { email })}
+              </>
+            }
+          />
+          {error && (
+            <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-xl border border-destructive/25 bg-destructive/5 px-3.5 py-3 text-[13.5px] text-destructive">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
+            </div>
+          )}
+          <form onSubmit={reset} className="space-y-5" noValidate>
+            <div className="space-y-1.5">
+              <div className="text-[13px] font-medium">{t("Reset code")}</div>
+              <OtpInput value={code} onChange={setCode} invalid={!!fieldErrors.code} />
+              {fieldErrors.code && <p className="text-xs font-medium text-destructive">{fieldErrors.code}</p>}
+            </div>
+            <Field label={t("New password")} error={fieldErrors.password}>
+              {(id) => <PasswordInput id={id} value={password} onChange={(e) => setPassword(e.target.value)} invalid={!!fieldErrors.password} />}
+            </Field>
+            <Field label={t("Confirm new password")} error={fieldErrors.confirm}>
+              {(id) => (
+                <PasswordInput id={id} name="confirm" value={confirm} onChange={(e) => setConfirm(e.target.value)} invalid={!!fieldErrors.confirm} showMeter={false} />
+              )}
+            </Field>
+            <button type="submit" disabled={loading} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-primary text-[14.5px] font-medium text-primary-foreground shadow-button disabled:opacity-70">
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />{' '}{t("Updating…")}</>
+              ) : (
+                t('Update password')
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setStep('email');
+                setCode('');
+                setError(null);
+              }}
+              className="w-full text-center text-[13.5px] text-muted-foreground hover:text-foreground"
+            >{t("Use a different email")}</button>
+          </form>
+        </>
+      )}
+      <p className="mt-8 text-center text-[13.5px] text-muted-foreground">{t("Remembered it?")}{' '}
+        <Link href="/login" className="font-semibold text-primary hover:underline">{t("Sign in")}</Link>
+      </p>
+    </SplitSignInLayout>
   );
 }

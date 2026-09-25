@@ -1,293 +1,146 @@
 'use client';
 
-import React, { Suspense, useState, useRef, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { api } from '@/lib/api';
-import toast from 'react-hot-toast';
-import { FiMail, FiShield, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import toast from 'react-hot-toast';
+import { AlertCircle, CheckCircle2, Loader2, MailCheck } from 'lucide-react';
+import { api } from '@/lib/api';
+import SplitSignInLayout from '@/components/auth/SplitSignInLayout';
+import { AuthHeading, extractError } from '@/components/auth/SignInForm';
+import { OtpInput } from '@/components/auth/OtpInput';
+import { t as tr } from '@/lib/i18n';
 
-function VerifyEmailPageContent() {
+function VerifyEmailContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const email = searchParams.get('email') || '';
-  const role = searchParams.get('role') || 'patient';
+  const params = useSearchParams();
+  const email = params.get('email') || '';
+  const role = params.get('role') || 'patient';
 
-  const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
+  const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(60);
-  const [canResend, setCanResend] = useState(false);
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Countdown timer for resend
   useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    } else {
-      setCanResend(true);
-    }
+    if (countdown <= 0) return;
+    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
   }, [countdown]);
 
-  // Auto-focus first input
-  useEffect(() => {
-    inputRefs.current[0]?.focus();
-  }, []);
-
-  const handleChange = (index: number, value: string) => {
-    // Only allow digits
-    if (value && !/^\d$/.test(value)) return;
-
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
-    // Auto-advance to next input
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-
-    // Auto-submit when all 6 digits entered
-    if (value && index === 5) {
-      const fullOtp = newOtp.join('');
-      if (fullOtp.length === 6) {
-        handleVerify(fullOtp);
+  const verify = useCallback(
+    async (value: string) => {
+      if (value.length !== 6 || !email) return;
+      setLoading(true);
+      setError(null);
+      try {
+        await api.auth.verifyEmail(email, value);
+        setVerified(true);
+        setTimeout(() => router.push(role === 'doctor' ? '/login?message=doctor_verified' : '/login?message=verified'), 1600);
+      } catch (err: any) {
+        const d = err?.response?.data;
+        setError(d?.otp?.[0] || extractError(err, tr("That code is invalid or has expired.")));
+        setCode('');
+      } finally {
+        setLoading(false);
       }
-    }
-  };
+    },
+    [email, role, router]
+  );
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent) => {
-    e.preventDefault();
-    const pasteData = e.clipboardData.getData('text').trim();
-    if (/^\d{6}$/.test(pasteData)) {
-      const digits = pasteData.split('');
-      setOtp(digits);
-      inputRefs.current[5]?.focus();
-      handleVerify(pasteData);
-    }
-  };
-
-  const handleVerify = useCallback(async (otpCode?: string) => {
-    const code = otpCode || otp.join('');
-    if (code.length !== 6) {
-      toast.error('Please enter the complete 6-digit OTP');
-      return;
-    }
-
-    if (!email) {
-      toast.error('Email not found. Please register again.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await api.auth.verifyEmail(email, code);
-      setVerified(true);
-      toast.success('Email verified successfully!');
-
-      // Redirect based on role after a short delay
-      setTimeout(() => {
-        if (role === 'doctor') {
-          router.push('/login?message=doctor_verified');
-        } else {
-          router.push('/login?message=verified');
-        }
-      }, 2000);
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.otp?.[0] ||
-        error?.response?.data?.non_field_errors?.[0] ||
-        error?.response?.data?.detail ||
-        'Invalid or expired OTP. Please try again.';
-      toast.error(msg);
-      // Clear OTP inputs
-      setOtp(['', '', '', '', '', '']);
-      inputRefs.current[0]?.focus();
-    } finally {
-      setLoading(false);
-    }
-  }, [otp, email, role, router]);
-
-  const handleResendOTP = async () => {
-    if (!email) {
-      toast.error('Email not found. Please register again.');
-      return;
-    }
-
+  const resend = async () => {
     setResending(true);
+    setError(null);
     try {
       await api.auth.sendOtp(email);
-      toast.success('New OTP sent to your email!');
+      toast.success(tr("A new code is on its way."));
       setCountdown(60);
-      setCanResend(false);
-      setOtp(['', '', '', '', '', '']);
-      inputRefs.current[0]?.focus();
-    } catch (error: any) {
-      toast.error('Failed to resend OTP. Please try again.');
+      setCode('');
+    } catch (err) {
+      setError(extractError(err, tr("Could not send a new code. Try again shortly.")));
     } finally {
       setResending(false);
     }
   };
 
-  // Success state
-  if (verified) {
+  if (!email) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-50 via-white to-emerald-50 p-4">
-        <div className="w-full max-w-md text-center">
-          <div className="bg-card rounded-2xl shadow-xl p-8">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
-              <FiCheckCircle className="w-10 h-10 text-green-600" />
-            </div>
-            <h1 className="text-2xl font-bold text-foreground mb-2">Email Verified!</h1>
-            <p className="text-muted-foreground mb-4">
-              Your email <span className="font-semibold text-foreground">{email}</span> has been verified successfully.
-            </p>
-            {role === 'doctor' ? (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-                <p className="text-amber-800 text-sm">
-                  <strong>Note:</strong> Your doctor registration is under review.
-                  You&apos;ll receive an email once your profile is approved by our admin team (24-48 hours).
-                </p>
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-sm mb-6">
-                Redirecting you to the login page...
-              </p>
-            )}
-            <button
-              onClick={() => router.push('/login')}
-              className="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
-            >
-              Go to Login
-            </button>
-          </div>
-        </div>
-      </div>
+      <SplitSignInLayout backHref="/signup" backLabel={tr("Register")}>
+        <AuthHeading
+          title={tr("Verification link incomplete")}
+          description={tr("We need the email you registered with. Start registration again to get a new code.")}
+        />
+        <Link href="/signup" className="inline-flex h-11 items-center rounded-[10px] bg-primary px-5 text-[14.5px] font-medium text-primary-foreground shadow-button">{tr("Back to registration")}</Link>
+      </SplitSignInLayout>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-card rounded-2xl shadow-xl p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <FiShield className="w-8 h-8 text-white" />
+    <SplitSignInLayout backHref="/login" backLabel={tr("Sign in")}>
+      {verified ? (
+        <div className="text-center">
+          <span className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-success/12 text-success">
+            <CheckCircle2 className="h-7 w-7" />
+          </span>
+          <h1 className="text-[26px] font-semibold tracking-[-0.03em]">{tr("Email verified")}</h1>
+          <p className="mt-2 text-[14.5px] text-muted-foreground">
+            {role === 'doctor'
+              ? tr("Your licence now goes to an administrator for review. Taking you to sign in…")
+              : tr("Taking you to sign in…")}
+          </p>
+        </div>
+      ) : (
+        <>
+          <span className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <MailCheck className="h-6 w-6" />
+          </span>
+          <AuthHeading
+            title={tr("Check your inbox")}
+            description={
+              <>{tr("We sent a 6-digit code to")}{' '}<span className="font-medium text-foreground">{email}</span>.
+              </>
+            }
+          />
+          {error && (
+            <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-xl border border-destructive/25 bg-destructive/5 px-3.5 py-3 text-[13.5px] text-destructive">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
             </div>
-            <h1 className="text-2xl font-bold text-foreground mb-2">Verify Your Email</h1>
-            <p className="text-muted-foreground text-sm">
-              We&apos;ve sent a 6-digit verification code to
-            </p>
-            <div className="flex items-center justify-center gap-2 mt-2">
-              <FiMail className="w-4 h-4 text-indigo-600" />
-              <span className="font-semibold text-indigo-600">{email || 'your email'}</span>
-            </div>
-          </div>
-
-          {/* OTP Input */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-foreground/80 mb-3 text-center">
-              Enter verification code
-            </label>
-            <div className="flex justify-center gap-3" onPaste={handlePaste}>
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  ref={(el) => { inputRefs.current[index] = el; }}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleChange(index, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  className={`w-12 h-14 text-center text-xl font-bold border-2 rounded-xl outline-none transition-all ${
-                    digit
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-border bg-card text-foreground'
-                  } focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200`}
-                  disabled={loading}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Verify Button */}
+          )}
+          <OtpInput value={code} onChange={setCode} onComplete={verify} invalid={!!error} disabled={loading} />
           <button
-            onClick={() => handleVerify()}
-            disabled={loading || otp.join('').length !== 6}
-            className={`w-full py-3 rounded-xl font-semibold text-white transition-all ${
-              loading || otp.join('').length !== 6
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg hover:shadow-xl'
-            }`}
+            type="button"
+            onClick={() => verify(code)}
+            disabled={loading || code.length !== 6}
+            className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-primary text-[14.5px] font-medium text-primary-foreground shadow-button disabled:opacity-60"
           >
             {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Verifying...
-              </span>
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />{' '}{tr("Verifying…")}</>
             ) : (
-              'Verify Email'
+              tr('Verify email')
             )}
           </button>
-
-          {/* Resend OTP */}
-          <div className="mt-6 text-center">
-            {canResend ? (
-              <button
-                onClick={handleResendOTP}
-                disabled={resending}
-                className="text-indigo-600 hover:text-indigo-700 font-medium text-sm"
-              >
-                {resending ? 'Sending...' : 'Resend verification code'}
-              </button>
+          <p className="mt-6 text-center text-[13.5px] text-muted-foreground">{tr("Didn't get it?")}{' '}
+            {countdown > 0 ? (
+              <span className="tabular">{tr("Resend in {countdown}s", { countdown })}</span>
             ) : (
-              <p className="text-muted-foreground text-sm">
-                Resend code in <span className="font-semibold text-indigo-600">{countdown}s</span>
-              </p>
+              <button type="button" onClick={resend} disabled={resending} className="font-semibold text-primary hover:underline disabled:opacity-60">
+                {resending ? tr("Sending…") : tr("Send a new code")}
+              </button>
             )}
-          </div>
-
-          {/* Help text */}
-          <div className="mt-6 bg-background rounded-lg p-4">
-            <p className="text-xs text-muted-foreground text-center">
-              Didn&apos;t receive the email? Check your spam folder or click resend above.
-              The code expires in 5 minutes.
-            </p>
-          </div>
-
-          {/* Back to signup */}
-          <div className="mt-4 text-center">
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground/80"
-            >
-              <FiArrowLeft className="w-3 h-3" />
-              Back to Sign Up
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
+          </p>
+        </>
+      )}
+    </SplitSignInLayout>
   );
 }
 
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={null}>
-      <VerifyEmailPageContent />
+      <VerifyEmailContent />
     </Suspense>
   );
 }
