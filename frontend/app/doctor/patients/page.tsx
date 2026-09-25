@@ -1,232 +1,113 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ChevronRight, Clock, QrCode, Search, Users } from 'lucide-react';
 import { withAuth } from '@/components/auth/withAuth';
 import { api } from '@/lib/api';
-import { MyPatient } from '@/types';
-import { FiUsers, FiSearch, FiPlus, FiClipboard, FiCamera, FiMapPin, FiCalendar, FiActivity } from 'react-icons/fi';
-import { useLanguage } from '@/components/providers/LanguageProvider';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { EmptyState, ErrorState, PageHeader, SkeletonRows, StatusPill } from '@/components/ui/page';
+import { fieldClass } from '@/components/auth/FormKit';
+import { initialsOf } from '@/components/layout/useShell';
+import type { MyPatient } from '@/types';
+import { t, intlLocale } from '@/lib/i18n';
+
+const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+
+function accessLabel(p: MyPatient) {
+  const hours = (new Date(p.access_expires_at).getTime() - Date.now()) / 3_600_000;
+  if (p.access_method === 'added_to_list' || hours > 24 * 30) return { label: t("On your list"), tone: 'primary' as const };
+  if (hours < 1) return { label: t('{count} min left', { count: Math.max(1, Math.round(hours * 60)) }), tone: 'warning' as const };
+  return { label: t('{count} h left', { count: Math.round(hours) }), tone: hours < 6 ? ('warning' as const) : ('neutral' as const) };
+}
 
 function MyPatientsPage() {
-  const router = useRouter();
-  const { t } = useLanguage();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [search, setSearch] = useState('');
+  const q = useQuery({ queryKey: ['myPatients'], queryFn: () => api.medical.getMyPatients() as Promise<{ count: number; results: MyPatient[] }> });
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['myPatients'],
-    queryFn: async () => {
-      const response = await api.medical.getMyPatients();
-      return response as { count: number; results: MyPatient[] };
-    },
-  });
-
-  const filteredPatients =
-    data?.results?.filter((patient) => {
-      const search = searchTerm.toLowerCase();
-      return (
-        patient.name.toLowerCase().includes(search) ||
-        patient.unique_patient_id.toLowerCase().includes(search) ||
-        patient.district.toLowerCase().includes(search)
-      );
-    }) || [];
+  const list = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    return (q.data?.results ?? []).filter(
+      (p) => !s || p.name.toLowerCase().includes(s) || p.unique_patient_id.toLowerCase().includes(s) || (p.district || '').toLowerCase().includes(s)
+    );
+  }, [q.data, search]);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8 pb-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground tracking-tight">{t('my_patients_title') || 'My Patients'}</h1>
-            <p className="text-muted-foreground mt-1">
-              {t('my_patients_subtitle') || 'Manage your patients and create consultation records'}
-            </p>
-          </div>
-          <div className="flex items-center gap-3 bg-card px-4 py-2 rounded-xl shadow-sm border border-border">
-            <span className="text-2xl font-bold text-primary">
-              {data?.count ?? 0}
-            </span>
-            <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{t('total') || 'Total'}</span>
-          </div>
+    <div>
+      <PageHeader
+        title={t("My patients")}
+        description={t("Patients whose health card you have scanned. Scan access lasts 24 hours; add a patient to your list to keep access for ongoing care.")}
+        actions={
+          <Link href="/doctor/scan-qr" className="inline-flex h-10 items-center gap-2 rounded-[10px] bg-primary px-4 text-[13.5px] font-medium text-primary-foreground shadow-button">
+            <QrCode className="h-4 w-4" />{' '}{t("Scan health card")}</Link>
+        }
+      />
+
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative sm:w-80">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("Search name, patient ID or district")} className={`${fieldClass()} h-10 pl-10`} aria-label={t("Search patients")} />
         </div>
-
-        {/* Search & Actions */}
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
-            <Input
-              type="text"
-              placeholder={t('search_patients_placeholder') || 'Search by name, patient ID, or district...'}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 py-6 bg-card border-border shadow-sm transition-all focus:ring-2 focus:ring-primary"
-            />
-          </div>
-          <Button
-            onClick={() => router.push('/doctor/scan-qr')}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 py-6"
-          >
-            <FiCamera className="mr-2 h-5 w-5" />
-            {t('scan_patient_qr') || 'Scan Patient QR'}
-          </Button>
-        </div>
-
-        {/* Loading */}
-        {isLoading && (
-          <div className="bg-card/50 backdrop-blur-sm rounded-xl border border-border p-12 text-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4" />
-            <p className="text-muted-foreground">{t('loading_patients') || 'Loading patients...'}</p>
-          </div>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="bg-rose-50 border border-rose-200 rounded-xl p-6 flex items-start gap-4">
-            <div className="p-2 bg-rose-100 rounded-full">
-              <FiActivity className="h-5 w-5 text-rose-600" />
-            </div>
-            <div>
-              <p className="text-rose-900 font-semibold mb-1">{t('error_loading_patients') || 'Error Loading Patients'}</p>
-              <p className="text-rose-700 text-sm">
-                {(error as any)?.message || 'Something went wrong'}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Patients list */}
-        {!isLoading && !error && (
-          <>
-            {filteredPatients.length === 0 ? (
-              <Card className="border-dashed border-2 border-border bg-background/50">
-                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-4">
-                    <FiUsers className="h-10 w-10 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">
-                    {t('no_patients_found') || 'No Patients Found'}
-                  </h3>
-                  <p className="text-muted-foreground max-w-sm mx-auto mb-8">
-                    {searchTerm
-                      ? (t('adjust_search') || 'Try adjusting your search terms')
-                      : (t('scan_qr_prompt') || "Scan a patient's health card QR code to add them to your list")}
-                  </p>
-                  <Button
-                    onClick={() => router.push('/doctor/scan-qr')}
-                    variant="default"
-                    size="lg"
-                    className="bg-primary hover:bg-primary"
-                  >
-                    <FiCamera className="h-5 w-5 mr-2" />
-                    {t('scan_qr_now') || 'Scan QR Now'}
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {filteredPatients.map((patient) => (
-                  <Card
-                    key={patient.patient_id}
-                    className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md bg-card overflow-hidden relative"
-                  >
-                    <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-blue-500 group-hover:w-1.5 transition-all"></div>
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between gap-4 mb-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-16 h-16 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md shadow-primary/20 ring-4 ring-card">
-                            {patient.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-bold text-foreground line-clamp-1" title={patient.name}>
-                              {patient.name}
-                            </h3>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs font-mono font-bold text-primary bg-primary/8 px-2 py-0.5 rounded border border-primary/15">
-                                {patient.unique_patient_id}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm mb-6">
-                        <div className="flex flex-col">
-                          <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Age / Gender</span>
-                          <span className="font-medium text-foreground/80">{patient.age} yrs • {patient.gender}</span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Blood Group</span>
-                          <span className="font-medium text-foreground/80">{patient.blood_group}</span>
-                        </div>
-                        <div className="flex flex-col col-span-2">
-                          <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold flex items-center gap-1">
-                            <FiMapPin className="h-3 w-3" /> District
-                          </span>
-                          <span className="font-medium text-foreground/80">{patient.district}</span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold flex items-center gap-1">
-                            <FiActivity className="h-3 w-3" /> Visits
-                          </span>
-                          <span className="font-medium text-foreground/80">{patient.visit_count}</span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold flex items-center gap-1">
-                            <FiCalendar className="h-3 w-3" /> Last Visit
-                          </span>
-                          <span className="font-medium text-foreground/80">
-                            {patient.last_visit_date
-                              ? new Date(patient.last_visit_date).toLocaleDateString()
-                              : 'Never'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <Button
-                          onClick={() =>
-                            router.push(`/doctor/patients/${patient.patient_id}/create-consultation`)
-                          }
-                          variant="default"
-                          className="w-full bg-primary hover:bg-primary text-white shadow-md shadow-teal-100"
-                        >
-                          <FiPlus className="h-4 w-4 mr-1.5" />
-                          {t('create_record') || 'Create Record'}
-                        </Button>
-
-                        <Button
-                          onClick={() =>
-                            router.push(`/doctor/patients/${patient.patient_id}`)
-                          }
-                          variant="outline"
-                          className="w-full border-border text-foreground/80 hover:bg-background hover:text-foreground"
-                        >
-                          <FiClipboard className="h-4 w-4 mr-1.5" />
-                          {t('history') || 'History'}
-                        </Button>
-                      </div>
-
-                      <div className="mt-4 pt-3 border-t border-slate-50 flex justify-between items-center text-xs text-muted-foreground">
-                        <span>Granted: {new Date(patient.access_granted_at).toLocaleDateString()}</span>
-                        <span className={patient.access_method === 'added_to_list' ? 'text-primary font-medium' : ''}>
-                          {patient.access_method === 'added_to_list' ? 'My List' : 'Token'}
-                        </span>
-                      </div>
-
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+        <div className="text-[13px] text-muted-foreground">{q.data ? t("{length} of {count} patients", { length: list.length, count: q.data.count }) : ''}</div>
       </div>
-    </DashboardLayout>
+
+      {q.isLoading ? (
+        <div className="rounded-2xl border bg-card p-5"><SkeletonRows rows={5} /></div>
+      ) : q.isError ? (
+        <ErrorState onRetry={() => q.refetch()} />
+      ) : list.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title={q.data?.count ? t("No patients match") : t("No patients yet")}
+          description={q.data?.count ? t("Try another search term.") : t("Scan a patient’s QR health card during their visit to open their records.")}
+          action={!q.data?.count && <Link href="/doctor/scan-qr" className="inline-flex h-9 items-center gap-2 rounded-[10px] bg-primary px-3.5 text-[13px] font-medium text-primary-foreground shadow-button"><QrCode className="h-4 w-4" />{' '}{t("Scan a card")}</Link>}
+        />
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border bg-card shadow-sm">
+          <table className="w-full min-w-[760px] text-[13.5px]">
+            <thead className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
+              <tr>
+                <th className="px-5 py-3 font-medium">{t("Patient")}</th>
+                <th className="px-5 py-3 font-medium">{t("Age / sex")}</th>
+                <th className="px-5 py-3 font-medium">{t("Blood")}</th>
+                <th className="px-5 py-3 font-medium">{t("District")}</th>
+                <th className="px-5 py-3 font-medium">{t("Visits")}</th>
+                <th className="px-5 py-3 font-medium">{t("Last visit")}</th>
+                <th className="px-5 py-3 font-medium">{t("Access")}</th>
+                <th className="w-8" />
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {list.map((p) => {
+                const a = accessLabel(p);
+                return (
+                  <tr key={p.patient_id} className="group cursor-pointer hover:bg-muted/40">
+                    <td className="px-5 py-3">
+                      <Link href={`/doctor/patients/${p.patient_id}`} className="flex items-center gap-3">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-xs font-semibold text-accent-foreground">{initialsOf(p.name)}</span>
+                        <span>
+                          <span className="block font-semibold">{p.name}</span>
+                          <span className="block font-mono text-xs text-muted-foreground">{p.unique_patient_id}</span>
+                        </span>
+                      </Link>
+                    </td>
+                    <td className="px-5 py-3">{p.age} · {p.gender?.[0]?.toUpperCase()}</td>
+                    <td className="px-5 py-3">{p.blood_group}</td>
+                    <td className="px-5 py-3">{p.district || '—'}</td>
+                    <td className="tabular px-5 py-3">{p.visit_count}</td>
+                    <td className="px-5 py-3 text-muted-foreground">{fmt(p.last_visit_date)}</td>
+                    <td className="px-5 py-3"><StatusPill tone={a.tone}><Clock className="h-3 w-3" />{a.label}</StatusPill></td>
+                    <td className="pr-4">
+                      <Link href={`/doctor/patients/${p.patient_id}`} aria-label={t("Open {name}", { name: p.name })}><ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" /></Link>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }
 

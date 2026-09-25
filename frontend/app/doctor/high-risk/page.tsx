@@ -1,286 +1,122 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AlertTriangle, ChevronRight, FilePlus2, FlaskConical, HeartPulse } from 'lucide-react';
 import { withAuth } from '@/components/auth/withAuth';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
-import { FiAlertTriangle, FiSearch, FiClipboard, FiPlus, FiActivity, FiUser } from 'react-icons/fi';
-import { useLanguage } from '@/components/providers/LanguageProvider';
+import { EmptyState, ErrorState, PageHeader, SkeletonRows, StatusPill, severityTone } from '@/components/ui/page';
+import { initialsOf } from '@/components/layout/useShell';
+import { cn } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
-interface HighRiskPatient {
+interface HighRisk {
   patient_id: string;
   unique_patient_id: string;
   name: string;
   age: number;
   gender: string;
-  blood_group: string;
   district: string;
   condition: string;
-  risk_level: 'low' | 'medium' | 'high' | 'critical';
+  risk_level: string;
   risk_score: number;
   risk_factors: string[];
   last_visit_date: string | null;
   latest_bp: string | null;
-  latest_bp_value: number | null;
   latest_sugar: number | null;
   conditions_count: number;
   abnormal_labs: number;
 }
 
-const riskBadgeConfig: Record<string, { bg: string; text: string; border: string }> = {
-  critical: { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-200' },
-  high: { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' },
-  medium: { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200' },
-  low: { bg: 'bg-emerald-100', text: 'text-primary', border: 'border-emerald-200' },
-};
+const LEVELS = ['All', 'Critical', 'High', 'Medium'];
 
 function HighRiskPatientsPage() {
-  const router = useRouter();
-  const { t } = useLanguage();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [level, setLevel] = useState('All');
+  const q = useQuery({ queryKey: ['doctor-high-risk'], queryFn: () => api.medical.getHighRiskPatients() as Promise<{ count: number; results: HighRisk[] }> });
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['doctor-high-risk'],
-    queryFn: async () => {
-      const res = await api.medical.getHighRiskPatients();
-      return res as { count: number; results: HighRiskPatient[] };
-    },
-  });
-
-  const filtered =
-    data?.results?.filter((p: HighRiskPatient) => {
-      const s = searchTerm.toLowerCase();
-      return (
-        p.name.toLowerCase().includes(s) ||
-        p.unique_patient_id.toLowerCase().includes(s) ||
-        p.risk_level.includes(s) ||
-        (p.condition && p.condition.toLowerCase().includes(s)) ||
-        p.risk_factors.some((f: string) => f.toLowerCase().includes(s))
-      );
-    }) ?? [];
-
-  const getRiskLabel = (level: string) => {
-    switch (level) {
-      case 'critical': return t('critical');
-      case 'high': return t('high_risk');
-      case 'medium': return t('medium_risk');
-      case 'low': return t('low_risk');
-      default: return level;
-    }
-  };
+  const all = useMemo(() => q.data?.results ?? [], [q.data]);
+  const list = useMemo(
+    () => all.filter((p) => level === 'All' || p.risk_level.toLowerCase() === level.toLowerCase()).sort((a, b) => b.risk_score - a.risk_score),
+    [all, level]
+  );
+  const count = (l: string) => all.filter((p) => p.risk_level.toLowerCase() === l.toLowerCase()).length;
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8 pb-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <span className="p-2 bg-rose-100 rounded-lg">
-                <FiAlertTriangle className="text-rose-600 h-8 w-8" />
-              </span>
-              {t('high_risk_title')}
-            </h1>
-            <p className="text-muted-foreground mt-2 max-w-2xl">
-              {t('high_risk_subtitle')}
-            </p>
-          </div>
-          <div className="flex items-center gap-3 bg-card px-5 py-3 rounded-xl shadow-lg shadow-rose-100/50 border border-rose-100">
-            <span className="text-3xl font-bold text-rose-600">{data?.count ?? 0}</span>
-            <span className="text-sm font-semibold text-rose-800 uppercase tracking-wider">{t('flagged')}</span>
-          </div>
-        </div>
+    <div>
+      <PageHeader title={t("High-risk watchlist")} description={t("Your patients ranked by a risk score built from chronic conditions, recent vitals and abnormal lab results.")} />
 
-        {/* Search */}
-        <div className="relative">
-          <FiSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
-          <Input
-            type="text"
-            placeholder={t('search_high_risk')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-14 pr-4 py-6 bg-card border-border shadow-sm focus:ring-2 focus:ring-rose-500 rounded-xl transition-all"
-          />
-        </div>
-
-        {/* Loading */}
-        {isLoading && (
-          <div className="bg-card/50 backdrop-blur-sm rounded-xl border border-border p-12 text-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-rose-500 mx-auto mb-4" />
-            <p className="text-muted-foreground font-medium">{t('analysing_risk')}</p>
-          </div>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="bg-rose-50 border border-rose-200 rounded-xl p-6 flex items-start gap-3">
-            <FiAlertTriangle className="h-5 w-5 text-rose-600 mt-0.5" />
-            <div>
-              <p className="text-rose-900 font-semibold mb-1">{t('failed_load')}</p>
-              <p className="text-rose-700 text-sm">
-                {(error as any)?.message || 'Failed to load high-risk patients'}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Cards */}
-        {!isLoading && !error && (
-          <>
-            {filtered.length === 0 ? (
-              <Card className="border-2 border-dashed border-border bg-background/50">
-                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="w-20 h-20 bg-primary/8 rounded-full flex items-center justify-center mb-4">
-                    <FiClipboard className="h-10 w-10 text-emerald-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">
-                    {t('no_high_risk_found')}
-                  </h3>
-                  <p className="text-muted-foreground max-w-sm mx-auto">
-                    {searchTerm
-                      ? t('adjust_search')
-                      : t('no_high_risk_desc')}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {filtered.map((patient) => {
-                  const badge = riskBadgeConfig[patient.risk_level] ?? riskBadgeConfig.low;
-                  return (
-                    <Card
-                      key={patient.patient_id}
-                      className={`group hover:shadow-xl transition-all duration-300 border-0 shadow-md bg-card overflow-hidden relative border-t-4 ${patient.risk_level === 'critical' ? 'border-t-rose-500' :
-                          patient.risk_level === 'high' ? 'border-t-orange-500' :
-                            patient.risk_level === 'medium' ? 'border-t-yellow-500' : 'border-t-emerald-500'
-                        }`}
-                    >
-                      <CardContent className="p-6">
-                        {/* Top row */}
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold border-2 ${badge.bg} ${badge.text} ${badge.border}`}>
-                              {patient.name.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <h3 className="text-lg font-bold text-foreground leading-snug">
-                                {patient.name}
-                              </h3>
-                              <p className="text-xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded inline-block">
-                                {patient.unique_patient_id}
-                              </p>
-                            </div>
-                          </div>
-                          <span
-                            className={`${badge.bg} ${badge.text} border ${badge.border} text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide`}
-                          >
-                            {getRiskLabel(patient.risk_level)}
-                          </span>
-                        </div>
-
-                        {/* Patient Demographics */}
-                        <div className="text-xs text-muted-foreground mb-4 flex gap-2 items-center">
-                          <span>{patient.age} yrs</span>
-                          <span>•</span>
-                          <span>{patient.gender}</span>
-                          <span>•</span>
-                          <span>{patient.blood_group}</span>
-                        </div>
-
-                        {/* Primary Condition */}
-                        {patient.condition && (
-                          <div className="mb-4 bg-background p-3 rounded-lg border border-border">
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold block mb-1">{t('primary_condition')}</span>
-                            <span className="text-sm font-bold text-foreground flex items-center gap-2">
-                              <FiActivity className="text-rose-500" /> {patient.condition}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Risk factors */}
-                        <div className="mb-4">
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold block mb-2">{t('risk_factors')}</span>
-                          <div className="flex flex-wrap gap-1.5">
-                            {patient.risk_factors.map((factor, i) => (
-                              <span
-                                key={i}
-                                className="bg-card border border-border text-muted-foreground text-xs px-2.5 py-1 rounded-md font-medium shadow-sm"
-                              >
-                                {factor}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Stats row */}
-                        <div className="grid grid-cols-2 gap-3 mb-6 bg-background/50 p-3 rounded-xl border border-border/50">
-                          <div>
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">BP</span>
-                            <p className={`font-mono font-semibold ${patient.latest_bp_value && patient.latest_bp_value >= 140 ? 'text-rose-600' : 'text-foreground/80'}`}>
-                              {patient.latest_bp ?? '—'}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Sugar</span>
-                            <p className={`font-mono font-semibold ${patient.latest_sugar && patient.latest_sugar > 200 ? 'text-rose-600' : 'text-foreground/80'}`}>
-                              {patient.latest_sugar ? `${patient.latest_sugar} mg/dL` : '—'}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{t('abnormal_labs_count')}</span>
-                            <p className={`font-mono font-semibold ${patient.abnormal_labs > 0 ? 'text-rose-600' : 'text-foreground/80'}`}>
-                              {patient.abnormal_labs}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Last Visit</span>
-                            <p className="font-mono font-semibold text-foreground/80 text-xs mt-0.5">
-                              {patient.last_visit_date
-                                ? new Date(patient.last_visit_date).toLocaleDateString()
-                                : '—'}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="grid grid-cols-2 gap-3">
-                          <Button
-                            onClick={() =>
-                              router.push(
-                                `/doctor/patients/${patient.patient_id}/create-consultation`
-                              )
-                            }
-                            className="w-full bg-primary hover:bg-primary text-white shadow-md shadow-teal-100"
-                          >
-                            <FiPlus className="h-4 w-4 mr-1.5" />
-                            {t('new_record')}
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              router.push(`/doctor/patients/${patient.patient_id}`)
-                            }
-                            variant="outline"
-                            className="w-full border-border text-foreground/80 hover:bg-background"
-                          >
-                            <FiClipboard className="h-4 w-4 mr-1.5" />
-                            {t('view_history')}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </>
-        )}
+      <div className="mb-5 inline-flex flex-wrap rounded-[10px] border bg-card p-1 shadow-sm">
+        {LEVELS.map((l) => (
+          <button key={l} onClick={() => setLevel(l)} className={cn('rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors', level === l ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>
+            {l}
+            {l !== 'All' && q.data && <span className="tabular ml-1.5 opacity-80">{count(l)}</span>}
+          </button>
+        ))}
       </div>
-    </DashboardLayout>
+
+      {q.isLoading ? (
+        <div className="rounded-2xl border bg-card p-5"><SkeletonRows rows={5} /></div>
+      ) : q.isError ? (
+        <ErrorState onRetry={() => q.refetch()} />
+      ) : list.length === 0 ? (
+        <EmptyState icon={AlertTriangle} title={all.length ? t("No patients at this level") : t("No high-risk patients")} description={all.length ? undefined : t("Patients you have access to appear here when they have active conditions, out-of-range vitals or abnormal labs.")} />
+      ) : (
+        <div className="grid gap-4 xl:grid-cols-2">
+          {list.map((p) => (
+            <article key={p.patient_id} className="flex flex-col rounded-2xl border bg-card p-5 shadow-sm">
+              <div className="flex items-start gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-sm font-semibold text-destructive">{initialsOf(p.name)}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="truncate text-[16px] font-semibold">{p.name}</h2>
+                    <StatusPill tone={severityTone(p.risk_level)}>{t(p.risk_level)}</StatusPill>
+                  </div>
+                  <div className="text-[13px] text-muted-foreground">
+                    <span className="font-mono">{p.unique_patient_id}</span>{' '}{t("· {age} y · {gender}", { age: p.age, gender: t(p.gender) }) + (p.district ? ` · ${p.district}` : '')}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="tabular text-[22px] font-semibold leading-none">{p.risk_score}</div>
+                  <div className="text-[11px] text-muted-foreground">{t("risk score")}</div>
+                </div>
+              </div>
+
+              <div className="mb-5 mt-4 grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-lg bg-muted/50 px-2 py-2">
+                  <HeartPulse className="mx-auto h-4 w-4 text-destructive" />
+                  <div className="tabular mt-1 text-[13.5px] font-semibold">{p.latest_bp || '—'}</div>
+                  <div className="text-[11px] text-muted-foreground">{t("BP")}</div>
+                </div>
+                <div className="rounded-lg bg-muted/50 px-2 py-2">
+                  <FlaskConical className="mx-auto h-4 w-4 text-warning" />
+                  <div className="tabular mt-1 text-[13.5px] font-semibold">{p.latest_sugar ? Math.round(p.latest_sugar) : '—'}</div>
+                  <div className="text-[11px] text-muted-foreground">{t("Glucose")}</div>
+                </div>
+                <div className="rounded-lg bg-muted/50 px-2 py-2">
+                  <AlertTriangle className="mx-auto h-4 w-4 text-muted-foreground" />
+                  <div className="tabular mt-1 text-[13.5px] font-semibold">{p.abnormal_labs}</div>
+                  <div className="text-[11px] text-muted-foreground">{t("Abnormal labs")}</div>
+                </div>
+              </div>
+
+              {p.risk_factors?.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-1.5">
+                  {p.risk_factors.slice(0, 6).map((f) => <span key={f} className="rounded-md bg-destructive/8 px-2 py-0.5 text-xs text-destructive">{f}</span>)}
+                </div>
+              )}
+
+              <div className="mt-auto flex gap-2 border-t pt-4">
+                <Link href={`/doctor/patients/${p.patient_id}`} className="inline-flex h-9 items-center gap-1.5 rounded-[10px] border px-3.5 text-[13px] font-medium hover:bg-muted">{t("Open chart")}{' '}<ChevronRight className="h-4 w-4" />
+                </Link>
+                <Link href={`/doctor/patients/${p.patient_id}/create-consultation`} className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-[10px] bg-primary px-3.5 text-[13px] font-medium text-primary-foreground shadow-button">
+                  <FilePlus2 className="h-4 w-4" />{' '}{t("New consultation")}</Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
