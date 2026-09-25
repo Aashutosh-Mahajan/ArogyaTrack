@@ -1,21 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { withAuth } from '@/components/auth/withAuth';
 import { ProfileView } from '@/components/dashboard/ProfileView';
+import { PageHeader } from '@/components/ui/page';
+import { t } from '@/lib/i18n';
 
 function ProfilePage(): React.JSX.Element {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">My Profile</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          View and manage your personal information, address, and privacy settings.
-        </p>
-      </div>
-      <ProfileView />
+    <div>
+      <PageHeader title={t("Profile")} description={t("Personal details, family members and privacy preferences.")} />
+      <Suspense fallback={null}>
+        <ProfileView />
+      </Suspense>
     </div>
-
   );
 }
 
