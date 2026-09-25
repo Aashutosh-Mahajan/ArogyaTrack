@@ -1,0 +1,5854 @@
+[
+ {
+  "message": " · {length} report(s)",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": " · {n_features} features",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": " · added by {added_by_name}",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": " · Glucose {round}",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": " · level {escalation_level}",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": " · self-reported",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": ", Dr. {lastName}",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "· {age} y · {gender}",
+  "file": "app/doctor/high-risk/page.tsx"
+ },
+ {
+  "message": "· {age} y · {gender} ·",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "· {age} y · {gender} · {blood_group}",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "· {age} y · {visit_count} visits",
+  "file": "app/doctor/add-record/page.tsx"
+ },
+ {
+  "message": "· Acknowledged {fmt}",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "· Resolved {fmt}",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "· since {fmt}",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "(and optionally",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": ") in the backend",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "{actual_cases} cases vs {round} expected",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "{actual_doses}/{expected_doses} doses",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "{age} y · {toUpperCase}",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "{age} years · {gender}",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "{ageFrom} years",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "{alertCount} unread alerts",
+  "file": "components/layout/Header.tsx"
+ },
+ {
+  "message": "{case_count} cases · {cases_per_100k}/100k",
+  "file": "components/maps/DynamicMap.tsx"
+ },
+ {
+  "message": "{count} consultations",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "{count} consultations match your filters",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "{count} critical",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "{count} d left",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "{count} days left",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "{count} doctors currently have access to your records",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "{count} events",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "{count} h left",
+  "file": "app/doctor/patients/page.tsx"
+ },
+ {
+  "message": "{count} invoices",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "{count} min left",
+  "file": "app/doctor/patients/page.tsx"
+ },
+ {
+  "message": "{count} outbreak alerts in your region",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "{count} prescription items",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "{days} days ago",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "{dispensed}/{length} dispensed",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "{dosage} · {frequency} · {duration_days} d",
+  "file": "app/prescription/verify/page.tsx"
+ },
+ {
+  "message": "{dosage} · {frequency} · {duration_days} days",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "{dosage} · {frequency} · {duration_days} days · qty {quantity}",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "{duration_days} days",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "{floor} d ago",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "{floor} h ago",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "{floor} min ago",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "{formatCompact} doctors · {formatCompact2} pharmacists",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "{formatCompact} reported cases",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "{h} d",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "{h} days",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "{hospital_count} hospitals",
+  "file": "app/admin/surveillance/page.tsx"
+ },
+ {
+  "message": "{humidity}% humidity",
+  "file": "app/admin/surveillance/page.tsx"
+ },
+ {
+  "message": "{inStock} in stock",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "{ip_address} · signed in {fmt}",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "{label} workspace",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "{length} districts · detected {fmt} · centred {centroid_lat}, {centroid_lon}",
+  "file": "app/admin/clusters/page.tsx"
+ },
+ {
+  "message": "{length} of {count} patients",
+  "file": "app/doctor/patients/page.tsx"
+ },
+ {
+  "message": "{max} min ago",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "{medicine} recorded",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "{ml_models_live} of {ml_models_total} models loaded",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "{money} dispensed, not billed",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "{months} months ago",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "{name} added to stock",
+  "file": "components/pharmacy/AddInventoryModal.tsx"
+ },
+ {
+  "message": "{name} added to your family",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "{name} is already listed above. Remove this line or combine the dose and quantity into one.",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "{name} is over 10 MB",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "{name}: only PDF, JPG or PNG",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "{quantity_in_stock} left",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "{quantity} units in stock",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "{quantity} units in stock · batch {batch}",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "{rainfall} mm rain",
+  "file": "app/admin/surveillance/page.tsx"
+ },
+ {
+  "message": "{risk_level} risk",
+  "file": "components/maps/DynamicMap.tsx"
+ },
+ {
+  "message": "{specialization} · applied {fmt}",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "{temperature}°C",
+  "file": "app/admin/surveillance/page.tsx"
+ },
+ {
+  "message": "{total_cases_7d} cases · {regions_affected} regions",
+  "file": "components/dashboard/DayWiseComparison.tsx"
+ },
+ {
+  "message": "{unique_patient_id} · {count} visits",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "{unique_patient_id} · 1 visit",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "{value} · {experience_years} yrs",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "{value} · next {horizon} days",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "{value} cases predicted across {value2} regions",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "{value} Confirm your password to continue.",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "{value} from stock with no unit price and will be billed at ₹0. Set prices in Inventory before dispensing.",
+  "file": "components/pharmacy/BillPanel.tsx"
+ },
+ {
+  "message": "{value} KB",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "{value}/100k",
+  "file": "app/admin/clusters/page.tsx"
+ },
+ {
+  "message": "{w} days",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "{when} · {count} items · {method}",
+  "file": "components/pharmacy/BillPanel.tsx"
+ },
+ {
+  "message": "{when} · 1 item · {method}",
+  "file": "components/pharmacy/BillPanel.tsx"
+ },
+ {
+  "message": "© {getFullYear} ArogyaTrack",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "1 consultation",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "1 consultation matches your filters",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "1 day left",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "1 doctor currently has access to your records",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "1 event",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "1 invoice",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "1 outbreak alert in your region",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "1 prescription item",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "10-digit mobile number starting with 6–9",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "14-day forecast",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "2 of 3 items dispensed",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "2FA",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "3 medicines checked",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "6-digit PIN code",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "6–20 letters, digits, - or /",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "7 d",
+  "file": "components/dashboard/DayWiseComparison.tsx"
+ },
+ {
+  "message": "7-day cases",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "7, 14 and 30-day case forecasts",
+  "file": "app/admin/signin/page.tsx"
+ },
+ {
+  "message": "7, 14 and 30-day case forecasts per district with upper and lower bounds.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "7, 14 and 30-day case forecasts with confidence bands",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "95% interval",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "A code is emailed to you every time you sign in.",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "A health ID and QR card are issued on sign-up, with family profiles.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "A live map of disease burden, with forecasts and alerts.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "A medicine is listed twice. Remove the repeat or combine it into one line",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "a month ago",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "A new code is on its way",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "A new code is on its way.",
+  "file": "app/verify-email/page.tsx"
+ },
+ {
+  "message": "A QR health card is issued as soon as you verify your email",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "A QR health card you can share or revoke",
+  "file": "app/patient/signin/page.tsx"
+ },
+ {
+  "message": "A QR health card you control — revoke doctor access at any time",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "A team of doctors and nurses in a hospital corridor",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "A verified doctor scans the QR during your visit.",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Aadhaar or government ID (optional)",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Abnormal {test} detected",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Abnormal lab values",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Abnormal labs",
+  "file": "app/doctor/high-risk/page.tsx"
+ },
+ {
+  "message": "Abnormal labs and new visit records for your patients will show here.",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Abnormal labs to review",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Abnormal results, missed medication and disease outbreaks reported in your area.",
+  "file": "app/dashboard/alerts/page.tsx"
+ },
+ {
+  "message": "About you",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Access",
+  "file": "app/doctor/patients/page.tsx"
+ },
+ {
+  "message": "Access granted for 24 hours",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Access is narrow by default and every sensitive action leaves a record.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Access is role-based and every action is audited",
+  "file": "components/auth/SplitSignInLayout.tsx"
+ },
+ {
+  "message": "Access until {value}",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Access your records, prescriptions and health card.",
+  "file": "app/patient/signin/page.tsx"
+ },
+ {
+  "message": "Account",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Account activity",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Account created. Check your email for a verification code.",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Account holder",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Account types",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Ack",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Acknowledge",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Acknowledged",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Across active prescriptions",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Across the {value} most recent of {count} region–disease scores",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Across your patients",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Action",
+  "file": "components/cdss/CDSSPanel.tsx"
+ },
+ {
+  "message": "Actions",
+  "file": "components/layout/nav.ts"
+ },
+ {
+  "message": "Active",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "active across monitored districts",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Active alerts",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Active clusters",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Active conditions",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Active medicines",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Active Prescriptions",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Active sessions",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Actual",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Add",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Add a family member",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Add a record",
+  "file": "app/doctor/add-record/page.tsx"
+ },
+ {
+  "message": "Add an emailed code to every sign-in for extra protection.",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Add another…",
+  "file": "components/auth/FormKit.tsx"
+ },
+ {
+  "message": "Add at least one medicine with a dose and frequency, or turn off the prescription",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Add family member",
+  "file": "components/layout/ProfileSwitcher.tsx"
+ },
+ {
+  "message": "Add family members to the same account later",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Add medicine",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Add member",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Add record",
+  "file": "components/layout/nav.ts"
+ },
+ {
+  "message": "Add stock",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Add the medicines you carry so dispensing can check and deduct stock.",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Add to stock",
+  "file": "components/pharmacy/AddInventoryModal.tsx"
+ },
+ {
+  "message": "Added to the current quantity",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Address",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "adherence",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Adherence",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "adherence page",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "Administration",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Administrator",
+  "file": "lib/roles.ts"
+ },
+ {
+  "message": "Admins",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "After a pharmacy dispenses a prescription, its dose schedule shows up here.",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "After signing in, scan the card again.",
+  "file": "app/patient/qr/[token]/page.tsx"
+ },
+ {
+  "message": "After you verify your email, an administrator checks your licence. You can sign in meanwhile, but patient data stays locked until approval.",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Age / sex",
+  "file": "app/doctor/patients/page.tsx"
+ },
+ {
+  "message": "AI decision support is not configured on this server. An administrator can enable it by setting",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "AI review + recorded data",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "AI_API_KEY",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "AI_BASE_URL",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "AI_MODEL",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Alert acknowledged",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Alert dismissed",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "Alert escalated",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Alert resolved",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Alert workflow and doctor licence approvals",
+  "file": "app/admin/signin/page.tsx"
+ },
+ {
+  "message": "Alert workflow: acknowledge, escalate, resolve",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Alerts",
+  "file": "app/dashboard/alerts/page.tsx"
+ },
+ {
+  "message": "All",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "All ({count})",
+  "file": "app/pharmacy/dispense/patient/page.tsx"
+ },
+ {
+  "message": "All alerts marked as read",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "All diseases",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "All lab results",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "All lines",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "All patients",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "All roles",
+  "file": "app/admin/signin/page.tsx"
+ },
+ {
+  "message": "All severities",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "All states",
+  "file": "components/dashboard/DayWiseComparison.tsx"
+ },
+ {
+  "message": "All visits",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "All years",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "Allergen",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Allergies",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Allergies and conditions you add are visible to your doctors",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Allergy recorded",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Allergy removed",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Allergy: {allergen}",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Already had",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Already registered?",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Already registered? ",
+  "file": "components/auth/RolePicker.tsx"
+ },
+ {
+  "message": "Amlodipine 10 mg",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Amount",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "An administrator rejected your registration. Contact your hospital administrator to resubmit your documents.",
+  "file": "components/layout/ApprovalBanner.tsx"
+ },
+ {
+  "message": "An administrator reviews your licence before patient data opens up",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Anaesthesiology",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Analyse symptoms",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Analysing… (about 20 s)",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Analytics",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "and",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Anonymised aggregates feed forecasts, clusters and outbreak alerts.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Another allergy",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Another condition",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Application rejected",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Approve licence",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Approved",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Approved {date}",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Approved {date} by {admin}",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "AQI {aqi}",
+  "file": "app/admin/surveillance/page.tsx"
+ },
+ {
+  "message": "ArogyaTrack health card",
+  "file": "app/patient/qr/[token]/page.tsx"
+ },
+ {
+  "message": "ArogyaTrack home",
+  "file": "components/brand/Logo.tsx"
+ },
+ {
+  "message": "ArogyaTrack links patient records, e-prescriptions and pharmacy dispensing to a surveillance layer that forecasts cases and flags disease clusters district by district — so care teams and health authorities act on the same picture.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "As issued by your state medical council",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "As needed",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "as of {formatAsOf}",
+  "file": "components/auth/SplitSignInLayout.tsx"
+ },
+ {
+  "message": "Aspirin",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Asthma",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "At bedtime",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "At least 8 characters",
+  "file": "components/auth/FormKit.tsx"
+ },
+ {
+  "message": "Attach lab or imaging reports",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Audit log",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Authority accounts are provisioned by system administrators. Every sign-in is logged.",
+  "file": "app/admin/signin/page.tsx"
+ },
+ {
+  "message": "Authority sign-in",
+  "file": "app/admin/signin/page.tsx"
+ },
+ {
+  "message": "Average per region",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Average per region, generated {fmtDate}",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Awaiting data",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Awaiting review",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "B.Pharm",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Back",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Back to chart",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Back to national view",
+  "file": "app/admin/surveillance/page.tsx"
+ },
+ {
+  "message": "Back to registration",
+  "file": "app/verify-email/page.tsx"
+ },
+ {
+  "message": "Batch",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Batch number",
+  "file": "components/pharmacy/AddInventoryModal.tsx"
+ },
+ {
+  "message": "Bill",
+  "file": "components/pharmacy/BillPanel.tsx"
+ },
+ {
+  "message": "Billed today",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "Bills issued at your counter. Generate one from the dispensing screen after handing over medicines.",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "Blocked",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Blood",
+  "file": "app/doctor/patients/page.tsx"
+ },
+ {
+  "message": "Blood glucose",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Blood group",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Blood group {value}",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Blood pressure",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Blood sugar",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "BP",
+  "file": "app/doctor/high-risk/page.tsx"
+ },
+ {
+  "message": "browse",
+  "file": "components/auth/FormKit.tsx"
+ },
+ {
+  "message": "Built around the people who <em>actually</em> deliver care.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Busiest region–disease pairs",
+  "file": "components/dashboard/DayWiseComparison.tsx"
+ },
+ {
+  "message": "by {added_by_name}",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Calculated from your recent vitals, lab results, conditions and medication adherence.",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Camera permission was denied. Allow camera access in the browser, or upload a photo of the QR instead.",
+  "file": "components/pharmacy/QRScanner.tsx"
+ },
+ {
+  "message": "Cancel",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Cancer",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Cannot reach the server. Check that the API is running.",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "Cannot reach the server. Check your connection.",
+  "file": "lib/documents.ts"
+ },
+ {
+  "message": "Card scan grants time-limited access; visits and prescriptions are recorded.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Card status",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Cardiology",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Care network",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Care that connects, <em>surveillance</em> that sees ahead.",
+  "file": "components/auth/SplitSignInLayout.tsx"
+ },
+ {
+  "message": "Case forecast",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Cases",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Cases (7 d)",
+  "file": "app/admin/surveillance/page.tsx"
+ },
+ {
+  "message": "Cases by disease",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Cases in the last 7 days",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Cases inside clusters",
+  "file": "app/admin/clusters/page.tsx"
+ },
+ {
+  "message": "Cases per 100,000 population",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Cases reported",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Category",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "CGST + SGST",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Change",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Change card photo",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Change language",
+  "file": "components/layout/LanguageSwitcher.tsx"
+ },
+ {
+  "message": "Change photo",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Change versus the previous 7 days",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Check stock at pharmacy (optional)",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Check your inbox",
+  "file": "app/verify-email/page.tsx"
+ },
+ {
+  "message": "Checked against recorded allergies, interactions, dosing and stock",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Checked for allergies, interactions, dosing and stock before it is issued",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Checking alerts…",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Checking model status…",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Checking signature…",
+  "file": "app/prescription/verify/page.tsx"
+ },
+ {
+  "message": "Child",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Choose a blood group",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Choose a disease to run the pipeline for",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Choose a medicine",
+  "file": "components/pharmacy/AddInventoryModal.tsx"
+ },
+ {
+  "message": "Choose a new password",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Choose a specialisation",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Choose your <em>portal.</em>",
+  "file": "components/auth/RolePicker.tsx"
+ },
+ {
+  "message": "Choose your qualification",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Choose your role",
+  "file": "app/login/page.tsx"
+ },
+ {
+  "message": "Chronic Conditions",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "Circle size: cases per 100k",
+  "file": "components/maps/DynamicMap.tsx"
+ },
+ {
+  "message": "Class",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "Clear search",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "Click a circle on the map to see its cases by disease, population and environment.",
+  "file": "app/admin/surveillance/page.tsx"
+ },
+ {
+  "message": "Clinic",
+  "file": "components/layout/nav.ts"
+ },
+ {
+  "message": "Clinic address",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Clinical activity flows into k-anonymised district aggregates. The pipeline forecasts, clusters, scores risk and raises alerts that authorities can act on.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Clinical decision support suggests differentials from symptoms",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Clinical notes",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Close",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Close decision support",
+  "file": "components/cdss/CDSSPanel.tsx"
+ },
+ {
+  "message": "Close menu",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Cluster detected",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Clusters",
+  "file": "app/admin/clusters/page.tsx"
+ },
+ {
+  "message": "Coded diagnoses recorded by your doctors",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "Command centre",
+  "file": "components/layout/nav.ts"
+ },
+ {
+  "message": "Complete dispensing history for audit",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Complete history of your medical consultations",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "Complete your profile to generate a health card.",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Completed",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Completed courses · {length}",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "Condition",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Condition recorded",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Condition removed",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Conditions",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Conditions & allergies",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Confidence",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "Confirm new password",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Consultation",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "Consultation · General medicine",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Consultation fee (₹)",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Consultation saved",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Consultations, prescriptions and lab reports in one timeline",
+  "file": "app/patient/signin/page.tsx"
+ },
+ {
+  "message": "Contact",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Contact {phone}",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Continue",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Cost at batch prices, earliest expiry first",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "Could not build the archive. Please try again.",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Could not create the invoice.",
+  "file": "components/pharmacy/BillPanel.tsx"
+ },
+ {
+  "message": "Could not open the report.",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "Could not prepare the PDF. Please try again.",
+  "file": "lib/documents.ts"
+ },
+ {
+  "message": "Could not reissue the card",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Could not send a new code.",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "Could not send a new code. Try again shortly.",
+  "file": "app/verify-email/page.tsx"
+ },
+ {
+  "message": "Could not update this item.",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "Could not update this setting",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Could not upload the photo",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Counter",
+  "file": "components/layout/nav.ts"
+ },
+ {
+  "message": "Create a patient account",
+  "file": "app/patient/signin/page.tsx"
+ },
+ {
+  "message": "Create a patient ID",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Create account",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Create an account",
+  "file": "components/auth/RolePicker.tsx"
+ },
+ {
+  "message": "Create pharmacy",
+  "file": "components/pharmacy/PharmacySetup.tsx"
+ },
+ {
+  "message": "Create your <em>health ID.</em>",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Create your health ID",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Creating account…",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Critical",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Critical visit recorded",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Current courses · {length}",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "Current password",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "D.Pharm",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Dashboard",
+  "file": "components/layout/nav.ts"
+ },
+ {
+  "message": "Data as of {fmtDate}",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Date",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Date of birth",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Date of birth cannot be in the future",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "days",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "DBSCAN clustering",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Decision support",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Decision support and a high-risk patient watchlist",
+  "file": "app/doctor/signin/page.tsx"
+ },
+ {
+  "message": "Degree",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Degree certificate",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Degree name",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Density-based spatial clustering that surfaces emerging hotspots.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Department",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "Dermatology",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Describe the reaction",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Details",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Detected",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Deviation",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Devices that are signed in to your account",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Diabetes",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Diabetic range",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Diagnoses",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "Diagnosis",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Diastolic",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Diastolic (mmHg)",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Didn't get it?",
+  "file": "app/verify-email/page.tsx"
+ },
+ {
+  "message": "Digit {value}",
+  "file": "components/auth/OtpInput.tsx"
+ },
+ {
+  "message": "Discount",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Discount (₹)",
+  "file": "components/pharmacy/BillPanel.tsx"
+ },
+ {
+  "message": "Discount cannot be more than the bill.",
+  "file": "components/pharmacy/BillPanel.tsx"
+ },
+ {
+  "message": "Disease",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Disease burden · {disease}",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Disease burden · all diseases",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Disease filter",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Diseases",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Diseases clustering",
+  "file": "app/admin/clusters/page.tsx"
+ },
+ {
+  "message": "Dismiss",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "Dismiss {title}",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "Dispense",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "Dispense a prescription, then use Generate invoice in its Bill section.",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "Dispense by patient",
+  "file": "components/layout/nav.ts"
+ },
+ {
+  "message": "Dispense prescription",
+  "file": "app/pharmacy/dispense/[id]/page.tsx"
+ },
+ {
+  "message": "Dispense with <em>certainty.</em>",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Dispensed",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Dispensed and stock updated",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "Dispensed today",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "Dispensing counter",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "Dispensing history",
+  "file": "app/pharmacy/history/page.tsx"
+ },
+ {
+  "message": "Dispensing log",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "dispensing_{value}.csv",
+  "file": "app/pharmacy/history/page.tsx"
+ },
+ {
+  "message": "District",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "District detail",
+  "file": "app/admin/surveillance/page.tsx"
+ },
+ {
+  "message": "District-level disease intelligence, <em>live.</em>",
+  "file": "app/admin/signin/page.tsx"
+ },
+ {
+  "message": "Districts",
+  "file": "components/auth/SplitSignInLayout.tsx"
+ },
+ {
+  "message": "Districts monitored",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "DOB {fmt}",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Doctor",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "Doctor access via health card",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Doctor accounts can open patient data only after an administrator approves the medical licence.",
+  "file": "app/doctor/signin/page.tsx"
+ },
+ {
+  "message": "Doctor accounts stay locked until an administrator approves the licence.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Doctor approvals",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Doctor approved. They can now open patient records.",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Doctor consults",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Doctor notes",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "Doctor portal",
+  "file": "app/doctor/signin/page.tsx"
+ },
+ {
+  "message": "Doctor registration",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Doctor sign-in",
+  "file": "app/patient/qr/[token]/page.tsx"
+ },
+ {
+  "message": "Doctors",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Doctors · Pharmacists · Patients",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Doctors add diagnosed conditions during consultations.",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Doctors and nurses standing together in a hospital",
+  "file": "components/auth/SplitSignInLayout.tsx"
+ },
+ {
+  "message": "Doctors can sign in after verifying their email, but cannot open patient data until you approve their licence here.",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Doctors must be at least 23 years old",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Documents",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Dosage",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Dose",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "Dose recorded",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Dose reminders and adherence tracking",
+  "file": "app/patient/signin/page.tsx"
+ },
+ {
+  "message": "Dose reminders and adherence tracking for active prescriptions",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Dose, e.g. 500 mg",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Doses scheduled in the next 24 hours appear here.",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Download {file_name}",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "Download {fileName}",
+  "file": "components/ui/pdf-actions.tsx"
+ },
+ {
+  "message": "Download everything",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Download PDF",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "Downloads",
+  "file": "app/dashboard/downloads/page.tsx"
+ },
+ {
+  "message": "Downloads so far",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Dr. {name}",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Drop a file or",
+  "file": "components/auth/FormKit.tsx"
+ },
+ {
+  "message": "Drug licence number",
+  "file": "components/pharmacy/PharmacySetup.tsx"
+ },
+ {
+  "message": "Drug-interaction and allergy checks before a prescription is issued",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Due in the next 24 h",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Duration",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Duration in days",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "e.g. Acute viral pharyngitis",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "e.g. Hives, anaphylaxis",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "e.g. MH-2019-04821",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "e.g. Penicillin",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "e.g. Type 2 diabetes mellitus",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Each batch is a separate line so expiry dates stay accurate.",
+  "file": "components/pharmacy/AddInventoryModal.tsx"
+ },
+ {
+  "message": "Each role has its own workspace. Your email and password work in the one you registered for.",
+  "file": "components/auth/RolePicker.tsx"
+ },
+ {
+  "message": "Early warnings",
+  "file": "components/cdss/CDSSPanel.tsx"
+ },
+ {
+  "message": "Edit {medicine_name}",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Edit details",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Elevated",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Email",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Email or password is incorrect.",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "Email unverified",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Email verified",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Email verified. Sign in to continue.",
+  "file": "app/login/page.tsx"
+ },
+ {
+  "message": "Email verified. Your licence is now with an administrator for approval.",
+  "file": "app/login/page.tsx"
+ },
+ {
+  "message": "Emergency information",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Ended {fmt}",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "Ends {fmt}",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "English",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Ensemble case forecasts per district",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "Ensemble forecasts generated {value}",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "ENT",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Enter a date of birth",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Enter a diagnosis or notes above first; the analysis is based on them.",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Enter a diagnosis or presenting problem",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Enter a valid 15-character GSTIN",
+  "file": "components/pharmacy/PharmacySetup.tsx"
+ },
+ {
+  "message": "Enter a valid email",
+  "file": "components/pharmacy/PharmacySetup.tsx"
+ },
+ {
+  "message": "Enter a valid email address",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Enter a valid phone number",
+  "file": "components/pharmacy/PharmacySetup.tsx"
+ },
+ {
+  "message": "Enter both systolic and diastolic",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Enter the 6-digit code",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Enter the address",
+  "file": "components/pharmacy/PharmacySetup.tsx"
+ },
+ {
+  "message": "Enter the allergen",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Enter the condition",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Enter the drug licence number",
+  "file": "components/pharmacy/PharmacySetup.tsx"
+ },
+ {
+  "message": "Enter the email on your account and we will send a reset code.",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Enter the pharmacy name",
+  "file": "components/pharmacy/PharmacySetup.tsx"
+ },
+ {
+  "message": "Enter the quantity received",
+  "file": "components/pharmacy/AddInventoryModal.tsx"
+ },
+ {
+  "message": "Enter years of experience",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Enter your address",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Enter your current password",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Enter your date of birth",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Enter your district",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Enter your email",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "Enter your first name",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Enter your last name",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Enter your password",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "Enter your pharmacy council registration number",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Enter your state",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Environment · {value}",
+  "file": "app/admin/surveillance/page.tsx"
+ },
+ {
+  "message": "Environmental and demographic features fused into a per-region risk tier.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Escalate",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Escalate (level {level})",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Every 8 hours",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Every account on the platform, and a record of sign-ins, approvals and other sensitive actions.",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Every consultation, lab report and prescription in one timeline",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Every document as PDF, plus uploaded files, in one ZIP",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Every item handed over, marked unavailable, or already with the patient, at your pharmacy.",
+  "file": "app/pharmacy/history/page.tsx"
+ },
+ {
+  "message": "Every line is above its reorder threshold.",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "Everything prescribed to this patient has been handled.",
+  "file": "app/pharmacy/dispense/patient/page.tsx"
+ },
+ {
+  "message": "Excellent",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Existing conditions",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Expected",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Expired",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Expiring in 90 days",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Expiry",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Expiry date",
+  "file": "components/pharmacy/AddInventoryModal.tsx"
+ },
+ {
+  "message": "Explain why you are overriding the block (at least 10 characters)",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Export CSV",
+  "file": "app/pharmacy/history/page.tsx"
+ },
+ {
+  "message": "Fair",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Falling",
+  "file": "components/dashboard/DayWiseComparison.tsx"
+ },
+ {
+  "message": "Falling fast",
+  "file": "components/dashboard/DayWiseComparison.tsx"
+ },
+ {
+  "message": "False positive",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Family",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Family member",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Family profiles",
+  "file": "components/layout/ProfileSwitcher.tsx"
+ },
+ {
+  "message": "Family profiles: manage records for parents and children",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Female",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Filter by role",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Filter by severity",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Filter by year",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "Find",
+  "file": "app/pharmacy/scan/page.tsx"
+ },
+ {
+  "message": "Finished",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "First name",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Flag as low at or below",
+  "file": "components/pharmacy/AddInventoryModal.tsx"
+ },
+ {
+  "message": "Follow-up",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "Follow-up needed",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Follow-up required",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Footer",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "For health administrators and surveillance officers.",
+  "file": "app/admin/signin/page.tsx"
+ },
+ {
+  "message": "For patients you already have access to. New patients must present their card.",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "Forecast",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "Forecasts",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "Forecasts generated",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Forgot password?",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "Four models watching the data, <em>every day.</em>",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Four times daily",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Frequency",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "From a clinic visit to a district alert",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Full audit trail",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Full chart",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "Full history",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "Full name",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Gastroenterology",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Gender",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "General Medicine",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "General Surgery",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Generate invoice",
+  "file": "components/pharmacy/BillPanel.tsx"
+ },
+ {
+  "message": "Generated by the surveillance pipeline when clusters, anomalies or forecasts cross thresholds. Acknowledge, escalate to district officers, or resolve.",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Genuine prescription — signature verified",
+  "file": "app/prescription/verify/page.tsx"
+ },
+ {
+  "message": "Get differential diagnoses, suggested tests and warnings from the notes above and the patient's anonymised history.",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Get started",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Given",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Given {fmt}",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Glucose",
+  "file": "app/doctor/high-risk/page.tsx"
+ },
+ {
+  "message": "Glucose (mg/dL)",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Glucose values from visits and lab tests will appear here.",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Go home",
+  "file": "app/not-found.tsx"
+ },
+ {
+  "message": "Go to my dashboard",
+  "file": "app/patient/qr/[token]/page.tsx"
+ },
+ {
+  "message": "Go to scan",
+  "file": "app/pharmacy/dispense/patient/page.tsx"
+ },
+ {
+  "message": "Good",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Good afternoon",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Good evening",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Good morning",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Government ID",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Groups of nearby districts reporting the same disease, found by DBSCAN spatial clustering.",
+  "file": "app/admin/clusters/page.tsx"
+ },
+ {
+  "message": "Growth versus previous window",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "GST",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "GST included",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "GSTIN (optional)",
+  "file": "components/pharmacy/PharmacySetup.tsx"
+ },
+ {
+  "message": "Guest",
+  "file": "lib/roles.ts"
+ },
+ {
+  "message": "Had it",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "Has it",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "HbA1c",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Health alerts and risk notifications",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Health authorities",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Health authority",
+  "file": "components/auth/RolePicker.tsx"
+ },
+ {
+  "message": "Health card",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Health card (printable, front and back)",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Health card QR code",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Health card scanned",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Health cards and prescriptions carry signatures verified server-side.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Health data deserves <em>restraint.</em>",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Health history",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Health records",
+  "file": "components/layout/nav.ts"
+ },
+ {
+  "message": "Health risk",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "Health score",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Health surveillance",
+  "file": "components/brand/Logo.tsx"
+ },
+ {
+  "message": "Heart Disease",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Heat map of cases per 100k across monitored districts",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Heat maps, clusters and anomaly detection",
+  "file": "app/admin/signin/page.tsx"
+ },
+ {
+  "message": "Hide items",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Hide password",
+  "file": "components/auth/FormKit.tsx"
+ },
+ {
+  "message": "High",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "High (stage 1)",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "High (stage 2)",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "High risk",
+  "file": "components/cdss/CDSSPanel.tsx"
+ },
+ {
+  "message": "High-risk patient watchlist ranked by computed risk score",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "High-risk patients",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "High-risk regions",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "High-risk watch",
+  "file": "components/layout/nav.ts"
+ },
+ {
+  "message": "High-risk watchlist",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Highest incidence",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Highest incidence regions",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Highest predicted load",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "History, examination findings, advice",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Home",
+  "file": "app/error.tsx"
+ },
+ {
+  "message": "Hospital or clinic",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "How it fits together",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "How will you use <em>ArogyaTrack?</em>",
+  "file": "components/auth/RolePicker.tsx"
+ },
+ {
+  "message": "How your card works",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "hsl(24 90% 50%)",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "httpOnly session cookies",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Hypertension",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "I accept the terms of service and confirm my licence details are accurate.",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "I accept the terms of service and confirm these documents are genuine.",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "I accept the terms of service and privacy policy.",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "I allow doctors I share my health card with to view my records.",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "I consent to ArogyaTrack storing my health records securely.",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "ICD-10 {icd_10_code}",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "ICD-10 {icd_10_code} · {added_by_name}",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "ICD-10 code",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "ICD-10 diagnoses added during consultations appear here.",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "If an account exists for {email}, a 6-digit code is on its way.",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Images must be under 5 MB",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "In stock",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Inactive",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "incl. GST {gst}",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "incl. GST {gst} · {discount} off",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "incl. GST {money}",
+  "file": "components/pharmacy/BillPanel.tsx"
+ },
+ {
+  "message": "Include a prescription",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "India",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Info",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Instructions",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Instructions, e.g. after food",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Intelligence",
+  "file": "components/layout/nav.ts"
+ },
+ {
+  "message": "Interaction and allergy checks before prescribing",
+  "file": "app/doctor/signin/page.tsx"
+ },
+ {
+  "message": "Interval",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "Inventory",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Inventory with low-stock and expiry tracking",
+  "file": "app/pharmacist/signin/page.tsx"
+ },
+ {
+  "message": "Inventory with low-stock and expiry visibility",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Invoice",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "Invoice {invoice_number} created",
+  "file": "components/pharmacy/BillPanel.tsx"
+ },
+ {
+  "message": "Invoice {number}",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Invoice number, patient or patient ID",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "Invoices",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "Invoices from pharmacies that dispensed your prescriptions. Download any of them as a PDF.",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Isolation Forest",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Isolation Forest flags where cases far exceed the expected level",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Issued",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Issued {fmt}",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Items",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "Items dispensed",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "Items total",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Join the network as a <em>verified</em> clinician.",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Joined",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "JPG, PNG or PDF · up to {size} MB",
+  "file": "components/auth/FormKit.tsx"
+ },
+ {
+  "message": "just now",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "K-anonymised surveillance",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Keep it up.",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Keep on my list",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Keep stock, batches and expiry dates in one place",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Kidney Disease",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Known allergies",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Lab insights",
+  "file": "components/cdss/CDSSPanel.tsx"
+ },
+ {
+  "message": "Lab report file",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Lab reports",
+  "file": "app/dashboard/lab-reports/page.tsx"
+ },
+ {
+  "message": "Lab result",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "Lab result trend",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Lab results",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Last 7 days",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "Last 7 days of reported cases by district",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Last 90 days",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Last changed {relative}",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Last name",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Last sign-in",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Last updated",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Last visit",
+  "file": "app/doctor/patients/page.tsx"
+ },
+ {
+  "message": "Latest BP",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Latest lab results",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Latest vitals",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Latex",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Leading diseases",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Leading this week",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Letters and spaces only, at least 2 characters",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Licence & account",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Licence approval required",
+  "file": "components/auth/RolePicker.tsx"
+ },
+ {
+  "message": "Licence certificate",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Licence not approved",
+  "file": "components/layout/ApprovalBanner.tsx"
+ },
+ {
+  "message": "Licence pending",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Licence rejected",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Licence review in progress",
+  "file": "components/layout/ApprovalBanner.tsx"
+ },
+ {
+  "message": "Live",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Live data",
+  "file": "components/auth/SplitSignInLayout.tsx"
+ },
+ {
+  "message": "Liver Disease",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Load older consultations",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "Load older events",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Loaded",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Loading",
+  "file": "components/auth/withAuth.tsx"
+ },
+ {
+  "message": "Loading consultations…",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "Loading…",
+  "file": "components/pharmacy/AddInventoryModal.tsx"
+ },
+ {
+  "message": "Logout",
+  "file": "components/layout/Header.tsx"
+ },
+ {
+  "message": "Long-term conditions",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Long-term conditions and allergies on your record, with your latest vitals in context.",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Lost your card or want to withdraw access?",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Low",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Low risk",
+  "file": "components/cdss/CDSSPanel.tsx"
+ },
+ {
+  "message": "Low stock",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Low-stock lines",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "M.Pharm",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Main",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Male",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Manage",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Manage inventory",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "Manage patients, records and prescriptions.",
+  "file": "app/doctor/signin/page.tsx"
+ },
+ {
+  "message": "Mark all as read",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "Marked as already with patient",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "Marked unavailable",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "Matching invoices",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "Mean per region",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "Medical licence",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Medical licence certificate",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Medical records",
+  "file": "components/layout/nav.ts"
+ },
+ {
+  "message": "Medical Records",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "Medical registration number",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Medication",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "Medication adherence",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Medication alerts",
+  "file": "components/cdss/CDSSPanel.tsx"
+ },
+ {
+  "message": "Medicine",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Medicine {value}",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Medicine or batch",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Medicine reference",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "Medicine, patient or Rx number",
+  "file": "app/pharmacy/history/page.tsx"
+ },
+ {
+  "message": "Medicines",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "Medicines from your prescriptions show here while the course is running.",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "Medium",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Medium risk",
+  "file": "components/cdss/CDSSPanel.tsx"
+ },
+ {
+  "message": "Member since",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "mg/dL",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "mg/dL · {fmtShort}",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Mild",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Missed doses",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Missed in the last 7 days",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Missing",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "ML models",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "mmHg",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "mmHg · {fmtShort}",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Mobile",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Mobile number",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Model confidence {round}%",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Model registry",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Moderate",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Monitor",
+  "file": "components/layout/nav.ts"
+ },
+ {
+  "message": "Most recent readings on your record",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "My health",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "My medicines",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "My patients",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "My Prescriptions",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Name your degree",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "National disease surveillance",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Need dose reminders? Track them on the",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "Needs attention",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Neurology",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "New card issued. The previous QR no longer works.",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "New consultation",
+  "file": "app/doctor/high-risk/page.tsx"
+ },
+ {
+  "message": "New doctor registrations appear here once they sign up.",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "New here?",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "New password",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "New record added",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "New to ArogyaTrack? ",
+  "file": "components/auth/RolePicker.tsx"
+ },
+ {
+  "message": "Next 24 hours",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Next patient",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "No {tab} doctors",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "No active alerts",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "No active chronic conditions recorded.",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "No active medicine courses",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "No active sessions recorded.",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "No alerts",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "No alerts in this view",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "No allergies recorded",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "No applications waiting",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "No audit events",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "No bills yet",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "No blood pressure readings yet",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "No camera was found on this device. Upload a photo of the QR instead.",
+  "file": "components/pharmacy/QRScanner.tsx"
+ },
+ {
+  "message": "No cases in this window",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "No cases recorded.",
+  "file": "app/admin/surveillance/page.tsx"
+ },
+ {
+  "message": "No cases reported in this period.",
+  "file": "components/dashboard/DayWiseComparison.tsx"
+ },
+ {
+  "message": "No clinic listed",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "No clusters detected",
+  "file": "app/admin/clusters/page.tsx"
+ },
+ {
+  "message": "No coded diagnoses",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "No coded diagnoses yet.",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "No coded diagnosis",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "No conditions on record",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "No consultations match",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "No dispensing yet",
+  "file": "app/pharmacy/history/page.tsx"
+ },
+ {
+  "message": "No documents match",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "No documents uploaded.",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "No doses scheduled in the next 24 hours.",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "No forecast for this selection",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "No forecast rows.",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "No forecasts for this selection",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "No glucose readings yet",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "No high-risk patients",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "No individual can be re-identified from the aggregates authorities see.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "No interactions found",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "No invoices match",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "No invoices yet",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "No known allergies.",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "No lab results on record.",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "No lab results yet",
+  "file": "app/dashboard/lab-reports/page.tsx"
+ },
+ {
+  "message": "No medical records yet",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "No medicine matches “{debounced}”.",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "No medicines found",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "No medicines found.",
+  "file": "components/pharmacy/AddInventoryModal.tsx"
+ },
+ {
+  "message": "No missed doses this week",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "No open prescriptions",
+  "file": "app/pharmacy/dispense/patient/page.tsx"
+ },
+ {
+  "message": "No other sessions were active",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "No outbreak alerts in your region",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "No patient selected",
+  "file": "app/pharmacy/dispense/patient/page.tsx"
+ },
+ {
+  "message": "No patients at this level",
+  "file": "app/doctor/high-risk/page.tsx"
+ },
+ {
+  "message": "No patients match",
+  "file": "app/doctor/add-record/page.tsx"
+ },
+ {
+  "message": "No patients with active access",
+  "file": "app/doctor/add-record/page.tsx"
+ },
+ {
+  "message": "No patients yet",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "No pharmacy selected",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "No prescriptions",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "No prescriptions on record for this patient.",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "No prescriptions yet",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "No previous visits on record.",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "No price set",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "No problems found",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "No profile found",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "No QR code was found in that image. Try a sharper, well-lit photo.",
+  "file": "components/pharmacy/QRScanner.tsx"
+ },
+ {
+  "message": "No reports were uploaded for this visit.",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "No stock yet",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "No tests match",
+  "file": "app/dashboard/lab-reports/page.tsx"
+ },
+ {
+  "message": "No tracked courses yet",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "No unresolved anomalies.",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "No users match",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "No visit records yet",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "No visits recorded",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "No visits recorded yet",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "None",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "none critical",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "None recorded",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "None recorded.",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Normal",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Normal {normal_min}–{normal_max} {unit}",
+  "file": "app/dashboard/lab-reports/page.tsx"
+ },
+ {
+  "message": "Not billed",
+  "file": "app/pharmacy/history/page.tsx"
+ },
+ {
+  "message": "Not dispensed",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Not enough unexpired stock",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "Not given",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Not recorded",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Not yet dispensed",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Notes",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Nothing dispensed yet",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "Nothing due right now",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Nothing in this view",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Nothing matches",
+  "file": "app/pharmacy/history/page.tsx"
+ },
+ {
+  "message": "Nothing new",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Nothing to download yet",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Now viewing {name}",
+  "file": "components/layout/ProfileSwitcher.tsx"
+ },
+ {
+  "message": "NSAIDs",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Obstetrics & Gynaecology",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "of {expected} doses taken",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "of {length} tracked tests",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Off",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "On",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "on {date}",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "On track",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "On your list",
+  "file": "app/doctor/patients/page.tsx"
+ },
+ {
+  "message": "On your list until {fmt}",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Once approved, scan health cards and prescribe with safety checks",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Once daily",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Once daily · 21 days left",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "One per line, e.g. CBC, CRP",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "One record · four roles",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "One sign-in for patients, doctors, pharmacists and health authorities.",
+  "file": "app/login/page.tsx"
+ },
+ {
+  "message": "One tracker per dispensed prescription",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Only aggregated, k-anonymised statistics are ever shared.",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Only verified doctors and pharmacists can open a patient's records from their health card.",
+  "file": "app/patient/qr/[token]/page.tsx"
+ },
+ {
+  "message": "Open ({count})",
+  "file": "app/pharmacy/dispense/patient/page.tsx"
+ },
+ {
+  "message": "Open {name}",
+  "file": "app/doctor/patients/page.tsx"
+ },
+ {
+  "message": "Open anomalies",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Open chart",
+  "file": "app/doctor/high-risk/page.tsx"
+ },
+ {
+  "message": "Open dashboard",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Open menu",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Open records",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "Open your health card",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Opening this health card…",
+  "file": "app/patient/qr/[token]/page.tsx"
+ },
+ {
+  "message": "Ophthalmology",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Optional",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Optional. Saved to the patient's trend charts.",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Optional. These are saved to your record so doctors see them before prescribing.",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Original file",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Orthopaedics",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Other",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Out of range",
+  "file": "app/dashboard/lab-reports/page.tsx"
+ },
+ {
+  "message": "Outbreak alerts",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Outbreak nearby",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "Outbreaks",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "Outcome",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Override reason",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Overview",
+  "file": "components/layout/nav.ts"
+ },
+ {
+  "message": "Paediatrics",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Paid · {payment_method_display}",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Parent",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Partial and full dispensing recorded against each line item",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Partly dispensed",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Password",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Password changed",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Password updated. Sign in with your new password.",
+  "file": "app/login/page.tsx"
+ },
+ {
+  "message": "Password, two-step sign-in and the devices signed in to your account.",
+  "file": "app/admin/security/page.tsx"
+ },
+ {
+  "message": "Passwords do not match",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Patient",
+  "file": "app/doctor/patients/page.tsx"
+ },
+ {
+  "message": "Patient already had it",
+  "file": "app/prescription/verify/page.tsx"
+ },
+ {
+  "message": "Patient had it",
+  "file": "app/pharmacy/history/page.tsx"
+ },
+ {
+  "message": "Patient has it",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "Patient history, consultations and safe prescribing.",
+  "file": "components/auth/RolePicker.tsx"
+ },
+ {
+  "message": "Patient ID",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Patient kept on your list",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "Patient kept on your list for ongoing care",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Patient not found",
+  "file": "app/pharmacy/dispense/patient/page.tsx"
+ },
+ {
+  "message": "Patient portal",
+  "file": "app/patient/signin/page.tsx"
+ },
+ {
+  "message": "Patient registers",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Patient registration",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Patient snapshot",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Patients",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Patients whose health card you have scanned. Scan access lasts 24 hours; add a patient to your list to keep access for ongoing care.",
+  "file": "app/doctor/patients/page.tsx"
+ },
+ {
+  "message": "Patients with access",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Patients with active conditions or abnormal labs appear here once you have access to them.",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Patients you have access to appear here when they have active conditions, out-of-range vitals or abnormal labs.",
+  "file": "app/doctor/high-risk/page.tsx"
+ },
+ {
+  "message": "Patients, doctors, pharmacists and authorities see only what their role allows.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Payment",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "Payment method",
+  "file": "components/pharmacy/BillPanel.tsx"
+ },
+ {
+  "message": "PDF",
+  "file": "components/ui/pdf-actions.tsx"
+ },
+ {
+  "message": "PDF documents",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "PDF, JPG or PNG · up to 10 MB each · max 5",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Peak daily prediction per district in this horizon",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "Peak day",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "Peanuts",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Pending",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Penicillin",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Per 100k",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Personal details",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Personal details, family members and privacy preferences.",
+  "file": "app/dashboard/profile/page.tsx"
+ },
+ {
+  "message": "Ph.D (Pharmacy)",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Pharm.D",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Pharmacies",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Pharmacist",
+  "file": "app/patient/qr/[token]/page.tsx"
+ },
+ {
+  "message": "Pharmacist registration",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Pharmacist?",
+  "file": "app/prescription/verify/page.tsx"
+ },
+ {
+  "message": "Pharmacists",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Pharmacists use it to find your prescriptions at the counter.",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Pharmacy bills",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Pharmacy council registration number",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Pharmacy details",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Pharmacy details updated",
+  "file": "components/pharmacy/PharmacySetup.tsx"
+ },
+ {
+  "message": "Pharmacy dispenses",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Pharmacy name",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Pharmacy portal",
+  "file": "app/pharmacist/signin/page.tsx"
+ },
+ {
+  "message": "Pharmacy set up. You can now manage stock and dispense.",
+  "file": "components/pharmacy/PharmacySetup.tsx"
+ },
+ {
+  "message": "Phone",
+  "file": "components/pharmacy/PharmacySetup.tsx"
+ },
+ {
+  "message": "Photo updated",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Pick one of your patients to record a consultation, vitals, reports and a prescription.",
+  "file": "app/doctor/add-record/page.tsx"
+ },
+ {
+  "message": "Pick the account type that matches your role. You can add family members to a patient account later.",
+  "file": "components/auth/RolePicker.tsx"
+ },
+ {
+  "message": "PIN code",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Pipeline finished. Results refreshed.",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Pipeline started. Results appear when it finishes.",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Platform",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Please sign in to continue",
+  "file": "components/auth/withAuth.tsx"
+ },
+ {
+  "message": "Point the camera at the QR code on the health card or prescription.",
+  "file": "components/pharmacy/QRScanner.tsx"
+ },
+ {
+  "message": "Possible diagnoses",
+  "file": "components/cdss/CDSSPanel.tsx"
+ },
+ {
+  "message": "Practice",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Pre-diabetic range",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Predicted",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "Predicted impact",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Prefer a role-specific portal?",
+  "file": "app/login/page.tsx"
+ },
+ {
+  "message": "Preference saved",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Prescription",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Prescription {number} – {date}",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Prescription language",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Prescription QR",
+  "file": "app/pharmacy/scan/page.tsx"
+ },
+ {
+  "message": "Prescription QR code",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Prescription QR is verified before any medicine leaves the counter.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Prescription verified",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Prescriptions",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Prescriptions awaiting items",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "Prescriptions your doctors issue will appear here with a QR code for the pharmacy.",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Price",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Prices include GST; the invoice shows the CGST/SGST split.",
+  "file": "components/pharmacy/BillPanel.tsx"
+ },
+ {
+  "message": "Primary",
+  "file": "components/layout/Sidebar.tsx"
+ },
+ {
+  "message": "Printed on invoices. With a GSTIN, bills are issued as tax invoices.",
+  "file": "components/pharmacy/PharmacySetup.tsx"
+ },
+ {
+  "message": "Privacy & consent",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Profile",
+  "file": "app/dashboard/profile/page.tsx"
+ },
+ {
+  "message": "Profile updated",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Profiles managed from this account",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Progress",
+  "file": "components/auth/FormKit.tsx"
+ },
+ {
+  "message": "Prophet forecasting",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Provisioned accounts only",
+  "file": "components/auth/RolePicker.tsx"
+ },
+ {
+  "message": "Psychiatry",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Pulmonology",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "QR code unavailable for this prescription.",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "QR health card",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "QR unavailable",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Qty",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Qualification",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Quantity",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Quantity of {medicine_name}",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "Radiology",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Range",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "Ranked by risk score from conditions, vitals and labs",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Ranked differential diagnoses",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Rate",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Re-run clustering, forecasting, anomaly detection and risk scoring",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Reaction",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Readings recorded by your doctor during visits will appear here.",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Recent activity",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Recent dispensing",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "Recent Medical Records",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Recent visits",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Recently seen patients",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Recommended actions",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Record a long-term condition",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Record access, prescription checks and approvals are logged with actor and time.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Record an allergy",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Record doses as you take them. Your doctor sees your adherence when reviewing your treatment.",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Record full and partial dispensing per item",
+  "file": "app/pharmacist/signin/page.tsx"
+ },
+ {
+  "message": "Record late",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Record partial and full dispensing per item",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Record the first consultation",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Record visit",
+  "file": "app/doctor/add-record/page.tsx"
+ },
+ {
+  "message": "Recorded {fmt}",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Recorded by your doctors or reported by you at sign-up",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Recorded in the audit log with your name.",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Records",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Records stay private",
+  "file": "app/patient/qr/[token]/page.tsx"
+ },
+ {
+  "message": "Records, prescriptions and dispensing in one place",
+  "file": "components/auth/SplitSignInLayout.tsx"
+ },
+ {
+  "message": "Records, prescriptions, health card and dose reminders.",
+  "file": "components/auth/RolePicker.tsx"
+ },
+ {
+  "message": "Region",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Regions",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Regions · {disease}",
+  "file": "components/dashboard/DayWiseComparison.tsx"
+ },
+ {
+  "message": "Regions monitored",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Register",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Register a pharmacy",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Register as a doctor",
+  "file": "app/doctor/signin/page.tsx"
+ },
+ {
+  "message": "Register in a few minutes. Your records follow you to any doctor or pharmacy on the network.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Register your pharmacy",
+  "file": "app/pharmacist/signin/page.tsx"
+ },
+ {
+  "message": "Registration failed. Please try again.",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Registration no.",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Registration submitted. Verify your email to continue.",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Reissue card",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Reissue your health card?",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Reissuing creates a new QR. The old one stops working immediately and doctors lose access until they scan the new card.",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Reject",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Reject Dr. {name}?",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Rejected",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Rejected {date}",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Rejected {date} by {admin}",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "Relationship",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Remaining held for refill",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Remembered it?",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Remove {allergen}",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Remove {disease_name}",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Remove {name}",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Remove file",
+  "file": "components/auth/FormKit.tsx"
+ },
+ {
+  "message": "Remove line",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Remove medicine",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Reorder at",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "reorder at {low_stock_threshold}",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Report downloaded",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "Report Downloads",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Reports",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Reports{value}",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "Request failed",
+  "file": "lib/api.ts"
+ },
+ {
+  "message": "Required",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Resend code",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "Resend in {countdown}s",
+  "file": "app/verify-email/page.tsx"
+ },
+ {
+  "message": "Reset code",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Reset failed. Request a new code and try again.",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Reset map",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Reset your password",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Resolve",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Resolved",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Restock",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "Restricted access",
+  "file": "components/auth/RolePicker.tsx"
+ },
+ {
+  "message": "Result",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Results uploaded by labs and doctors will appear here.",
+  "file": "app/dashboard/lab-reports/page.tsx"
+ },
+ {
+  "message": "Returning patient",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "Review before issuing",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Rising",
+  "file": "components/dashboard/DayWiseComparison.tsx"
+ },
+ {
+  "message": "Rising fast",
+  "file": "components/dashboard/DayWiseComparison.tsx"
+ },
+ {
+  "message": "Risk",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Risk level",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "risk score",
+  "file": "app/doctor/high-risk/page.tsx"
+ },
+ {
+  "message": "Risk score distribution",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Risk tier",
+  "file": "components/maps/DynamicMap.tsx"
+ },
+ {
+  "message": "Role",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Role-based access",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Roles",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Routed to district officer",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Run ML pipeline",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Run safety check",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Run the ML pipeline from the command centre to generate them.",
+  "file": "app/admin/forecasts/page.tsx"
+ },
+ {
+  "message": "Run the ML pipeline to generate one.",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Run the safety check before issuing the prescription",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Save",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Save allergy",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Save changes",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Save condition",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Save consultation",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Scan",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "Scan a card",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Scan a card, see the full history, prescribe safely.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Scan a health card for audited access to patient history",
+  "file": "app/doctor/signin/page.tsx"
+ },
+ {
+  "message": "Scan a health card or enter a patient ID first.",
+  "file": "app/pharmacy/dispense/patient/page.tsx"
+ },
+ {
+  "message": "Scan a patient QR to open their history with audited access",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Scan a patient’s QR health card during their visit to open their records.",
+  "file": "app/doctor/patients/page.tsx"
+ },
+ {
+  "message": "Scan a patient's QR health card to open their history. Access lasts 24 hours unless you add them to your list.",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Scan a prescription or a patient's health card to start.",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "Scan a prescription QR — signatures are verified server-side",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Scan again",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "Scan another",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "Scan health card",
+  "file": "app/doctor/add-record/page.tsx"
+ },
+ {
+  "message": "Scan prescription",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "Scan prescription QR codes with signature verification",
+  "file": "app/pharmacist/signin/page.tsx"
+ },
+ {
+  "message": "Scan QR",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "Scan the patient's health card again to reopen their records.",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Scan the patient's health card to get access, then record the consultation.",
+  "file": "app/doctor/add-record/page.tsx"
+ },
+ {
+  "message": "Scan the patient’s health card to see all their prescriptions.",
+  "file": "app/pharmacy/scan/page.tsx"
+ },
+ {
+  "message": "Scan the QR on the patient's health card. Their allergies, conditions, vitals and visit history appear here.",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "Scan the QR printed on an ArogyaTrack prescription to confirm it was issued by a registered doctor and has not been altered.",
+  "file": "app/prescription/verify/page.tsx"
+ },
+ {
+  "message": "Scan the QR the patient shows from their prescription.",
+  "file": "app/pharmacy/scan/page.tsx"
+ },
+ {
+  "message": "Scan their health card",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Scanning a patient's QR gives you 24 hours of logged access to their records. Keep them on your list for ongoing care.",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "Score",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Scores",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Search by brand or generic name",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "Search by email",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Search by name or patient ID",
+  "file": "app/doctor/add-record/page.tsx"
+ },
+ {
+  "message": "Search diagnosis, doctor, department or test",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "Search documents",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Search history",
+  "file": "app/pharmacy/history/page.tsx"
+ },
+ {
+  "message": "Search inventory",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Search invoices",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "Search medicine",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Search medicines",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "Search name, patient ID or district",
+  "file": "app/doctor/patients/page.tsx"
+ },
+ {
+  "message": "Search patients",
+  "file": "app/doctor/add-record/page.tsx"
+ },
+ {
+  "message": "Search records",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "Search tests",
+  "file": "app/dashboard/lab-reports/page.tsx"
+ },
+ {
+  "message": "Search the catalogue",
+  "file": "components/pharmacy/AddInventoryModal.tsx"
+ },
+ {
+  "message": "Search users",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Searching…",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Secure record storage",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Security",
+  "file": "app/admin/security/page.tsx"
+ },
+ {
+  "message": "Security & privacy",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "See outbreaks <em>before</em> they spread.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Select",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Select a district",
+  "file": "app/admin/surveillance/page.tsx"
+ },
+ {
+  "message": "self-reported",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Send a new code",
+  "file": "app/verify-email/page.tsx"
+ },
+ {
+  "message": "Send reset code",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Sending…",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Set up your pharmacy",
+  "file": "components/pharmacy/PharmacySetup.tsx"
+ },
+ {
+  "message": "Set up your pharmacy on the dashboard before dispensing.",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "Seven days of reported cases by district.",
+  "file": "app/admin/surveillance/page.tsx"
+ },
+ {
+  "message": "Seven days of reported cases to {value}. Select a district for detail.",
+  "file": "app/admin/surveillance/page.tsx"
+ },
+ {
+  "message": "Seven-day trend by disease",
+  "file": "components/dashboard/DayWiseComparison.tsx"
+ },
+ {
+  "message": "Severe",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Severity",
+  "file": "app/admin/alerts/page.tsx"
+ },
+ {
+  "message": "Share anonymised data for research",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Shellfish",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Show emergency side",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Show front",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Show items",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Show password",
+  "file": "components/auth/FormKit.tsx"
+ },
+ {
+  "message": "Show pharmacy QR",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Show QR card",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Show this code at the pharmacy counter.",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Show this QR to a doctor or pharmacist to share your records securely.",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Showing the 200 most recent accounts. Narrow the search to find others.",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Shown to doctors before they prescribe",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "Sibling",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Sign in",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Sign in as {role}",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "Sign in as a doctor",
+  "file": "app/doctor/signin/page.tsx"
+ },
+ {
+  "message": "Sign in as a patient",
+  "file": "app/patient/signin/page.tsx"
+ },
+ {
+  "message": "Sign in as a pharmacist",
+  "file": "app/pharmacist/signin/page.tsx"
+ },
+ {
+  "message": "Sign in by role",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Sign in to ArogyaTrack",
+  "file": "app/login/page.tsx"
+ },
+ {
+  "message": "Sign in to dispense",
+  "file": "app/prescription/verify/page.tsx"
+ },
+ {
+  "message": "Sign out others",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Signature valid",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Signature verified. Record what you hand over.",
+  "file": "app/pharmacy/dispense/[id]/page.tsx"
+ },
+ {
+  "message": "Signed in as {value}",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "Signed out {count} other sessions",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Signed out 1 other session",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Signed QR health cards and prescriptions",
+  "file": "components/auth/SplitSignInLayout.tsx"
+ },
+ {
+  "message": "Signed QR tokens",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Signing in…",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "Slipping",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Some details need attention",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Some details need attention.",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Something went wrong on this page",
+  "file": "app/error.tsx"
+ },
+ {
+  "message": "Something went wrong. Please try again.",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "Spatial clustering surfaces emerging hotspots",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Spatial density flag",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Specialisation",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Spent in {getFullYear}",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Spouse",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Stable",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Standard dosing",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "Standard:",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Start camera",
+  "file": "components/pharmacy/QRScanner.tsx"
+ },
+ {
+  "message": "Start consultation",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "Start with your own <em>health ID.</em>",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Starting camera…",
+  "file": "components/pharmacy/QRScanner.tsx"
+ },
+ {
+  "message": "State",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "States covered",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Status",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Stock is deducted from the batch closest to expiry.",
+  "file": "components/pharmacy/DispenseList.tsx"
+ },
+ {
+  "message": "Stock line removed",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Stock line updated",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Stock lines",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Stock value",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Stock, dispensing records and the pharmacy directory doctors see are all tied to your pharmacy.",
+  "file": "components/pharmacy/PharmacySetup.tsx"
+ },
+ {
+  "message": "Stop camera",
+  "file": "components/pharmacy/QRScanner.tsx"
+ },
+ {
+  "message": "Street address",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Strong",
+  "file": "components/auth/FormKit.tsx"
+ },
+ {
+  "message": "Submit for review",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Submitting…",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Subtotal {subtotal}",
+  "file": "components/pharmacy/BillPanel.tsx"
+ },
+ {
+  "message": "Subtotal {subtotal} · Discount − {discount}",
+  "file": "components/pharmacy/BillPanel.tsx"
+ },
+ {
+  "message": "Suggested tests",
+  "file": "components/cdss/CDSSPanel.tsx"
+ },
+ {
+  "message": "Suggestions are generated from anonymised patient data and are not a diagnosis. Clinical judgement applies.",
+  "file": "components/cdss/CDSSPanel.tsx"
+ },
+ {
+  "message": "Sulfa Drugs",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Surveillance",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Surveillance command",
+  "file": "app/admin/page.tsx"
+ },
+ {
+  "message": "Surveillance data as of {formatAsOf}",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Surveillance intelligence",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Surveillance learns",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Surveillance map",
+  "file": "app/admin/surveillance/page.tsx"
+ },
+ {
+  "message": "Surveillance map, forecasts, clusters and alerts.",
+  "file": "components/auth/RolePicker.tsx"
+ },
+ {
+  "message": "Surveillance records",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Switch",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Switch family profile",
+  "file": "components/layout/ProfileSwitcher.tsx"
+ },
+ {
+  "message": "Switch to dark mode",
+  "file": "components/ThemeToggle.tsx"
+ },
+ {
+  "message": "Switch to light mode",
+  "file": "components/ThemeToggle.tsx"
+ },
+ {
+  "message": "Switched profile",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Symptoms:",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Synced",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "System",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Systolic",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Systolic (mmHg)",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Taken",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Taking you to sign in…",
+  "file": "app/verify-email/page.tsx"
+ },
+ {
+  "message": "Tap when you have taken a dose",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Taxable value",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Terms of service",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Test",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Tests performed",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "Tests performed or ordered",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "That card or ID did not match a patient.",
+  "file": "app/pharmacy/dispense/patient/page.tsx"
+ },
+ {
+  "message": "That code could not be read as an ArogyaTrack health card.",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "That code did not work.",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "That code is invalid or has expired.",
+  "file": "app/verify-email/page.tsx"
+ },
+ {
+  "message": "That file could not be downloaded.",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "That file is over {size} MB.",
+  "file": "components/auth/FormKit.tsx"
+ },
+ {
+  "message": "That file no longer exists.",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "That page belongs to a different portal",
+  "file": "components/auth/withAuth.tsx"
+ },
+ {
+  "message": "That QR is not a valid ArogyaTrack prescription.",
+  "file": "app/pharmacy/scan/page.tsx"
+ },
+ {
+  "message": "That QR is not an ArogyaTrack prescription.",
+  "file": "app/prescription/verify/page.tsx"
+ },
+ {
+  "message": "The camera could not start. Upload a photo of the QR instead.",
+  "file": "components/pharmacy/QRScanner.tsx"
+ },
+ {
+  "message": "The full history, <em>one scan</em> away.",
+  "file": "app/doctor/signin/page.tsx"
+ },
+ {
+  "message": "The link may be old, or the address mistyped.",
+  "file": "app/not-found.tsx"
+ },
+ {
+  "message": "the patient",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "The problem has been logged in your browser console. Try again, or go back to the start.",
+  "file": "app/error.tsx"
+ },
+ {
+  "message": "The server did not respond. Check your connection and try again.",
+  "file": "components/ui/page.tsx"
+ },
+ {
+  "message": "The server safety check blocked this prescription. Record an override reason to proceed.",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "The visit and prescription are now on {name}'s record. The patient can show the prescription QR at any pharmacy on the network.",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "The visit is now on {name}'s record.",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "These bands are general guidance, not a diagnosis. Discuss your readings with your doctor.",
+  "file": "app/dashboard/conditions/page.tsx"
+ },
+ {
+  "message": "They get their own health ID and records under your account.",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "They get time-limited access to your history, and the access is logged.",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "They will keep their account but will not be able to open patient records.",
+  "file": "app/admin/approvals/page.tsx"
+ },
+ {
+  "message": "This account is registered as a {role}. Use the {value} sign-in instead.",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "This batch has already expired",
+  "file": "components/pharmacy/AddInventoryModal.tsx"
+ },
+ {
+  "message": "This card belongs to a registered patient. Doctors and pharmacists can sign in to open it. Access is logged.",
+  "file": "app/patient/qr/[token]/page.tsx"
+ },
+ {
+  "message": "This device",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "This page doesn't exist",
+  "file": "app/not-found.tsx"
+ },
+ {
+  "message": "This prescription could not be loaded.",
+  "file": "app/pharmacy/dispense/[id]/page.tsx"
+ },
+ {
+  "message": "This prescription could not be verified.",
+  "file": "app/prescription/verify/page.tsx"
+ },
+ {
+  "message": "Three times daily",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Thyroid Disorder",
+  "file": "app/signup/patient/page.tsx"
+ },
+ {
+  "message": "Time-limited doctor access",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Timestamped per pharmacist",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "to continue.",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Tokens never touch JavaScript, closing off the usual XSS theft route.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Took one late? You can still record it.",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Total",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Total billed",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "Total of matches",
+  "file": "app/pharmacy/invoices/page.tsx"
+ },
+ {
+  "message": "Tracking starts when a pharmacy dispenses your prescription.",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Treatment courses",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Try a different name.",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "Try a different search term or year.",
+  "file": "app/dashboard/medical-records/page.tsx"
+ },
+ {
+  "message": "Try again",
+  "file": "app/error.tsx"
+ },
+ {
+  "message": "Try another filter or search term.",
+  "file": "app/dashboard/lab-reports/page.tsx"
+ },
+ {
+  "message": "Try another filter or search.",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Try another filter.",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Try another search term.",
+  "file": "app/doctor/patients/page.tsx"
+ },
+ {
+  "message": "Try camera again",
+  "file": "components/pharmacy/QRScanner.tsx"
+ },
+ {
+  "message": "Turn off",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Turn off two-step sign-in?",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Turn on",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Turn on to prescribe medicines with this visit.",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Turn on two-step sign-in",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Twice daily",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Two-step sign-in",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Two-step sign-in is off",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Two-step sign-in is on",
+  "file": "components/dashboard/SecuritySettings.tsx"
+ },
+ {
+  "message": "Two-step sign-in is on. Enter the 6-digit code sent to",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "Type the ID printed on the health card.",
+  "file": "app/pharmacy/scan/page.tsx"
+ },
+ {
+  "message": "Unavailable",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "Unit price",
+  "file": "components/pharmacy/BillPanel.tsx"
+ },
+ {
+  "message": "Unit price (₹)",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "units",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Units received",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Unread",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "Unresolved anomalies",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Unsupervised anomaly detection on case patterns threshold rules miss.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Up to 5 reports per visit",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Upcoming doses",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Update password",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Updates this week",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "Updating…",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Upload a government ID",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Upload a photo of the QR",
+  "file": "components/pharmacy/QRScanner.tsx"
+ },
+ {
+  "message": "Upload your degree certificate",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Upload your licence certificate",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Uploaded files",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Uploaded report",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Upper bound above threshold",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Use a different account",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "Use a different email",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "Use a JPG or PNG image",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Use a JPG, PNG or PDF file.",
+  "file": "components/auth/FormKit.tsx"
+ },
+ {
+  "message": "Use an ICD-10 code such as E11.9 or I10",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Use as diagnosis",
+  "file": "components/cdss/CDSSPanel.tsx"
+ },
+ {
+  "message": "Use at least 8 characters",
+  "file": "app/forgot-password/page.tsx"
+ },
+ {
+  "message": "User",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Users",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Users & audit log",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Valid until",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Valid until {fmt}",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Verification code",
+  "file": "components/auth/OtpInput.tsx"
+ },
+ {
+  "message": "Verification link incomplete",
+  "file": "app/verify-email/page.tsx"
+ },
+ {
+  "message": "Verified clinicians",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Verify a prescription",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Verify a prescription's signature, or pull up every prescription for a patient.",
+  "file": "app/pharmacy/scan/page.tsx"
+ },
+ {
+  "message": "Verify and sign in",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "Verify another",
+  "file": "app/prescription/verify/page.tsx"
+ },
+ {
+  "message": "Verify email",
+  "file": "app/verify-email/page.tsx"
+ },
+ {
+  "message": "Verify every prescription <em>before</em> it leaves the counter.",
+  "file": "app/pharmacist/signin/page.tsx"
+ },
+ {
+  "message": "Verify prescription signatures before dispensing",
+  "file": "app/signup/pharmacist/page.tsx"
+ },
+ {
+  "message": "Verify prescriptions, dispense and manage stock.",
+  "file": "components/auth/RolePicker.tsx"
+ },
+ {
+  "message": "Verify, dispense and manage stock.",
+  "file": "app/pharmacist/signin/page.tsx"
+ },
+ {
+  "message": "Verify, dispense and track stock from one counter.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Verifying card and loading history…",
+  "file": "app/doctor/scan-qr/page.tsx"
+ },
+ {
+  "message": "Verifying signature…",
+  "file": "app/pharmacy/scan/page.tsx"
+ },
+ {
+  "message": "Verifying…",
+  "file": "app/verify-email/page.tsx"
+ },
+ {
+  "message": "View",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "View {file_name}",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "View {fileName}",
+  "file": "components/ui/pdf-actions.tsx"
+ },
+ {
+  "message": "View all",
+  "file": "app/doctor/dashboard/page.tsx"
+ },
+ {
+  "message": "View All",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "View all your prescriptions and medication details",
+  "file": "app/dashboard/prescriptions/page.tsx"
+ },
+ {
+  "message": "View prescriptions",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "Viewing",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Visit date and time",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Visit notes and vitals",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Visit record",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Visit records",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Visit records, prescriptions, invoices and lab results appear here as PDFs.",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Visits",
+  "file": "app/doctor/patients/page.tsx"
+ },
+ {
+  "message": "Vitals",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "vs last",
+  "file": "app/dashboard/lab-reports/page.tsx"
+ },
+ {
+  "message": "Warning",
+  "file": "app/admin/users/page.tsx"
+ },
+ {
+  "message": "Was due {fmtWhen}",
+  "file": "app/dashboard/adherence/page.tsx"
+ },
+ {
+  "message": "We couldn't load this",
+  "file": "components/ui/page.tsx"
+ },
+ {
+  "message": "We need the email you registered with. Start registration again to get a new code.",
+  "file": "app/verify-email/page.tsx"
+ },
+ {
+  "message": "We sent a 6-digit code to",
+  "file": "app/verify-email/page.tsx"
+ },
+ {
+  "message": "We will notify you about abnormal results, missed medication and outbreaks near you.",
+  "file": "components/dashboard/AlertsPanel.tsx"
+ },
+ {
+  "message": "Weak",
+  "file": "components/auth/FormKit.tsx"
+ },
+ {
+  "message": "Weight",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Weight (kg)",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Welcome",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "Welcome back",
+  "file": "app/login/page.tsx"
+ },
+ {
+  "message": "Welcome, {name}",
+  "file": "app/pharmacy/page.tsx"
+ },
+ {
+  "message": "What you are currently taking, and a reference for medicines on the network.",
+  "file": "app/dashboard/medicines/page.tsx"
+ },
+ {
+  "message": "When",
+  "file": "app/pharmacy/history/page.tsx"
+ },
+ {
+  "message": "When a doctor scans your health card and records a consultation, it will show up here.",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "When a pharmacy dispenses your prescription and issues an invoice, it appears here.",
+  "file": "app/dashboard/bills/page.tsx"
+ },
+ {
+  "message": "Where a unit price is set",
+  "file": "app/pharmacy/inventory/page.tsx"
+ },
+ {
+  "message": "Who it serves",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Why this prescription is clinically justified despite the block",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Window ending {value}",
+  "file": "app/admin/analytics/page.tsx"
+ },
+ {
+  "message": "Workspace",
+  "file": "components/layout/Header.tsx"
+ },
+ {
+  "message": "XGBoost risk scoring",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Years of experience",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "You",
+  "file": "components/layout/ProfileSwitcher.tsx"
+ },
+ {
+  "message": "You can look around, but scanning health cards and opening patient records unlock once an administrator approves your medical licence. This page updates automatically.",
+  "file": "components/layout/ApprovalBanner.tsx"
+ },
+ {
+  "message": "You do not have access to this file.",
+  "file": "components/dashboard/RecordDetailModal.tsx"
+ },
+ {
+  "message": "You no longer have access to this patient.",
+  "file": "app/doctor/patients/[id]/create-consultation/page.tsx"
+ },
+ {
+  "message": "Your 12 most recent readings",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Your access to this patient has ended",
+  "file": "app/doctor/patients/[id]/page.tsx"
+ },
+ {
+  "message": "Your account does not have a patient profile yet.",
+  "file": "components/dashboard/ProfileView.tsx"
+ },
+ {
+  "message": "Your current QR code will stop working and {value} doctor{value2} with access will need to scan the new card.",
+  "file": "app/dashboard/patient-card/page.tsx"
+ },
+ {
+  "message": "Your documents are stored privately and used only for verification",
+  "file": "app/signup/doctor/page.tsx"
+ },
+ {
+  "message": "Your health card, visit records, prescriptions, invoices and lab results as ready-to-print PDFs, plus files your doctors uploaded.",
+  "file": "app/dashboard/downloads/page.tsx"
+ },
+ {
+  "message": "Your health record, <em>wherever</em> you are treated.",
+  "file": "app/patient/signin/page.tsx"
+ },
+ {
+  "message": "Your latest consultations",
+  "file": "app/dashboard/page.tsx"
+ },
+ {
+  "message": "Your latest result for each test, compared with the normal range and your previous result.",
+  "file": "app/dashboard/lab-reports/page.tsx"
+ },
+ {
+  "message": "Your licence now goes to an administrator for review. Taking you to sign in…",
+  "file": "app/verify-email/page.tsx"
+ },
+ {
+  "message": "Your password",
+  "file": "components/auth/SignInForm.tsx"
+ },
+ {
+  "message": "Your patients ranked by a risk score built from chronic conditions, recent vitals and abnormal lab results.",
+  "file": "app/doctor/high-risk/page.tsx"
+ },
+ {
+  "message": "Your records archive is downloading",
+  "file": "components/dashboard/DownloadCenter.tsx"
+ },
+ {
+  "message": "Your records, prescriptions and reminders in one health ID.",
+  "file": "app/page.tsx"
+ },
+ {
+  "message": "Your visit records will appear here",
+  "file": "app/dashboard/medical-records/page.tsx"
+ }
+]

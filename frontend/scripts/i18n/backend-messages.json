@@ -1,0 +1,970 @@
+[
+ {
+  "message": "2FA setting updated.",
+  "file": "dashboard/views.py"
+ },
+ {
+  "message": "A new code has been sent.",
+  "file": "accounts/views.py"
+ },
+ {
+  "message": "AI analysis service is temporarily unavailable. Please try again later.",
+  "file": "cdss/views.py"
+ },
+ {
+  "message": "Abnormal Lab Results",
+  "file": "dashboard/models.py"
+ },
+ {
+  "message": "Access denied. You can only download reports you uploaded (doctors) or reports from your own medical records (patients).",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "Account is inactive",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "Admin",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "Admin role required.",
+  "file": "accounts/permissions.py"
+ },
+ {
+  "message": "Alert Acknowledged",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "Alert Generated",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "Alert acknowledged",
+  "file": "surveillance/views.py"
+ },
+ {
+  "message": "Alert escalated",
+  "file": "surveillance/views.py"
+ },
+ {
+  "message": "Alert evaluation started",
+  "file": "surveillance/views.py"
+ },
+ {
+  "message": "Alert not found",
+  "file": "surveillance/tasks.py"
+ },
+ {
+  "message": "Alert not found.",
+  "file": "dashboard/views.py"
+ },
+ {
+  "message": "Alert resolved",
+  "file": "surveillance/views.py"
+ },
+ {
+  "message": "All password fields are required.",
+  "file": "dashboard/views.py"
+ },
+ {
+  "message": "Anomaly marked as resolved",
+  "file": "surveillance/views.py"
+ },
+ {
+  "message": "Approved",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "Asthma",
+  "file": "db:surveillance.disease_name"
+ },
+ {
+  "message": "At least one medicine is required",
+  "file": "prescriptions/serializers.py"
+ },
+ {
+  "message": "BAMS (Ayurvedic)",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "BDS (Bachelor of Dental Surgery)",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "BHMS (Homeopathic)",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "BUMS (Unani)",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "Blood Pressure",
+  "file": "medical/models.py"
+ },
+ {
+  "message": "Blood Sugar",
+  "file": "medical/models.py"
+ },
+ {
+  "message": "Bulk Download",
+  "file": "dashboard/models.py"
+ },
+ {
+  "message": "Card",
+  "file": "pharmacy/models.py"
+ },
+ {
+  "message": "Cash",
+  "file": "pharmacy/models.py"
+ },
+ {
+  "message": "Child",
+  "file": "patients/models.py"
+ },
+ {
+  "message": "Cholera",
+  "file": "db:surveillance.disease_name"
+ },
+ {
+  "message": "Clinical decision support is not configured on this server (AI_API_KEY is not set).",
+  "file": "cdss/views.py"
+ },
+ {
+  "message": "Clustering analysis started",
+  "file": "surveillance/views.py"
+ },
+ {
+  "message": "Consent for doctor access is required",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "Consent granted",
+  "file": "surveillance/views.py"
+ },
+ {
+  "message": "Consent revoked",
+  "file": "surveillance/views.py"
+ },
+ {
+  "message": "Consent to store medical data is required",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "Contraindicated",
+  "file": "prescriptions/models.py"
+ },
+ {
+  "message": "Critical",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "Current password is incorrect.",
+  "file": "dashboard/views.py"
+ },
+ {
+  "message": "DNB (Diplomate of National Board)",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "Dengue Fever",
+  "file": "db:surveillance.disease_name"
+ },
+ {
+  "message": "Diagnosis is required.",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "Disease Outbreak in Region",
+  "file": "dashboard/models.py"
+ },
+ {
+  "message": "Dispensed",
+  "file": "prescriptions/models.py"
+ },
+ {
+  "message": "Doctor",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "Doctor or Admin role required.",
+  "file": "accounts/permissions.py"
+ },
+ {
+  "message": "Doctor role required.",
+  "file": "accounts/permissions.py"
+ },
+ {
+  "message": "Dose already recorded or not found",
+  "file": "adherence/views.py"
+ },
+ {
+  "message": "Dose recorded successfully",
+  "file": "adherence/views.py"
+ },
+ {
+  "message": "Dose schedule not found",
+  "file": "adherence/views.py"
+ },
+ {
+  "message": "Download logged.",
+  "file": "dashboard/views.py"
+ },
+ {
+  "message": "Elevated Risk Score",
+  "file": "dashboard/models.py"
+ },
+ {
+  "message": "Email already registered",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "Email verified successfully",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "Enter a valid 15-character GSTIN, e.g. 29ABCDE1234F1Z5.",
+  "file": "pharmacy/serializers.py"
+ },
+ {
+  "message": "Enter both systolic and diastolic BP.",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "Enter the 6-digit code we emailed you.",
+  "file": "accounts/views.py"
+ },
+ {
+  "message": "Error",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "Failed to parse AI response. Please try again.",
+  "file": "cdss/views.py"
+ },
+ {
+  "message": "Failed to process patient data securely.",
+  "file": "cdss/views.py"
+ },
+ {
+  "message": "Female",
+  "file": "patients/models.py"
+ },
+ {
+  "message": "File not found.",
+  "file": "dashboard/views.py"
+ },
+ {
+  "message": "File too large. Maximum size is 5MB.",
+  "file": "patients/views.py"
+ },
+ {
+  "message": "Forbidden",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "Forecast generation started",
+  "file": "surveillance/views.py"
+ },
+ {
+  "message": "Fully Dispensed",
+  "file": "prescriptions/models.py"
+ },
+ {
+  "message": "Gastritis",
+  "file": "db:surveillance.disease_name"
+ },
+ {
+  "message": "Gastroenteritis",
+  "file": "db:surveillance.disease_name"
+ },
+ {
+  "message": "Health Card",
+  "file": "dashboard/models.py"
+ },
+ {
+  "message": "Health Card Generated",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "Health Card Revoked",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "Health card invalid or expired",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "Health card is invalid, expired, or revoked",
+  "file": "medical/serializers.py"
+ },
+ {
+  "message": "Health card revoked",
+  "file": "patients/views.py"
+ },
+ {
+  "message": "Health card revoked or missing",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "Hepatitis B",
+  "file": "db:surveillance.disease_name"
+ },
+ {
+  "message": "High",
+  "file": "dashboard/models.py"
+ },
+ {
+  "message": "Hypertension",
+  "file": "db:surveillance.disease_name"
+ },
+ {
+  "message": "If the email exists, an OTP has been sent",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "Influenza",
+  "file": "db:surveillance.disease_name"
+ },
+ {
+  "message": "Info",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "Invalid ICD-10 code",
+  "file": "medical/serializers.py"
+ },
+ {
+  "message": "Invalid QR code format",
+  "file": "pharmacy/serializers.py"
+ },
+ {
+  "message": "Invalid QR code format.",
+  "file": "pharmacy/views.py"
+ },
+ {
+  "message": "Invalid QR code.",
+  "file": "patients/views.py"
+ },
+ {
+  "message": "Invalid credentials",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "Invalid file_type.",
+  "file": "dashboard/views.py"
+ },
+ {
+  "message": "Invalid or expired OTP",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "Invalid or expired QR token",
+  "file": "medical/serializers.py"
+ },
+ {
+  "message": "Invalid or tampered prescription",
+  "file": "pharmacy/serializers.py"
+ },
+ {
+  "message": "Invalid request",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "Invalid security hash. This prescription may be tampered with.",
+  "file": "prescriptions/views.py"
+ },
+ {
+  "message": "Invalid token",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "Invalid token format",
+  "file": "medical/serializers.py"
+ },
+ {
+  "message": "Inventory item not found in your pharmacy",
+  "file": "pharmacy/serializers.py"
+ },
+ {
+  "message": "Invoice",
+  "file": "dashboard/models.py"
+ },
+ {
+  "message": "Lab Report",
+  "file": "dashboard/models.py"
+ },
+ {
+  "message": "Logged out.",
+  "file": "accounts/views.py"
+ },
+ {
+  "message": "Low",
+  "file": "dashboard/models.py"
+ },
+ {
+  "message": "Low Medication Adherence",
+  "file": "dashboard/models.py"
+ },
+ {
+  "message": "MD (Doctor of Medicine)",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "ML pipeline completed (sync)",
+  "file": "surveillance/views.py"
+ },
+ {
+  "message": "ML pipeline started (async)",
+  "file": "surveillance/views.py"
+ },
+ {
+  "message": "MS (Master of Surgery)",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "Major",
+  "file": "prescriptions/models.py"
+ },
+ {
+  "message": "Malaria",
+  "file": "db:surveillance.disease_name"
+ },
+ {
+  "message": "Male",
+  "file": "patients/models.py"
+ },
+ {
+  "message": "Measles",
+  "file": "db:surveillance.disease_name"
+ },
+ {
+  "message": "Medical Record",
+  "file": "dashboard/models.py"
+ },
+ {
+  "message": "Medium",
+  "file": "dashboard/models.py"
+ },
+ {
+  "message": "Meningococcal Infection",
+  "file": "db:surveillance.disease_name"
+ },
+ {
+  "message": "Minor",
+  "file": "prescriptions/models.py"
+ },
+ {
+  "message": "Moderate",
+  "file": "prescriptions/models.py"
+ },
+ {
+  "message": "New passwords do not match.",
+  "file": "dashboard/views.py"
+ },
+ {
+  "message": "No active profile found",
+  "file": "adherence/views.py"
+ },
+ {
+  "message": "No file attached.",
+  "file": "dashboard/views.py"
+ },
+ {
+  "message": "No files available for download.",
+  "file": "dashboard/views.py"
+ },
+ {
+  "message": "No health card found.",
+  "file": "patients/views.py"
+ },
+ {
+  "message": "No patient profile.",
+  "file": "documents/views.py"
+ },
+ {
+  "message": "No pharmacy found for this user",
+  "file": "pharmacy/serializers.py"
+ },
+ {
+  "message": "No pharmacy found for this user.",
+  "file": "pharmacy/views.py"
+ },
+ {
+  "message": "No pharmacy set up yet.",
+  "file": "pharmacy/views.py"
+ },
+ {
+  "message": "No photo file provided.",
+  "file": "patients/views.py"
+ },
+ {
+  "message": "No profile found.",
+  "file": "patients/views.py"
+ },
+ {
+  "message": "No profile found. Please complete your profile first.",
+  "file": "patients/views.py"
+ },
+ {
+  "message": "No profile found. Please create a profile first.",
+  "file": "patients/views.py"
+ },
+ {
+  "message": "Nothing to bill: every item dispensed on this prescription is already invoiced.",
+  "file": "pharmacy/views.py"
+ },
+ {
+  "message": "OTP Failed",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "OTP Sent",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "OTP Verified",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "OTP sent if email is registered/created.",
+  "file": "accounts/views.py"
+ },
+ {
+  "message": "One or more medicines are invalid or inactive",
+  "file": "prescriptions/serializers.py"
+ },
+ {
+  "message": "Only approved doctors can keep patients on their list.",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "Only doctors and administrators can access high-risk patient data.",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "Only doctors and administrators can access patient lists.",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "Only doctors and administrators can create visit records.",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "Only doctors can create records",
+  "file": "medical/serializers.py"
+ },
+ {
+  "message": "Only patient accounts have a patient profile.",
+  "file": "patients/views.py"
+ },
+ {
+  "message": "Only patients can record doses",
+  "file": "adherence/views.py"
+ },
+ {
+  "message": "Only patients can view missed doses",
+  "file": "adherence/views.py"
+ },
+ {
+  "message": "Only patients can view upcoming doses",
+  "file": "adherence/views.py"
+ },
+ {
+  "message": "Only pharmacists can use this endpoint.",
+  "file": "pharmacy/views.py"
+ },
+ {
+  "message": "Other",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "Parent",
+  "file": "patients/models.py"
+ },
+ {
+  "message": "Partially Dispensed",
+  "file": "prescriptions/models.py"
+ },
+ {
+  "message": "Password changed successfully.",
+  "file": "dashboard/views.py"
+ },
+ {
+  "message": "Password must be at least 8 characters.",
+  "file": "dashboard/views.py"
+ },
+ {
+  "message": "Password reset successful",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "Patient",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "Patient Already Has",
+  "file": "prescriptions/models.py"
+ },
+ {
+  "message": "Patient Record Accessed",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "Patient access extended",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "Patient added to your list",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "Patient is required",
+  "file": "medical/serializers.py"
+ },
+ {
+  "message": "Patient not found",
+  "file": "medical/serializers.py"
+ },
+ {
+  "message": "Patient not found.",
+  "file": "cdss/views.py"
+ },
+ {
+  "message": "Patient role required.",
+  "file": "accounts/permissions.py"
+ },
+ {
+  "message": "Pending",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "Pharmacist",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "Pharmacist role required.",
+  "file": "accounts/permissions.py"
+ },
+ {
+  "message": "Please specify your degree",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "Please use the code below to verify your email address and complete your registration.",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "Please verify your email first",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "Pneumonia",
+  "file": "db:surveillance.disease_name"
+ },
+ {
+  "message": "Prescription",
+  "file": "dashboard/models.py"
+ },
+ {
+  "message": "Prescription Created",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "Prescription Dispensed",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "Prescription Validated",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "Prescription medicine not found",
+  "file": "pharmacy/serializers.py"
+ },
+ {
+  "message": "Prescription not found",
+  "file": "pharmacy/serializers.py"
+ },
+ {
+  "message": "Prescription not found.",
+  "file": "prescriptions/views.py"
+ },
+ {
+  "message": "Profile Created",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "Profile not found for user",
+  "file": "patients/serializers.py"
+ },
+ {
+  "message": "Profile photo uploaded successfully.",
+  "file": "patients/views.py"
+ },
+ {
+  "message": "QR token or Patient ID is required.",
+  "file": "patients/views.py"
+ },
+ {
+  "message": "Region not found",
+  "file": "surveillance/tasks.py"
+ },
+ {
+  "message": "Registration failed. Please check the errors below.",
+  "file": "accounts/views.py"
+ },
+ {
+  "message": "Registration successful. Please check your email for OTP verification.",
+  "file": "accounts/views.py"
+ },
+ {
+  "message": "Registration successful. Please check your email for verification code.",
+  "file": "accounts/views.py"
+ },
+ {
+  "message": "Registration successful. Your documents are under review. Please check your email for OTP verification.",
+  "file": "accounts/views.py"
+ },
+ {
+  "message": "Rejected",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "Scan the patient's health card first. You can only keep patients whose card you have scanned.",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "Scan this patient's QR health card to get access. Manual ID lookup only works for patients you already have access to.",
+  "file": "patients/views.py"
+ },
+ {
+  "message": "Security Event",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "Self",
+  "file": "patients/models.py"
+ },
+ {
+  "message": "Set up your pharmacy before dispensing.",
+  "file": "pharmacy/views.py"
+ },
+ {
+  "message": "Set up your pharmacy first.",
+  "file": "pharmacy/views.py"
+ },
+ {
+  "message": "Signed out of other sessions.",
+  "file": "dashboard/views.py"
+ },
+ {
+  "message": "Spouse",
+  "file": "patients/models.py"
+ },
+ {
+  "message": "The requested file could not be found on the server.",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "The requested file reference does not exist.",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "This QR belongs to a card that has been replaced. Ask the patient for their current card.",
+  "file": "patients/views.py"
+ },
+ {
+  "message": "This QR code has expired.",
+  "file": "pharmacy/views.py"
+ },
+ {
+  "message": "This batch has already expired.",
+  "file": "pharmacy/serializers.py"
+ },
+ {
+  "message": "This health card has expired or been revoked.",
+  "file": "patients/views.py"
+ },
+ {
+  "message": "This license number is already registered",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "This medical license number is already registered",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "This medicine has already been dispensed",
+  "file": "pharmacy/serializers.py"
+ },
+ {
+  "message": "This prescription is blocked by a safety check. Record an override reason to proceed.",
+  "file": "prescriptions/views.py"
+ },
+ {
+  "message": "This record has no patient profile.",
+  "file": "documents/views.py"
+ },
+ {
+  "message": "This sign-in attempt expired. Enter your password again.",
+  "file": "accounts/views.py"
+ },
+ {
+  "message": "Too many OTP requests. Please try again in 1 hour.",
+  "file": "accounts/middleware.py"
+ },
+ {
+  "message": "Too many OTP verification attempts. Please request a new OTP.",
+  "file": "accounts/middleware.py"
+ },
+ {
+  "message": "Tracker not found",
+  "file": "adherence/views.py"
+ },
+ {
+  "message": "Type 2 Diabetes",
+  "file": "db:surveillance.disease_name"
+ },
+ {
+  "message": "Unable to read the requested file.",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "Unauthorized",
+  "file": "adherence/views.py"
+ },
+ {
+  "message": "Unavailable",
+  "file": "prescriptions/models.py"
+ },
+ {
+  "message": "Use the code below to securely sign in to your account.",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "User Login",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "User Logout",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "User Registration",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "User not found",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "Verified",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "Visit Attachment",
+  "file": "dashboard/models.py"
+ },
+ {
+  "message": "Warning",
+  "file": "accounts/audit.py"
+ },
+ {
+  "message": "Weight",
+  "file": "medical/models.py"
+ },
+ {
+  "message": "Whooping Cough",
+  "file": "db:surveillance.disease_name"
+ },
+ {
+  "message": "You already have a pharmacy. Update it instead.",
+  "file": "pharmacy/views.py"
+ },
+ {
+  "message": "You do not have access to these prescriptions",
+  "file": "prescriptions/views.py"
+ },
+ {
+  "message": "You do not have access to this document.",
+  "file": "documents/views.py"
+ },
+ {
+  "message": "You do not have access to this patient's records",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "You do not have access to this patient's records.",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "You do not have access to this patient. Please add them to your patients list first.",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "You do not have access to this patient. Scan their health card first.",
+  "file": "cdss/views.py"
+ },
+ {
+  "message": "You do not have access to this prescription",
+  "file": "prescriptions/views.py"
+ },
+ {
+  "message": "You do not have access to this record.",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "You do not have permission to access this file.",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "You do not have permission to access this resource.",
+  "file": "accounts/permissions.py"
+ },
+ {
+  "message": "You must accept the terms and conditions",
+  "file": "accounts/serializers.py"
+ },
+ {
+  "message": "You requested a password reset. Use the code below to set a new password.",
+  "file": "accounts/models.py"
+ },
+ {
+  "message": "Your doctor account is pending approval.",
+  "file": "accounts/permissions.py"
+ },
+ {
+  "message": "Your doctor account is pending approval. Access restricted.",
+  "file": "accounts/permissions.py"
+ },
+ {
+  "message": "current_symptoms is required.",
+  "file": "cdss/views.py"
+ },
+ {
+  "message": "disease_code is required",
+  "file": "surveillance/views.py"
+ },
+ {
+  "message": "patient_id is required",
+  "file": "medical/views.py"
+ },
+ {
+  "message": "patient_id is required.",
+  "file": "cdss/views.py"
+ },
+ {
+  "message": "prescription_id and hash are required.",
+  "file": "prescriptions/views.py"
+ },
+ {
+  "message": "region_id and disease_code are required",
+  "file": "surveillance/views.py"
+ },
+ {
+  "message": "token required",
+  "file": "medical/views.py"
+ }
+]
