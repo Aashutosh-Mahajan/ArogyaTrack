@@ -1,135 +1,29 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { api } from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import toast from 'react-hot-toast';
-import { FiMail, FiLock, FiEye, FiEyeOff, FiAlertTriangle, FiCheckCircle, FiClock, FiLock as FiLockAlt } from 'react-icons/fi';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { ShieldAlert } from 'lucide-react';
 import SplitSignInLayout from '@/components/auth/SplitSignInLayout';
-
-const schema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
-});
-
-type FormData = z.infer<typeof schema>;
-
-/* ── Amber warning decoration for left panel ── */
-function DoctorWarning() {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
-        <FiAlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm font-semibold text-amber-300">Verified Practitioners Only</p>
-          <p className="text-xs text-amber-200/60 mt-1">
-            Your medical council registration must be verified by an admin before you can access patient data.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const doctorFeatures = [
-  { icon: <FiCheckCircle className="w-4 h-4 text-emerald-400" />, label: 'Write & manage prescriptions' },
-  { icon: <FiClock className="w-4 h-4 text-emerald-400" />, label: 'View patient medical history' },
-  { icon: <FiLockAlt className="w-4 h-4 text-emerald-400" />, label: 'HIPAA-compliant data access' },
-];
+import { AuthHeading, SignInForm } from '@/components/auth/SignInForm';
+import { t } from '@/lib/i18n';
+import { tRich } from '@/lib/i18n-rich';
 
 export default function DoctorSignInPage() {
-  const router = useRouter();
-  const { setAuth } = useAuthStore();
-  const [showPassword, setShowPassword] = useState(false);
-
-  const form = useForm<FormData>({ resolver: zodResolver(schema) });
-
-  const onSubmit = async (data: FormData) => {
-    try {
-      const response: any = await api.auth.login(data.email, data.password);
-      if (response.user.role !== 'doctor') {
-        toast.error('This login is for doctors only');
-        return;
-      }
-      setAuth(response.user);
-      toast.success('Welcome back, Doctor!');
-      router.push('/doctor');
-    } catch (error: any) {
-      toast.error(error?.response?.data?.detail || 'Invalid email or password');
-    }
-  };
-
   return (
-    <SplitSignInLayout decoration={<DoctorWarning />} features={doctorFeatures}>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-        {/* Header */}
-        <div>
-          <h2 className="text-3xl font-bold text-foreground mb-1 font-syne">Doctor Login</h2>
-          <p className="text-sm text-muted-foreground font-dm">Manage patients &amp; write prescriptions</p>
-        </div>
-
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-          {/* Email */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground/80">Registered Email</label>
-            <div className="relative group">
-              <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
-              <Input
-                {...form.register('email')}
-                type="email"
-                placeholder="doctor@hospital.in"
-                className="pl-11 h-12 bg-card border-border focus:border-primary focus:ring-primary/20 rounded-xl"
-              />
-            </div>
-            {form.formState.errors.email && <p className="text-xs text-red-500">{form.formState.errors.email.message}</p>}
-          </div>
-
-          {/* Password */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between">
-              <label className="text-sm font-medium text-foreground/80">Password</label>
-              <Link href="/forgot-password" className="text-xs text-primary hover:text-primary font-medium">Forgot?</Link>
-            </div>
-            <div className="relative group">
-              <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
-              <Input
-                {...form.register('password')}
-                type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
-                className="pl-11 pr-11 h-12 bg-card border-border focus:border-primary focus:ring-primary/20 rounded-xl"
-              />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
-                {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
-              </button>
-            </div>
-            {form.formState.errors.password && <p className="text-xs text-red-500">{form.formState.errors.password.message}</p>}
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full h-12 text-base bg-primary hover:opacity-90 shadow-lg shadow-teal-700/20 rounded-xl"
-            disabled={form.formState.isSubmitting}
-          >
-            {form.formState.isSubmitting ? 'Signing in…' : 'Sign In'}
-          </Button>
-        </form>
-
-        <div className="text-center space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Don&apos;t have an account?{' '}
-            <Link href="/signup/doctor" className="text-primary font-semibold hover:underline">Register</Link>
-          </p>
-          <Link href="/signup" className="text-xs text-muted-foreground hover:text-muted-foreground">← Back to role selection</Link>
-        </div>
-      </motion.div>
+    <SplitSignInLayout
+      backHref="/roles"
+      backLabel={t("All roles")}
+      headline={<>{tRich("The full history, <em>one scan</em> away.", (c) => <span className="font-serif-accent text-[#9be3cf]">{c}</span>)}</>}
+      points={[
+        t("Scan a health card for audited access to patient history"),
+        t("Interaction and allergy checks before prescribing"),
+        t("Decision support and a high-risk patient watchlist"),
+      ]}
+      decoration={
+        <div className="flex items-start gap-3 rounded-xl border border-white/15 bg-white/10 p-3.5 text-[13px] text-white/85 backdrop-blur">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />{t("Doctor accounts can open patient data only after an administrator approves the medical licence.")}</div>
+      }
+    >
+      <AuthHeading eyebrow={t("Doctor portal")} title={t("Sign in as a doctor")} description={t("Manage patients, records and prescriptions.")} />
+      <SignInForm roles={['doctor']} emailPlaceholder="you@hospital.in" registerHref="/signup/doctor" registerLabel={t("Register as a doctor")} />
     </SplitSignInLayout>
   );
 }
