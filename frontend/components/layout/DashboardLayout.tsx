@@ -1,37 +1,25 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { ApprovalBanner } from './ApprovalBanner';
 
-interface DashboardLayoutProps {
-  children: React.ReactNode;
-}
+export function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+  // Close the mobile drawer on navigation.
+  useEffect(() => setMenuOpen(false), [pathname]);
+
   return (
-    <div style={{
-      display: 'flex',
-      height: '100vh',
-      width: '100vw',
-      overflow: 'hidden',
-    }}>
-      <Sidebar />
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        minWidth: 0,
-        marginLeft: 290,
-      }}>
-        <Header />
-        <main style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '24px 28px',
-          background: 'hsl(var(--background))',
-        }}>
+    <div className="min-h-dvh bg-background">
+      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <div className="flex min-h-dvh min-w-0 flex-col lg:pl-[272px]">
+        <Header onMenuClick={() => setMenuOpen(true)} />
+        <main id="main" className="mx-auto w-full max-w-[1480px] flex-1 px-4 py-6 md:px-8 md:py-8">
+          <ApprovalBanner />
           {children}
         </main>
       </div>
