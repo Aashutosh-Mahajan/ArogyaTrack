@@ -10,6 +10,7 @@ export interface User {
   role: UserRole;
   active_profile?: string | null; // UUID
   verification_status: 'pending' | 'verified';
+  approval_status?: 'pending' | 'approved' | 'rejected' | null;
   is_active: boolean;
   is_staff: boolean;
   date_joined: string;
@@ -36,6 +37,7 @@ export interface AuthState {
 
 // Patient Types
 export interface Profile {
+  patient_id?: string;
   id: string; // UUID
   name: string;
   age: number;
@@ -101,6 +103,13 @@ export interface PatientCard {
   qr_code_url: string | null;
   profile_photo_url: string | null;
   address?: string;
+  profile_id?: string;
+  relationship?: string;
+  phone?: string;
+  state?: string;
+  issued_at?: string | null;
+  expires_at?: string | null;
+  doctors_with_access?: number;
 }
 
 export interface PatientHistoryFromQR {
@@ -913,6 +922,7 @@ export interface ActiveSession {
   device: string;
   ip_address: string;
   last_active: string;
+  is_current?: boolean;
 }
 
 export interface SecurityInfo {
@@ -924,8 +934,10 @@ export interface SecurityInfo {
 
 // Download Center
 export interface DownloadItem {
-  id: number;
-  type: 'visit_attachment' | 'lab_report' | 'medical_record';
+  id: number | string;
+  type: 'visit_attachment' | 'lab_report' | 'medical_record' | 'prescription' | 'invoice' | 'lab_summary' | 'health_card';
+  /** API path of a server-generated PDF for this document, when there is one. */
+  pdf_url?: string | null;
   type_label: string;
   title: string;
   visit_info: string;
