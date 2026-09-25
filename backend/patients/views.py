@@ -1,6 +1,8 @@
+from django.utils import timezone
 from django.conf import settings
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
+from medical.models import DoctorPatientAccess
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -34,22 +36,14 @@ class ActiveProfileView(APIView):
 
     def get(self, request):
         user = request.user
-        profile = None
-        if user.active_profile_id:
-            profile = user.profiles.filter(id=user.active_profile_id).first()
-        if not profile:
-            profile = user.profiles.first()
+        profile = user.get_active_profile()
         if not profile:
             return Response({"detail": "No profile found. Please create a profile first."}, status=status.HTTP_404_NOT_FOUND)
         return Response(ProfileSerializer(profile).data)
 
     def patch(self, request):
         user = request.user
-        profile = None
-        if user.active_profile_id:
-            profile = user.profiles.filter(id=user.active_profile_id).first()
-        if not profile:
-            profile = user.profiles.first()
+        profile = user.get_active_profile()
         if not profile:
             return Response({"detail": "No profile found."}, status=status.HTTP_404_NOT_FOUND)
         serializer = ProfileSerializer(profile, data=request.data, partial=True, context={"request": request})
@@ -63,25 +57,25 @@ class PatientProfileView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @staticmethod
+    def _get_profile(user):
+        # Patient accounts created before consent tracking (or by seed scripts)
+        # have no row yet; create one with every consent unset.
+        if user.role != "patient":
+            return None
+        return PatientProfile.objects.get_or_create(user=user)[0]
+
     def get(self, request):
-        user = request.user
-        try:
-            patient_profile = PatientProfile.objects.get(user=user)
-            return Response(PatientProfileSerializer(patient_profile).data)
-        except PatientProfile.DoesNotExist:
-            return Response({
-                "detail": "Patient profile not found. This may be a doctor or admin account."
-            }, status=status.HTTP_404_NOT_FOUND)
+        patient_profile = self._get_profile(request.user)
+        if patient_profile is None:
+            return Response({"detail": "Only patient accounts have a patient profile."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(PatientProfileSerializer(patient_profile).data)
 
     def patch(self, request):
-        user = request.user
-        try:
-            patient_profile = PatientProfile.objects.get(user=user)
-        except PatientProfile.DoesNotExist:
-            return Response({
-                "detail": "Patient profile not found."
-            }, status=status.HTTP_404_NOT_FOUND)
-        
+        patient_profile = self._get_profile(request.user)
+        if patient_profile is None:
+            return Response({"detail": "Only patient accounts have a patient profile."}, status=status.HTTP_404_NOT_FOUND)
+
         serializer = PatientProfileSerializer(
             patient_profile, 
             data=request.data, 
@@ -159,6 +153,14 @@ class RevokeHealthCardView(APIView):
         serializer = RevokeHealthCardSerializer(data={}, context={"profile": profile})
         serializer.is_valid(raise_exception=True)
         card = serializer.save()
+        from accounts.audit import AuditService
+        AuditService.log_event(
+            event_type="health_card_revoked",
+            action="Patient reissued health card",
+            user=request.user,
+            resource_type="Profile",
+            resource_id=str(profile.id),
+        )
         return Response({"revoked_at": card.revoked_at}, status=status.HTTP_200_OK)
 
 
@@ -167,11 +169,7 @@ class RevokeHealthCardView(APIView):
 
 def _get_or_create_card(user):
     """Get active profile and ensure a health card exists, creating one if needed."""
-    profile = None
-    if user.active_profile_id:
-        profile = user.profiles.filter(id=user.active_profile_id).first()
-    if not profile:
-        profile = user.profiles.first()
+    profile = user.get_active_profile()
     if not profile:
         return None, None
 
@@ -289,6 +287,15 @@ class MyCardView(APIView):
             "qr_code_url": qr_code_url,
             "token": card.token if card else None,
             "profile_photo_url": profile_photo_url,
+            "profile_id": str(profile.id),
+            "relationship": profile.relationship,
+            "phone": profile.phone or "",
+            "state": profile.state or "",
+            "issued_at": card.created_at if card else None,
+            "expires_at": card.expires_at if card else None,
+            "doctors_with_access": DoctorPatientAccess.objects.filter(
+                patient=profile, expires_at__gt=timezone.now()
+            ).values("doctor").distinct().count(),
         })
 
 
@@ -365,79 +372,12 @@ class MyCardPDFView(APIView):
         if not profile or not card:
             return Response({"detail": "No health card found."}, status=status.HTTP_404_NOT_FOUND)
 
-        unique_patient_id = profile.patient_id or "N/A"
+        from documents.pdfs import health_card_pdf
+        from documents.views import _log, _pdf_response
 
-        try:
-            from io import BytesIO
-            from reportlab.lib.pagesizes import A6
-            from reportlab.lib.units import mm
-            from reportlab.pdfgen import canvas as pdf_canvas
-            from reportlab.lib.colors import HexColor
-
-            buffer = BytesIO()
-            width, height = A6
-            c = pdf_canvas.Canvas(buffer, pagesize=A6)
-
-            # Blue header
-            c.setFillColor(HexColor("#1e40af"))
-            c.rect(0, height - 40 * mm, width, 40 * mm, fill=True, stroke=False)
-            c.setFillColor(HexColor("#ffffff"))
-            c.setFont("Helvetica", 7)
-            c.drawString(10 * mm, height - 10 * mm, "Health Surveillance System")
-            c.setFont("Helvetica-Bold", 14)
-            c.drawString(10 * mm, height - 18 * mm, profile.name)
-            c.setFont("Helvetica", 8)
-            c.drawString(10 * mm, height - 24 * mm, "Digital Patient Card")
-
-            # Profile photo in header (if available)
-            if profile.profile_photo:
-                try:
-                    from reportlab.lib.utils import ImageReader
-                    photo_img = ImageReader(profile.profile_photo.path)
-                    # Draw photo in top-right corner of header
-                    c.drawImage(photo_img, width - 35 * mm, height - 35 * mm, 25 * mm, 25 * mm, mask='auto', preserveAspectRatio=True)
-                except Exception:
-                    pass  # Skip if photo can't be loaded
-
-            # Body
-            y = height - 50 * mm
-            fields = [
-                ("Patient ID", unique_patient_id),
-                ("Blood Group", profile.blood_group),
-                ("Date of Birth", str(profile.date_of_birth) if profile.date_of_birth else "N/A"),
-                ("Gender", profile.gender.title()),
-                ("District", profile.district or "N/A"),
-            ]
-            for label, value in fields:
-                c.setFont("Helvetica", 7)
-                c.setFillColor(HexColor("#6b7280"))
-                c.drawString(10 * mm, y, label)
-                c.setFont("Helvetica-Bold", 9)
-                c.setFillColor(HexColor("#111827"))
-                c.drawString(10 * mm, y - 4 * mm, value)
-                y -= 12 * mm
-
-            # QR code image
-            try:
-                from reportlab.lib.utils import ImageReader
-                qr_img = ImageReader(card.qr_code_path)
-                c.drawImage(qr_img, width - 38 * mm, height - 80 * mm, 28 * mm, 28 * mm)
-            except Exception:
-                pass
-
-            c.save()
-            buffer.seek(0)
-
-            from django.http import HttpResponse
-            response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
-            response["Content-Disposition"] = f'attachment; filename="patient_card_{unique_patient_id}.pdf"'
-            return response
-
-        except ImportError:
-            return Response(
-                {"detail": "PDF generation requires reportlab. Install: pip install reportlab"},
-                status=status.HTTP_501_NOT_IMPLEMENTED,
-            )
+        name = f"Health_card_{profile.patient_id or 'patient'}.pdf"
+        _log(request, "health_card", name)
+        return _pdf_response(health_card_pdf(profile, card), name, inline=request.query_params.get("inline") == "1")
 
 
 class ScanPatientQRView(APIView):
@@ -450,12 +390,15 @@ class ScanPatientQRView(APIView):
     def post(self, request):
         import jwt as pyjwt
 
-        # Check authorization - only doctors and admins can scan
-        if request.user.role not in ["doctor", "admin"]:
-            return Response(
-                {"detail": "Only doctors and administrators can scan patient QR codes."},
-                status=status.HTTP_403_FORBIDDEN,
+        # Only approved doctors (and admins) may open patient history.
+        user = request.user
+        if not (user.is_admin or user.is_superuser or user.is_approved_doctor):
+            detail = (
+                "Your doctor account is pending approval. Patient records unlock once an administrator approves your licence."
+                if user.role == "doctor"
+                else "Only doctors and administrators can scan patient QR codes."
             )
+            return Response({"detail": detail}, status=status.HTTP_403_FORBIDDEN)
 
         token = request.data.get("token")
         patient_id_input = request.data.get("patient_id")
@@ -478,8 +421,17 @@ class ScanPatientQRView(APIView):
             )
 
             if patient_id_input:
-                # Lookup by the generated HS-YYYY-XXXXXX format
-                profile = optimized_qs.get(patient_id=patient_id_input)
+                # Typing an ID is only a shortcut back to patients this doctor
+                # already has consented access to; new patients must present
+                # their card, since holding the QR is how a patient consents.
+                profile = optimized_qs.get(patient_id=str(patient_id_input).strip().upper())
+                if not user.is_admin and not DoctorPatientAccess.objects.filter(
+                    doctor=user, patient=profile, expires_at__gt=timezone.now()
+                ).exists():
+                    return Response(
+                        {"detail": "Scan this patient's QR health card to get access. Manual ID lookup only works for patients you already have access to."},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
             else:
                 # Decode the JWT token
                 try:
@@ -508,11 +460,44 @@ class ScanPatientQRView(APIView):
                             status=status.HTTP_400_BAD_REQUEST,
                         )
 
-            card = profile.health_card
+            card = getattr(profile, "health_card", None)
             if card and not card.is_active():
                 return Response(
                     {"detail": "This health card has expired or been revoked."},
                     status=status.HTTP_410_GONE,
+                )
+            # A QR from a reissued (revoked) card still decodes to the same
+            # patient, so it must match the card that is live right now.
+            if token and not patient_id_input and (card is None or card.token != token):
+                return Response(
+                    {"detail": "This QR belongs to a card that has been replaced. Ask the patient for their current card."},
+                    status=status.HTTP_410_GONE,
+                )
+
+            access = None
+            if user.role == "doctor":
+                access = (
+                    DoctorPatientAccess.objects.filter(doctor=user, patient=profile, expires_at__gt=timezone.now())
+                    .order_by("-expires_at").first()
+                )
+                if token and not patient_id_input:
+                    from datetime import timedelta
+                    new_expiry = timezone.now() + timedelta(hours=24)
+                    if access is None:
+                        access = DoctorPatientAccess.objects.create(
+                            doctor=user, patient=profile, expires_at=new_expiry,
+                        )
+                    elif access.expires_at < new_expiry:
+                        access.expires_at = new_expiry
+                        access.save(update_fields=["expires_at"])
+                from accounts.audit import AuditService
+                AuditService.log_event(
+                    event_type="patient_record_accessed",
+                    action="Doctor opened patient history" + (" via QR scan" if token and not patient_id_input else " via patient ID"),
+                    user=user,
+                    resource_type="Profile",
+                    resource_id=str(profile.id),
+                    details={"access_method": "qr_scan" if token and not patient_id_input else "patient_id"},
                 )
 
             unique_patient_id = profile.patient_id or "N/A"
@@ -617,8 +602,12 @@ class ScanPatientQRView(APIView):
                     "profile_photo_url": profile_photo_url,
                 },
                 "card_info": {
-                    "issued_at": card.created_at.isoformat(),
-                    "expires_at": card.expires_at.isoformat(),
+                    "issued_at": card.created_at.isoformat() if card else None,
+                    "expires_at": card.expires_at.isoformat() if card else None,
+                },
+                "access": {
+                    "expires_at": access.expires_at.isoformat() if access else None,
+                    "method": getattr(access, "access_method", None) if access else None,
                 },
                 "latest_vitals": latest_vitals,
                 "medical_records": medical_records_data,
