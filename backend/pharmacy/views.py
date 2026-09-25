@@ -8,18 +8,21 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.permissions import IsPharmacist
+
 from patients.models import Profile
 from prescriptions.models import Prescription, PrescriptionMedicine
 from prescriptions.serializers import PrescriptionSerializer, PrescriptionMedicineSerializer
 
-from .models import DispensingRecord, Pharmacy, PharmacyInventory
-from .serializers import DispenseMedicineSerializer, DispensingRecordSerializer, PharmacySerializer, PharmacyInventorySerializer, ScanPrescriptionSerializer, UpdateStockSerializer
+from .billing import allocate_gst
+from .models import DispensingRecord, Invoice, Pharmacy, PharmacyInventory
+from .serializers import CreateInvoiceSerializer, DispenseMedicineSerializer, DispensingRecordSerializer, InvoiceSerializer, PharmacySerializer, PharmacyInventorySerializer, ScanPrescriptionSerializer, UpdateStockSerializer
 
 
 class ScanPrescriptionView(APIView):
     """Pharmacist scans prescription QR code."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsPharmacist]
 
     def post(self, request):
         serializer = ScanPrescriptionSerializer(data=request.data)
@@ -35,7 +38,7 @@ class PharmacyScanPatientView(APIView):
     Returns patient info and ALL prescriptions grouped by doctor.
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsPharmacist]
 
     def post(self, request):
         # Only pharmacists (and admins) may use this endpoint
@@ -96,13 +99,17 @@ class PharmacyScanPatientView(APIView):
                 profile = Profile.objects.select_related("user", "health_card").get(id=pid)
 
             # Validate health card
-            if hasattr(profile, "health_card"):
-                card = profile.health_card
-                if card and not card.is_active():
-                    return Response(
-                        {"detail": "This health card has expired or been revoked."},
-                        status=status.HTTP_410_GONE,
-                    )
+            card = getattr(profile, "health_card", None)
+            if card and not card.is_active():
+                return Response(
+                    {"detail": "This health card has expired or been revoked."},
+                    status=status.HTTP_410_GONE,
+                )
+            if token and not patient_id_input and (card is None or card.token != token):
+                return Response(
+                    {"detail": "This QR belongs to a card that has been replaced. Ask the patient for their current card."},
+                    status=status.HTTP_410_GONE,
+                )
 
             # Fetch all prescriptions that are not fully dispensed
             prescriptions = (
@@ -165,11 +172,15 @@ class PharmacyScanPatientView(APIView):
 class DispenseMedicineView(APIView):
     """Pharmacist dispenses a medicine from prescription."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsPharmacist]
 
     def post(self, request):
-        # Get pharmacy for current user (if one exists)
         pharmacy = Pharmacy.objects.filter(owner=request.user, is_active=True).first()
+        if pharmacy is None:
+            return Response(
+                {"detail": "Set up your pharmacy before dispensing.", "code": "pharmacy_missing"},
+                status=status.HTTP_409_CONFLICT,
+            )
 
         serializer = DispenseMedicineSerializer(data=request.data, context={"request": request, "pharmacy": pharmacy})
         serializer.is_valid(raise_exception=True)
@@ -181,7 +192,7 @@ class DispenseMedicineView(APIView):
 class DispensingHistoryView(APIView):
     """Get dispensing history for a pharmacy."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsPharmacist]
 
     def get(self, request):
         # Get pharmacy for current user
@@ -190,19 +201,39 @@ class DispensingHistoryView(APIView):
         except Pharmacy.DoesNotExist:
             return Response([])
 
-        records = DispensingRecord.objects.filter(pharmacy=pharmacy).order_by("-dispensed_at")[:100]
+        records = (
+            DispensingRecord.objects.filter(pharmacy=pharmacy)
+            .select_related("prescription__patient", "prescription_medicine__medicine", "pharmacy")
+            .order_by("-dispensed_at")[: min(int(request.query_params.get("limit", 200)), 500)]
+        )
 
         return Response(DispensingRecordSerializer(records, many=True).data)
 
 
 class PharmacyDetailView(APIView):
-    """Get pharmacy details."""
+    """The signed-in pharmacist's own pharmacy: read, create once, or update."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsPharmacist]
 
     def get(self, request):
-        pharmacy = get_object_or_404(Pharmacy, owner=request.user)
+        pharmacy = Pharmacy.objects.filter(owner=request.user).first()
+        if pharmacy is None:
+            return Response({"detail": "No pharmacy set up yet.", "code": "pharmacy_missing"}, status=status.HTTP_404_NOT_FOUND)
         return Response(PharmacySerializer(pharmacy).data)
+
+    def post(self, request):
+        if Pharmacy.objects.filter(owner=request.user).exists():
+            return Response({"detail": "You already have a pharmacy. Update it instead."}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = PharmacySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        pharmacy = serializer.save(owner=request.user, is_active=True)
+        return Response(PharmacySerializer(pharmacy).data, status=status.HTTP_201_CREATED)
+
+    def patch(self, request):
+        pharmacy = get_object_or_404(Pharmacy, owner=request.user)
+        serializer = PharmacySerializer(pharmacy, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(PharmacySerializer(serializer.save()).data)
 
 
 class PharmacyInventoryView(APIView):
@@ -212,10 +243,13 @@ class PharmacyInventoryView(APIView):
     POST: Add new item.
     """
     
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsPharmacist]
     
     def get_pharmacy(self, request):
         return get_object_or_404(Pharmacy, owner=request.user)
+
+    def get_queryset_for(self, pharmacy):
+        return PharmacyInventory.objects.filter(pharmacy=pharmacy).select_related("medicine").order_by("medicine__name", "expiry_date")
 
     def get(self, request):
         try:
@@ -223,7 +257,7 @@ class PharmacyInventoryView(APIView):
         except Pharmacy.DoesNotExist:
             return Response([])
 
-        queryset = PharmacyInventory.objects.filter(pharmacy=pharmacy)
+        queryset = self.get_queryset_for(pharmacy)
         
         # Filter: Low Stock
         if request.query_params.get("low_stock") == "true":
@@ -243,7 +277,7 @@ class PharmacyInventoryView(APIView):
 class PharmacyDashboardStatsView(APIView):
     """Return real KPI stats and 7-day dispensing trend for the pharmacist dashboard."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsPharmacist]
 
     def get(self, request):
         from datetime import timedelta
@@ -259,6 +293,9 @@ class PharmacyDashboardStatsView(APIView):
                     "today_dispensed": 0,
                     "low_stock_count": 0,
                     "pending_prescriptions": 0,
+                    "billed_today": "0.00",
+                    "invoices_today": 0,
+                    "unbilled_amount": "0.00",
                     "trend": [],
                 }
             )
@@ -289,6 +326,13 @@ class PharmacyDashboardStatsView(APIView):
             .count()
         )
 
+        from django.db.models import Sum
+
+        billed = Invoice.objects.filter(pharmacy=pharmacy, created_at__gte=today_start).aggregate(total=Sum("total"), n=Count("id"))
+        unbilled = DispensingRecord.objects.filter(
+            pharmacy=pharmacy, status="dispensed", invoice__isnull=True, amount__isnull=False
+        ).aggregate(total=Sum("amount"))
+
         # 7-day trend
         seven_days_ago = now - timedelta(days=7)
         trend_qs = (
@@ -313,6 +357,9 @@ class PharmacyDashboardStatsView(APIView):
                 "today_dispensed": today_dispensed,
                 "low_stock_count": low_stock_count,
                 "pending_prescriptions": pending_prescriptions,
+                "billed_today": str(billed["total"] or "0.00"),
+                "invoices_today": billed["n"],
+                "unbilled_amount": str(unbilled["total"] or "0.00"),
                 "trend": trend,
             }
         )
@@ -324,7 +371,7 @@ class UpdateStockView(APIView):
     POST /api/pharmacy/update-stock/
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsPharmacist]
 
     def post(self, request):
         pharmacy = Pharmacy.objects.filter(owner=request.user, is_active=True).first()
@@ -345,6 +392,25 @@ class UpdateStockView(APIView):
         )
 
 
+class PharmacyInventoryItemView(APIView):
+    """PATCH or DELETE one inventory line of the pharmacist's own pharmacy."""
+
+    permission_classes = [permissions.IsAuthenticated, IsPharmacist]
+
+    def _item(self, request, item_id):
+        return get_object_or_404(PharmacyInventory, id=item_id, pharmacy__owner=request.user)
+
+    def patch(self, request, item_id):
+        item = self._item(request, item_id)
+        serializer = PharmacyInventorySerializer(item, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(PharmacyInventorySerializer(serializer.save()).data)
+
+    def delete(self, request, item_id):
+        self._item(request, item_id).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class PharmacyListView(APIView):
     """List all active pharmacies (for doctors selecting a target pharmacy)."""
 
@@ -357,3 +423,157 @@ class PharmacyListView(APIView):
             qs = qs.filter(name__icontains=search)
         qs = qs[:50]
         return Response(PharmacySerializer(qs, many=True).data)
+
+
+def _my_pharmacy(user):
+    return Pharmacy.objects.filter(owner=user, is_active=True).first()
+
+
+def _invoice_queryset():
+    return Invoice.objects.select_related(
+        "pharmacy", "pharmacist", "patient", "prescription__doctor"
+    ).prefetch_related("items__prescription_medicine__medicine")
+
+
+def _new_invoice_number():
+    import secrets
+
+    while True:
+        from documents.layout import local_time
+
+        number = f"INV-{local_time():%y%m%d}-{secrets.token_hex(3).upper()}"
+        if not Invoice.objects.filter(invoice_number=number).exists():
+            return number
+
+
+class PrescriptionBillingView(APIView):
+    """GET /api/pharmacy/billing/<prescription_id>/
+
+    What this pharmacy has dispensed against a prescription and not billed
+    yet, plus the invoices it has already issued for it.
+    """
+
+    permission_classes = [permissions.IsAuthenticated, IsPharmacist]
+
+    def get(self, request, prescription_id):
+        from .serializers import InvoiceItemSerializer
+
+        pharmacy = _my_pharmacy(request.user)
+        if pharmacy is None:
+            return Response({"detail": "Set up your pharmacy first.", "code": "pharmacy_missing"}, status=status.HTTP_409_CONFLICT)
+        unbilled = list(
+            DispensingRecord.objects.filter(
+                pharmacy=pharmacy, prescription_id=prescription_id, status="dispensed", invoice__isnull=True
+            )
+            .select_related("prescription_medicine__medicine")
+            .order_by("dispensed_at")
+        )
+        subtotal = sum((r.amount or 0) for r in unbilled)
+        invoices = _invoice_queryset().filter(pharmacy=pharmacy, prescription_id=prescription_id)
+        return Response(
+            {
+                "unbilled_items": InvoiceItemSerializer(unbilled, many=True).data,
+                "unbilled_subtotal": f"{subtotal:.2f}",
+                "unpriced_items": sum(1 for r in unbilled if r.amount is None),
+                "invoices": InvoiceSerializer(invoices, many=True).data,
+            }
+        )
+
+
+class InvoiceListCreateView(APIView):
+    """GET/POST /api/pharmacy/invoices/
+
+    POST bills every item this pharmacy dispensed against the prescription
+    that is not on an invoice yet. Prices were fixed at dispense time from
+    the batches the stock came out of.
+    """
+
+    permission_classes = [permissions.IsAuthenticated, IsPharmacist]
+
+    def get(self, request):
+        pharmacy = _my_pharmacy(request.user)
+        if pharmacy is None:
+            return Response([])
+        qs = _invoice_queryset().filter(pharmacy=pharmacy)
+        q = (request.query_params.get("search") or "").strip()
+        if q:
+            from django.db.models import Q
+
+            qs = qs.filter(Q(invoice_number__icontains=q) | Q(patient__name__icontains=q) | Q(patient__patient_id__icontains=q))
+        limit = min(int(request.query_params.get("limit", 200)), 500)
+        return Response(InvoiceSerializer(qs[:limit], many=True).data)
+
+    def post(self, request):
+        from decimal import Decimal
+
+        from django.db import transaction
+
+        pharmacy = _my_pharmacy(request.user)
+        if pharmacy is None:
+            return Response({"detail": "Set up your pharmacy first.", "code": "pharmacy_missing"}, status=status.HTTP_409_CONFLICT)
+        serializer = CreateInvoiceSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        with transaction.atomic():
+            # Lock the rows so a double click cannot bill the same items twice.
+            records = list(
+                DispensingRecord.objects.select_for_update()
+                .filter(pharmacy=pharmacy, prescription_id=data["prescription_id"], status="dispensed", invoice__isnull=True)
+                .select_related("prescription", "prescription_medicine__medicine")
+                .order_by("dispensed_at")
+            )
+            if not records:
+                return Response(
+                    {"detail": "Nothing to bill: every item dispensed on this prescription is already invoiced."},
+                    status=status.HTTP_409_CONFLICT,
+                )
+            subtotal = sum((r.amount or Decimal("0")) for r in records)
+            discount = data["discount"]
+            if discount > subtotal:
+                return Response({"discount": ["Discount cannot be more than the bill."]}, status=status.HTTP_400_BAD_REQUEST)
+            prescription = records[0].prescription
+            total = subtotal - discount
+            taxable_value, cgst, sgst = allocate_gst(records, subtotal, total)
+            invoice = Invoice.objects.create(
+                invoice_number=_new_invoice_number(),
+                pharmacy=pharmacy,
+                pharmacist=request.user,
+                prescription=prescription,
+                patient=prescription.patient,
+                subtotal=subtotal,
+                discount=discount,
+                total=total,
+                taxable_value=taxable_value,
+                cgst=cgst,
+                sgst=sgst,
+                payment_method=data["payment_method"],
+            )
+            for r in records:
+                r.invoice = invoice
+            DispensingRecord.objects.bulk_update(
+                records, ["invoice", "hsn_code", "gst_rate", "taxable_value", "tax_amount"]
+            )
+
+            from accounts.audit import AuditService
+
+            AuditService.log_event(
+                event_type="invoice_created",
+                action=f"Issued invoice {invoice.invoice_number}",
+                user=request.user,
+                resource_type="Invoice",
+                resource_id=str(invoice.id),
+                details={"total": str(invoice.total), "items": len(records), "pharmacy": pharmacy.name},
+            )
+
+        return Response(InvoiceSerializer(_invoice_queryset().get(id=invoice.id)).data, status=status.HTTP_201_CREATED)
+
+
+class InvoiceDetailView(APIView):
+    """GET /api/pharmacy/invoices/<id>/"""
+
+    permission_classes = [permissions.IsAuthenticated, IsPharmacist]
+
+    def get(self, request, invoice_id):
+        invoice = get_object_or_404(_invoice_queryset(), id=invoice_id, pharmacy__owner=request.user)
+        return Response(InvoiceSerializer(invoice).data)
