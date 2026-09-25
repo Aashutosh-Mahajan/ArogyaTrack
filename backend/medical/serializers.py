@@ -31,6 +31,9 @@ class MedicalRecordSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"doctor": "Only doctors can create records"})
         if patient is None:
             raise serializers.ValidationError({"patient": "Patient is required"})
+        from .models import HealthCardValidator
+        if doctor.role == doctor.Role.DOCTOR and not HealthCardValidator.has_access(doctor, patient):
+            raise serializers.ValidationError({"patient": "You do not have access to this patient. Scan their health card first."})
         return attrs
 
     def create(self, validated_data):
@@ -87,13 +90,25 @@ class HistoryDiagnosisSerializer(serializers.ModelSerializer):
         fields = ["icd_10_code", "disease_name", "severity", "created_at"]
 
 
+class HistoryDoctorSerializer(serializers.Serializer):
+    # Explicit field list: `depth = 1` used to serialize the whole User row,
+    # which leaked the doctor's password hash to patients.
+    id = serializers.IntegerField()
+    email = serializers.EmailField()
+    name = serializers.SerializerMethodField()
+
+    def get_name(self, user):
+        full = f"{user.get_first_name()} {user.get_last_name()}".strip()
+        return full or user.email
+
+
 class MedicalHistorySerializer(serializers.ModelSerializer):
     diagnoses = HistoryDiagnosisSerializer(many=True)
+    doctor = HistoryDoctorSerializer(read_only=True)
 
     class Meta:
         model = MedicalRecord
         fields = ["id", "doctor", "symptoms", "notes", "created_at", "diagnoses"]
-        depth = 1
 
 
 class ScanHealthCardSerializer(serializers.Serializer):
