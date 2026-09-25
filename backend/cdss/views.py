@@ -8,7 +8,7 @@ Display-only: never writes to the database.
 import json
 import logging
 
-from django.conf import settings
+from config.ai import ai_chat, ai_configured
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -62,6 +62,11 @@ class CDSSAnalyzeView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsApprovedDoctor]
 
     def post(self, request):
+        if not ai_configured():
+            return Response(
+                {"detail": "Clinical decision support is not configured on this server (AI_API_KEY is not set).", "code": "cdss_unconfigured"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         # ── STEP A: Validate request ──
         patient_id = request.data.get("patient_id")
         current_symptoms = request.data.get("current_symptoms", "").strip()
@@ -84,6 +89,13 @@ class CDSSAnalyzeView(APIView):
             return Response(
                 {"detail": "Patient not found."},
                 status=status.HTTP_404_NOT_FOUND,
+            )
+
+        from medical.models import HealthCardValidator
+        if not HealthCardValidator.has_access(request.user, patient):
+            return Response(
+                {"detail": "You do not have access to this patient. Scan their health card first."},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         records = (
@@ -145,24 +157,21 @@ class CDSSAnalyzeView(APIView):
             "Return exactly the 6-section JSON as described in your instructions."
         )
 
-        # ── STEP E: Call OpenAI ──
+        # ── STEP E: Call the configured LLM ──
         try:
-            import openai
-
-            client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
-            completion = client.chat.completions.create(
-                model="gpt-4.1",
-                temperature=0.2,
-                max_tokens=2000,
-                response_format={"type": "json_object"},
-                messages=[
+            raw_content = ai_chat(
+                [
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt},
                 ],
+                default_model="gpt-4.1",
+                temperature=0.2,
+                # Generous budget: reasoning models spend part of it thinking.
+                max_tokens=8000,
+                json_mode=True,
             )
-            raw_content = completion.choices[0].message.content
         except Exception:
-            logger.exception("OpenAI API call failed during CDSS analysis")
+            logger.exception("AI call failed during CDSS analysis")
             return Response(
                 {"detail": "AI analysis service is temporarily unavailable. Please try again later."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -179,3 +188,12 @@ class CDSSAnalyzeView(APIView):
             )
 
         return Response(result, status=status.HTTP_200_OK)
+
+
+class CDSSStatusView(APIView):
+    """GET /api/cdss/status/ — whether AI decision support can run on this server."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        return Response({"available": ai_configured()})
