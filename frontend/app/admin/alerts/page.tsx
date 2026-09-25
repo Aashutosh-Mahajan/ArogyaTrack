@@ -1,253 +1,131 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { ArrowUpCircle, Bell, Check, CheckCheck, ChevronDown, Loader2, MapPin } from 'lucide-react';
 import { withAuth } from '@/components/auth/withAuth';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
-import { useLanguage } from '@/components/providers/LanguageProvider';
-import type { PaginatedResponse, Alert } from '@/types';
-import { FiAlertTriangle, FiRefreshCw, FiCheck, FiCheckCircle, FiArrowUp, FiFilter, FiActivity, FiMapPin, FiMail } from 'react-icons/fi';
+import { EmptyState, ErrorState, PageHeader, SkeletonRows, StatusPill, severityTone } from '@/components/ui/page';
+import { cn } from '@/lib/utils';
+import { t, intlLocale } from '@/lib/i18n';
 
-function LoadingSkeleton({ height = 'h-[200px]', rows }: { height?: string; rows?: number }) {
-  if (rows) {
-    return (
-      <div className="space-y-3 animate-pulse">
-        {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <div className="space-y-2 flex-1">
-              <div className="h-4 bg-muted rounded w-1/3" />
-              <div className="h-3 bg-muted rounded w-1/4" />
-            </div>
-            <div className="h-6 bg-muted rounded w-16" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return (
-    <div className={`${height} bg-muted/50 animate-pulse rounded-lg flex items-center justify-center`}>
-      <div className="flex flex-col items-center gap-2">
-        <FiActivity className="h-6 w-6 text-muted-foreground animate-spin" />
-      </div>
-    </div>
-  );
-}
+const STATUSES = [
+  { k: 'active', get l() { return t("Active"); } },
+  { k: 'acknowledged', get l() { return t("Acknowledged"); } },
+  { k: 'resolved', get l() { return t("Resolved"); } },
+  { k: 'false_positive', get l() { return t("False positive"); } },
+  { k: '', get l() { return t("All"); } },
+];
+const SEVERITIES = ['', 'critical', 'high', 'medium', 'low'];
+const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—');
 
-function AlertsPage(): React.JSX.Element {
-  const { t } = useLanguage();
-  const queryClient = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState('active');
-  const [severityFilter, setSeverityFilter] = useState('');
+function AlertsPage() {
+  const qc = useQueryClient();
+  const [status, setStatus] = useState('active');
+  const [severity, setSeverity] = useState('');
+  const [open, setOpen] = useState<string | null>(null);
 
-  const { data: alerts, refetch, isLoading: isAlertsLoading } = useQuery<PaginatedResponse<Alert>>({
-    queryKey: ['alerts-page', statusFilter, severityFilter],
-    queryFn: () => api.surveillance.getAlerts({
-      status: statusFilter || undefined,
-      severity: severityFilter || undefined,
-      page_size: 20,
-    }),
+  const q = useQuery<any>({
+    queryKey: ['surv-alerts', status, severity],
+    queryFn: () => api.surveillance.getAlerts({ ...(status ? { status } : {}), ...(severity ? { severity } : {}) }),
   });
 
-  const acknowledgeMutation = useMutation({
-    mutationFn: (id: string) => api.surveillance.acknowledgeAlert(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alerts-page'] });
+  const act = useMutation({
+    mutationFn: ({ id, action }: { id: string; action: 'acknowledge' | 'escalate' | 'resolve' }) =>
+      action === 'acknowledge' ? api.surveillance.acknowledgeAlert(id) : action === 'escalate' ? api.surveillance.escalateAlert(id) : api.surveillance.resolveAlert(id),
+    onSuccess: (_d, v) => {
+      toast.success(v.action === 'acknowledge' ? t("Alert acknowledged") : v.action === 'escalate' ? t("Alert escalated") : t("Alert resolved"));
+      qc.invalidateQueries({ queryKey: ['surv-alerts'] });
+      qc.invalidateQueries({ queryKey: ['surv-overview'] });
+      qc.invalidateQueries({ queryKey: ['shell', 'surveillance-alerts'] });
     },
   });
 
-  const resolveMutation = useMutation({
-    mutationFn: (id: string) => api.surveillance.resolveAlert(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alerts-page'] });
-    },
-  });
-
-  const escalateMutation = useMutation({
-    mutationFn: (id: string) => api.surveillance.escalateAlert(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alerts-page'] });
-    },
-  });
-
-  const getSeverityBadge = (severity: string) => {
-    const map: Record<string, string> = {
-      critical: 'bg-rose-100 text-rose-800 border-rose-200 hover:bg-rose-200',
-      high: 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200',
-      medium: 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200',
-      low: 'bg-muted text-foreground border-border hover:bg-muted',
-    };
-    return map[severity] || 'bg-muted text-foreground border-border';
-  };
-
-  const getStatusColor = (status: string) => {
-    const map: Record<string, string> = {
-      active: 'bg-rose-50 text-rose-700 border-rose-100',
-      acknowledged: 'bg-amber-50 text-amber-700 border-amber-100',
-      resolved: 'bg-primary/8 text-primary border-primary/15',
-      false_positive: 'bg-background text-muted-foreground border-border',
-    };
-    return map[status] || 'bg-background text-muted-foreground border-border';
-  };
+  const list = q.data?.results ?? [];
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 pb-12">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">{t('alerts_management_title')}</h1>
-            <p className="text-muted-foreground mt-1">{t('alerts_management_desc')}</p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => refetch()}
-            className="bg-card/80 backdrop-blur-sm border-border hover:bg-background shadow-sm"
-          >
-            <FiRefreshCw className="mr-2 h-4 w-4" /> {t('refresh_data')}
-          </Button>
+    <div>
+      <PageHeader title={t("Outbreak alerts")} description={t("Generated by the surveillance pipeline when clusters, anomalies or forecasts cross thresholds. Acknowledge, escalate to district officers, or resolve.")} />
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="inline-flex flex-wrap rounded-[10px] border bg-card p-1 shadow-sm">
+          {STATUSES.map((s) => (
+            <button key={s.k} onClick={() => setStatus(s.k)} className={cn('rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors', status === s.k ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>{s.l}</button>
+          ))}
         </div>
+        <select value={severity} onChange={(e) => setSeverity(e.target.value)} className="h-10 rounded-[10px] border bg-card px-3 text-[13.5px] shadow-sm" aria-label={t("Severity")}>
+          {SEVERITIES.map((s) => <option key={s} value={s}>{s ? s[0].toUpperCase() + s.slice(1) : t("All severities")}</option>)}
+        </select>
+      </div>
 
-        {/* Filters */}
-        <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
-          <div className="h-1 bg-gradient-to-r from-rose-400 to-orange-400" />
-          <CardHeader className="bg-background/50 border-b border-border py-4">
-            <CardTitle className="flex items-center text-base text-foreground">
-              <FiFilter className="mr-2 text-rose-500" /> {t('filters')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-border rounded-xl text-sm bg-card focus:ring-2 focus:ring-rose-500 outline-none"
-              >
-                <option value="">{t('all_status')}</option>
-                <option value="active">{t('active')}</option>
-                <option value="acknowledged">{t('acknowledged')}</option>
-                <option value="resolved">{t('resolved')}</option>
-                <option value="false_positive">{t('false_positive')}</option>
-              </select>
-              <select
-                value={severityFilter}
-                onChange={(e) => setSeverityFilter(e.target.value)}
-                className="px-3 py-2 border border-border rounded-xl text-sm bg-card focus:ring-2 focus:ring-rose-500 outline-none"
-              >
-                <option value="">{t('all_severity')}</option>
-                <option value="critical">{t('critical')}</option>
-                <option value="high">{t('high')}</option>
-                <option value="medium">{t('medium')}</option>
-                <option value="low">{t('low')}</option>
-              </select>
-              <div className="sm:ml-auto flex items-center px-4 py-2 bg-background rounded-xl border border-border">
-                <FiAlertTriangle className="mr-2 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground">
-                  {alerts?.count || 0} {t('alerts_found')}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Alert List */}
-        <div className="space-y-4">
-          {isAlertsLoading ? (
-            <LoadingSkeleton rows={5} />
-          ) : alerts?.results && alerts.results.length > 0 ? (
-            alerts.results.map((alert) => (
-              <Card key={alert.id} className={`border-0 shadow-md transition-shadow hover:shadow-lg ${alert.status === 'active' ? 'bg-rose-50/30' : 'bg-card'}`}>
-                <CardContent className="p-5">
-                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                    <div className="flex-1 space-y-3">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="outline" className={`${getSeverityBadge(alert.severity)} uppercase tracking-wider font-bold`}>
-                          {alert.severity}
-                        </Badge>
-                        <Badge variant="outline" className="bg-card text-muted-foreground border-border">{alert.alert_type}</Badge>
-                        <span className={`text-xs px-2.5 py-0.5 rounded-full border font-medium ${getStatusColor(alert.status)}`}>
-                          {alert.status_display || alert.status}
-                        </span>
-                        <span className="text-xs text-muted-foreground font-mono bg-background px-2 py-0.5 rounded border border-border">
-                          {t('confidence')}: {(alert.confidence * 100).toFixed(0)}%
-                        </span>
-                        <span className="text-xs text-muted-foreground font-mono bg-background px-2 py-0.5 rounded border border-border">
-                          {t('level')} {alert.escalation_level}
-                        </span>
-                      </div>
-
+      {q.isLoading ? (
+        <div className="rounded-2xl border bg-card p-5"><SkeletonRows rows={5} /></div>
+      ) : q.isError ? (
+        <ErrorState onRetry={() => q.refetch()} />
+      ) : !list.length ? (
+        <EmptyState icon={Bell} title={t("No alerts in this view")} />
+      ) : (
+        <ul className="space-y-3">
+          {list.map((a: any) => {
+            const isOpen = open === a.id;
+            const busy = act.isPending && act.variables?.id === a.id;
+            return (
+              <li key={a.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+                <button onClick={() => setOpen(isOpen ? null : a.id)} className="flex w-full items-start gap-4 px-5 py-4 text-left hover:bg-muted/30" aria-expanded={isOpen}>
+                  <span className={cn('mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full', a.severity === 'critical' || a.severity === 'high' ? 'bg-destructive' : a.severity === 'medium' ? 'bg-warning' : 'bg-info')} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[15px] font-semibold">{a.title}</span>
+                    <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-muted-foreground">
+                      <span>{t(a.disease_name)} ({a.disease_code})</span>
+                      <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{(a.affected_regions_data || []).map((r: any) => r.name).join(', ') || '—'}</span>
+                      <span>{fmt(a.generated_at)}</span>
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 flex-col items-end gap-1.5">
+                    <StatusPill tone={severityTone(a.severity)}>{t(a.severity_display)}</StatusPill>
+                    <span className="text-[11.5px] text-muted-foreground">{t(a.status_display)}{a.escalation_level ? t(" · level {escalation_level}", { escalation_level: a.escalation_level }) : ''}</span>
+                  </span>
+                  <ChevronDown className={cn('mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform', isOpen && 'rotate-180')} />
+                </button>
+                {isOpen && (
+                  <div className="space-y-4 border-t px-5 py-4 text-[13.5px]">
+                    <p className="leading-relaxed">{a.description}</p>
+                    {a.predicted_impact && <div><div className="kicker mb-1">{t("Predicted impact")}</div><p className="text-muted-foreground">{a.predicted_impact}</p></div>}
+                    {a.recommended_actions && (
                       <div>
-                        <h3 className="text-lg font-bold text-foreground leading-tight">{alert.title}</h3>
-                        <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{alert.description}</p>
-                      </div>
-
-                      {alert.recommended_actions && (
-                        <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100 text-xs">
-                          <p className="font-semibold text-blue-800 mb-1">{t('actions')}:</p>
-                          <p className="text-blue-700">{alert.recommended_actions}</p>
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                        {alert.affected_regions_data?.map((r) => (
-                          <span key={r.id} className="flex items-center bg-card px-2 py-1 rounded border border-border shadow-sm text-muted-foreground">
-                            <FiMapPin className="mr-1" /> {r.name}
-                          </span>
-                        ))}
-                        <span className="flex items-center">
-                          <FiActivity className="mr-1" /> {new Date(alert.generated_at).toLocaleString()}
-                        </span>
-                        {alert.acknowledged_by_email && (
-                          <span className="flex items-center text-primary font-medium">
-                            <FiCheckCircle className="mr-1" /> {t('ack_by')}: {alert.acknowledged_by_email}
-                          </span>
+                        <div className="kicker mb-1">{t("Recommended actions")}</div>
+                        {Array.isArray(a.recommended_actions) ? (
+                          <ul className="list-disc space-y-1 pl-5 text-muted-foreground">{a.recommended_actions.map((r: string, i: number) => <li key={i}>{r}</li>)}</ul>
+                        ) : (
+                          <ul className="list-disc space-y-1 pl-5 text-muted-foreground">{String(a.recommended_actions).split(/\n|;\s*/).filter(Boolean).map((r, i) => <li key={i}>{r.replace(/^[-•\d.\s]+/, '')}</li>)}</ul>
                         )}
                       </div>
+                    )}
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      {a.confidence != null && <span>{t("Model confidence {round}%", { round: Math.round(a.confidence * 100) })}</span>}
+                      {a.acknowledged_at && <span>{t("· Acknowledged {fmt}", { fmt: fmt(a.acknowledged_at) })}</span>}
+                      {a.resolved_at && <span>{t("· Resolved {fmt}", { fmt: fmt(a.resolved_at) })}</span>}
                     </div>
-
-                    <div className="flex flex-row md:flex-col gap-2 pt-2 md:pt-0">
-                      {alert.status === 'active' && (
-                        <Button size="sm"
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
-                          onClick={() => acknowledgeMutation.mutate(alert.id)}
-                          disabled={acknowledgeMutation.isPending}>
-                          <FiCheck className="mr-1.5 h-3.5 w-3.5" /> {t('acknowledge')}
-                        </Button>
-                      )}
-                      {(alert.status === 'active' || alert.status === 'acknowledged') && (
-                        <>
-                          <Button size="sm" variant="outline"
-                            className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
-                            onClick={() => resolveMutation.mutate(alert.id)}
-                            disabled={resolveMutation.isPending}>
-                            <FiCheckCircle className="mr-1.5 h-3.5 w-3.5" /> {t('resolve')}
-                          </Button>
-                          <Button size="sm" variant="outline"
-                            className="text-rose-600 border-rose-200 hover:bg-rose-50"
-                            onClick={() => escalateMutation.mutate(alert.id)}
-                            disabled={escalateMutation.isPending}>
-                            <FiArrowUp className="mr-1.5 h-3.5 w-3.5" /> {t('escalate')}
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                    {!['resolved', 'false_positive'].includes(a.status) && (
+                      <div className="flex flex-wrap gap-2 border-t pt-4">
+                        {a.status === 'active' && (
+                          <button onClick={() => act.mutate({ id: a.id, action: 'acknowledge' })} disabled={busy} className="inline-flex h-9 items-center gap-1.5 rounded-[10px] border px-3.5 text-[13px] font-medium hover:bg-muted disabled:opacity-60"><Check className="h-4 w-4" />{' '}{t("Acknowledge")}</button>
+                        )}
+                        {(a.escalation_level ?? 0) < 3 && (
+                          <button onClick={() => act.mutate({ id: a.id, action: 'escalate' })} disabled={busy} className="inline-flex h-9 items-center gap-1.5 rounded-[10px] border border-warning/40 px-3.5 text-[13px] font-medium text-warning hover:bg-warning/5 disabled:opacity-60"><ArrowUpCircle className="h-4 w-4" />{' '}{a.escalation_level ? t("Escalate (level {level})", { level: a.escalation_level + 1 }) : t("Escalate")}</button>
+                        )}
+                        <button onClick={() => act.mutate({ id: a.id, action: 'resolve' })} disabled={busy} className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-[10px] bg-primary px-3.5 text-[13px] font-medium text-primary-foreground shadow-button disabled:opacity-60">
+                          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCheck className="h-4 w-4" />}{' '}{t("Resolve")}</button>
+                      </div>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <Card className="border-0 shadow-sm bg-background/50">
-              <CardContent className="py-16 text-center text-muted-foreground flex flex-col items-center">
-                <FiAlertTriangle className="h-12 w-12 mb-4 opacity-20" />
-                <p>{t('no_alerts_found')}</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-    </DashboardLayout>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }
 
