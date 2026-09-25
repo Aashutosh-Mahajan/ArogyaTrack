@@ -1,47 +1,67 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { translations, Language, TranslationKey } from '@/lib/translations';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { isLanguage, loadLanguage, t, type Language } from '@/lib/i18n';
+
+const STORAGE_KEY = 'app-language';
 
 interface LanguageContextType {
-    language: Language;
-    setLanguage: (lang: Language) => void;
-    t: (key: TranslationKey) => string;
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: typeof t;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-    const [language, setLanguage] = useState<Language>('en');
+  // Render English first (matches the server render), then switch to the saved language.
+  const [language, setLanguageState] = useState<Language>('en');
 
-    // Optional: Load from localStorage on mount
-    useEffect(() => {
-        const saved = localStorage.getItem('app-language') as Language;
-        if (saved && (saved === 'en' || saved === 'hi' || saved === 'mr')) {
-            setLanguage(saved);
-        }
-    }, []);
+  const apply = useCallback(async (lang: Language) => {
+    try {
+      await loadLanguage(lang);
+    } catch {
+      await loadLanguage('en');
+      lang = 'en';
+    }
+    document.documentElement.lang = lang;
+    setLanguageState(lang);
+  }, []);
 
-    // Save to localStorage on change
-    useEffect(() => {
-        localStorage.setItem('app-language', language);
-    }, [language]);
+  useEffect(() => {
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(STORAGE_KEY);
+    } catch {
+      /* storage unavailable */
+    }
+    if (isLanguage(saved) && saved !== 'en') apply(saved);
+  }, [apply]);
 
-    const t = (key: TranslationKey): string => {
-        return translations[language][key] || translations['en'][key] || key;
-    };
+  const setLanguage = useCallback(
+    (lang: Language) => {
+      try {
+        localStorage.setItem(STORAGE_KEY, lang);
+      } catch {
+        /* storage unavailable */
+      }
+      apply(lang);
+    },
+    [apply]
+  );
 
-    return (
-        <LanguageContext.Provider value={{ language, setLanguage, t }}>
-            {children}
-        </LanguageContext.Provider>
-    );
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+      {/* Remount on change so every component re-renders with the new catalog. */}
+      <React.Fragment key={language}>{children}</React.Fragment>
+    </LanguageContext.Provider>
+  );
 }
 
 export function useLanguage() {
-    const context = useContext(LanguageContext);
-    if (context === undefined) {
-        throw new Error('useLanguage must be used within a LanguageProvider');
-    }
-    return context;
+  const context = useContext(LanguageContext);
+  if (context === undefined) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return context;
 }

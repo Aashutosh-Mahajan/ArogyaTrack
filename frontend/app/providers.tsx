@@ -13,6 +13,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           queries: {
             staleTime: 60 * 1000,
             retry: 1,
+            refetchOnWindowFocus: false,
           },
         },
       })
@@ -24,25 +25,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
         {children}
         <Toaster
           position="top-right"
+          gutter={10}
           toastOptions={{
             duration: 4000,
+            className: '!rounded-xl !text-sm !font-medium',
             style: {
-              background: '#363636',
-              color: '#fff',
+              background: 'hsl(var(--popover))',
+              color: 'hsl(var(--popover-foreground))',
+              border: '1px solid hsl(var(--border))',
+              boxShadow: '0 16px 40px -16px hsl(var(--shadow-color) / 0.35)',
+              padding: '10px 14px',
             },
             success: {
               duration: 3000,
-              iconTheme: {
-                primary: '#10b981',
-                secondary: '#fff',
-              },
+              iconTheme: { primary: 'hsl(var(--success))', secondary: 'hsl(var(--card))' },
             },
             error: {
-              duration: 4000,
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fff',
-              },
+              iconTheme: { primary: 'hsl(var(--destructive))', secondary: 'hsl(var(--card))' },
             },
           }}
         />
