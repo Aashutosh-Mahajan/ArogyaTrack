@@ -1,156 +1,86 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import dynamic from 'next/dynamic';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ChevronDown, MapPin, Network, Users } from 'lucide-react';
 import { withAuth } from '@/components/auth/withAuth';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
-import type { PaginatedResponse, Cluster } from '@/types';
-import { FiMapPin, FiRefreshCw } from 'react-icons/fi';
+import { EmptyState, ErrorState, PageHeader, SkeletonRows, Stat, StatusPill, severityTone } from '@/components/ui/page';
+import { cn } from '@/lib/utils';
+import type { Cluster } from '@/types';
+import { t as tr, intlLocale } from '@/lib/i18n';
 
-function ClustersPage(): React.JSX.Element {
-  const [activeOnly, setActiveOnly] = useState(true);
-  const [selectedDisease, setSelectedDisease] = useState('');
+const fmt = (iso: string) => new Date(iso).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
 
-  const { data: clusters, refetch } = useQuery<PaginatedResponse<Cluster>>({
-    queryKey: ['clusters-page', activeOnly, selectedDisease],
-    queryFn: () => api.surveillance.getClusters({
-      is_active: activeOnly || undefined,
-      disease_code: selectedDisease || undefined,
-      page_size: 20,
-    }),
-  });
-
-  const getSeverityColor = (sev: string) => {
-    const map: Record<string, 'destructive' | 'warning' | 'secondary' | 'outline'> = {
-      critical: 'destructive',
-      high: 'warning',
-      medium: 'secondary',
-      low: 'outline',
-    };
-    return map[sev] || 'secondary';
-  };
+function ClustersPage() {
+  const [active, setActive] = useState(true);
+  const [open, setOpen] = useState<string | null>(null);
+  const q = useQuery<any>({ queryKey: ['surv-clusters', active], queryFn: () => api.surveillance.getClusters(active ? { is_active: true } : {}) });
+  const list: Cluster[] = useMemo(() => [...(q.data?.results ?? [])].sort((a, b) => b.total_cases - a.total_cases), [q.data]);
+  const totalCases = list.reduce((n, c) => n + c.total_cases, 0);
+  const diseases = new Set(list.map((c) => c.disease_code)).size;
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Disease Clusters</h1>
-            <p className="text-muted-foreground mt-1">DBSCAN geo-clustering analysis results</p>
-          </div>
-          <Button variant="outline" onClick={() => refetch()}>
-            <FiRefreshCw className="mr-2 h-4 w-4" /> Refresh
-          </Button>
-        </div>
-
-        {/* Filters */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex gap-4">
-              <select value={selectedDisease} onChange={(e) => setSelectedDisease(e.target.value)}
-                className="px-3 py-2 border rounded-lg text-sm">
-                <option value="">All Diseases</option>
-                <option value="A90">Dengue Fever</option>
-                <option value="U07.1">COVID-19</option>
-                <option value="B50.0">Malaria</option>
-                <option value="J18.9">Pneumonia</option>
-                <option value="J10.1">Influenza</option>
-                <option value="A09">Gastroenteritis</option>
-                <option value="B05">Measles</option>
-              </select>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={activeOnly}
-                  onChange={(e) => setActiveOnly(e.target.checked)}
-                  className="rounded" />
-                Active only
-              </label>
-              <span className="text-sm text-muted-foreground ml-auto self-center">
-                {clusters?.count || 0} clusters found
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Clusters Grid */}
-        {clusters?.results && clusters.results.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {clusters.results.map((cluster) => (
-              <Card key={cluster.id} className={cluster.severity === 'critical' ? 'border-red-200' : ''}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{cluster.disease_name}</CardTitle>
-                    <Badge variant={getSeverityColor(cluster.severity)}>
-                      {cluster.severity}
-                    </Badge>
-                  </div>
-                  <CardDescription>{cluster.disease_code} • Detected {cluster.detection_date}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Cases</span>
-                      <span className="font-semibold">{cluster.total_cases.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Population</span>
-                      <span className="font-medium">{cluster.total_population?.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Radius</span>
-                      <span className="font-medium">{cluster.radius_km.toFixed(1)} km</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Centroid</span>
-                      <span className="font-mono text-xs">
-                        {cluster.centroid_lat.toFixed(4)}, {cluster.centroid_lon.toFixed(4)}
-                      </span>
-                    </div>
-                    {cluster.growth_rate !== null && cluster.growth_rate !== undefined && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Growth Rate</span>
-                        <span className={`font-medium ${cluster.growth_rate > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                          {cluster.growth_rate > 0 ? '+' : ''}{cluster.growth_rate.toFixed(1)}%
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status</span>
-                      <Badge variant={cluster.is_active ? 'destructive' : 'secondary'}>
-                        {cluster.is_active ? 'Active' : 'Inactive'}
-                      </Badge>
-                    </div>
-                    {cluster.affected_region_names && cluster.affected_region_names.length > 0 && (
-                      <div className="pt-2 border-t">
-                        <p className="text-xs text-muted-foreground mb-1">Affected Regions:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {cluster.affected_region_names.map((name, i) => (
-                            <span key={i} className="text-xs bg-muted px-2 py-0.5 rounded">
-                              {name}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+    <div>
+      <PageHeader
+        title={tr("Clusters")}
+        description={tr("Groups of nearby districts reporting the same disease, found by DBSCAN spatial clustering.")}
+        actions={
+          <div className="inline-flex rounded-[10px] border bg-card p-1 shadow-sm">
+            {[{ k: true, l: tr("Active") }, { k: false, l: tr("All") }].map((t) => (
+              <button key={String(t.k)} onClick={() => setActive(t.k)} className={cn('rounded-lg px-3 py-1.5 text-[13px] font-medium', active === t.k ? 'bg-primary text-primary-foreground' : 'text-muted-foreground')}>{t.l}</button>
             ))}
           </div>
-        ) : (
-          <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              <FiMapPin className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-              <p>No clusters found matching the current filters.</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </DashboardLayout>
+        }
+      />
+      <section className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-3">
+        <Stat label={tr("Clusters")} value={list.length} icon={Network} loading={q.isLoading} />
+        <Stat label={tr("Cases inside clusters")} value={totalCases.toLocaleString(intlLocale())} icon={Users} tone="warning" loading={q.isLoading} />
+        <Stat label={tr("Diseases clustering")} value={diseases} icon={MapPin} tone="info" loading={q.isLoading} />
+      </section>
+      {q.isLoading ? (
+        <div className="rounded-2xl border bg-card p-5"><SkeletonRows rows={5} /></div>
+      ) : q.isError ? (
+        <ErrorState onRetry={() => q.refetch()} />
+      ) : !list.length ? (
+        <EmptyState icon={Network} title={tr("No clusters detected")} />
+      ) : (
+        <ul className="space-y-3">
+          {list.map((c) => {
+            const isOpen = open === c.id;
+            const regions = [...(c.regions_data ?? [])].sort((a: any, b: any) => b.case_count - a.case_count);
+            const maxR = (regions[0] as any)?.case_count || 1;
+            return (
+              <li key={c.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+                <button onClick={() => setOpen(isOpen ? null : c.id)} className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-muted/30" aria-expanded={isOpen}>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Network className="h-5 w-5" /></span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[15px] font-semibold">{tr(c.disease_name)} <span className="font-mono text-xs font-normal text-muted-foreground">{c.disease_code}</span></span>
+                    <span className="block text-[12.5px] text-muted-foreground">{tr("{length} districts · detected {fmt} · centred {centroid_lat}, {centroid_lon}", { length: regions.length, fmt: fmt(c.detection_date), centroid_lat: c.centroid_lat.toFixed(2), centroid_lon: c.centroid_lon.toFixed(2) })}</span>
+                  </span>
+                  <span className="text-right">
+                    <span className="tabular block text-[16px] font-semibold">{c.total_cases.toLocaleString(intlLocale())}</span>
+                    <span className="block text-[11.5px] text-muted-foreground">{tr("{value}/100k", { value: ((c.total_cases / Math.max(1, c.total_population)) * 100000).toFixed(1) })}</span>
+                  </span>
+                  <StatusPill tone={severityTone(c.severity)} className="w-[76px] justify-center capitalize">{c.severity}</StatusPill>
+                  <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', isOpen && 'rotate-180')} />
+                </button>
+                {isOpen && (
+                  <div className="grid gap-2 border-t px-5 py-4 sm:grid-cols-2">
+                    {regions.map((r: any) => (
+                      <div key={r.region} className="text-[13px]">
+                        <div className="flex justify-between gap-2"><span className="truncate">{r.region_details?.name?.replace(/_/g, ' ')} <span className="text-muted-foreground">· {r.region_details?.state}</span></span><span className="tabular font-medium">{r.case_count}</span></div>
+                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary/70" style={{ width: `${(r.case_count / maxR) * 100}%` }} /></div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }
 

@@ -1,207 +1,108 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import React, { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { TrendingUp } from 'lucide-react';
 import { withAuth } from '@/components/auth/withAuth';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
-import type { PaginatedResponse, Forecast, Region } from '@/types';
-import { FiActivity, FiRefreshCw, FiZap } from 'react-icons/fi';
-import { ForecastChart, LineChartComponent } from '@/components/charts/Charts';
+import { EmptyState, PageHeader, Panel, Skeleton, SkeletonRows, StatusPill } from '@/components/ui/page';
+import { fieldClass } from '@/components/auth/FormKit';
+import { C, ChartTooltip, Legend, axisProps, gridProps } from '@/components/charts/chartTheme';
+import { cn } from '@/lib/utils';
+import { t, intlLocale } from '@/lib/i18n';
 
-function ForecastsPage(): React.JSX.Element {
-  const queryClient = useQueryClient();
-  const [selectedDisease, setSelectedDisease] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('');
-  const [forecastHorizon, setForecastHorizon] = useState(7);
-  const [pipelineDisease, setPipelineDisease] = useState('A90');
+function ForecastsPage() {
+  const [horizon, setHorizon] = useState(7);
+  const [disease, setDisease] = useState('');
+  const stats = useQuery<any[]>({ queryKey: ['surv-disease-stats'], queryFn: () => api.surveillance.getDiseaseStats() });
+  const chart = useQuery<any>({ queryKey: ['surv-forecast-chart', horizon, disease], queryFn: () => api.surveillance.getForecastChartData({ horizon, ...(disease ? { disease_code: disease } : {}) }) });
+  const rows = useQuery<any>({ queryKey: ['surv-forecasts', horizon, disease], queryFn: () => api.surveillance.getForecasts({ horizon, ...(disease ? { disease_code: disease } : {}) }) });
 
-  const { data: regions } = useQuery<PaginatedResponse<Region>>({
-    queryKey: ['regions'],
-    queryFn: () => api.surveillance.getRegions({ page_size: 100 }),
-  });
-
-  const { data: forecasts, refetch } = useQuery<PaginatedResponse<Forecast>>({
-    queryKey: ['forecasts-page', selectedDisease, selectedRegion, forecastHorizon],
-    queryFn: () => api.surveillance.getForecasts({
-      disease_code: selectedDisease || undefined,
-      region_id: selectedRegion || undefined,
-      horizon: forecastHorizon,
-      page_size: 50,
-    }),
-  });
-
-  const runPipelineMutation = useMutation({
-    mutationFn: (diseaseCode: string) => api.surveillance.runMLPipeline(diseaseCode),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['forecasts-page'] });
-      queryClient.invalidateQueries({ queryKey: ['ml-pipeline-status'] });
-    },
-  });
-
-  // Aggregate forecasts by prediction_date (raw results are per-region)
-  const chartData = (() => {
-    if (!forecasts?.results) return [];
-    const byDate: Record<string, { forecasts: number[]; lowers: number[]; uppers: number[] }> = {};
-    for (const f of forecasts.results) {
-      if (!byDate[f.prediction_date]) {
-        byDate[f.prediction_date] = { forecasts: [], lowers: [], uppers: [] };
-      }
-      byDate[f.prediction_date].forecasts.push(f.predicted_cases);
-      byDate[f.prediction_date].lowers.push(f.lower_bound);
-      byDate[f.prediction_date].uppers.push(f.upper_bound);
+  // Peak predicted value per region–disease across the horizon.
+  const peaks = useMemo(() => {
+    const m = new Map<string, any>();
+    for (const f of rows.data?.results ?? []) {
+      const key = `${f.region}-${f.disease_code}`;
+      const cur = m.get(key);
+      if (!cur || f.predicted_cases > cur.predicted_cases) m.set(key, f);
     }
-    return Object.entries(byDate)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([dateStr, vals]) => ({
-        date: new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        forecast: Math.round(vals.forecasts.reduce((s, v) => s + v, 0) / vals.forecasts.length),
-        lower_bound: Math.round(vals.lowers.reduce((s, v) => s + v, 0) / vals.lowers.length),
-        upper_bound: Math.round(vals.uppers.reduce((s, v) => s + v, 0) / vals.uppers.length),
-        actual: 0,
-      }));
-  })();
+    return Array.from(m.values()).sort((a, b) => b.predicted_cases - a.predicted_cases).slice(0, 15);
+  }, [rows.data]);
+
+  const data = (chart.data?.data ?? []).map((d: any) => ({ ...d, band: [d.lower_bound, d.upper_bound] }));
+  const total = (chart.data?.data ?? []).reduce((n: number, d: any) => n + (d.total_predicted || 0), 0);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Forecasts</h1>
-            <p className="text-muted-foreground mt-1">Prophet time-series forecasting with environmental regressors</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <select value={pipelineDisease} onChange={(e) => setPipelineDisease(e.target.value)}
-              className="px-3 py-2 border rounded-lg text-sm">
-              <option value="A90">Dengue (A90)</option>
-              <option value="U07.1">COVID-19 (U07.1)</option>
-              <option value="B50.0">Malaria (B50.0)</option>
-              <option value="J18.9">Pneumonia (J18.9)</option>
-              <option value="J10.1">Influenza (J10.1)</option>
-              <option value="A09">Gastroenteritis (A09)</option>
+    <div className="space-y-6">
+      <PageHeader
+        title={t("Forecasts")}
+        description={chart.data?.forecast_date ? t("Ensemble forecasts generated {value}", { value: new Date(chart.data.forecast_date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) }) : t("Ensemble case forecasts per district")}
+        actions={
+          <>
+            <select value={disease} onChange={(e) => setDisease(e.target.value)} className={`${fieldClass()} h-10 w-56`} aria-label={t("Disease")}>
+              <option value="">{t("All diseases")}</option>
+              {(stats.data ?? []).map((s) => <option key={s.disease_code} value={s.disease_code}>{t(s.disease_name)}</option>)}
             </select>
-            <Button size="sm"
-              onClick={() => runPipelineMutation.mutate(pipelineDisease)}
-              disabled={runPipelineMutation.isPending}>
-              {runPipelineMutation.isPending ? (
-                <FiRefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <FiZap className="mr-2 h-4 w-4" />
-              )}
-              Generate Forecasts
-            </Button>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex gap-4 flex-wrap items-center">
-              <select value={forecastHorizon} onChange={(e) => setForecastHorizon(Number(e.target.value))}
-                className="px-3 py-2 border rounded-lg text-sm font-medium">
-                <option value={7}>7 Days</option>
-                <option value={14}>14 Days</option>
-                <option value={30}>30 Days</option>
-              </select>
-              <select value={selectedDisease} onChange={(e) => setSelectedDisease(e.target.value)}
-                className="px-3 py-2 border rounded-lg text-sm">
-                <option value="">All Diseases</option>
-                <option value="A90">Dengue Fever</option>
-                <option value="U07.1">COVID-19</option>
-                <option value="B50.0">Malaria</option>
-                <option value="J18.9">Pneumonia</option>
-                <option value="J10.1">Influenza</option>
-                <option value="A09">Gastroenteritis</option>
-                <option value="B05">Measles</option>
-              </select>
-              <select value={selectedRegion} onChange={(e) => setSelectedRegion(e.target.value)}
-                className="px-3 py-2 border rounded-lg text-sm">
-                <option value="">All Regions</option>
-                {regions?.results?.map((r) => (
-                  <option key={r.id} value={r.id}>{r.name}, {r.district}</option>
-                ))}
-              </select>
-              <Button variant="outline" size="sm" onClick={() => refetch()} className="ml-auto">
-                <FiRefreshCw className="mr-2 h-4 w-4" /> Refresh
-              </Button>
+            <div className="inline-flex rounded-[10px] border bg-card p-1 shadow-sm">
+              {[7, 14, 30].map((h) => (
+                <button key={h} onClick={() => setHorizon(h)} className={cn('rounded-lg px-3 py-1.5 text-[13px] font-medium', horizon === h ? 'bg-primary text-primary-foreground' : 'text-muted-foreground')}>{t("{h} days", { h })}</button>
+              ))}
             </div>
-          </CardContent>
-        </Card>
+          </>
+        }
+      />
 
-        {/* Forecast Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <FiActivity className="mr-2" /> Forecast Visualization
-            </CardTitle>
-            <CardDescription>
-              Predicted case counts with confidence intervals
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {chartData.length > 0 ? (
-              <ForecastChart data={chartData} />
-            ) : (
-              <div className="h-[350px] flex items-center justify-center text-muted-foreground">
-                No forecast data available — run the ML pipeline to generate forecasts
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <Panel
+        title={t("{value} · next {horizon} days", { value: chart.data?.disease_name ?? 'All diseases', horizon })}
+        description={total ? t("{value} cases predicted across {value2} regions", { value: Math.round(total).toLocaleString(intlLocale()), value2: chart.data?.data?.[0]?.regions ?? 0 }) : undefined}
+        icon={TrendingUp}
+        actions={<Legend items={[{ label: t("Mean per region"), color: C.primary }, { label: t("Interval"), color: 'hsl(var(--chart-1) / 0.25)' }]} />}
+      >
+        {chart.isLoading ? (
+          <Skeleton className="h-[320px] w-full" />
+        ) : data.length ? (
+          <ResponsiveContainer width="100%" height={320}>
+            <ComposedChart data={data} margin={{ top: 10, right: 6, left: 0, bottom: 0 }}>
+              <CartesianGrid {...gridProps} />
+              <XAxis dataKey="date" {...axisProps} minTickGap={16} />
+              <YAxis {...axisProps} width={40} tickFormatter={(v: number) => String(Math.round(v))} />
+              <Tooltip content={<ChartTooltip formatter={(v) => (Array.isArray(v) ? `${Math.round(v[0])}–${Math.round(v[1])}` : String(Math.round(Number(v))))} />} />
+              <Area dataKey="band" name={t("Interval")} stroke="none" fill={C.primary} fillOpacity={0.14} />
+              <Line dataKey="forecast" name={t("Forecast")} stroke={C.primary} strokeWidth={2.2} dot={{ r: 2.5 }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        ) : (
+          <EmptyState compact icon={TrendingUp} title={t("No forecasts for this selection")} description={t("Run the ML pipeline from the command centre to generate them.")} />
+        )}
+      </Panel>
 
-        {/* Forecasts Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Forecast Details ({forecasts?.count || 0})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {forecasts?.results && forecasts.results.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left">
-                      <th className="pb-3 font-medium">Region</th>
-                      <th className="pb-3 font-medium">Disease</th>
-                      <th className="pb-3 font-medium">Generated</th>
-                      <th className="pb-3 font-medium">Prediction Date</th>
-                      <th className="pb-3 font-medium text-right">Predicted</th>
-                      <th className="pb-3 font-medium text-right">Lower</th>
-                      <th className="pb-3 font-medium text-right">Upper</th>
-                      <th className="pb-3 font-medium text-right">Confidence</th>
-                      <th className="pb-3 font-medium text-right">Horizon</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {forecasts.results.map((f) => (
-                      <tr key={f.id} className="border-b hover:bg-background">
-                        <td className="py-3">{f.region_details?.name || 'National'}</td>
-                        <td className="py-3">{f.disease_name}</td>
-                        <td className="py-3">{f.forecast_date}</td>
-                        <td className="py-3">{f.prediction_date}</td>
-                        <td className="py-3 text-right font-semibold">{Math.round(f.predicted_cases).toLocaleString()}</td>
-                        <td className="py-3 text-right text-muted-foreground">{Math.round(f.lower_bound).toLocaleString()}</td>
-                        <td className="py-3 text-right text-muted-foreground">{Math.round(f.upper_bound).toLocaleString()}</td>
-                        <td className="py-3 text-right font-mono">{(f.confidence * 100).toFixed(0)}%</td>
-                        <td className="py-3 text-right">
-                          <Badge variant="outline">{f.horizon_days}d</Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-center py-8 text-muted-foreground">
-                No forecast data available. Run the ML pipeline to generate forecasts.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </DashboardLayout>
+      <Panel title={t("Highest predicted load")} description={t("Peak daily prediction per district in this horizon")} icon={TrendingUp}>
+        {rows.isLoading ? (
+          <SkeletonRows rows={6} />
+        ) : peaks.length ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-[13.5px]">
+              <thead className="text-left text-xs text-muted-foreground"><tr><th className="pb-2 font-medium">{t("District")}</th><th className="pb-2 font-medium">{t("Disease")}</th><th className="pb-2 font-medium">{t("Peak day")}</th><th className="pb-2 text-right font-medium">{t("Predicted")}</th><th className="pb-2 text-right font-medium">{t("Range")}</th><th className="pb-2 text-right font-medium">{t("Confidence")}</th></tr></thead>
+              <tbody className="divide-y">
+                {peaks.map((f) => (
+                  <tr key={f.id}>
+                    <td className="py-2 font-medium">{f.region_details?.name?.replace(/_/g, ' ')} <span className="font-normal text-muted-foreground">· {f.region_details?.state}</span></td>
+                    <td className="py-2">{t(f.disease_name)}</td>
+                    <td className="py-2 text-muted-foreground">{new Date(f.prediction_date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short' })}</td>
+                    <td className="tabular py-2 text-right font-semibold">{Math.round(f.predicted_cases)}</td>
+                    <td className="tabular py-2 text-right text-muted-foreground">{Math.round(f.lower_bound)}–{Math.round(f.upper_bound)}</td>
+                    <td className="py-2 text-right"><StatusPill tone={f.confidence >= 0.8 ? 'success' : f.confidence >= 0.6 ? 'warning' : 'neutral'}>{Math.round(f.confidence * 100)}%</StatusPill></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-[13.5px] text-muted-foreground">{t("No forecast rows.")}</p>
+        )}
+      </Panel>
+    </div>
   );
 }
 
