@@ -99,6 +99,27 @@ class User(AbstractBaseUser, PermissionsMixin):
     def is_admin(self) -> bool:
         return self.role == self.Role.ADMIN
 
+    def get_active_profile(self):
+        """The family-member profile this account is currently acting as.
+
+        Every patient-facing view resolves "which patient" through this, so
+        switching profiles switches the whole app consistently. Falls back to
+        the account holder's own ("self") profile, then to any profile.
+        """
+        profiles = self.profiles.all()
+        if self.active_profile_id:
+            profile = profiles.filter(id=self.active_profile_id).first()
+            if profile:
+                return profile
+        return profiles.filter(relationship="self").first() or profiles.first()
+
+    def get_approval_status(self):
+        """Doctor approval state ("pending"/"approved"/"rejected"); None for other roles."""
+        if self.role != self.Role.DOCTOR:
+            return None
+        profile = getattr(self, "doctor_profile", None)
+        return profile.approval_status if profile else DoctorProfile.ApprovalStatus.PENDING
+
     def get_first_name(self) -> str:
         """Get first name from relevant profile."""
         if self.role == self.Role.PHARMACIST:
