@@ -1,576 +1,269 @@
 'use client';
 
-import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
-import { PatientRegistrationData } from '@/types';
-import toast from 'react-hot-toast';
-import { verifyAbhaId } from '@/lib/abhaApi';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiArrowRight, FiArrowLeft, FiCheckCircle, FiUser, FiMail, FiPhone, FiMapPin, FiLock, FiEye, FiEyeOff, FiUploadCloud, FiX, FiHeart, FiActivity, FiPlus } from 'react-icons/fi';
-import MultiStepProgress from '@/components/auth/MultiStepProgress';
+import { useRouter } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
+import toast from 'react-hot-toast';
+import { AlertCircle, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
+import { api } from '@/lib/api';
+import SplitSignInLayout from '@/components/auth/SplitSignInLayout';
+import { AuthHeading } from '@/components/auth/SignInForm';
+import { CheckRow, ChipToggle, Field, FileDrop, PasswordInput, Stepper, fieldClass, flattenErrors } from '@/components/auth/FormKit';
+import type { PatientRegistrationData } from '@/types';
+import { t, m } from '@/lib/i18n';
+import { tRich } from '@/lib/i18n-rich';
 
-const STEPS = ['Personal Info', 'Medical History', 'Contact & Address', 'Security & Upload'];
+const STEPS = [m("About you"), m("Health history"), m("Contact"), m("Account")];
+const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const CONDITIONS = [m("Diabetes"), m("Hypertension"), m("Heart Disease"), m("Asthma"), m("Thyroid Disorder"), m("Kidney Disease"), m("Liver Disease"), m("Cancer"), m("None")];
+const ALLERGIES = [m("Penicillin"), m("Aspirin"), m("Sulfa Drugs"), m("NSAIDs"), m("Latex"), m("Peanuts"), m("Shellfish"), m("None")];
 
-const CONDITION_OPTIONS = ['Diabetes', 'Hypertension', 'Heart Disease', 'Asthma', 'Thyroid Disorder', 'Kidney Disease', 'Liver Disease', 'Cancer', 'None'];
-const ALLERGY_OPTIONS = ['Penicillin', 'Aspirin', 'Sulfa Drugs', 'NSAIDs', 'Latex', 'Peanuts', 'Shellfish', 'None'];
+/** Which step each backend field lives on, so server errors jump to the right place. */
+const FIELD_STEP: Record<string, number> = {
+  first_name: 0, last_name: 0, date_of_birth: 0, gender: 0, blood_group: 0,
+  existing_conditions: 1, known_allergies: 1,
+  email: 2, phone: 2, address: 2, district: 2, state: 2, pincode: 2,
+  password: 3, aadhar_id_proof: 3, terms_accepted: 3, consent_store_data: 3, consent_doctor_access: 3,
+};
+
+type Form = {
+  first_name: string; last_name: string; date_of_birth: string; gender: 'male' | 'female' | 'other'; blood_group: string;
+  email: string; phone: string; address: string; district: string; state: string; pincode: string;
+  password: string; terms_accepted: boolean; consent_store_data: boolean; consent_doctor_access: boolean;
+};
 
 export default function PatientRegisterPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong'>('weak');
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  const [formData, setFormData] = useState<Partial<PatientRegistrationData>>({
-    email: '',
-    password: '',
-    first_name: '',
-    last_name: '',
-    date_of_birth: '',
-    gender: 'male',
-    phone: '',
-    blood_group: '',
-    address: '',
-    district: '',
-    state: '',
-    country: 'India',
-    pincode: '',
-    terms_accepted: false,
-    consent_store_data: false,
-    consent_doctor_access: false,
+  const [form, setForm] = useState<Form>({
+    first_name: '', last_name: '', date_of_birth: '', gender: 'male', blood_group: '',
+    email: '', phone: '', address: '', district: '', state: '', pincode: '',
+    password: '', terms_accepted: false, consent_store_data: false, consent_doctor_access: false,
   });
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // ABHA
-  const [abhaId, setAbhaId] = useState('');
-  const [abhaStatus, setAbhaStatus] = useState<'idle' | 'verified' | 'not_found'>('idle');
-  const [abhaHidden, setAbhaHidden] = useState(false);
-  const [abhaVerifying, setAbhaVerifying] = useState(false);
-
-  // Medical history
   const [conditions, setConditions] = useState<string[]>([]);
-  const [customCondition, setCustomCondition] = useState('');
   const [allergies, setAllergies] = useState<string[]>([]);
-  const [customAllergy, setCustomAllergy] = useState('');
-  const [pastSurgeries, setPastSurgeries] = useState('');
-  const [currentMedications, setCurrentMedications] = useState('');
+  const [idProof, setIdProof] = useState<File | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const calcStrength = (p: string): 'weak' | 'medium' | 'strong' => {
-    let s = 0;
-    if (p.length >= 8) s++;
-    if (/[a-z]/.test(p) && /[A-Z]/.test(p)) s++;
-    if (/\d/.test(p)) s++;
-    if (/[^a-zA-Z0-9]/.test(p)) s++;
-    return s <= 2 ? 'weak' : s === 3 ? 'medium' : 'strong';
+  const set = <K extends keyof Form>(key: K, value: Form[K]) => {
+    setForm((f) => ({ ...f, [key]: value }));
+    if (errors[key]) setErrors((e) => ({ ...e, [key]: '' }));
   };
+  const onText = (key: keyof Form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+    set(key, e.target.value as any);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-    setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-    if (name === 'password') setPasswordStrength(calcStrength(value));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
-  };
-
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error('Max 5MB'); return; }
-    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-    if (!allowed.includes(file.type)) { toast.error('Only JPG, PNG, PDF allowed'); return; }
-    setFormData((prev) => ({ ...prev, aadhar_id_proof: file }));
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onloadend = () => setPreviewUrl(reader.result as string);
-      reader.readAsDataURL(file);
-    } else {
-      setPreviewUrl(null);
-    }
-  };
-
-  const handleAbhaVerify = () => {
-    if (!abhaId.trim()) { toast.error('Enter ABHA ID'); return; }
-    setAbhaVerifying(true);
-    const result = verifyAbhaId(abhaId);
-    if (result.success && result.patient) {
-      const p = result.patient;
-      const [first, ...rest] = p.name.split(' ');
-      setFormData((prev) => ({
-        ...prev,
-        first_name: first || '',
-        last_name: rest.join(' ') || '',
-        date_of_birth: p.date_of_birth || '',
-        gender: p.gender.toLowerCase() as 'male' | 'female' | 'other',
-        blood_group: p.blood_group,
-        phone: p.phone,
-        email: p.email || '',
-        address: p.address || '',
-        district: p.district || '',
-        state: p.state || '',
-        pincode: p.pincode || '',
-      }));
-      setAbhaStatus('verified');
-      toast.success('ABHA verified - fields auto-filled');
-    } else {
-      setAbhaStatus('not_found');
-    }
-    setAbhaVerifying(false);
-  };
-
-  const validateStep = (): boolean => {
+  const validate = (s: number) => {
     const e: Record<string, string> = {};
-    if (step === 0) {
-      if (!formData.first_name) e.first_name = 'Required';
-      if (!formData.last_name) e.last_name = 'Required';
-      if (!formData.date_of_birth) e.date_of_birth = 'Required';
-      if (!formData.blood_group) e.blood_group = 'Required';
-    } else if (step === 1) {
-      // Medical history - no required fields, all optional
-    } else if (step === 2) {
-      if (!formData.email) e.email = 'Required';
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) e.email = 'Invalid email';
-      if (!formData.phone) e.phone = 'Required';
-      else if (!/^[6-9]\d{9}$/.test(formData.phone)) e.phone = '10 digits starting 6-9';
-      if (!formData.address) e.address = 'Required';
-      if (!formData.district) e.district = 'Required';
-      if (!formData.state) e.state = 'Required';
-      if (!formData.pincode) e.pincode = 'Required';
-    } else if (step === 3) {
-      if (!formData.password) e.password = 'Required';
-      else if (formData.password.length < 8) e.password = 'Min 8 characters';
-      if (!formData.aadhar_id_proof && abhaStatus !== 'verified') e.aadhar_id_proof = 'ID proof required';
-      if (!formData.terms_accepted) e.terms_accepted = 'Must accept terms';
-      if (!formData.consent_store_data) e.consent_store_data = 'Required';
-      if (!formData.consent_doctor_access) e.consent_doctor_access = 'Required';
+    if (s === 0) {
+      if (form.first_name.trim().length < 2) e.first_name = t("Enter your first name");
+      if (!form.last_name.trim()) e.last_name = t("Enter your last name");
+      if (!form.date_of_birth) e.date_of_birth = t("Enter your date of birth");
+      else if (new Date(form.date_of_birth) > new Date()) e.date_of_birth = t("Date of birth cannot be in the future");
+      if (!form.blood_group) e.blood_group = t("Choose a blood group");
+    }
+    if (s === 2) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = t("Enter a valid email address");
+      if (!/^[6-9]\d{9}$/.test(form.phone)) e.phone = t("10-digit mobile number starting with 6–9");
+      if (!form.address.trim()) e.address = t("Enter your address");
+      if (!form.district.trim()) e.district = t("Enter your district");
+      if (!form.state.trim()) e.state = t("Enter your state");
+      if (form.pincode && !/^\d{6}$/.test(form.pincode)) e.pincode = t("6-digit PIN code");
+    }
+    if (s === 3) {
+      if (form.password.length < 8) e.password = t("Use at least 8 characters");
+      if (!form.terms_accepted) e.terms_accepted = t("Required");
+      if (!form.consent_store_data) e.consent_store_data = t("Required");
+      if (!form.consent_doctor_access) e.consent_doctor_access = t("Required");
     }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
-  const nextStep = () => { if (validateStep()) setStep((s) => Math.min(s + 1, STEPS.length - 1)); };
-  const prevStep = () => setStep((s) => Math.max(s - 1, 0));
+  const next = () => validate(step) && setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  const back = () => setStep((s) => Math.max(s - 1, 0));
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!validateStep()) { toast.error('Fix errors before submitting'); return; }
+  const submit = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    if (step < STEPS.length - 1) return next();
+    if (!validate(3)) return;
     setLoading(true);
+    setFormError(null);
     try {
-      const submitData = {
-        ...formData,
-        abha_verified: abhaStatus === 'verified',
+      const payload = {
+        ...form,
+        email: form.email.trim().toLowerCase(),
+        country: t("India"),
         existing_conditions: conditions.join(', '),
         known_allergies: allergies.join(', '),
-        past_surgeries: pastSurgeries,
-        current_medications: currentMedications,
+        ...(idProof ? { aadhar_id_proof: idProof } : {}),
       };
-      await api.auth.registerPatientWithDocuments(submitData as PatientRegistrationData);
-      toast.success('Registration successful!');
-      if (abhaStatus === 'verified') {
-        router.push('/login');
+      await api.auth.registerPatientWithDocuments(payload as unknown as PatientRegistrationData);
+      toast.success(t("Account created. Check your email for a verification code."));
+      router.push(`/verify-email?email=${encodeURIComponent(payload.email)}&role=patient`);
+    } catch (err: any) {
+      const fieldErrors = flattenErrors(err?.response?.data);
+      if (Object.keys(fieldErrors).length) {
+        setErrors(fieldErrors);
+        const firstStep = Math.min(...Object.keys(fieldErrors).map((k) => FIELD_STEP[k] ?? 3));
+        setStep(firstStep);
+        setFormError(t("Some details need attention."));
       } else {
-        router.push(`/verify-email?email=${encodeURIComponent(formData.email || '')}&role=patient`);
-      }
-    } catch (error: any) {
-      if (error.response?.data?.errors) {
-        const backendErrors: Record<string, string> = {};
-        Object.entries(error.response.data.errors).forEach(([key, value]) => {
-          backendErrors[key] = Array.isArray(value) ? value[0] : String(value);
-        });
-        setErrors(backendErrors);
-      } else {
-        toast.error(error.response?.data?.detail || 'Registration failed');
+        setFormError(err?.response?.data?.detail || t("Registration failed. Please try again."));
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const strengthColor = passwordStrength === 'weak' ? 'bg-red-500' : passwordStrength === 'medium' ? 'bg-yellow-500' : 'bg-green-500';
-  const strengthWidth = passwordStrength === 'weak' ? '33%' : passwordStrength === 'medium' ? '66%' : '100%';
-
-  const inputClass = (field: string) =>
-    `mt-1 block w-full h-11 rounded-xl border ${errors[field] ? 'border-red-400' : 'border-border'} bg-card px-4 text-sm focus:border-primary focus:ring-primary/20 transition-all ${abhaStatus === 'verified' ? 'bg-background' : ''}`;
-
   return (
-    <div className="min-h-screen bg-background py-10 px-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center">
-              <FiActivity className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-syne font-bold text-lg text-foreground">ArogyaTrack</span>
-          </Link>
-          <h1 className="text-3xl font-bold text-foreground font-syne mb-1">Patient Registration</h1>
-          <p className="text-sm text-muted-foreground font-dm">Create your secure healthcare account</p>
+    <SplitSignInLayout
+      wide
+      backHref="/signup"
+      backLabel={t("Account types")}
+      headline={<>{tRich("Create your <em>health ID.</em>", (c) => <span className="font-serif-accent text-[#9be3cf]">{c}</span>)}</>}
+      points={[
+        t("A QR health card is issued as soon as you verify your email"),
+        t("Allergies and conditions you add are visible to your doctors"),
+        t("Add family members to the same account later"),
+      ]}
+    >
+      <AuthHeading eyebrow={t("Patient registration")} title={t("Create a patient account")} />
+      <Stepper steps={STEPS} current={step} />
+
+      {formError && (
+        <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-xl border border-destructive/25 bg-destructive/5 px-3.5 py-3 text-[13.5px] text-destructive">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {formError}
         </div>
+      )}
 
-        <MultiStepProgress steps={STEPS} current={step} />
-
-        {/* Live Preview Card */}
-        {(formData.first_name || formData.last_name) && (
+      <form onSubmit={submit} noValidate>
+        <AnimatePresence mode="wait">
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            className="mb-6 p-4 rounded-2xl bg-card border border-border shadow-sm"
+            key={step}
+            initial={{ opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -16 }}
+            transition={{ duration: 0.25 }}
+            className="space-y-5"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/12 flex items-center justify-center">
-                <FiUser className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-semibold text-foreground">{formData.first_name} {formData.last_name}</p>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  {formData.blood_group && <span className="flex items-center gap-1"><FiHeart className="w-3 h-3 text-red-400" />{formData.blood_group}</span>}
-                  {formData.email && <span className="flex items-center gap-1"><FiMail className="w-3 h-3" />{formData.email}</span>}
+            {step === 0 && (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label={t("First name")} required error={errors.first_name}>
+                    {(id) => <input id={id} value={form.first_name} onChange={onText('first_name')} autoComplete="given-name" className={fieldClass(!!errors.first_name)} />}
+                  </Field>
+                  <Field label={t("Last name")} required error={errors.last_name}>
+                    {(id) => <input id={id} value={form.last_name} onChange={onText('last_name')} autoComplete="family-name" className={fieldClass(!!errors.last_name)} />}
+                  </Field>
                 </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div className="bg-card rounded-2xl border border-border shadow-sm p-8">
-            <AnimatePresence mode="wait">
-              {/* ── Step 1: Personal Info ── */}
-              {step === 0 && (
-                <motion.div key="s0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
-                  {/* ABHA */}
-                  {!abhaHidden && (
-                    <div className="p-5 rounded-xl bg-blue-50 border border-blue-200">
-                      <h3 className="text-sm font-semibold text-foreground mb-1">ABHA ID Verification</h3>
-                      <p className="text-xs text-muted-foreground mb-3">Auto-fill details with your national health ID</p>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={abhaId}
-                          onChange={(e) => { setAbhaId(e.target.value); setAbhaStatus('idle'); }}
-                          placeholder="12-3456-7890-1234"
-                          className="flex-1 h-10 rounded-lg border border-border px-3 text-sm focus:border-blue-500"
-                        />
-                        <button type="button" onClick={handleAbhaVerify} disabled={abhaVerifying} className="px-4 h-10 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:bg-gray-400">
-                          {abhaVerifying ? 'Verifying…' : 'Verify'}
-                        </button>
-                      </div>
-                      {abhaStatus === 'verified' && <p className="text-green-600 text-xs mt-2 font-medium">✓ ABHA verified &ndash; fields auto-filled</p>}
-                      {abhaStatus === 'not_found' && <p className="text-red-500 text-xs mt-2 font-medium">✗ ABHA not found &ndash; fill manually</p>}
-                      <button type="button" onClick={() => setAbhaHidden(true)} className="text-xs text-blue-600 hover:underline mt-2">Skip &amp; fill manually</button>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">First Name <span className="text-red-500">*</span></label>
-                      <input type="text" name="first_name" value={formData.first_name} onChange={handleChange} className={inputClass('first_name')} />
-                      {errors.first_name && <p className="text-xs text-red-500 mt-1">{errors.first_name}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">Last Name <span className="text-red-500">*</span></label>
-                      <input type="text" name="last_name" value={formData.last_name} onChange={handleChange} className={inputClass('last_name')} />
-                      {errors.last_name && <p className="text-xs text-red-500 mt-1">{errors.last_name}</p>}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">Date of Birth <span className="text-red-500">*</span></label>
-                      <input type="date" name="date_of_birth" value={formData.date_of_birth} onChange={handleChange} className={inputClass('date_of_birth')} />
-                      {errors.date_of_birth && <p className="text-xs text-red-500 mt-1">{errors.date_of_birth}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">Gender</label>
-                      <select name="gender" value={formData.gender} onChange={handleChange} className={inputClass('gender')}>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <Field label={t("Date of birth")} required error={errors.date_of_birth} className="sm:col-span-1">
+                    {(id) => <input id={id} type="date" value={form.date_of_birth} max={new Date().toISOString().slice(0, 10)} onChange={onText('date_of_birth')} className={fieldClass(!!errors.date_of_birth)} />}
+                  </Field>
+                  <Field label={t("Gender")} error={errors.gender}>
+                    {(id) => (
+                      <select id={id} value={form.gender} onChange={onText('gender')} className={fieldClass()}>
+                        <option value="male">{t("Male")}</option>
+                        <option value="female">{t("Female")}</option>
+                        <option value="other">{t("Other")}</option>
                       </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80">Blood Group <span className="text-red-500">*</span></label>
-                    <select name="blood_group" value={formData.blood_group} onChange={handleChange} className={inputClass('blood_group')}>
-                      <option value="">Select</option>
-                      {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => <option key={bg} value={bg}>{bg}</option>)}
-                    </select>
-                    {errors.blood_group && <p className="text-xs text-red-500 mt-1">{errors.blood_group}</p>}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ── Step 2: Medical History ── */}
-              {step === 1 && (
-                <motion.div key="s1med" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
-                  <h3 className="text-lg font-bold text-foreground">Help doctors understand you better</h3>
-
-                  {/* Existing Medical Conditions */}
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">Existing Medical Conditions</label>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {CONDITION_OPTIONS.map((opt) => {
-                        const active = conditions.includes(opt);
-                        return (
-                          <button
-                            key={opt}
-                            type="button"
-                            onClick={() => {
-                              if (opt === 'None') { setConditions(active ? [] : ['None']); return; }
-                              if (conditions.includes('None')) setConditions((c) => c.filter((x) => x !== 'None'));
-                              setConditions((c) => active ? c.filter((x) => x !== opt) : [...c, opt]);
-                            }}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                              active ? 'bg-primary text-white border-transparent' : 'bg-card text-muted-foreground border-border hover:border-primary/50'
-                            }`}
-                          >
-                            {opt}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={customCondition}
-                        onChange={(e) => setCustomCondition(e.target.value)}
-                        placeholder="Add custom condition..."
-                        className="flex-1 h-10 rounded-xl border border-border bg-background px-4 text-sm focus:border-primary"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') { e.preventDefault(); if (customCondition.trim()) { setConditions((c) => [...c, customCondition.trim()]); setCustomCondition(''); } }
-                        }}
-                      />
-                      <button type="button" onClick={() => { if (customCondition.trim()) { setConditions((c) => [...c, customCondition.trim()]); setCustomCondition(''); } }} className="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:bg-muted">
-                        <FiPlus className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Known Allergies */}
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">Known Allergies</label>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {ALLERGY_OPTIONS.map((opt) => {
-                        const active = allergies.includes(opt);
-                        return (
-                          <button
-                            key={opt}
-                            type="button"
-                            onClick={() => {
-                              if (opt === 'None') { setAllergies(active ? [] : ['None']); return; }
-                              if (allergies.includes('None')) setAllergies((a) => a.filter((x) => x !== 'None'));
-                              setAllergies((a) => active ? a.filter((x) => x !== opt) : [...a, opt]);
-                            }}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                              active ? 'bg-primary text-white border-transparent' : 'bg-card text-muted-foreground border-border hover:border-primary/50'
-                            }`}
-                          >
-                            {opt}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={customAllergy}
-                        onChange={(e) => setCustomAllergy(e.target.value)}
-                        placeholder="Add custom allergy..."
-                        className="flex-1 h-10 rounded-xl border border-border bg-background px-4 text-sm focus:border-primary"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') { e.preventDefault(); if (customAllergy.trim()) { setAllergies((a) => [...a, customAllergy.trim()]); setCustomAllergy(''); } }
-                        }}
-                      />
-                      <button type="button" onClick={() => { if (customAllergy.trim()) { setAllergies((a) => [...a, customAllergy.trim()]); setCustomAllergy(''); } }} className="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:bg-muted">
-                        <FiPlus className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Past Surgeries */}
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">Past Surgeries / Hospitalizations</label>
-                    <textarea
-                      value={pastSurgeries}
-                      onChange={(e) => setPastSurgeries(e.target.value)}
-                      rows={3}
-                      placeholder="E.g. Appendectomy 2019, Hospitalized for pneumonia 2022..."
-                      className="mt-1 block w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:border-primary focus:ring-primary/20"
-                    />
-                  </div>
-
-                  {/* Current Medications */}
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">Current Medications</label>
-                    <textarea
-                      value={currentMedications}
-                      onChange={(e) => setCurrentMedications(e.target.value)}
-                      rows={2}
-                      placeholder="E.g. Metformin 500mg twice daily, Amlodipine 5mg once daily..."
-                      className="mt-1 block w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:border-primary focus:ring-primary/20"
-                    />
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ── Step 3: Contact & Address ── */}
-              {step === 2 && (
-                <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">Email <span className="text-red-500">*</span></label>
-                      <div className="relative">
-                        <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                        <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@email.com" className={`${inputClass('email')} pl-10`} />
-                      </div>
-                      {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">Phone <span className="text-red-500">*</span></label>
-                      <div className="relative">
-                        <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                        <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="9876543210" className={`${inputClass('phone')} pl-10`} />
-                      </div>
-                      {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80">Full Address <span className="text-red-500">*</span></label>
-                    <textarea name="address" value={formData.address} onChange={handleChange} rows={2} className={`mt-1 block w-full rounded-xl border ${errors.address ? 'border-red-400' : 'border-border'} bg-card px-4 py-3 text-sm focus:border-primary focus:ring-primary/20`} />
-                    {errors.address && <p className="text-xs text-red-500 mt-1">{errors.address}</p>}
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">District <span className="text-red-500">*</span></label>
-                      <input type="text" name="district" value={formData.district} onChange={handleChange} className={inputClass('district')} />
-                      {errors.district && <p className="text-xs text-red-500 mt-1">{errors.district}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">State <span className="text-red-500">*</span></label>
-                      <input type="text" name="state" value={formData.state} onChange={handleChange} className={inputClass('state')} />
-                      {errors.state && <p className="text-xs text-red-500 mt-1">{errors.state}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">Pincode <span className="text-red-500">*</span></label>
-                      <input type="text" name="pincode" value={formData.pincode} onChange={handleChange} maxLength={6} className={inputClass('pincode')} />
-                      {errors.pincode && <p className="text-xs text-red-500 mt-1">{errors.pincode}</p>}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ── Step 4: Security & Upload ── */}
-              {step === 3 && (
-                <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80">Password <span className="text-red-500">*</span></label>
-                    <div className="relative">
-                      <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        className={`${inputClass('password')} pl-10 pr-10`}
-                      />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
-                        {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
-                    {formData.password && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className={`h-full ${strengthColor} transition-all`} style={{ width: strengthWidth }} />
-                        </div>
-                        <span className="text-[10px] font-medium capitalize text-muted-foreground">{passwordStrength}</span>
-                      </div>
                     )}
-                  </div>
-
-                  {/* Aadhar Upload */}
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80 mb-1">Aadhar / ID Proof <span className="text-red-500">*</span></label>
-                    {!(formData as any).aadhar_id_proof ? (
-                      <div
-                        className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer hover:border-primary/60 hover:bg-primary/8 transition-colors ${errors.aadhar_id_proof ? 'border-red-400' : 'border-border'}`}
-                        onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = '.jpg,.jpeg,.png,.pdf'; i.onchange = handleFileChange as any; i.click(); }}
-                      >
-                        <FiUploadCloud className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">Drag &amp; drop or <span className="text-primary font-medium">browse</span></p>
-                        <p className="text-xs text-muted-foreground mt-1">JPG, PNG, PDF (max 5MB)</p>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-3 p-3 bg-primary/8 border border-emerald-200 rounded-xl">
-                        <FiCheckCircle className="w-5 h-5 text-primary" />
-                        <span className="text-sm text-primary truncate flex-1">{((formData as any).aadhar_id_proof as File).name}</span>
-                        <button type="button" onClick={() => { setFormData((p) => ({ ...p, aadhar_id_proof: undefined })); setPreviewUrl(null); }} className="p-1 text-primary hover:bg-primary/12 rounded-full">
-                          <FiX className="w-4 h-4" />
-                        </button>
-                      </div>
+                  </Field>
+                  <Field label={t("Blood group")} required error={errors.blood_group}>
+                    {(id) => (
+                      <select id={id} value={form.blood_group} onChange={onText('blood_group')} className={fieldClass(!!errors.blood_group)}>
+                        <option value="">{t("Select")}</option>
+                        {BLOOD_GROUPS.map((b) => <option key={b} value={b}>{b}</option>)}
+                      </select>
                     )}
-                    {previewUrl && <img src={previewUrl} alt="Preview" className="mt-3 w-32 h-auto rounded-lg border" />}
-                    {errors.aadhar_id_proof && <p className="text-xs text-red-500 mt-1">{errors.aadhar_id_proof}</p>}
-                  </div>
+                  </Field>
+                </div>
+              </>
+            )}
 
-                  {/* Consents */}
-                  <div className="space-y-3 pt-2">
-                    {[
-                      { name: 'terms_accepted', label: 'I accept the Terms of Service & Privacy Policy' },
-                      { name: 'consent_store_data', label: 'I consent to secure storage of my health data' },
-                      { name: 'consent_doctor_access', label: 'I consent to doctor access of my medical records' },
-                    ].map((c) => (
-                      <label key={c.name} className="flex items-start gap-3 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          name={c.name}
-                          checked={(formData as any)[c.name] || false}
-                          onChange={handleChange}
-                          className="mt-0.5 w-4 h-4 rounded border-border text-primary focus:ring-primary"
-                        />
-                        <span className={`text-sm ${errors[c.name] ? 'text-red-500' : 'text-muted-foreground'}`}>{c.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {step === 1 && (
+              <>
+                <p className="text-[14px] text-muted-foreground">{t("Optional. These are saved to your record so doctors see them before prescribing.")}</p>
+                <div className="space-y-2">
+                  <div className="text-[13px] font-medium">{t("Existing conditions")}</div>
+                  <ChipToggle options={CONDITIONS} selected={conditions} onChange={setConditions} exclusive="None" allowCustom customPlaceholder={t("Another condition")} />
+                </div>
+                <div className="space-y-2">
+                  <div className="text-[13px] font-medium">{t("Known allergies")}</div>
+                  <ChipToggle options={ALLERGIES} selected={allergies} onChange={setAllergies} exclusive="None" allowCustom customPlaceholder={t("Another allergy")} />
+                </div>
+              </>
+            )}
 
-            {/* Navigation */}
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
-              {step > 0 ? (
-                <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted transition-colors">
-                  <FiArrowLeft className="w-4 h-4" /> Back
-                </button>
-              ) : (
-                <Link href="/signup" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-muted-foreground">
-                  <FiArrowLeft className="w-4 h-4" /> Role selection
-                </Link>
-              )}
+            {step === 2 && (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label={t("Email")} required error={errors.email}>
+                    {(id) => <input id={id} type="email" value={form.email} onChange={onText('email')} autoComplete="email" placeholder="you@example.com" className={fieldClass(!!errors.email)} />}
+                  </Field>
+                  <Field label={t("Mobile number")} required error={errors.phone}>
+                    {(id) => <input id={id} type="tel" inputMode="numeric" maxLength={10} value={form.phone} onChange={(e) => set('phone', e.target.value.replace(/\D/g, ''))} autoComplete="tel-national" placeholder="98765 43210" className={fieldClass(!!errors.phone)} />}
+                  </Field>
+                </div>
+                <Field label={t("Address")} required error={errors.address}>
+                  {(id) => <textarea id={id} rows={2} value={form.address} onChange={onText('address')} autoComplete="street-address" className={`${fieldClass(!!errors.address)} h-auto py-2.5`} />}
+                </Field>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <Field label={t("District")} required error={errors.district}>
+                    {(id) => <input id={id} value={form.district} onChange={onText('district')} className={fieldClass(!!errors.district)} />}
+                  </Field>
+                  <Field label={t("State")} required error={errors.state}>
+                    {(id) => <input id={id} value={form.state} onChange={onText('state')} autoComplete="address-level1" className={fieldClass(!!errors.state)} />}
+                  </Field>
+                  <Field label={t("PIN code")} error={errors.pincode}>
+                    {(id) => <input id={id} inputMode="numeric" maxLength={6} value={form.pincode} onChange={(e) => set('pincode', e.target.value.replace(/\D/g, ''))} autoComplete="postal-code" className={fieldClass(!!errors.pincode)} />}
+                  </Field>
+                </div>
+              </>
+            )}
 
-              {step < STEPS.length - 1 ? (
-                <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 h-11 rounded-xl text-sm font-medium bg-primary text-white hover:opacity-90 shadow-lg shadow-teal-700/20 transition-all">
-                  Next <FiArrowRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 h-11 rounded-xl text-sm font-medium bg-primary text-white hover:opacity-90 shadow-lg shadow-teal-700/20 transition-all disabled:opacity-60">
-                  {loading ? 'Creating account…' : 'Create Account'} <FiCheckCircle className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-        </form>
+            {step === 3 && (
+              <>
+                <Field label={t("Password")} required error={errors.password}>
+                  {(id) => <PasswordInput id={id} value={form.password} onChange={onText('password') as any} invalid={!!errors.password} />}
+                </Field>
+                <FileDrop label={t("Aadhaar or government ID (optional)")} file={idProof} onFile={setIdProof} error={errors.aadhar_id_proof} />
+                <div className="space-y-1 rounded-xl border bg-muted/30 p-3">
+                  <CheckRow checked={form.terms_accepted} onChange={(v) => set('terms_accepted', v)} invalid={!!errors.terms_accepted}>{t("I accept the terms of service and privacy policy.")}</CheckRow>
+                  <CheckRow checked={form.consent_store_data} onChange={(v) => set('consent_store_data', v)} invalid={!!errors.consent_store_data}>{t("I consent to ArogyaTrack storing my health records securely.")}</CheckRow>
+                  <CheckRow checked={form.consent_doctor_access} onChange={(v) => set('consent_doctor_access', v)} invalid={!!errors.consent_doctor_access}>{t("I allow doctors I share my health card with to view my records.")}</CheckRow>
+                </div>
+              </>
+            )}
+          </motion.div>
+        </AnimatePresence>
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          Already have an account?{' '}
-          <Link href="/patient/signin" className="text-primary font-semibold hover:underline">Sign in</Link>
-        </p>
-      </div>
-    </div>
+        <div className="mt-8 flex items-center justify-between border-t pt-6">
+          {step > 0 ? (
+            <button type="button" onClick={back} className="inline-flex h-10 items-center gap-1.5 rounded-[10px] px-3 text-[14px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" />{' '}{t("Back")}</button>
+          ) : (
+            <Link href="/patient/signin" className="text-[13.5px] text-muted-foreground hover:text-foreground">{t("Already registered?")}{' '}<span className="font-semibold text-primary">{t("Sign in")}</span>
+            </Link>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="inline-flex h-11 items-center gap-2 rounded-[10px] bg-primary px-5 text-[14.5px] font-medium text-primary-foreground shadow-button transition-transform active:scale-[0.98] disabled:opacity-70"
+          >
+            {loading ? (
+              <><Loader2 className="h-4 w-4 animate-spin" />{' '}{t("Creating account…")}</>
+            ) : step < STEPS.length - 1 ? (
+              <>{t("Continue")}{' '}<ArrowRight className="h-4 w-4" /></>
+            ) : (
+              <>{t("Create account")}{' '}<ArrowRight className="h-4 w-4" /></>
+            )}
+          </button>
+        </div>
+      </form>
+    </SplitSignInLayout>
   );
 }
