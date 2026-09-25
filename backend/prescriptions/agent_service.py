@@ -1,7 +1,7 @@
 """
 prescriptions/agent_service.py
 ───────────────────────────────────────────────────────
-Calls GPT-5.1 with the assembled patient/medicine context and returns
+Calls the configured LLM (AI_MODEL, default gpt-5.1) with the assembled patient/medicine context and returns
 a structured safety report.
 
 Fail-open by design: if the API is unreachable or returns something
@@ -19,8 +19,7 @@ particularly urgent ones.
 import json
 import logging
 
-from django.conf import settings
-from openai import OpenAI
+from config.ai import ai_chat, ai_configured
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +45,8 @@ RULES:
    - Set allergy_conflict=true and explain in allergy_detail for any match or suspected cross-reactivity.
 3. Cross-check interactions with BOTH the new medicines AND existing active prescriptions.
 4. Evaluate dosage against standard ranges, adjusting for age, weight, kidney function (creatinine), and liver function (ALT).
-5. Flag stock availability issues at the selected pharmacy.
+5. Flag stock availability issues only when a pharmacy is selected (pharmacy_stock entries have pharmacy_selected=true). If no pharmacy is selected, do not comment on availability anywhere, including the summary; stock is reported separately from inventory data.
+   Keep medicines[] in the same order as the prescribed medicines.
 6. overall_status must be "blocked" if ANY contraindicated allergy or contraindicated interaction exists.
    "warning" if moderate interactions, dosage concerns, or low stock exist.
    "safe" if everything checks out.
@@ -88,33 +88,29 @@ RESPONSE SCHEMA:
 
 def run_safety_agent(context: dict) -> dict:
     """
-    Send context to GPT-5.1 and return structured safety report.
+    Send context to the configured LLM and return structured safety report.
 
     Returns a dict matching the schema above.  On any failure returns a
     fallback report with overall_status="warning" so the doctor can proceed.
     """
-    api_key = getattr(settings, "OPENAI_API_KEY", None)
-    if not api_key:
-        logger.error("OPENAI_API_KEY not configured")
-        return _fallback_report("AI validation unavailable — OpenAI API key not configured.")
+    if not ai_configured():
+        logger.error("AI_API_KEY not configured")
+        return _fallback_report("AI validation unavailable — AI_API_KEY is not configured.")
 
     try:
-        client = OpenAI(api_key=api_key)
 
         user_message = json.dumps(context, indent=2, default=str)
 
-        response = client.chat.completions.create(
-            model="gpt-5.1",
-            messages=[
+        content = ai_chat(
+            [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_message},
             ],
+            default_model="gpt-5.1",
             temperature=0.1,
-            max_completion_tokens=4096,
-            timeout=30,
-        )
-
-        content = response.choices[0].message.content.strip()
+            max_tokens=8000,
+            timeout=60,
+        ).strip()
 
         # Strip markdown code fences if present
         if content.startswith("```"):
