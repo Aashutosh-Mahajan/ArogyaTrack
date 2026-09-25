@@ -154,7 +154,7 @@ def translate_prescription_data(prescription, language: str = "en") -> dict:
         "gender_label": t("gender"),
         "gender": prescription.patient.gender,
         "doctor_label": t("doctor"),
-        "doctor": prescription.doctor.email,
+        "doctor": (f"{prescription.doctor.get_first_name()} {prescription.doctor.get_last_name()}".strip() or prescription.doctor.email),
         "date_label": t("date"),
         "date": prescription.created_at.strftime("%Y-%m-%d"),
         "medicines_label": t("medicines"),
@@ -183,6 +183,11 @@ def translate_prescription_data(prescription, language: str = "en") -> dict:
 
 def translate_frequency(frequency: str, language: str) -> str:
     """Translate frequency text."""
+    # The prescribing form's own options have exact translations.
+    exact = FREQUENCY_TRANSLATIONS.get(frequency.strip().lower(), {})
+    if language in exact:
+        return exact[language]
+
     # Simple translation of common patterns
     freq_lower = frequency.lower()
 
@@ -222,3 +227,28 @@ def translate_instructions(instructions: str, language: str) -> str:
             translated = translated.replace(eng.title(), trans)
 
     return translated
+
+
+# Labels used on the printed prescription beyond the original set.
+_EXTRA_LABELS = {
+    "en": {"patient": "Patient", "quantity": "Quantity", "patient_id": "Patient ID", "scan_to_verify": "Scan to verify this prescription", "instructions": "Instructions"},
+    "hi": {"patient": "रोगी", "quantity": "मात्रा", "patient_id": "रोगी आईडी", "scan_to_verify": "इस पर्चे को सत्यापित करने के लिए स्कैन करें", "instructions": "निर्देश"},
+    "mr": {"patient": "रुग्ण", "quantity": "संख्या", "patient_id": "रुग्ण आयडी", "scan_to_verify": "हे प्रिस्क्रिप्शन पडताळण्यासाठी स्कॅन करा", "instructions": "सूचना"},
+    "ta": {"patient": "நோயாளி", "quantity": "எண்ணிக்கை", "patient_id": "நோயாளர் அடையாள எண்", "scan_to_verify": "இந்த மருந்துச்சீட்டைச் சரிபார்க்க ஸ்கேன் செய்யவும்", "instructions": "அறிவுறுத்தல்கள்"},
+    "te": {"patient": "రోగి", "quantity": "పరిమాణం", "patient_id": "రోగి ఐడి", "scan_to_verify": "ఈ ప్రిస్క్రిప్షన్‌ను ధృవీకరించడానికి స్కాన్ చేయండి", "instructions": "సూచనలు"},
+    "bn": {"patient": "রোগী", "quantity": "পরিমাণ", "patient_id": "রোগীর আইডি", "scan_to_verify": "এই প্রেসক্রিপশন যাচাই করতে স্ক্যান করুন", "instructions": "নির্দেশনা"},
+}
+for _lang, _labels in _EXTRA_LABELS.items():
+    for _key, _value in _labels.items():
+        TRANSLATIONS.setdefault(_lang, {}).setdefault(_key, _value)
+
+# Exact translations of the frequency options offered on the prescribing form.
+FREQUENCY_TRANSLATIONS = {
+    "once daily": {"hi": "दिन में एक बार", "mr": "दिवसातून एकदा", "ta": "தினமும் ஒரு முறை", "te": "రోజుకు ఒకసారి", "bn": "দিনে একবার"},
+    "twice daily": {"hi": "दिन में दो बार", "mr": "दिवसातून दोनदा", "ta": "தினமும் இரண்டு முறை", "te": "రోజుకు రెండుసార్లు", "bn": "দিনে দুবার"},
+    "three times daily": {"hi": "दिन में तीन बार", "mr": "दिवसातून तीनदा", "ta": "தினமும் மூன்று முறை", "te": "రోజుకు మూడుసార్లు", "bn": "দিনে তিনবার"},
+    "four times daily": {"hi": "दिन में चार बार", "mr": "दिवसातून चार वेळा", "ta": "தினமும் நான்கு முறை", "te": "రోజుకు నాలుగుసార్లు", "bn": "দিনে চারবার"},
+    "at bedtime": {"hi": "सोते समय", "mr": "झोपताना", "ta": "தூங்கும் முன்", "te": "నిద్రపోయే ముందు", "bn": "ঘুমানোর আগে"},
+    "every 8 hours": {"hi": "हर 8 घंटे में", "mr": "दर 8 तासांनी", "ta": "ஒவ்வொரு 8 மணி நேரத்திற்கும்", "te": "ప్రతి 8 గంటలకు", "bn": "প্রতি 8 ঘণ্টা অন্তর"},
+    "as needed": {"hi": "आवश्यकता होने पर", "mr": "गरजेनुसार", "ta": "தேவைப்படும்போது", "te": "అవసరమైనప్పుడు", "bn": "প্রয়োজন হলে"},
+}
