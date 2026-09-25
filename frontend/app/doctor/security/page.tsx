@@ -1,23 +1,17 @@
 'use client';
 
 import React from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { withAuth } from '@/components/auth/withAuth';
 import { SecuritySettings } from '@/components/dashboard/SecuritySettings';
+import { PageHeader } from '@/components/ui/page';
+import { t } from '@/lib/i18n';
 
 function DoctorSecurityPage(): React.JSX.Element {
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Security Settings</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your account security, sessions, and password.
-          </p>
-        </div>
-        <SecuritySettings />
-      </div>
-    </DashboardLayout>
+    <div>
+      <PageHeader title={t("Security")} description={t("Password, two-step sign-in and the devices signed in to your account.")} />
+      <SecuritySettings />
+    </div>
   );
 }
 
