@@ -89,16 +89,32 @@ class CreateMedicalRecordView(APIView):
         return Response(MedicalRecordSerializer(record).data, status=status.HTTP_201_CREATED)
 
 
+def _patient_access_denied(user, profile):
+    """403 response unless the user is an admin or a doctor with current access to this patient."""
+    if user.is_admin or user.is_superuser or HealthCardValidator.has_access(user, profile):
+        return None
+    return Response(
+        {"detail": "You do not have access to this patient. Scan their health card first."},
+        status=status.HTTP_403_FORBIDDEN,
+    )
+
+
 class AllergyCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsDoctorOrAdmin]
 
     def get(self, request, profile_id):
         profile = get_object_or_404(Profile, id=profile_id)
+        denied = _patient_access_denied(request.user, profile)
+        if denied:
+            return denied
         allergies = profile.allergies.all().order_by("-created_at")
         return Response(AllergySerializer(allergies, many=True).data)
 
     def post(self, request, profile_id):
         profile = get_object_or_404(Profile, id=profile_id)
+        denied = _patient_access_denied(request.user, profile)
+        if denied:
+            return denied
         serializer = AllergySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         allergy = serializer.save(profile=profile, added_by=request.user)
@@ -110,6 +126,9 @@ class AllergyDeleteView(APIView):
 
     def delete(self, request, profile_id, allergy_id):
         profile = get_object_or_404(Profile, id=profile_id)
+        denied = _patient_access_denied(request.user, profile)
+        if denied:
+            return denied
         allergy = get_object_or_404(Allergy, id=allergy_id, profile=profile)
         allergy.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -120,11 +139,17 @@ class ChronicConditionCreateView(APIView):
 
     def get(self, request, profile_id):
         profile = get_object_or_404(Profile, id=profile_id)
+        denied = _patient_access_denied(request.user, profile)
+        if denied:
+            return denied
         conditions = profile.chronic_conditions.filter(is_active=True).order_by("-created_at")
         return Response(ChronicConditionSerializer(conditions, many=True).data)
 
     def post(self, request, profile_id):
         profile = get_object_or_404(Profile, id=profile_id)
+        denied = _patient_access_denied(request.user, profile)
+        if denied:
+            return denied
         serializer = ChronicConditionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         condition = serializer.save(profile=profile, added_by=request.user)
@@ -136,6 +161,9 @@ class ChronicConditionDeleteView(APIView):
 
     def delete(self, request, profile_id, condition_id):
         profile = get_object_or_404(Profile, id=profile_id)
+        denied = _patient_access_denied(request.user, profile)
+        if denied:
+            return denied
         condition = get_object_or_404(ChronicCondition, id=condition_id, profile=profile)
         condition.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -160,14 +188,67 @@ class PatientHistoryView(APIView):
             profile=profile
         ).prefetch_related('report_attachments').order_by("-visit_date")
 
+        from prescriptions.models import Prescription
+        from prescriptions.serializers import PrescriptionSerializer
+
+        prescriptions = (
+            Prescription.objects.filter(patient=profile)
+            .select_related("doctor__doctor_profile")
+            .prefetch_related("medicines__medicine")
+            .order_by("-created_at")[:20]
+        )
+        latest_metrics = {}
+        for m in HealthMetric.objects.filter(profile=profile).order_by("metric_type", "-recorded_at").distinct("metric_type"):
+            latest_metrics[m.metric_type] = {
+                "value": m.value,
+                "secondary_value": m.secondary_value,
+                "unit": m.unit,
+                "recorded_at": m.recorded_at.isoformat(),
+            }
+        labs = {}
+        for lab in LabTestResult.objects.filter(profile=profile).order_by("test_name", "-tested_at"):
+            if lab.test_name not in labs:
+                labs[lab.test_name] = {
+                    "test_name": lab.test_name,
+                    "value": lab.value,
+                    "unit": lab.unit,
+                    "normal_min": lab.normal_min,
+                    "normal_max": lab.normal_max,
+                    "status": lab.status,
+                    "tested_at": lab.tested_at.isoformat(),
+                }
+        access = (
+            DoctorPatientAccess.objects.filter(doctor=request.user, patient=profile, expires_at__gt=timezone.now())
+            .order_by("-expires_at").first()
+        )
+
         return Response(
             {
                 "patient_id": str(profile.id),
                 "patient_name": profile.name,
+                "patient": {
+                    "id": str(profile.id),
+                    "unique_patient_id": profile.patient_id,
+                    "name": profile.name,
+                    "age": profile.calculate_age() if profile.date_of_birth else profile.age,
+                    "gender": profile.gender,
+                    "blood_group": profile.blood_group,
+                    "date_of_birth": str(profile.date_of_birth) if profile.date_of_birth else None,
+                    "phone": profile.phone or None,
+                    "district": profile.district or None,
+                    "state": profile.state or None,
+                },
+                "access": {
+                    "expires_at": access.expires_at.isoformat() if access else None,
+                    "method": access.access_method if access else None,
+                },
+                "latest_vitals": latest_metrics,
+                "lab_results": list(labs.values()),
                 "allergies": AllergySerializer(allergies, many=True).data,
                 "chronic_conditions": ChronicConditionSerializer(chronic_conditions, many=True).data,
                 "medical_records": MedicalHistorySerializer(records, many=True).data,
                 "visit_records": PatientVisitRecordSerializer(visit_records, many=True, context={'request': request}).data,
+                "prescriptions": PrescriptionSerializer(prescriptions, many=True).data,
             }
         )
 
@@ -178,10 +259,10 @@ class PatientOwnRecordsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        profiles = request.user.profiles.all()
-        if not profiles.exists():
+        profile = request.user.get_active_profile()
+        if not profile:
             return Response({"count": 0, "results": []})
-        records = MedicalRecord.objects.filter(patient__in=profiles).prefetch_related("diagnoses").order_by("-created_at")
+        records = MedicalRecord.objects.filter(patient=profile).prefetch_related("diagnoses").order_by("-created_at")
         limit = int(request.query_params.get("limit", 20))
         offset = int(request.query_params.get("offset", 0))
         total = records.count()
@@ -195,8 +276,8 @@ class PatientOwnAllergiesView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        profiles = request.user.profiles.all()
-        allergies = Allergy.objects.filter(profile__in=profiles).select_related("added_by").order_by("-created_at")
+        profile = request.user.get_active_profile()
+        allergies = Allergy.objects.filter(profile=profile).select_related("added_by").order_by("-created_at")
         return Response(AllergySerializer(allergies, many=True).data)
 
 
@@ -206,8 +287,8 @@ class PatientOwnConditionsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        profiles = request.user.profiles.all()
-        conditions = ChronicCondition.objects.filter(profile__in=profiles, is_active=True).select_related("added_by").order_by("-created_at")
+        profile = request.user.get_active_profile()
+        conditions = ChronicCondition.objects.filter(profile=profile, is_active=True).select_related("added_by").order_by("-created_at")
         return Response(ChronicConditionSerializer(conditions, many=True).data)
 
 
@@ -235,7 +316,7 @@ class PatientVisitRecordsView(APIView):
             records = PatientVisitRecord.objects.filter(profile=profile).prefetch_related('report_attachments')
         else:
             # Patient viewing own records
-            own_profile = Profile.objects.filter(user=request.user, relationship="self").first()
+            own_profile = request.user.get_active_profile()
             records = PatientVisitRecord.objects.filter(profile=own_profile).prefetch_related('report_attachments')
         
         # Search functionality
@@ -326,21 +407,28 @@ class MyPatientsListView(APIView):
         active_accesses = DoctorPatientAccess.objects.filter(
             doctor=request.user,
             expires_at__gt=timezone.now()
-        ).select_related('patient').order_by('-granted_at')
+        ).select_related('patient').order_by('-expires_at')
+
+        # Repeat scans create several access rows; keep the longest-lived one per patient.
+        latest_access = {}
+        for access in active_accesses:
+            latest_access.setdefault(access.patient_id, access)
+
+        from django.db.models import Count, Max
+        visit_stats = {
+            row['profile_id']: row
+            for row in PatientVisitRecord.objects.filter(profile_id__in=latest_access.keys())
+            .values('profile_id').annotate(n=Count('id'), last=Max('visit_date'))
+        }
 
         patients = []
-        for access in active_accesses:
+        for access in sorted(latest_access.values(), key=lambda a: a.granted_at, reverse=True):
             profile = access.patient
             unique_patient_id = profile.patient_id or "N/A"
-            
-            # Get recent visit records count
-            visit_count = PatientVisitRecord.objects.filter(profile=profile).count()
+            stats = visit_stats.get(profile.id, {})
+            visit_count = stats.get('n', 0)
+            last_visit_date = stats.get('last')
 
-            # Get last visit date
-            last_visit = PatientVisitRecord.objects.filter(
-                profile=profile
-            ).order_by('-visit_date').first()
-            
             patients.append({
                 "patient_id": str(profile.id),
                 "unique_patient_id": unique_patient_id,
@@ -353,7 +441,7 @@ class MyPatientsListView(APIView):
                 "access_expires_at": access.expires_at.isoformat(),
                 "access_method": access.access_method,
                 "visit_count": visit_count,
-                "last_visit_date": last_visit.visit_date.isoformat() if last_visit else None,
+                "last_visit_date": last_visit_date.isoformat() if last_visit_date else None,
             })
 
         return Response({
@@ -370,10 +458,10 @@ class AddPatientToMyListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        # Check authorization - only doctors and admins can add patients
-        if request.user.role not in ['doctor', 'admin']:
+        # Only approved doctors keep patients on a list.
+        if not request.user.is_approved_doctor:
             return Response(
-                {"detail": "Only doctors and administrators can add patients to their list."},
+                {"detail": "Only approved doctors can keep patients on their list."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         
@@ -404,10 +492,13 @@ class AddPatientToMyListView(APIView):
                 "expires_at": existing_access.expires_at.isoformat()
             })
         else:
-            # Grant new extended access
-            access = HealthCardValidator.grant_access(request.user, profile, hours=365*24)
-            access.access_method = "added_to_list"
-            access.save()
+            # Without a current (card-scan) access there is no patient consent
+            # to extend, so a doctor cannot add arbitrary patients by ID.
+            return Response(
+                {"detail": "Scan the patient's health card first. You can only keep patients whose card you have scanned."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+            access = None
             
             # Log the action
             from accounts.audit import AuditService
@@ -668,6 +759,7 @@ class DoctorRecentActivityView(APIView):
             patient_name = patient_profile_map.get(lab.profile_id, 'Unknown')
             activities.append({
                 "type": "abnormal_lab",
+                "patient_id": str(lab.profile_id),
                 "icon": "lab",
                 "title": f"Abnormal {lab.test_name} detected",
                 "description": f"{patient_name} — {lab.value} {lab.unit} ({lab_status.upper()})",
@@ -701,6 +793,7 @@ class DoctorRecentActivityView(APIView):
 
             activities.append({
                 "type": act_type,
+                "patient_id": str(visit.profile_id),
                 "icon": "record",
                 "title": title,
                 "description": f"{patient_name} — {visit.diagnosis[:80]}",
@@ -729,6 +822,8 @@ class CreateVisitRecordView(APIView):
 
     def post(self, request, patient_id):
         # Check authorization - only doctors and admins can create visit records
+        if request.user.role == 'doctor' and not request.user.is_approved_doctor:
+            return Response({"detail": "Your doctor account is pending approval."}, status=status.HTTP_403_FORBIDDEN)
         if request.user.role not in ['doctor', 'admin']:
             return Response(
                 {"detail": "Only doctors and administrators can create visit records."},
@@ -784,6 +879,29 @@ class CreateVisitRecordView(APIView):
         else:
             visit_date = timezone.now()
 
+        # ── Optional vitals measured at this visit (feed the patient's trend charts) ──
+        def _num(key, lo, hi, label):
+            raw = request.data.get(key)
+            if raw in (None, ""):
+                return None
+            try:
+                v = float(raw)
+            except (TypeError, ValueError):
+                raise ValueError(f"{label} must be a number.")
+            if not lo <= v <= hi:
+                raise ValueError(f"{label} must be between {lo:g} and {hi:g}.")
+            return v
+
+        try:
+            systolic = _num("bp_systolic", 50, 260, "Systolic BP")
+            diastolic = _num("bp_diastolic", 30, 160, "Diastolic BP")
+            glucose = _num("blood_sugar", 20, 700, "Blood glucose")
+            weight = _num("weight", 1, 350, "Weight")
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        if (systolic is None) != (diastolic is None):
+            return Response({"detail": "Enter both systolic and diastolic BP."}, status=status.HTTP_400_BAD_REQUEST)
+
         # ── Validate uploaded report files (before creating record) ──
         report_files = request.FILES.getlist('reports')
         if report_files:
@@ -812,6 +930,20 @@ class CreateVisitRecordView(APIView):
             visit_date=visit_date
         )
 
+        vitals = []
+        if systolic is not None:
+            vitals.append(HealthMetric(metric_type="blood_pressure", value=systolic, secondary_value=diastolic, unit="mmHg"))
+        if glucose is not None:
+            vitals.append(HealthMetric(metric_type="sugar", value=glucose, unit="mg/dL"))
+        if weight is not None:
+            vitals.append(HealthMetric(metric_type="weight", value=weight, unit="kg"))
+        for m in vitals:
+            m.patient = profile.user
+            m.profile = profile
+            m.recorded_at = visit_date
+        if vitals:
+            HealthMetric.objects.bulk_create(vitals)
+
         # ── Save report attachments ──
         for f in report_files:
             VisitReportAttachment.objects.create(
@@ -831,9 +963,8 @@ class CreateVisitRecordView(APIView):
             resource_type="PatientVisitRecord",
             resource_id=str(visit_record.id),
             details={
-                "patient_name": profile.name,
-                "diagnosis": visit_record.diagnosis,
                 "reports_count": len(report_files),
+                "vitals_recorded": len(vitals),
             },
         )
 
