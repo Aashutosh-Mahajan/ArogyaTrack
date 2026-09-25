@@ -7,6 +7,7 @@ from django.utils import timezone
 from datetime import timedelta
 
 from accounts.models import DoctorProfile
+from medical.models import DoctorPatientAccess
 from patients.models import HealthCard, Profile
 
 User = get_user_model()
@@ -44,7 +45,26 @@ class MedicalFlowTests(APITestCase):
             expires_at=timezone.now() + timedelta(days=365),
         )
 
+    def _record_payload(self):
+        return {
+            "patient": str(self.profile.id),
+            "symptoms": "cough",
+            "notes": "rest",
+            "diagnoses": [{"icd_10_code": "A01", "disease_name": "Test", "severity": 2}],
+        }
+
+    def test_create_medical_record_requires_access(self):
+        resp = self.client.post(
+            reverse("create-medical-record"), self._record_payload(), format="json", **auth_headers(self.doctor)
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("patient", resp.data)
+
     def test_create_medical_record(self):
+        # Access is normally granted by scanning the patient's health card.
+        DoctorPatientAccess.objects.create(
+            doctor=self.doctor, patient=self.profile, expires_at=timezone.now() + timedelta(hours=24)
+        )
         payload = {
             "patient": str(self.profile.id),
             "symptoms": "cough",
