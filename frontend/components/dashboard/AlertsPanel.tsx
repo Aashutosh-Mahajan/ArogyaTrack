@@ -1,303 +1,157 @@
 'use client';
 
-import React from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import type { DashboardAlert } from '@/types';
-import {
-  FiAlertTriangle,
-  FiAlertCircle,
-  FiActivity,
-  FiHeart,
-  FiShield,
-  FiCheck,
-  FiX,
-  FiBell,
-} from 'react-icons/fi';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { useLanguage } from '@/components/providers/LanguageProvider';
+import { Activity, AlertTriangle, BellOff, CheckCheck, FlaskConical, Globe2, Pill, X } from 'lucide-react';
+import { api } from '@/lib/api';
+import { EmptyState, ErrorState, SkeletonRows, StatusPill } from '@/components/ui/page';
+import { cn } from '@/lib/utils';
+import type { DashboardAlert } from '@/types';
+import { t, intlLocale } from '@/lib/i18n';
 
-/* ── Severity config ───────────────────────────────────────────── */
+const TYPE_META: Record<DashboardAlert['alert_type'], { label: string; icon: typeof Activity }> = {
+  abnormal_labs: { get label() { return t("Lab result"); }, icon: FlaskConical },
+  low_adherence: { get label() { return t("Medication"); }, icon: Pill },
+  high_risk: { get label() { return t("Health risk"); }, icon: Activity },
+  outbreak: { get label() { return t("Outbreak nearby"); }, icon: Globe2 },
+};
 
+const SEVERITY: Record<DashboardAlert['severity'], { label: string; tone: 'neutral' | 'warning' | 'danger' | 'info'; bar: string }> = {
+  low: { get label() { return t("Low"); }, tone: 'info', bar: 'bg-info' },
+  medium: { get label() { return t("Medium"); }, tone: 'warning', bar: 'bg-warning' },
+  high: { get label() { return t("High"); }, tone: 'danger', bar: 'bg-destructive' },
+  critical: { get label() { return t("Critical"); }, tone: 'danger', bar: 'bg-destructive' },
+};
 
-/* ── Time-ago helper ───────────────────────────────────────────── */
+const FILTERS = [
+  { key: 'all', get label() { return t("All"); } },
+  { key: 'unread', get label() { return t("Unread"); } },
+  { key: 'outbreak', get label() { return t("Outbreaks"); } },
+  { key: 'personal', get label() { return t("My health"); } },
+] as const;
 
-function TimeAgo({ dateStr }: { dateStr: string }) {
-  const { t } = useLanguage();
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60_000);
-
-  // Simple time ago logic using translations
-  if (mins < 1) return <>{t('just_now')}</>;
-  if (mins < 60) return <>{mins}m {t('ago')}</>;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return <>{hrs}h {t('ago')}</>;
-  const days = Math.floor(hrs / 24);
-  if (days < 7) return <>{days}d {t('ago')}</>;
-
-  return <>{new Date(dateStr).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-  })}</>;
+function timeAgo(iso: string) {
+  const s = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (s < 60) return t("just now");
+  if (s < 3600) return t("{floor} min ago", { floor: Math.floor(s / 60) });
+  if (s < 86400) return t("{floor} h ago", { floor: Math.floor(s / 3600) });
+  if (s < 7 * 86400) return t("{floor} d ago", { floor: Math.floor(s / 86400) });
+  return new Date(iso).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
 }
-
-/* ── Single alert row ──────────────────────────────────────────── */
-
-function AlertRow({
-  alert,
-  onMarkRead,
-  onDismiss,
-}: {
-  alert: DashboardAlert;
-  onMarkRead: (id: string) => void;
-  onDismiss: (id: string) => void;
-}) {
-  const { t } = useLanguage();
-
-  const SEVERITY_CONFIG = {
-    critical: {
-      badge: 'bg-rose-50 text-rose-700 border-rose-200',
-      border: 'border-rose-200',
-      bg: 'bg-rose-50/50',
-      icon: 'text-rose-600',
-      dot: 'bg-rose-500',
-    },
-    high: {
-      badge: 'bg-orange-50 text-orange-700 border-orange-200',
-      border: 'border-orange-200',
-      bg: 'bg-orange-50/50',
-      icon: 'text-orange-600',
-      dot: 'bg-orange-500',
-    },
-    medium: {
-      badge: 'bg-amber-50 text-amber-700 border-amber-200',
-      border: 'border-amber-200',
-      bg: 'bg-amber-50/40',
-      icon: 'text-amber-600',
-      dot: 'bg-amber-500',
-    },
-    low: {
-      badge: 'bg-blue-50 text-blue-700 border-blue-200',
-      border: 'border-blue-200',
-      bg: 'bg-blue-50/40',
-      icon: 'text-blue-600',
-      dot: 'bg-blue-500',
-    },
-  } as const;
-
-  const ALERT_ICON: Record<string, React.ElementType> = {
-    abnormal_labs: FiActivity,
-    low_adherence: FiHeart,
-    high_risk: FiShield,
-    outbreak: FiAlertTriangle,
-  };
-
-  const ALERT_TYPE_LABEL: Record<string, string> = {
-    abnormal_labs: t('alert_lab_results'),
-    low_adherence: t('alert_adherence'),
-    high_risk: t('alert_risk_score'),
-    outbreak: t('alert_outbreak'),
-  };
-
-  const cfg = SEVERITY_CONFIG[alert.severity];
-  // @ts-ignore
-  const Icon = ALERT_ICON[alert.alert_type] ?? FiAlertTriangle;
-
-  return (
-    <div
-      className={`group relative flex items-start gap-4 p-4 rounded-xl border transition-all ${alert.is_read
-        ? 'border-border bg-card hover:border-border'
-        : `${cfg.border} ${cfg.bg}`
-        }`}
-    >
-      {/* Unread dot */}
-      {!alert.is_read && (
-        <span
-          className={`absolute top-4 right-4 h-2 w-2 rounded-full ${cfg.dot} animate-pulse`}
-        />
-      )}
-
-      {/* Icon */}
-      <div
-        className={`shrink-0 p-2.5 rounded-xl ${alert.is_read ? 'bg-muted text-muted-foreground' : cfg.badge
-          }`}
-      >
-        <Icon className="h-5 w-5" />
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap mb-1">
-          <h4
-            className={`text-[17px] font-extrabold ${alert.is_read ? 'text-muted-foreground' : 'text-foreground'
-              }`}
-          >
-            {alert.title}
-          </h4>
-          <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[12px] font-bold uppercase tracking-wider border ${cfg.badge}`}
-          >
-            {alert.severity}
-          </span>
-        </div>
-
-        <p
-          className={`text-sm leading-relaxed ${alert.is_read ? 'text-muted-foreground' : 'text-muted-foreground'
-            }`}
-        >
-          {alert.message}
-        </p>
-
-        <div className="flex items-center gap-2 mt-2">
-          <p className="text-xs text-muted-foreground font-medium">
-            <TimeAgo dateStr={alert.created_at} />
-          </p>
-          <span className="text-muted-foreground/40">•</span>
-          <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-            {ALERT_TYPE_LABEL[alert.alert_type] ?? alert.alert_type}
-          </span>
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="shrink-0 flex flex-col sm:flex-row items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        {!alert.is_read && (
-          <button
-            onClick={() => onMarkRead(alert.id)}
-            title={t('mark_read')}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/8 transition"
-          >
-            <FiCheck className="h-4 w-4" />
-          </button>
-        )}
-        <button
-          onClick={() => onDismiss(alert.id)}
-          title={t('dismiss')}
-          className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-600 hover:bg-rose-50 transition"
-        >
-          <FiX className="h-4 w-4" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ── Loading skeleton ──────────────────────────────────────────── */
-
-function AlertsSkeleton() {
-  return (
-    <div className="space-y-3">
-      {[...Array(3)].map((_, i) => (
-        <div
-          key={i}
-          className="animate-pulse flex items-start gap-4 p-4 rounded-xl border border-border bg-card"
-        >
-          <div className="h-10 w-10 bg-muted rounded-xl shrink-0" />
-          <div className="flex-1 space-y-2">
-            <div className="h-4 w-1/3 bg-muted rounded" />
-            <div className="h-3 w-full bg-muted rounded" />
-            <div className="h-3 w-24 bg-muted rounded" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ── Main component ────────────────────────────────────────────── */
 
 export function AlertsPanel() {
-  const queryClient = useQueryClient();
-  const { t } = useLanguage();
+  const qc = useQueryClient();
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]['key']>('all');
+  const alerts = useQuery<DashboardAlert[]>({ queryKey: ['dashboard-alerts'], queryFn: () => api.dashboard.getAlerts() });
 
-  const {
-    data: alerts,
-    isLoading,
-    isError,
-  } = useQuery<DashboardAlert[]>({
-    queryKey: ['dashboard-alerts'],
-    queryFn: () => api.dashboard.getAlerts(),
-    staleTime: 30_000,
-    refetchInterval: 2 * 60_000,
-  });
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ['dashboard-alerts'] });
+    qc.invalidateQueries({ queryKey: ['shell', 'patient-alerts'] });
+  };
 
-  const markReadMutation = useMutation({
-    mutationFn: (alertId: string) => api.dashboard.markAlertRead(alertId),
+  const markRead = useMutation({ mutationFn: (id: string) => api.dashboard.markAlertRead(id), onSuccess: refresh });
+  const dismiss = useMutation({
+    mutationFn: (id: string) => api.dashboard.dismissAlert(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-alerts'] });
+      toast.success(t("Alert dismissed"));
+      refresh();
     },
-    onError: () => toast.error('Failed to mark alert as read'),
   });
-
-  const dismissMutation = useMutation({
-    mutationFn: (alertId: string) => api.dashboard.dismissAlert(alertId),
+  const markAll = useMutation({
+    mutationFn: async (ids: string[]) => Promise.all(ids.map((id) => api.dashboard.markAlertRead(id))),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-alerts'] });
-      toast.success('Alert dismissed');
+      toast.success(t("All alerts marked as read"));
+      refresh();
     },
-    onError: () => toast.error('Failed to dismiss alert'),
   });
 
-  const handleMarkRead = (id: string) => markReadMutation.mutate(id);
-  const handleDismiss = (id: string) => dismissMutation.mutate(id);
-
-  const unreadCount = alerts?.filter((a) => !a.is_read).length ?? 0;
+  const all = useMemo(() => alerts.data ?? [], [alerts.data]);
+  const unread = all.filter((a) => !a.is_read);
+  const list = useMemo(
+    () =>
+      all.filter((a) =>
+        filter === 'all' ? true : filter === 'unread' ? !a.is_read : filter === 'outbreak' ? a.alert_type === 'outbreak' : a.alert_type !== 'outbreak'
+      ),
+    [all, filter]
+  );
 
   return (
-    <Card className="border-0 shadow-lg overflow-hidden">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-rose-50 rounded-lg">
-              <FiBell className="w-[22px] h-[22px] text-rose-600" />
-            </div>
-            <div>
-              <CardTitle className="text-[23px] text-foreground">{t('alerts_title')}</CardTitle>
-              <p className="text-[16px] text-muted-foreground mt-0.5">{t('alerts_subtitle')}</p>
-            </div>
-          </div>
-
-          {unreadCount > 0 && (
-            <span className="inline-flex items-center justify-center h-6 min-w-[1.5rem] px-2 rounded-full bg-rose-500 text-white text-xs font-bold shadow-sm shadow-rose-200 animate-pulse">
-              {unreadCount}
-            </span>
-          )}
+    <div>
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="inline-flex rounded-[10px] border bg-card p-1 shadow-sm">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              className={cn('rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors', filter === f.key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}
+            >
+              {f.label}
+              {f.key === 'unread' && unread.length > 0 && <span className="tabular ml-1.5 opacity-80">{unread.length}</span>}
+            </button>
+          ))}
         </div>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        {isLoading ? (
-          <AlertsSkeleton />
-        ) : isError ? (
-          <div className="text-center py-12 text-muted-foreground bg-background/50 rounded-2xl border border-dashed border-border">
-            <FiAlertCircle className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
-            <p className="font-semibold text-foreground/80">{t('failed_load')}</p>
-            <p className="text-sm mt-1 text-muted-foreground">{t('try_again')}</p>
-          </div>
-        ) : alerts && alerts.length > 0 ? (
-          <div className="space-y-3">
-            {alerts.map((alert) => (
-              <AlertRow
-                key={alert.id}
-                alert={alert}
-                onMarkRead={handleMarkRead}
-                onDismiss={handleDismiss}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12 text-muted-foreground bg-background/50 rounded-2xl border border-dashed border-border">
-            <div className="bg-card p-3 rounded-full shadow-sm inline-block mb-3">
-              <FiShield className="h-6 w-6 text-emerald-500" />
-            </div>
-            <p className="font-semibold text-primary">{t('all_clear')}</p>
-            <p className="text-sm mt-1 text-muted-foreground">
-              {t('all_clear_desc')}
-            </p>
-          </div>
+        {unread.length > 0 && (
+          <button
+            onClick={() => markAll.mutate(unread.map((a) => a.id))}
+            disabled={markAll.isPending}
+            className="inline-flex h-9 items-center gap-2 rounded-[10px] border bg-card px-3.5 text-[13px] font-medium shadow-sm hover:bg-muted disabled:opacity-60"
+          >
+            <CheckCheck className="h-4 w-4" />{' '}{t("Mark all as read")}</button>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {alerts.isLoading ? (
+        <div className="rounded-2xl border bg-card p-5"><SkeletonRows rows={4} /></div>
+      ) : alerts.isError ? (
+        <ErrorState onRetry={() => alerts.refetch()} />
+      ) : list.length === 0 ? (
+        <EmptyState icon={BellOff} title={all.length ? t("Nothing in this view") : t("No alerts")} description={all.length ? t("Try another filter.") : t("We will notify you about abnormal results, missed medication and outbreaks near you.")} />
+      ) : (
+        <ul className="space-y-3">
+          {list.map((a) => {
+            const meta = TYPE_META[a.alert_type] ?? { label: a.alert_type, icon: AlertTriangle };
+            const sev = SEVERITY[a.severity] ?? SEVERITY.low;
+            const Icon = meta.icon;
+            return (
+              <li
+                key={a.id}
+                className={cn('relative flex gap-4 overflow-hidden rounded-2xl border bg-card p-5 shadow-sm transition-colors', !a.is_read && 'cursor-pointer border-primary/25 bg-primary/[0.025]')}
+                onClick={() => !a.is_read && markRead.mutate(a.id)}
+              >
+                <span className={cn('absolute inset-y-0 left-0 w-1', sev.bar)} aria-hidden="true" />
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground/70">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-[15px] font-semibold">{a.title}</h3>
+                    {!a.is_read && <span className="h-2 w-2 rounded-full bg-primary" aria-label={t("Unread")} />}
+                  </div>
+                  <p className="mt-1 text-[14px] leading-relaxed text-muted-foreground">{a.message}</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <StatusPill tone={sev.tone}>{sev.label}</StatusPill>
+                    <span className="rounded-md bg-muted px-2 py-0.5">{meta.label}</span>
+                    <span>{timeAgo(a.created_at)}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    dismiss.mutate(a.id);
+                  }}
+                  disabled={dismiss.isPending && dismiss.variables === a.id}
+                  className="self-start rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label={t("Dismiss {title}", { title: a.title })}
+                  title={t("Dismiss")}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }
