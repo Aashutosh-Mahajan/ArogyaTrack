@@ -21,8 +21,19 @@ if not SECRET_KEY:
     else:
         raise ImproperlyConfigured("SECRET_KEY environment variable must be set when DEBUG=False.")
 
-# OpenAI API Key for AI prescription safety agent
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+# Public address of the web app, used for links printed on documents
+# (e.g. the prescription verification link on a PDF).
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/")
+
+# Times printed on documents (PDFs, invoice numbers). Storage stays UTC.
+DOCUMENT_TIME_ZONE = os.getenv("DOCUMENT_TIME_ZONE", "Asia/Kolkata")
+
+# LLM for clinical decision support and the prescription safety agent.
+# Any OpenAI-compatible provider works: set AI_BASE_URL to its endpoint and
+# AI_MODEL to the model name. OPENAI_API_KEY is still read for older setups.
+AI_API_KEY = os.getenv("AI_API_KEY", "") or os.getenv("OPENAI_API_KEY", "")
+AI_BASE_URL = os.getenv("AI_BASE_URL", "").strip()
+AI_MODEL = os.getenv("AI_MODEL", "").strip()
 
 # Extra hosts (e.g. a developer's LAN IP for testing the mobile app) are opt-in
 # via env, never hardcoded, so they don't silently ship to every environment.
@@ -95,8 +106,15 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
     # Parse DATABASE_URL if provided (e.g., from Neon)
     import dj_database_url
+    # Reuse connections: opening a fresh TLS connection to a remote (Neon)
+    # database on every request added seconds of latency and intermittent
+    # "SSL error: unexpected eof" failures. Health checks drop stale ones.
     DATABASES = {
-        "default": dj_database_url.parse(DATABASE_URL, conn_max_age=0)
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=int(os.getenv("DB_CONN_MAX_AGE", "60")),
+            conn_health_checks=True,
+        )
     }
 else:
     if not DEBUG:
