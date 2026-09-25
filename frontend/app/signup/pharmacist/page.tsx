@@ -1,276 +1,175 @@
 'use client';
 
-import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
-import toast from 'react-hot-toast';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiArrowRight, FiArrowLeft, FiCheckCircle, FiActivity, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
-import MultiStepProgress from '@/components/auth/MultiStepProgress';
-import UploadBox from '@/components/auth/UploadBox';
+import { useRouter } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
+import toast from 'react-hot-toast';
+import { AlertCircle, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
+import { api } from '@/lib/api';
+import SplitSignInLayout from '@/components/auth/SplitSignInLayout';
+import { AuthHeading } from '@/components/auth/SignInForm';
+import { CheckRow, Field, FileDrop, PasswordInput, Stepper, fieldClass, flattenErrors } from '@/components/auth/FormKit';
+import { t, m } from '@/lib/i18n';
+import { tRich } from '@/lib/i18n-rich';
 
-const STEPS = ['Personal & Professional', 'Documents & Account'];
+const STEPS = [m("About you"), m("Licence & account")];
+const DEGREES = [m("D.Pharm"), m("B.Pharm"), m("M.Pharm"), m("Pharm.D"), m("Ph.D (Pharmacy)")];
+const FIELD_STEP: Record<string, number> = {
+  first_name: 0, last_name: 0, email: 0, pharmacy_name: 0, degree: 0,
+  license_number: 1, license_certificate: 1, password: 1, terms_accepted: 1,
+};
 
-const PHARMACY_DEGREES = ['B.Pharm', 'M.Pharm', 'D.Pharm', 'Pharm.D', 'Ph.D Pharmacy'];
+type Form = {
+  first_name: string; last_name: string; email: string; pharmacy_name: string; degree: string;
+  license_number: string; password: string; terms_accepted: boolean;
+};
 
 export default function PharmacistRegisterPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong'>('weak');
-
-  const [formData, setFormData] = useState<Record<string, any>>({
-    email: '',
-    password: '',
-    first_name: '',
-    last_name: '',
-    phone: '',
-    license_number: '',
-    degree: '',
-    pharmacy_name: '',
-    pharmacy_address: '',
-    terms_accepted: false,
+  const [form, setForm] = useState<Form>({
+    first_name: '', last_name: '', email: '', pharmacy_name: '', degree: '',
+    license_number: '', password: '', terms_accepted: false,
   });
-
-  const [licenseCert, setLicenseCert] = useState<File | null>(null);
+  const [certificate, setCertificate] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const calcStrength = (p: string): 'weak' | 'medium' | 'strong' => {
-    let s = 0;
-    if (p.length >= 8) s++;
-    if (/[a-z]/.test(p) && /[A-Z]/.test(p)) s++;
-    if (/\d/.test(p)) s++;
-    if (/[^a-zA-Z0-9]/.test(p)) s++;
-    return s <= 2 ? 'weak' : s === 3 ? 'medium' : 'strong';
+  const set = <K extends keyof Form>(key: K, value: Form[K]) => {
+    setForm((f) => ({ ...f, [key]: value }));
+    if (errors[key]) setErrors((e) => ({ ...e, [key]: '' }));
   };
+  const onText = (key: keyof Form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => set(key, e.target.value as any);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-    setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-    if (name === 'password') setPasswordStrength(calcStrength(value));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
-  };
-
-  const validateStep = (): boolean => {
+  const validate = (s: number) => {
     const e: Record<string, string> = {};
-    if (step === 0) {
-      if (!formData.first_name) e.first_name = 'Required';
-      if (!formData.last_name) e.last_name = 'Required';
-      if (!formData.email) e.email = 'Required';
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) e.email = 'Invalid email';
-      if (!formData.phone) e.phone = 'Required';
-      else if (!/^[6-9]\d{9}$/.test(formData.phone)) e.phone = '10 digits starting 6-9';
-      if (!formData.license_number) e.license_number = 'Required';
-      if (!formData.degree) e.degree = 'Required';
-      if (!formData.pharmacy_name) e.pharmacy_name = 'Required';
-    } else if (step === 1) {
-      if (!formData.password) e.password = 'Required';
-      else if (formData.password.length < 8) e.password = 'Min 8 characters';
-      if (!licenseCert) e.license_cert = 'License certificate required';
-      if (!formData.terms_accepted) e.terms_accepted = 'Must accept terms';
+    if (s === 0) {
+      if (form.first_name.trim().length < 2) e.first_name = t("Enter your first name");
+      if (!form.last_name.trim()) e.last_name = t("Enter your last name");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = t("Enter a valid email address");
+      if (!form.degree) e.degree = t("Choose your qualification");
+    }
+    if (s === 1) {
+      if (!form.license_number.trim()) e.license_number = t("Enter your pharmacy council registration number");
+      if (!certificate) e.license_certificate = t("Upload your licence certificate");
+      if (form.password.length < 8) e.password = t("Use at least 8 characters");
+      if (!form.terms_accepted) e.terms_accepted = t("Required");
     }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
-  const nextStep = () => { if (validateStep()) setStep((s) => Math.min(s + 1, STEPS.length - 1)); };
-  const prevStep = () => setStep((s) => Math.max(s - 1, 0));
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!validateStep()) { toast.error('Fix errors before submitting'); return; }
+  const submit = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    if (step === 0) {
+      if (validate(0)) setStep(1);
+      return;
+    }
+    if (!validate(1)) return;
     setLoading(true);
+    setFormError(null);
     try {
-      const submitData = {
-        ...formData,
-        ...(licenseCert && { license_certificate: licenseCert }),
-      };
-      await api.auth.registerPharmacist(submitData);
-      toast.success('Registration successful!');
-      router.push(`/verify-email?email=${encodeURIComponent(formData.email)}&role=pharmacist`);
-    } catch (error: any) {
-      if (error.response?.data?.errors) {
-        const backendErrors: Record<string, string> = {};
-        Object.entries(error.response.data.errors).forEach(([key, value]) => {
-          backendErrors[key] = Array.isArray(value) ? value[0] : String(value);
-        });
-        setErrors(backendErrors);
+      const email = form.email.trim().toLowerCase();
+      await api.auth.registerPharmacist({ ...form, email, license_number: form.license_number.trim(), license_certificate: certificate });
+      toast.success(t("Account created. Check your email for a verification code."));
+      router.push(`/verify-email?email=${encodeURIComponent(email)}&role=pharmacist`);
+    } catch (err: any) {
+      const fieldErrors = flattenErrors(err?.response?.data);
+      if (Object.keys(fieldErrors).length) {
+        setErrors(fieldErrors);
+        setStep(Math.min(...Object.keys(fieldErrors).map((k) => FIELD_STEP[k] ?? 1)));
+        setFormError(t("Some details need attention."));
       } else {
-        toast.error(error.response?.data?.detail || 'Registration failed');
+        setFormError(err?.response?.data?.detail || t("Registration failed. Please try again."));
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const strengthColor = passwordStrength === 'weak' ? 'bg-red-500' : passwordStrength === 'medium' ? 'bg-yellow-500' : 'bg-green-500';
-  const strengthWidth = passwordStrength === 'weak' ? '33%' : passwordStrength === 'medium' ? '66%' : '100%';
-
-  const inputClass = (field: string) =>
-    `mt-1 block w-full h-11 rounded-xl border ${errors[field] ? 'border-red-400' : 'border-border'} bg-card px-4 text-sm focus:border-primary focus:ring-primary/20 transition-all`;
-
   return (
-    <div className="min-h-screen bg-background py-10 px-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center">
-              <FiActivity className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-syne font-bold text-lg text-foreground">ArogyaTrack</span>
-          </Link>
-          <h1 className="text-3xl font-bold text-foreground font-syne mb-1">Pharmacist Registration</h1>
-          <p className="text-sm text-muted-foreground font-dm">Register your pharmacy on ArogyaTrack</p>
+    <SplitSignInLayout
+      wide
+      backHref="/signup"
+      backLabel={t("Account types")}
+      headline={<>{tRich("Dispense with <em>certainty.</em>", (c) => <span className="font-serif-accent text-[#9be3cf]">{c}</span>)}</>}
+      points={[
+        t("Verify prescription signatures before dispensing"),
+        t("Record partial and full dispensing per item"),
+        t("Keep stock, batches and expiry dates in one place"),
+      ]}
+    >
+      <AuthHeading eyebrow={t("Pharmacist registration")} title={t("Register your pharmacy")} />
+      <Stepper steps={STEPS} current={step} />
+
+      {formError && (
+        <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-xl border border-destructive/25 bg-destructive/5 px-3.5 py-3 text-[13.5px] text-destructive">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {formError}
         </div>
+      )}
 
-        <MultiStepProgress steps={STEPS} current={step} />
-
-        <form onSubmit={handleSubmit}>
-          <div className="bg-card rounded-2xl border border-border shadow-sm p-8">
-            <AnimatePresence mode="wait">
-              {/* ── Step 1: Personal & Professional ── */}
-              {step === 0 && (
-                <motion.div key="p0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">First Name <span className="text-red-500">*</span></label>
-                      <input type="text" name="first_name" value={formData.first_name} onChange={handleChange} className={inputClass('first_name')} />
-                      {errors.first_name && <p className="text-xs text-red-500 mt-1">{errors.first_name}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">Last Name <span className="text-red-500">*</span></label>
-                      <input type="text" name="last_name" value={formData.last_name} onChange={handleChange} className={inputClass('last_name')} />
-                      {errors.last_name && <p className="text-xs text-red-500 mt-1">{errors.last_name}</p>}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80">Email <span className="text-red-500">*</span></label>
-                    <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="pharmacy@medplus.in" className={inputClass('email')} />
-                    {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80">Phone <span className="text-red-500">*</span></label>
-                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="9876543210" className={inputClass('phone')} />
-                    {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">Pharmacist License No. <span className="text-red-500">*</span></label>
-                      <input type="text" name="license_number" value={formData.license_number} onChange={handleChange} placeholder="e.g. PCI-56789" className={inputClass('license_number')} />
-                      {errors.license_number && <p className="text-xs text-red-500 mt-1">{errors.license_number}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">Degree <span className="text-red-500">*</span></label>
-                      <select name="degree" value={formData.degree} onChange={handleChange} className={inputClass('degree')}>
-                        <option value="">Select degree</option>
-                        {PHARMACY_DEGREES.map((d) => <option key={d} value={d}>{d}</option>)}
+      <form onSubmit={submit} noValidate>
+        <AnimatePresence mode="wait">
+          <motion.div key={step} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.25 }} className="space-y-5">
+            {step === 0 ? (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label={t("First name")} required error={errors.first_name}>
+                    {(id) => <input id={id} value={form.first_name} onChange={onText('first_name')} autoComplete="given-name" className={fieldClass(!!errors.first_name)} />}
+                  </Field>
+                  <Field label={t("Last name")} required error={errors.last_name}>
+                    {(id) => <input id={id} value={form.last_name} onChange={onText('last_name')} autoComplete="family-name" className={fieldClass(!!errors.last_name)} />}
+                  </Field>
+                </div>
+                <Field label={t("Email")} required error={errors.email}>
+                  {(id) => <input id={id} type="email" value={form.email} onChange={onText('email')} autoComplete="email" placeholder="you@pharmacy.in" className={fieldClass(!!errors.email)} />}
+                </Field>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label={t("Pharmacy name")} error={errors.pharmacy_name}>
+                    {(id) => <input id={id} value={form.pharmacy_name} onChange={onText('pharmacy_name')} autoComplete="organization" className={fieldClass(!!errors.pharmacy_name)} />}
+                  </Field>
+                  <Field label={t("Qualification")} required error={errors.degree}>
+                    {(id) => (
+                      <select id={id} value={form.degree} onChange={onText('degree')} className={fieldClass(!!errors.degree)}>
+                        <option value="">{t("Select")}</option>
+                        {DEGREES.map((d) => <option key={d} value={d}>{t(d)}</option>)}
                       </select>
-                      {errors.degree && <p className="text-xs text-red-500 mt-1">{errors.degree}</p>}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80">Pharmacy Name <span className="text-red-500">*</span></label>
-                    <input type="text" name="pharmacy_name" value={formData.pharmacy_name} onChange={handleChange} className={inputClass('pharmacy_name')} />
-                    {errors.pharmacy_name && <p className="text-xs text-red-500 mt-1">{errors.pharmacy_name}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80">Pharmacy Address</label>
-                    <textarea name="pharmacy_address" value={formData.pharmacy_address} onChange={handleChange} rows={2} className="mt-1 block w-full rounded-xl border border-border bg-card px-4 py-3 text-sm focus:border-primary focus:ring-primary/20" />
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ── Step 2: Documents & Account ── */}
-              {step === 1 && (
-                <motion.div key="p1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80">Password <span className="text-red-500">*</span></label>
-                    <div className="relative">
-                      <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        className={`${inputClass('password')} pl-10 pr-10`}
-                      />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
-                        {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
-                    {formData.password && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className={`h-full ${strengthColor} transition-all`} style={{ width: strengthWidth }} />
-                        </div>
-                        <span className="text-[10px] font-medium capitalize text-muted-foreground">{passwordStrength}</span>
-                      </div>
                     )}
-                  </div>
+                  </Field>
+                </div>
+              </>
+            ) : (
+              <>
+                <Field label={t("Pharmacy council registration number")} required error={errors.license_number}>
+                  {(id) => <input id={id} value={form.license_number} onChange={onText('license_number')} className={fieldClass(!!errors.license_number)} />}
+                </Field>
+                <FileDrop label={t("Licence certificate")} required file={certificate} onFile={(f) => { setCertificate(f); setErrors((e) => ({ ...e, license_certificate: '' })); }} error={errors.license_certificate} />
+                <Field label={t("Password")} required error={errors.password}>
+                  {(id) => <PasswordInput id={id} value={form.password} onChange={onText('password') as any} invalid={!!errors.password} />}
+                </Field>
+                <div className="rounded-xl border bg-muted/30 p-3">
+                  <CheckRow checked={form.terms_accepted} onChange={(v) => set('terms_accepted', v)} invalid={!!errors.terms_accepted}>{t("I accept the terms of service and confirm my licence details are accurate.")}</CheckRow>
+                </div>
+              </>
+            )}
+          </motion.div>
+        </AnimatePresence>
 
-                  <UploadBox
-                    label="Pharmacy License Certificate *"
-                    file={licenseCert}
-                    onFileChange={setLicenseCert}
-                    error={errors.license_cert}
-                  />
-
-                  <label className="flex items-start gap-3 cursor-pointer pt-2">
-                    <input
-                      type="checkbox"
-                      name="terms_accepted"
-                      checked={formData.terms_accepted}
-                      onChange={handleChange}
-                      className="mt-0.5 w-4 h-4 rounded border-border text-primary focus:ring-primary"
-                    />
-                    <span className={`text-sm ${errors.terms_accepted ? 'text-red-500' : 'text-muted-foreground'}`}>
-                      I accept the Terms of Service &amp; confirm the accuracy of submitted information
-                    </span>
-                  </label>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Navigation */}
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
-              {step > 0 ? (
-                <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted transition-colors">
-                  <FiArrowLeft className="w-4 h-4" /> Back
-                </button>
-              ) : (
-                <Link href="/signup" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-muted-foreground">
-                  <FiArrowLeft className="w-4 h-4" /> Role selection
-                </Link>
-              )}
-
-              {step < STEPS.length - 1 ? (
-                <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 h-11 rounded-xl text-sm font-medium bg-primary text-white hover:opacity-90 shadow-lg shadow-teal-700/20 transition-all">
-                  Next <FiArrowRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 h-11 rounded-xl text-sm font-medium bg-primary text-white hover:opacity-90 shadow-lg shadow-teal-700/20 transition-all disabled:opacity-60">
-                  {loading ? 'Creating account…' : 'Create Account'} <FiCheckCircle className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-        </form>
-
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          Already registered?{' '}
-          <Link href="/pharmacist/signin" className="text-primary font-semibold hover:underline">Sign in</Link>
-        </p>
-      </div>
-    </div>
+        <div className="mt-8 flex items-center justify-between border-t pt-6">
+          {step > 0 ? (
+            <button type="button" onClick={() => setStep(0)} className="inline-flex h-10 items-center gap-1.5 rounded-[10px] px-3 text-[14px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" />{' '}{t("Back")}</button>
+          ) : (
+            <Link href="/pharmacist/signin" className="text-[13.5px] text-muted-foreground hover:text-foreground">{t("Already registered?")}{' '}<span className="font-semibold text-primary">{t("Sign in")}</span>
+            </Link>
+          )}
+          <button type="submit" disabled={loading} className="inline-flex h-11 items-center gap-2 rounded-[10px] bg-primary px-5 text-[14.5px] font-medium text-primary-foreground shadow-button transition-transform active:scale-[0.98] disabled:opacity-70">
+            {loading ? <><Loader2 className="h-4 w-4 animate-spin" />{' '}{t("Creating account…")}</> : step === 0 ? <>{t("Continue")}{' '}<ArrowRight className="h-4 w-4" /></> : <>{t("Create account")}{' '}<ArrowRight className="h-4 w-4" /></>}
+          </button>
+        </div>
+      </form>
+    </SplitSignInLayout>
   );
 }
