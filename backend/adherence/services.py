@@ -28,7 +28,7 @@ class AdherenceService:
 
             # Generate dose schedules for each medicine
             total_expected_doses = 0
-            for pm in prescription.prescription_medicines.filter(dispense_status='dispensed'):
+            for pm in prescription.medicines.filter(dispense_status='dispensed'):
                 doses = AdherenceService._generate_dose_schedule(tracker, pm)
                 total_expected_doses += len(doses)
 
@@ -39,10 +39,24 @@ class AdherenceService:
             return tracker
 
     @staticmethod
+    def add_dispensed_medicine(tracker: AdherenceTracker, prescription_medicine: PrescriptionMedicine) -> int:
+        """Schedule doses for an item dispensed after the tracker was created."""
+        if tracker.dose_schedules.filter(prescription_medicine=prescription_medicine).exists():
+            return 0
+        with transaction.atomic():
+            doses = AdherenceService._generate_dose_schedule(tracker, prescription_medicine)
+            tracker.expected_doses += len(doses)
+            end = tracker.start_date + timedelta(days=prescription_medicine.duration_days)
+            if end > tracker.end_date:
+                tracker.end_date = end
+            tracker.save()
+        return len(doses)
+
+    @staticmethod
     def _calculate_max_duration(prescription: Prescription) -> int:
         """Calculate maximum duration from all medicines"""
         max_duration = 0
-        for pm in prescription.prescription_medicines.all():
+        for pm in prescription.medicines.all():
             if pm.duration_days > max_duration:
                 max_duration = pm.duration_days
         return max_duration
