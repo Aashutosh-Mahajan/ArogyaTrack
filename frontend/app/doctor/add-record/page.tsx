@@ -1,486 +1,62 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import React, { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import { ChevronRight, FilePlus2, QrCode, Search } from 'lucide-react';
 import { withAuth } from '@/components/auth/withAuth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
-import { MyPatient } from '@/types';
-import toast from 'react-hot-toast';
-import { FiSave, FiUser, FiFileText, FiCheckCircle, FiUpload, FiX, FiFile, FiCalendar, FiActivity, FiEdit3 } from 'react-icons/fi';
-import { useLanguage } from '@/components/providers/LanguageProvider';
-import { CDSSPanel } from '@/components/cdss/CDSSPanel';
-import type { CDSSResult } from '@/types';
+import { EmptyState, ErrorState, PageHeader, SkeletonRows } from '@/components/ui/page';
+import { fieldClass } from '@/components/auth/FormKit';
+import { initialsOf } from '@/components/layout/useShell';
+import type { MyPatient } from '@/types';
+import { t } from '@/lib/i18n';
 
-const ALLOWED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-const MAX_REPORT_FILES = 5;
-
+/** Choose a patient, then record the consultation on the shared consultation page. */
 function AddRecordPage() {
-  const { t } = useLanguage();
-  const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedPatient, setSelectedPatient] = useState('');
-  const [diagnosis, setDiagnosis] = useState('');
-  const [testsPerformed, setTestsPerformed] = useState('');
-  const [prescription, setPrescription] = useState('');
-  const [doctorNotes, setDoctorNotes] = useState('');
-  const [visitStatus, setVisitStatus] = useState('completed');
-  const [reportFiles, setReportFiles] = useState<File[]>([]);
-  const [visitDate, setVisitDate] = useState(
-    new Date().toISOString().slice(0, 16)
-  );
-  const [submitted, setSubmitted] = useState(false);
-  const [cdssResult, setCdssResult] = useState<CDSSResult | null>(null);
-  const [cdssLoading, setCdssLoading] = useState(false);
-  const [cdssError, setCdssError] = useState<string | null>(null);
-  const [showCdss, setShowCdss] = useState(false);
-
-  const STATUS_OPTIONS = [
-    { value: 'completed', label: t('status_completed') },
-    { value: 'follow_up', label: t('status_follow_up') },
-    { value: 'critical', label: t('status_critical') },
-  ];
-
-  const { data: patientsData, isLoading: loadingPatients } = useQuery({
-    queryKey: ['myPatients'],
-    queryFn: async () => {
-      const response = await api.medical.getMyPatients();
-      return response as { count: number; results: MyPatient[] };
-    },
-  });
-
-  const createMutation = useMutation({
-    mutationFn: (payload: { data: Record<string, string>; files: File[] }) =>
-      api.medical.createVisitRecord(selectedPatient, payload.data, payload.files),
-    onSuccess: () => {
-      toast.success(t('record_saved_success'));
-      setSubmitted(true);
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ['doctor-recent-records'] });
-      queryClient.invalidateQueries({ queryKey: ['doctor-dashboard-summary'] });
-      queryClient.invalidateQueries({ queryKey: ['doctor-recent-activity'] });
-      queryClient.invalidateQueries({ queryKey: ['myPatients'] });
-    },
-    onError: (err: any) => {
-      toast.error(err?.message || t('failed_load'));
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedPatient) {
-      toast.error(t('select_patient'));
-      return;
-    }
-    if (!diagnosis.trim()) {
-      toast.error(t('diagnosis') + ' is required'); // Simplified check
-      return;
-    }
-
-    const statusLabel =
-      STATUS_OPTIONS.find((s) => s.value === visitStatus)?.label ?? visitStatus;
-    const notesWithStatus = [
-      doctorNotes.trim(),
-      `[Status: ${statusLabel}]`,
-    ]
-      .filter(Boolean)
-      .join('\n');
-
-    createMutation.mutate({
-      data: {
-        diagnosis: diagnosis.trim(),
-        tests_performed: testsPerformed.trim(),
-        prescription: prescription.trim(),
-        doctor_notes: notesWithStatus,
-        visit_date: new Date(visitDate).toISOString(),
-      },
-      files: reportFiles,
-    });
-  };
-
-  const resetForm = () => {
-    setSelectedPatient('');
-    setDiagnosis('');
-    setTestsPerformed('');
-    setPrescription('');
-    setDoctorNotes('');
-    setVisitStatus('completed');
-    setReportFiles([]);
-    setVisitDate(new Date().toISOString().slice(0, 16));
-    setSubmitted(false);
-    setCdssResult(null);
-    setCdssLoading(false);
-    setCdssError(null);
-    setShowCdss(false);
-  };
-
-  const handleCdssAnalyze = async () => {
-    if (!selectedPatient) {
-      toast.error('Please select a patient first');
-      return;
-    }
-    if (!doctorNotes.trim() && !diagnosis.trim()) {
-      toast.error('Please enter doctor notes or diagnosis before requesting AI analysis');
-      return;
-    }
-    const symptoms = [doctorNotes.trim(), diagnosis.trim(), testsPerformed.trim()]
-      .filter(Boolean)
-      .join('. ');
-    setCdssLoading(true);
-    setCdssError(null);
-    try {
-      const result = await api.cdss.analyze(selectedPatient, symptoms);
-      setCdssResult(result);
-      setShowCdss(true);
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.detail ||
-        err?.message ||
-        'AI analysis failed. Please try again.';
-      setCdssError(msg);
-      toast.error(msg);
-    } finally {
-      setCdssLoading(false);
-    }
-  };
-
-  if (submitted) {
-    return (
-      <DashboardLayout>
-        <div className="max-w-2xl mx-auto mt-12 text-center space-y-6">
-          <Card className="bg-primary/8 border border-primary/15 shadow-xl shadow-emerald-50/50 backdrop-blur-md">
-            <CardContent className="p-12">
-              <div className="bg-emerald-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                <FiCheckCircle className="h-12 w-12 text-primary" />
-              </div>
-              <h2 className="text-3xl font-bold text-foreground mb-3">
-                {t('record_saved_success')}
-              </h2>
-              <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
-                {t('record_saved_desc')}
-              </p>
-              <div className="flex justify-center gap-4">
-                <Button onClick={resetForm} size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200">
-                  <FiFileText className="mr-2 h-5 w-5" />
-                  {t('create_another')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const [search, setSearch] = useState('');
+  const q = useQuery({ queryKey: ['myPatients'], queryFn: () => api.medical.getMyPatients() as Promise<{ count: number; results: MyPatient[] }> });
+  const list = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    return (q.data?.results ?? []).filter((p) => !s || p.name.toLowerCase().includes(s) || p.unique_patient_id.toLowerCase().includes(s));
+  }, [q.data, search]);
 
   return (
-    <DashboardLayout>
-      <div className="max-w-4xl mx-auto space-y-8 pb-12">
-        <div className="text-center sm:text-left">
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-            <span className="p-2 bg-blue-100 rounded-lg text-blue-600">
-              <FiEdit3 className="h-8 w-8" />
-            </span>
-            {t('add_record_title')}
-          </h1>
-          <p className="text-muted-foreground mt-2 text-lg">
-            {t('add_record_subtitle')}
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-8">
-            {/* Patient & Date Section */}
-            <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
-              <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
-              <CardHeader className="bg-background/50 border-b border-border pb-4">
-                <CardTitle className="flex items-center gap-2 text-xl text-foreground">
-                  <FiUser className="h-5 w-5 text-blue-500" />
-                  {t('visit_details')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 grid gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground/80 block">
-                    {t('select_patient')} <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={selectedPatient}
-                      onChange={(e) => setSelectedPatient(e.target.value)}
-                      className="w-full pl-4 pr-10 py-3 rounded-xl border border-border bg-card focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none"
-                      required
-                    >
-                      <option value="">
-                        {loadingPatients ? t('loading') : t('choose_patient')}
-                      </option>
-                      {patientsData?.results?.map((p) => (
-                        <option key={p.patient_id} value={p.patient_id}>
-                          {p.name} ({p.unique_patient_id}) – {p.age} yrs
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"> <path fillRule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" /> </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground/80 block">
-                    {t('visit_date')}
-                  </label>
-                  <div className="relative">
-                    <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      type="datetime-local"
-                      value={visitDate}
-                      onChange={(e) => setVisitDate(e.target.value)}
-                      className="pl-10 h-12 rounded-xl border-border focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Clinical Details */}
-            <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
-              <div className="h-1 bg-gradient-to-r from-emerald-500 to-primary" />
-              <CardHeader className="bg-background/50 border-b border-border pb-4">
-                <CardTitle className="flex items-center gap-2 text-xl text-foreground">
-                  <FiActivity className="h-5 w-5 text-emerald-500" />
-                  Clinical Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground/80 block">
-                    {t('diagnosis')} <span className="text-rose-500">*</span>
-                  </label>
-                  <textarea
-                    value={diagnosis}
-                    onChange={(e) => setDiagnosis(e.target.value)}
-                    rows={2}
-                    className="w-full rounded-xl border border-border p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
-                    placeholder="e.g. Acute Viral Fever"
-                    required
-                  />
-                </div>
-
-                <div className="grid gap-6 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground/80 block">
-                      {t('prescription')}
-                    </label>
-                    <textarea
-                      value={prescription}
-                      onChange={(e) => setPrescription(e.target.value)}
-                      rows={4}
-                      className="w-full rounded-xl border border-border p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
-                      placeholder="e.g. Tab Paracetamol 500mg"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground/80 block">
-                      {t('tests_performed')}
-                    </label>
-                    <textarea
-                      value={testsPerformed}
-                      onChange={(e) => setTestsPerformed(e.target.value)}
-                      rows={4}
-                      className="w-full rounded-xl border border-border p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
-                      placeholder="e.g. CBC, Widal"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground/80 block">
-                    {t('doctor_notes')}
-                  </label>
-                  <textarea
-                    value={doctorNotes}
-                    onChange={(e) => setDoctorNotes(e.target.value)}
-                    rows={3}
-                    className="w-full rounded-xl border border-border p-4 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
-                    placeholder="Additional observation notes..."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground/80 block">
-                    {t('status')}
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={visitStatus}
-                      onChange={(e) => setVisitStatus(e.target.value)}
-                      className="w-full pl-4 pr-10 py-3 rounded-xl border border-border bg-card focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all appearance-none"
-                    >
-                      {STATUS_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"> <path fillRule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" /> </svg>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* CDSS AI Suggestions */}
-            <div className="rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 p-5 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3 text-white">
-                <FiActivity className="h-6 w-6" />
-                <div>
-                  <p className="font-semibold text-lg leading-tight">Clinical Decision Support</p>
-                  <p className="text-indigo-100 text-sm">AI-powered analysis based on patient history &amp; current notes</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                disabled={!selectedPatient || cdssLoading}
-                onClick={handleCdssAnalyze}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-card text-indigo-700 font-semibold text-sm shadow hover:bg-indigo-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {cdssLoading ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                    Analyzing…
-                  </>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a1 1 0 011 1v1.323a6.5 6.5 0 014.677 4.677H17a1 1 0 110 2h-1.323A6.5 6.5 0 0111 15.677V17a1 1 0 11-2 0v-1.323A6.5 6.5 0 014.323 11H3a1 1 0 110-2h1.323A6.5 6.5 0 019 4.323V3a1 1 0 011-1z" /></svg>
-                    Get AI Suggestions
-                  </>
-                )}
-              </button>
-            </div>
-
-            {cdssError && !cdssLoading && (
-              <div className="rounded-xl bg-rose-50 border border-rose-200 p-4 text-sm text-rose-700">
-                {cdssError}
-              </div>
-            )}
-
-            {showCdss && cdssResult && (
-              <CDSSPanel result={cdssResult} onClose={() => setShowCdss(false)} />
-            )}
-
-            {/* File Upload */}
-            <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-md overflow-hidden">
-              <div className="h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
-              <CardHeader className="bg-background/50 border-b border-border pb-4">
-                <CardTitle className="flex items-center gap-2 text-xl text-foreground">
-                  <FiFileText className="h-5 w-5 text-purple-500" />
-                  {t('upload_reports')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                {reportFiles.length > 0 && (
-                  <div className="grid gap-3 mb-4 sm:grid-cols-2">
-                    {reportFiles.map((file, idx) => (
-                      <div
-                        key={`${file.name}-${idx}`}
-                        className="flex items-center gap-3 rounded-xl border border-border px-4 py-3 bg-background transition-all hover:border-purple-200 hover:bg-purple-50/50"
-                      >
-                        <div className="h-10 w-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <FiFile className="h-5 w-5 text-purple-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground/80 truncate">{file.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {(file.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setReportFiles((prev) =>
-                              prev.filter((_, i) => i !== idx)
-                            )
-                          }
-                          className="text-muted-foreground hover:text-rose-500 hover:bg-rose-50 p-2 rounded-full transition-colors"
-                        >
-                          <FiX className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {reportFiles.length < MAX_REPORT_FILES && (
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="group cursor-pointer border-2 border-dashed border-border rounded-xl p-8 transition-all hover:border-purple-400 hover:bg-purple-50/30 flex flex-col items-center justify-center text-center space-y-3"
-                  >
-                    <div className="h-12 w-12 bg-muted rounded-full flex items-center justify-center group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
-                      <FiUpload className="h-6 w-6 text-muted-foreground group-hover:text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-foreground/80 font-medium group-hover:text-purple-700 transition-colors">
-                        {reportFiles.length === 0 ? t('click_upload') : t('add_more_files')}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t('upload_reports_desc')}
-                      </p>
-                    </div>
-                  </div>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    const valid: File[] = [];
-                    files.forEach(file => {
-                      if (ALLOWED_FILE_TYPES.includes(file.type) && file.size <= MAX_FILE_SIZE) {
-                        valid.push(file);
-                      } else {
-                        toast.error(
-                          !ALLOWED_FILE_TYPES.includes(file.type) ? `Invalid Type: ${file.name}` : `Too Large: ${file.name}`
-                        );
-                      }
-                    });
-                    setReportFiles(prev => [...prev, ...valid].slice(0, MAX_REPORT_FILES));
-                    e.target.value = '';
-                  }}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Submit Button */}
-            <div className="pt-4 pb-12">
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={createMutation.isPending || !selectedPatient || !diagnosis.trim()}
-              >
-                {createMutation.isPending ? (
-                  <>
-                    <span className="animate-spin mr-2">⏳</span>
-                    {t('saving')}
-                  </>
-                ) : (
-                  <>
-                    <FiSave className="mr-2 h-5 w-5" />
-                    {t('save_record')}
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </form>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader title={t("Add a record")} description={t("Pick one of your patients to record a consultation, vitals, reports and a prescription.")} />
+      <div className="relative mb-4">
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("Search by name or patient ID")} className={`${fieldClass()} pl-10`} aria-label={t("Search patients")} autoFocus />
       </div>
-    </DashboardLayout>
+      {q.isLoading ? (
+        <div className="rounded-2xl border bg-card p-5"><SkeletonRows rows={4} /></div>
+      ) : q.isError ? (
+        <ErrorState onRetry={() => q.refetch()} />
+      ) : list.length === 0 ? (
+        <EmptyState
+          icon={QrCode}
+          title={q.data?.count ? t("No patients match") : t("No patients with active access")}
+          description={t("Scan the patient's health card to get access, then record the consultation.")}
+          action={<Link href="/doctor/scan-qr" className="inline-flex h-9 items-center gap-2 rounded-[10px] bg-primary px-3.5 text-[13px] font-medium text-primary-foreground shadow-button"><QrCode className="h-4 w-4" />{' '}{t("Scan health card")}</Link>}
+        />
+      ) : (
+        <ul className="divide-y overflow-hidden rounded-2xl border bg-card shadow-sm">
+          {list.map((p) => (
+            <li key={p.patient_id}>
+              <Link href={`/doctor/patients/${p.patient_id}/create-consultation`} className="group flex items-center gap-4 px-5 py-3.5 hover:bg-muted/40">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-[13px] font-semibold text-accent-foreground">{initialsOf(p.name)}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[14.5px] font-semibold">{p.name}</span>
+                  <span className="block text-xs text-muted-foreground"><span className="font-mono">{p.unique_patient_id}</span>{' '}{t("· {age} y · {visit_count} visits", { age: p.age, visit_count: p.visit_count })}</span>
+                </span>
+                <span className="hidden items-center gap-1.5 text-[13px] font-medium text-primary sm:inline-flex"><FilePlus2 className="h-4 w-4" />{' '}{t("Record visit")}</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
