@@ -73,6 +73,77 @@ SYMPTOMS_MAP = {
 }
 
 
+# (generic name to find in the formulary, batch, quantity, unit price, months to expiry)
+DEMO_PHARMACY_STOCK = [
+    ('Amoxicillin', 'DEMO-AMX-01', 120, '4.20', 18),
+    ('Paracetamol', 'DEMO-PCM-01', 400, '1.10', 24),
+    ('Metformin', 'DEMO-MET-01', 250, '2.30', 20),
+    ('Amlodipine', 'DEMO-AML-01', 180, '1.90', 22),
+    ('Atorvastatin', 'DEMO-ATV-01', 90, '5.60', 16),
+    ('Salbutamol', 'DEMO-SAL-01', 6, '96.00', 12),     # below reorder level
+    ('Cetirizine', 'DEMO-CTZ-01', 60, '0.90', 2),      # expires soon
+    ('Aspirin', 'DEMO-ASP-01', 150, '0.60', 20),
+]
+
+
+def seed_demo_pharmacist():
+    """pharmacist1@demo.com with an approved profile, a pharmacy and stock.
+
+    Idempotent, and safe to run on its own against an existing database.
+    """
+    from datetime import date
+
+    from accounts.models import PharmacistProfile
+    from pharmacy.models import Pharmacy, PharmacyInventory
+    from prescriptions.models import Medicine
+
+    user = User.objects.filter(email='pharmacist1@demo.com').first()
+    if user is None:
+        user = User.objects.create_user(
+            email='pharmacist1@demo.com', password='demo123',
+            role=User.Role.PHARMACIST,
+            verification_status=User.VerificationStatus.VERIFIED,
+        )
+    PharmacistProfile.objects.get_or_create(
+        user=user,
+        defaults={
+            'first_name': 'Farhan', 'last_name': 'Sheikh',
+            'license_number': 'DEMO-PH-0001', 'degree': 'B.Pharm',
+            'pharmacy_name': 'Sanjeevani Medicals',
+            'approval_status': PharmacistProfile.ApprovalStatus.APPROVED,
+        },
+    )
+    pharmacy, _ = Pharmacy.objects.get_or_create(
+        owner=user,
+        defaults={
+            'name': 'Sanjeevani Medicals', 'license_number': 'DEMO-PHARM-0001',
+            'address': '14, Residency Road', 'district': 'Bengaluru',
+            'phone': '+918041237788', 'email': 'pharmacist1@demo.com',
+        },
+    )
+    today = date.today()
+    for generic, batch, qty, price, months in DEMO_PHARMACY_STOCK:
+        medicine = Medicine.objects.filter(generic_name__iexact=generic).first()
+        if medicine is None or PharmacyInventory.objects.filter(pharmacy=pharmacy, batch_number=batch).exists():
+            continue
+        month = today.month - 1 + months
+        PharmacyInventory.objects.create(
+            pharmacy=pharmacy, medicine=medicine, batch_number=batch,
+            quantity_in_stock=qty, unit_price=price,
+            expiry_date=date(today.year + month // 12, month % 12 + 1, 1),
+        )
+    return user
+
+
+DEMO_DOCTORS = [
+    ('Meera', 'Rao', 'General Medicine'),
+    ('Arjun', 'Mehta', 'Endocrinology'),
+    ('Kavya', 'Sharma', 'Cardiology'),
+    ('Imran', 'Qureshi', 'Pulmonology'),
+    ('Lalitha', 'Iyer', 'Paediatrics'),
+]
+
+
 class Command(BaseCommand):
     help = 'Seed demo data from ML models dataset (LIMITED SUBSET for dashboard demo)'
 
@@ -172,14 +243,30 @@ class Command(BaseCommand):
                 role=User.Role.ADMIN, is_staff=True,
                 verification_status=User.VerificationStatus.VERIFIED,
             )
-        for i in range(1, 6):
+        from accounts.models import DoctorProfile
+
+        for i, (first, last, specialization) in enumerate(DEMO_DOCTORS, start=1):
             email = f'doctor{i}@demo.com'
-            if not User.objects.filter(email=email).exists():
-                User.objects.create_user(
+            user = User.objects.filter(email=email).first()
+            if user is None:
+                user = User.objects.create_user(
                     email=email, password='demo123',
                     role=User.Role.DOCTOR,
                     verification_status=User.VerificationStatus.VERIFIED,
                 )
+            # Clinical endpoints require an approved DoctorProfile, so a demo
+            # doctor without one could sign in but not open any patient data.
+            DoctorProfile.objects.get_or_create(
+                user=user,
+                defaults={
+                    'first_name': first,
+                    'last_name': last,
+                    'medical_license': f'DEMO-DOC-{i:04d}',
+                    'specialization': specialization,
+                    'experience_years': 5 + i,
+                    'approval_status': DoctorProfile.ApprovalStatus.APPROVED,
+                },
+            )
         for i in range(1, 11):
             email = f'patient{i}@demo.com'
             if not User.objects.filter(email=email).exists():
@@ -188,6 +275,7 @@ class Command(BaseCommand):
                     role=User.Role.PATIENT,
                     verification_status=User.VerificationStatus.VERIFIED,
                 )
+        seed_demo_pharmacist()
         self.stdout.write(self.style.SUCCESS(
             f'   ✓ {User.objects.filter(is_superuser=False).count()} users'
         ))
