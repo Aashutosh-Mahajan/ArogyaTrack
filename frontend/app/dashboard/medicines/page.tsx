@@ -1,196 +1,211 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import { BookOpen, CalendarClock, Pill, Search } from 'lucide-react';
 import { withAuth } from '@/components/auth/withAuth';
 import { api } from '@/lib/api';
-import type { Medicine } from '@/types';
+import { EmptyState, ErrorState, PageHeader, Skeleton, SkeletonRows, StatusPill } from '@/components/ui/page';
+import { fieldClass } from '@/components/auth/FormKit';
+import { doctorLabel } from '@/components/dashboard/RecordDetailModal';
+import { cn } from '@/lib/utils';
+import type { Medicine, Prescription, PrescriptionMedicine } from '@/types';
+import { t as tr, intlLocale, tn } from '@/lib/i18n';
+
+type Tab = 'mine' | 'reference';
+
+interface Course {
+  item: PrescriptionMedicine;
+  rx: Prescription;
+  start: Date;
+  end: Date;
+  daysLeft: number;
+  progress: number;
+}
+
+const DAY = 86_400_000;
+
+/** A course is current while today falls inside issue date + duration. */
+function buildCourses(rxs: Prescription[]): { current: Course[]; past: Course[] } {
+  const now = Date.now();
+  const all: Course[] = [];
+  for (const rx of rxs) {
+    const start = new Date((rx as any).issued_at || rx.created_at);
+    for (const item of rx.medicines ?? []) {
+      if (item.dispense_status === 'unavailable') continue;
+      const end = new Date(start.getTime() + Math.max(1, item.duration_days) * DAY);
+      const total = end.getTime() - start.getTime();
+      all.push({
+        item,
+        rx,
+        start,
+        end,
+        daysLeft: Math.max(0, Math.ceil((end.getTime() - now) / DAY)),
+        progress: Math.min(1, Math.max(0, (now - start.getTime()) / total)),
+      });
+    }
+  }
+  return {
+    current: all.filter((c) => c.end.getTime() > now).sort((a, b) => a.end.getTime() - b.end.getTime()),
+    past: all.filter((c) => c.end.getTime() <= now).sort((a, b) => b.end.getTime() - a.end.getTime()),
+  };
+}
+
+function useDebounced<T>(value: T, ms = 300) {
+  const [v, setV] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setV(value), ms);
+    return () => clearTimeout(t);
+  }, [value, ms]);
+  return v;
+}
+
+const fmt = (d: Date) => d.toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
 
 function MedicinesPage(): React.JSX.Element {
+  const [tab, setTab] = useState<Tab>('mine');
   const [search, setSearch] = useState('');
+  const q = useDebounced(search.trim());
 
-  const { data: medicines, isLoading } = useQuery<Medicine[]>({
-    queryKey: ['medicines', search],
-    queryFn: () => api.prescriptions.getMedicines({ search: search || undefined }),
+  const rxQ = useQuery({ queryKey: ['prescriptions-all'], queryFn: () => api.prescriptions.getAll({ limit: 100 }) });
+  const catalogue = useQuery<Medicine[]>({
+    queryKey: ['medicines', q],
+    queryFn: () => api.prescriptions.getMedicines({ search: q || undefined }),
+    enabled: tab === 'reference',
   });
 
-  const list = medicines || [];
-
-  if (isLoading) {
-    return (
-      <div style={{ fontFamily: "'DM Sans', sans-serif" }}>
-        {/* Header */}
-        <div style={{
-          background: 'linear-gradient(130deg, #151109 0%, #1a5c52 55%, #1a5c52 100%)',
-          borderRadius: 18, padding: '32px 36px', marginBottom: 28,
-          position: 'relative', overflow: 'hidden',
-        }}>
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', margin: 0 }}>💊 Medicine Catalogue</h1>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 6 }}>Loading medicines…</p>
-        </div>
-        {/* Skeleton */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} style={{ background: 'hsl(var(--card))', borderRadius: 16, padding: 24, border: '1px solid hsl(var(--border))' }}>
-              <div className="animate-pulse" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ height: 16, background: 'hsl(var(--muted))', borderRadius: 6, width: '60%' }} />
-                <div style={{ height: 12, background: 'hsl(var(--muted))', borderRadius: 6, width: '40%' }} />
-                <div style={{ height: 12, background: 'hsl(var(--muted))', borderRadius: 6, width: '50%' }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const { current, past } = useMemo(() => buildCourses((rxQ.data?.results ?? []) as Prescription[]), [rxQ.data]);
 
   return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif" }}>
-      {/* ═══ HEADER BANNER ═══ */}
-      <div style={{
-        background: 'linear-gradient(130deg, #151109 0%, #1a5c52 55%, #1a5c52 100%)',
-        borderRadius: 18, padding: '32px 36px', marginBottom: 28,
-        position: 'relative', overflow: 'hidden',
-      }}>
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-        <svg style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 60, opacity: 0.07, pointerEvents: 'none' }}
-          viewBox="0 0 800 60" preserveAspectRatio="none">
-          <path d="M0,30 L100,30 L115,10 L130,50 L145,10 L160,30 L400,30 L415,12 L430,48 L445,12 L460,30 L800,30"
-            stroke="#4ade80" strokeWidth="2" fill="none" />
-        </svg>
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-          <div>
-            <h1 style={{ fontSize: 26, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', margin: 0 }}>💊 Medicine Catalogue</h1>
-            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 6 }}>
-              {list.length} medicine{list.length !== 1 ? 's' : ''} available
-            </p>
-          </div>
-          {/* Search */}
-          <div style={{ position: 'relative' }}>
-            <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(255,255,255,0.4)' }}
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <circle cx={11} cy={11} r={8} /><path d="m21 21-4.35-4.35" strokeLinecap="round" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search medicines…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{
-                width: 280, padding: '10px 14px 10px 40px',
-                borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)',
-                background: 'rgba(255,255,255,0.08)', color: '#fff',
-                fontSize: 14, outline: 'none',
-              }}
-            />
-          </div>
-        </div>
+    <div>
+      <PageHeader title={tr("Medicines")} description={tr("What you are currently taking, and a reference for medicines on the network.")} />
+
+      <div className="mb-6 inline-flex rounded-[10px] border bg-card p-1 shadow-sm" role="tablist">
+        {[
+          { key: 'mine' as Tab, label: tr("My medicines"), icon: Pill },
+          { key: 'reference' as Tab, label: tr("Medicine reference"), icon: BookOpen },
+        ].map((t) => (
+          <button
+            key={t.key}
+            role="tab"
+            aria-selected={tab === t.key}
+            onClick={() => setTab(t.key)}
+            className={cn('inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-[13px] font-medium transition-colors', tab === t.key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}
+          >
+            <t.icon className="h-4 w-4" /> {t.label}
+          </button>
+        ))}
       </div>
 
-      {/* ═══ EMPTY STATE ═══ */}
-      {list.length === 0 ? (
-        <div style={{
-          background: 'hsl(var(--card))', borderRadius: 16, padding: '60px 24px',
-          textAlign: 'center', border: '1px solid hsl(var(--border))',
-        }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>💊</div>
-          <p style={{ fontSize: 18, fontWeight: 700, color: '#1c1712' }}>No medicines found</p>
-          {search && <p style={{ fontSize: 14, color: '#7a756b', marginTop: 6 }}>Try a different search term.</p>}
-        </div>
+      {tab === 'mine' ? (
+        rxQ.isLoading ? (
+          <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-2xl" />)}</div>
+        ) : rxQ.isError ? (
+          <ErrorState onRetry={() => rxQ.refetch()} />
+        ) : (
+          <div className="space-y-8">
+            <section>
+              <h2 className="kicker mb-3">{tr("Current courses · {length}", { length: current.length })}</h2>
+              {current.length === 0 ? (
+                <EmptyState compact icon={Pill} title={tr("No active medicine courses")} description={tr("Medicines from your prescriptions show here while the course is running.")} />
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                  {current.map((c) => (
+                    <article key={c.item.id} className="flex flex-col rounded-2xl border bg-card p-5 shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Pill className="h-5 w-5" /></span>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="truncate text-[15px] font-semibold">{c.item.medicine_name}</h3>
+                          <div className="truncate text-xs text-muted-foreground">{(c.item as any).medicine_generic}</div>
+                        </div>
+                        <StatusPill tone={c.daysLeft <= 3 ? 'warning' : 'primary'}>{tn(c.daysLeft, '1 day left', '{count} days left')}</StatusPill>
+                      </div>
+                      <dl className="mt-4 grid grid-cols-2 gap-3 text-[13px]">
+                        <div><dt className="text-xs text-muted-foreground">{tr("Dose")}</dt><dd className="font-medium">{c.item.dosage}</dd></div>
+                        <div><dt className="text-xs text-muted-foreground">{tr("Frequency")}</dt><dd className="font-medium">{c.item.frequency}</dd></div>
+                      </dl>
+                      {c.item.special_instructions && <p className="mt-3 rounded-lg bg-muted/60 px-3 py-2 text-[12.5px] text-muted-foreground">{c.item.special_instructions}</p>}
+                      <div className="mt-auto pt-4">
+                        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                          <div className="h-full rounded-full bg-primary" style={{ width: `${c.progress * 100}%` }} />
+                        </div>
+                        <div className="mt-2 flex justify-between text-[11.5px] text-muted-foreground">
+                          <span>{fmt(c.start)}</span>
+                          <span>{tr("Ends {fmt}", { fmt: fmt(c.end) })}</span>
+                        </div>
+                        <div className="mt-2 truncate text-[11.5px] text-muted-foreground">
+                          {(c.rx as any).prescription_number} · {doctorLabel(c.rx.doctor_name)}
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {past.length > 0 && (
+              <section>
+                <h2 className="kicker mb-3">{tr("Completed courses · {length}", { length: past.length })}</h2>
+                <ul className="divide-y overflow-hidden rounded-2xl border bg-card shadow-sm">
+                  {past.slice(0, 20).map((c) => (
+                    <li key={c.item.id} className="flex items-center gap-3 px-5 py-3 text-[13.5px]">
+                      <CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0 flex-1 truncate font-medium">{c.item.medicine_name}</span>
+                      <span className="hidden text-muted-foreground sm:inline">{c.item.dosage} · {c.item.frequency}</span>
+                      <span className="text-xs text-muted-foreground">{tr("Ended {fmt}", { fmt: fmt(c.end) })}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            <p className="text-[13px] text-muted-foreground">{tr("Need dose reminders? Track them on the")}{' '}<Link href="/dashboard/adherence" className="font-medium text-primary hover:underline">{tr("adherence page")}</Link>.
+            </p>
+          </div>
+        )
       ) : (
-        /* ═══ MEDICINE GRID ═══ */
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
-          {list.map((med) => (
-            <div key={med.id} style={{
-              background: 'hsl(var(--card))', borderRadius: 16, padding: 0,
-              border: '1px solid hsl(var(--border))', overflow: 'hidden',
-              transition: 'box-shadow 0.2s, transform 0.2s',
-              cursor: 'default',
-            }}
-              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 8px 28px hsl(var(--primary) / 0.10)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
-            >
-
-              <div style={{ padding: '20px 24px' }}>
-                {/* Name + status */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                    <div style={{
-                      width: 40, height: 40, borderRadius: 12,
-                      background: med.is_active ? 'hsl(var(--primary) / 0.08)' : 'hsl(var(--muted))',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0,
-                    }}>
-                      <span style={{ fontSize: 18 }}>💊</span>
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <h3 style={{ fontSize: 15, fontWeight: 700, color: 'hsl(var(--foreground))', margin: 0, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{med.name}</h3>
-                      {med.generic_name && (
-                        <p style={{ fontSize: 12, color: '#7a756b', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{med.generic_name}</p>
-                      )}
-                    </div>
-                  </div>
-                  <span style={{
-                    fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
-                    padding: '4px 10px', borderRadius: 20, flexShrink: 0,
-                    background: med.is_active ? 'hsl(var(--primary) / 0.1)' : 'hsl(var(--muted))',
-                    color: med.is_active ? '#1a5c52' : '#9CA3AF',
-                  }}>
-                    {med.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-
-                {/* Info rows */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-                  {med.drug_class && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: '#9CA3AF', minWidth: 70, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Class</span>
-                      <span style={{ fontSize: 13, color: '#1c1712', fontWeight: 500 }}>{med.drug_class}</span>
-                    </div>
-                  )}
-                  {med.therapeutic_category && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: '#9CA3AF', minWidth: 70, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Category</span>
-                      <span style={{ fontSize: 13, color: '#1c1712', fontWeight: 500 }}>{med.therapeutic_category}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Allergens */}
-                {med.allergens && med.allergens.length > 0 && (
-                  <div style={{
-                    background: '#FFF7ED', border: '1px solid #FED7AA',
-                    borderRadius: 10, padding: '10px 14px', marginBottom: 16,
-                    display: 'flex', alignItems: 'center', gap: 8,
-                  }}>
-                    <span style={{ fontSize: 14 }}>⚠️</span>
-                    <span style={{ fontSize: 12, color: '#9A3412', fontWeight: 600 }}>Allergens:</span>
-                    <span style={{ fontSize: 12, color: '#C2410C' }}>{med.allergens.join(', ')}</span>
-                  </div>
-                )}
-
-                {/* Dosages */}
-                {med.standard_dosages && Object.keys(med.standard_dosages).length > 0 && (
-                  <div>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 8 }}>Standard Dosages</p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                      {Object.entries(med.standard_dosages).map(([key, val]) => (
-                        <span key={key} style={{
-                          fontSize: 12, fontWeight: 600,
-                          padding: '4px 10px', borderRadius: 8,
-                          background: 'hsl(var(--primary) / 0.06)',
-                          color: '#1a5c52', border: '1px solid hsl(var(--primary) / 0.12)',
-                        }}>
-                          {key}: {val}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+        <div>
+          <div className="relative mb-5 max-w-md">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={tr("Search by brand or generic name")} className={`${fieldClass()} pl-10`} aria-label={tr("Search medicines")} />
+          </div>
+          {catalogue.isLoading ? (
+            <div className="rounded-2xl border bg-card p-5"><SkeletonRows rows={5} /></div>
+          ) : catalogue.isError ? (
+            <ErrorState onRetry={() => catalogue.refetch()} />
+          ) : !catalogue.data?.length ? (
+            <EmptyState icon={BookOpen} title={tr("No medicines found")} description={tr("Try a different name.")} />
+          ) : (
+            <div className="overflow-x-auto rounded-2xl border bg-card shadow-sm">
+              <table className="w-full min-w-[640px] text-[13.5px]">
+                <thead className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
+                  <tr>
+                    <th className="px-5 py-3 font-medium">{tr("Medicine")}</th>
+                    <th className="px-5 py-3 font-medium">{tr("Class")}</th>
+                    <th className="px-5 py-3 font-medium">{tr("Category")}</th>
+                    <th className="px-5 py-3 font-medium">{tr("Standard dosing")}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {catalogue.data.map((m) => (
+                    <tr key={m.id} className="align-top hover:bg-muted/30">
+                      <td className="px-5 py-3">
+                        <div className="font-medium">{m.name}</div>
+                        <div className="text-xs text-muted-foreground">{m.generic_name}</div>
+                      </td>
+                      <td className="px-5 py-3">{m.drug_class || '—'}</td>
+                      <td className="px-5 py-3">{m.therapeutic_category || '—'}</td>
+                      <td className="px-5 py-3 text-muted-foreground">
+                        {m.standard_dosages && Object.keys(m.standard_dosages).length
+                          ? Object.entries(m.standard_dosages).slice(0, 3).map(([k, v]) => <div key={k}><span className="text-foreground/80">{k}:</span> {String(v)}</div>)
+                          : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>
