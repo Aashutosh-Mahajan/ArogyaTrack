@@ -1,254 +1,212 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
 import { useQuery } from '@tanstack/react-query';
+import { ChevronDown, ClipboardList, Loader2, QrCode, Stethoscope, X } from 'lucide-react';
 import { withAuth } from '@/components/auth/withAuth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
-import type { PaginatedResponse, Prescription, PrescriptionMedicine } from '@/types';
-import {
-  FiFileText,
-  FiCalendar,
-  FiChevronDown,
-  FiChevronUp,
-  FiPackage,
-  FiClock,
-  FiCheckCircle,
-  FiAlertCircle,
-  FiRefreshCw,
-  FiInfo
-} from 'react-icons/fi';
-import { formatDate } from '@/lib/utils';
+import { docPaths } from '@/lib/documents';
+import { PdfActions } from '@/components/ui/pdf-actions';
 import { useLanguage } from '@/components/providers/LanguageProvider';
+import { EmptyState, ErrorState, PageHeader, SkeletonRows, StatusPill } from '@/components/ui/page';
+import { doctorLabel } from '@/components/dashboard/RecordDetailModal';
+import { cn } from '@/lib/utils';
+import type { Prescription } from '@/types';
+import { t as tr, intlLocale } from '@/lib/i18n';
 
-function PrescriptionsPage(): React.JSX.Element {
-  const { t } = useLanguage();
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+const RX_STATUS: Record<string, { label: string; tone: 'info' | 'warning' | 'success' | 'neutral' }> = {
+  pending: { get label() { return tr("Not yet dispensed"); }, tone: 'info' },
+  partially_dispensed: { get label() { return tr("Partly dispensed"); }, tone: 'warning' },
+  fully_dispensed: { get label() { return tr("Dispensed"); }, tone: 'success' },
+};
+const ITEM_STATUS: Record<string, { label: string; tone: 'neutral' | 'success' | 'danger' | 'info' }> = {
+  pending: { get label() { return tr("Pending"); }, tone: 'neutral' },
+  dispensed: { get label() { return tr("Dispensed"); }, tone: 'success' },
+  unavailable: { get label() { return tr("Unavailable"); }, tone: 'danger' },
+  patient_has: { get label() { return tr("Already had"); }, tone: 'info' },
+};
+const FILTERS = [
+  { key: 'all', get label() { return tr("All"); } },
+  { key: 'active', get label() { return tr("Active"); } },
+  { key: 'fully_dispensed', get label() { return tr("Dispensed"); } },
+] as const;
 
-  const { data, isLoading, refetch, isFetching } = useQuery<PaginatedResponse<Prescription>>({
-    queryKey: ['prescriptions-all'],
-    queryFn: () => api.prescriptions.getAll({ limit: 50 }),
-    refetchInterval: 30000,
-  });
+const RX_LANGUAGES = [
+  { code: 'en', get label() { return tr("English"); } },
+  { code: 'hi', label: 'हिन्दी' },
+  { code: 'mr', label: 'मराठी' },
+  { code: 'ta', label: 'தமிழ்' },
+  { code: 'te', label: 'తెలుగు' },
+  { code: 'bn', label: 'বাংলা' },
+];
 
-  const toggle = (id: string) => {
-    setExpanded((prev) => {
-      const s = new Set(prev);
-      s.has(id) ? s.delete(id) : s.add(id);
-      return s;
-    });
-  };
+const fmt = (iso: string) => new Date(iso).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
 
-  const prescriptions = data?.results || [];
-
-  // Helper to get status config
-  const getStatusConfig = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return { label: t('active_prescriptions_title'), variant: 'secondary', className: 'bg-blue-100 text-blue-700 hover:bg-blue-200' };
-      case 'partially_dispensed':
-        return { label: t('medium'), variant: 'default', className: 'bg-amber-100 text-amber-700 hover:bg-amber-200' };
-      case 'fully_dispensed':
-        return { label: t('status_completed'), variant: 'default', className: 'bg-emerald-100 text-primary hover:bg-emerald-200' };
-      default:
-        return { label: status, variant: 'outline', className: 'bg-muted text-foreground/80' };
-    }
-  };
-
-  const getDispenseConfig = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return { label: t('pending'), className: 'bg-amber-50 text-amber-700 border-amber-200' };
-      case 'dispensed':
-        return { label: t('dispensed'), className: 'bg-primary/8 text-primary border-emerald-200' };
-      case 'unavailable':
-        return { label: t('none'), className: 'bg-rose-50 text-rose-700 border-rose-200' };
-      case 'patient_has':
-        return { label: t('status'), className: 'bg-background text-foreground/80 border-border' };
-      default:
-        return { label: status, className: 'bg-background text-foreground/80 border-border' };
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6 animate-pulse">
-        <div className="flex justify-between items-center">
-          <div className="h-8 w-48 bg-muted rounded"></div>
-          <div className="h-10 w-24 bg-muted rounded"></div>
-        </div>
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-muted rounded-xl"></div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+/* QR for the pharmacy counter. The image endpoint is authenticated, so fetch it as a blob. */
+function QrDialog({ rx, onClose }: { rx: Prescription; onClose: () => void }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let revoke: string | null = null;
+    api.client.client
+      .get(`/prescriptions/${rx.id}/qr-image/`, { responseType: 'blob' })
+      .then((res) => {
+        revoke = URL.createObjectURL(res.data);
+        setUrl(revoke);
+      })
+      .catch(() => setFailed(true));
+    return () => {
+      if (revoke) URL.revokeObjectURL(revoke);
+    };
+  }, [rx.id]);
 
   return (
-    <div className="space-y-8 pb-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">
-            {t('prescriptions_page_title')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('prescriptions_page_subtitle')}
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="flex items-center gap-2 bg-card/50 border-border hover:bg-muted transition-colors"
-        >
-          <FiRefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-          {t('refresh')}
-        </Button>
+    <Dialog.Root open onOpenChange={(o) => !o && onClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-foreground/30 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border bg-card p-6 text-center shadow-pop data-[state=open]:animate-in data-[state=open]:zoom-in-95">
+          <Dialog.Close className="absolute right-3 top-3 rounded-lg p-1.5 text-muted-foreground hover:bg-muted" aria-label={tr("Close")}><X className="h-4 w-4" /></Dialog.Close>
+          <Dialog.Title className="text-[17px] font-semibold">{(rx as any).prescription_number}</Dialog.Title>
+          <Dialog.Description className="mt-1 text-[13.5px] text-muted-foreground">{tr("Show this code at the pharmacy counter.")}</Dialog.Description>
+          <div className="mx-auto mt-5 flex h-60 w-60 items-center justify-center rounded-2xl border bg-white p-3">
+            {url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={url} alt={tr("Prescription QR code")} className="h-full w-full" />
+            ) : failed ? (
+              <span className="text-[13px] text-slate-500">{tr("QR code unavailable for this prescription.")}</span>
+            ) : (
+              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+            )}
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+
+function PrescriptionsPage(): React.JSX.Element {
+  const { t, language } = useLanguage();
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]['key']>('all');
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const [qrFor, setQrFor] = useState<Prescription | null>(null);
+  const [pdfLang, setPdfLang] = useState<string>(RX_LANGUAGES.some((l) => l.code === language) ? language : 'en');
+
+  const q = useQuery({ queryKey: ['prescriptions-all'], queryFn: () => api.prescriptions.getAll({ limit: 100 }) });
+  const all = useMemo(() => (q.data?.results ?? []) as Prescription[], [q.data]);
+  const list = useMemo(
+    () => all.filter((p) => (filter === 'all' ? true : filter === 'active' ? p.status !== 'fully_dispensed' : p.status === filter)),
+    [all, filter]
+  );
+
+  const toggle = (id: string) =>
+    setOpen((s) => {
+      const n = new Set(s);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+
+  return (
+    <div>
+      <PageHeader title={t("My Prescriptions")} description={t("View all your prescriptions and medication details")} />
+
+      <div className="mb-5 inline-flex rounded-[10px] border bg-card p-1 shadow-sm">
+        {FILTERS.map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setFilter(f.key)}
+            className={cn('rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors', filter === f.key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
-      <Card className="border-0 shadow-lg overflow-hidden bg-card/80 backdrop-blur-md">
-        
-        <CardContent className="p-0">
-          {prescriptions.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground">
-              <div className="bg-background p-4 rounded-full shadow-sm inline-block mb-4 border border-border">
-                <FiFileText className="h-8 w-8 text-slate-300" />
-              </div>
-              <h3 className="font-semibold text-foreground text-lg mb-1">{t('no_prescriptions')}</h3>
-              <p className="text-muted-foreground">{t('empty_records_desc')}</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {prescriptions.map((rx) => {
-                const isExpanded = expanded.has(rx.id);
-                const status = getStatusConfig(rx.status);
-
-                return (
-                  <div key={rx.id} className="group transition-all duration-200 hover:bg-background/50">
-                    <div
-                      className="p-5 cursor-pointer"
-                      onClick={() => toggle(rx.id)}
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4 min-w-0">
-                          <div className={`
-                                                        p-3 rounded-xl transition-colors shrink-0
-                                                        ${rx.status === 'pending'
-                              ? 'bg-blue-50 text-blue-600 group-hover:bg-blue-100'
-                              : 'bg-primary/8 text-primary group-hover:bg-primary/12'}
-                                                    `}>
-                            <FiFileText className="h-6 w-6" />
-                          </div>
-
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-bold text-foreground text-lg">
-                                {t('prescription_file')} #{rx.id.slice(-6)}
-                              </h3>
-                              <Badge className={`${status.className} border-0 uppercase text-[10px] tracking-wider font-bold`}>
-                                {status.label}
-                              </Badge>
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground font-medium">
-                              <span className="flex items-center gap-1.5">
-                                <FiCalendar className="w-3.5 h-3.5" />
-                                {formatDate(rx.created_at)}
-                              </span>
-                              {rx.doctor_name && (
-                                <span className="flex items-center gap-1.5">
-                                  <div className="w-1 h-1 rounded-full bg-muted-foreground/30"></div>
-                                  {rx.doctor_name}
-                                </span>
-                              )}
-                              <span className="flex items-center gap-1.5 text-muted-foreground">
-                                <div className="w-1 h-1 rounded-full bg-muted-foreground/30"></div>
-                                <FiPackage className="w-3.5 h-3.5" />
-                                {rx.medicines.length} {t('medicines_count')}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className={`
-                                                    p-2 rounded-full transition-all duration-300 shrink-0
-                                                    ${isExpanded ? 'bg-primary/8 text-primary rotate-180' : 'text-slate-300 group-hover:text-muted-foreground'}
-                                                `}>
-                          <FiChevronDown className="h-5 w-5" />
-                        </div>
+      {q.isLoading ? (
+        <div className="rounded-2xl border bg-card p-5"><SkeletonRows rows={4} /></div>
+      ) : q.isError ? (
+        <ErrorState onRetry={() => q.refetch()} />
+      ) : list.length === 0 ? (
+        <EmptyState icon={ClipboardList} title={all.length ? tr("Nothing in this view") : tr("No prescriptions yet")} description={all.length ? tr("Try another filter.") : tr("Prescriptions your doctors issue will appear here with a QR code for the pharmacy.")} />
+      ) : (
+        <div className="space-y-3">
+          {list.map((rx) => {
+            const st = RX_STATUS[rx.status] ?? { label: rx.status, tone: 'neutral' as const };
+            const meds = rx.medicines ?? [];
+            const dispensed = meds.filter((m) => m.dispense_status === 'dispensed').length;
+            const isOpen = open.has(rx.id);
+            return (
+              <article key={rx.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+                <button onClick={() => toggle(rx.id)} className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-muted/40" aria-expanded={isOpen}>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <ClipboardList className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-[14px] font-semibold">{(rx as any).prescription_number}</span>
+                      <StatusPill tone={st.tone}>{st.label}</StatusPill>
+                    </span>
+                    <span className="mt-1 flex flex-wrap items-center gap-x-2 text-[13px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1"><Stethoscope className="h-3.5 w-3.5" /> {doctorLabel(rx.doctor_name)}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>{fmt((rx as any).issued_at || rx.created_at)}</span>
+                      <span aria-hidden="true">·</span>
+                      <span className="tabular">{tr("{dispensed}/{length} dispensed", { dispensed, length: meds.length })}</span>
+                    </span>
+                  </span>
+                  <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform', isOpen && 'rotate-180')} />
+                </button>
+                {isOpen && (
+                  <div className="border-t px-5 pb-5 pt-4">
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[560px] text-[13.5px]">
+                        <thead>
+                          <tr className="text-left text-xs text-muted-foreground">
+                            <th className="pb-2 font-medium">{tr("Medicine")}</th>
+                            <th className="pb-2 font-medium">{tr("Dosage")}</th>
+                            <th className="pb-2 font-medium">{tr("Frequency")}</th>
+                            <th className="pb-2 font-medium">{tr("Duration")}</th>
+                            <th className="pb-2 text-right font-medium">{tr("Status")}</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {meds.map((m) => {
+                            const is = ITEM_STATUS[m.dispense_status] ?? { label: m.dispense_status, tone: 'neutral' as const };
+                            return (
+                              <tr key={m.id}>
+                                <td className="py-2.5 pr-3">
+                                  <div className="font-medium">{m.medicine_name}</div>
+                                  {m.special_instructions && <div className="text-xs text-muted-foreground">{m.special_instructions}</div>}
+                                </td>
+                                <td className="py-2.5 pr-3">{m.dosage}</td>
+                                <td className="py-2.5 pr-3">{m.frequency}</td>
+                                <td className="tabular py-2.5 pr-3">{tr("{duration_days} days", { duration_days: m.duration_days })}</td>
+                                <td className="py-2.5 text-right"><StatusPill tone={is.tone}>{is.label}</StatusPill></td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button onClick={() => setQrFor(rx)} className="inline-flex h-9 items-center gap-2 rounded-[10px] bg-primary px-3.5 text-[13px] font-medium text-primary-foreground shadow-button">
+                        <QrCode className="h-4 w-4" />{' '}{tr("Show pharmacy QR")}</button>
+                      <div className="inline-flex items-center gap-1.5">
+                        <select value={pdfLang} onChange={(e) => setPdfLang(e.target.value)} aria-label={tr("Prescription language")} className="h-9 rounded-[10px] border bg-card px-2.5 text-[13px] shadow-sm">
+                          {RX_LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+                        </select>
+                        <PdfActions path={docPaths.prescription(rx.id, pdfLang)} fileName={`Prescription_${(rx as any).prescription_number}_${pdfLang}.pdf`} size="md" />
                       </div>
                     </div>
-
-                    {isExpanded && (
-                      <div className="px-5 pb-5 animate-in slide-in-from-top-2 duration-200">
-                        <div className="bg-background/50 rounded-xl border border-border overflow-hidden">
-                          <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 bg-muted/50 text-[10px] items-center font-bold text-muted-foreground uppercase tracking-wider border-b border-border/50">
-                            <div className="col-span-4">{t('medicine_name')}</div>
-                            <div className="col-span-2 text-center">{t('dosage')}</div>
-                            <div className="col-span-2 text-center">{t('frequency')}</div>
-                            <div className="col-span-2 text-center">{t('duration')}</div>
-                            <div className="col-span-2 text-right">{t('dispense_status')}</div>
-                          </div>
-
-                          <div className="divide-y divide-slate-100">
-                            {rx.medicines.map((pm: PrescriptionMedicine) => {
-                              const dispenseStatus = getDispenseConfig(pm.dispense_status);
-                              return (
-                                <div key={pm.id} className="p-4 sm:grid sm:grid-cols-12 sm:gap-4 sm:items-center hover:bg-card transition-colors">
-                                  {/* Mobile-first Layout */}
-                                  <div className="col-span-4 mb-2 sm:mb-0">
-                                    <p className="font-semibold text-foreground flex items-center gap-2">
-                                      {pm.medicine_name || (typeof pm.medicine === 'object' ? pm.medicine.name : pm.medicine)}
-                                    </p>
-                                    {pm.special_instructions && (
-                                      <p className="text-xs text-amber-600 mt-1 flex items-start gap-1.5 bg-amber-50 p-1.5 rounded-md inline-block max-w-full">
-                                        <FiInfo className="w-3 h-3 shrink-0 mt-0.5" />
-                                        <span className="break-words">{t('instructions')}: {pm.special_instructions}</span>
-                                      </p>
-                                    )}
-                                  </div>
-
-                                  <div className="col-span-2 flex items-center justify-between sm:justify-center gap-2 text-sm text-muted-foreground mb-1 sm:mb-0">
-                                    <span className="sm:hidden text-xs text-muted-foreground font-medium uppercase">{t('dosage')}</span>
-                                    <span className="bg-muted px-2 py-0.5 rounded text-xs font-semibold">{pm.dosage}</span>
-                                  </div>
-
-                                  <div className="col-span-2 flex items-center justify-between sm:justify-center gap-2 text-sm text-muted-foreground mb-1 sm:mb-0">
-                                    <span className="sm:hidden text-xs text-muted-foreground font-medium uppercase">{t('frequency')}</span>
-                                    <div className="flex items-center gap-1.5">
-                                      <FiClock className="w-3.5 h-3.5 text-muted-foreground" />
-                                      {pm.frequency}
-                                    </div>
-                                  </div>
-
-                                  <div className="col-span-2 flex items-center justify-between sm:justify-center gap-2 text-sm text-muted-foreground mb-2 sm:mb-0">
-                                    <span className="sm:hidden text-xs text-muted-foreground font-medium uppercase">{t('duration')}</span>
-                                    <span>{pm.duration_days} {t('date').replace('Date', 'Days')}</span>
-                                  </div>
-
-                                  <div className="col-span-2 text-right">
-                                    <Badge className={`${dispenseStatus.className} text-[10px] uppercase tracking-wide border font-bold`}>
-                                      {dispenseStatus.label}
-                                    </Badge>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      {qrFor && <QrDialog rx={qrFor} onClose={() => setQrFor(null)} />}
     </div>
   );
 }
