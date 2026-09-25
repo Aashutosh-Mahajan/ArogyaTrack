@@ -1,852 +1,263 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { withAuth } from '@/components/auth/withAuth';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { api } from '@/lib/api';
-import { useLanguage } from '@/components/providers/LanguageProvider';
-import type {
-  HeatMapData,
-  PaginatedResponse,
-  Alert,
-  Cluster,
-  Forecast,
-  DiseaseStats,
-  Anomaly,
-  RiskScore,
-  AdminDashboardData,
-  MLPipelineStatus,
-} from '@/types';
+import Link from 'next/link';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import {
-  FiAlertTriangle,
-  FiTrendingUp,
-  FiUsers,
-  FiActivity,
-  FiMapPin,
-  FiBarChart2,
-  FiRefreshCw,
-  FiCpu,
-  FiShield,
-  FiZap,
-} from 'react-icons/fi';
-import { LineChartComponent, BarChartComponent, ForecastChart } from '@/components/charts/Charts';
-import { DayWiseComparison } from '@/components/dashboard/DayWiseComparison';
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  Bell,
+  Brain,
+  Check,
+  Cpu,
+  Globe2,
+  Loader2,
+  MapPin,
+  Network,
+  Play,
+  TrendingDown,
+  TrendingUp,
+  Waypoints,
+} from 'lucide-react';
+import { withAuth } from '@/components/auth/withAuth';
+import { api } from '@/lib/api';
+import { EmptyState, Panel, Skeleton, SkeletonRows, Stat, StatusPill, severityTone } from '@/components/ui/page';
+import { fieldClass } from '@/components/auth/FormKit';
+import { C, ChartTooltip, Legend, axisProps, gridProps } from '@/components/charts/chartTheme';
+import { cn } from '@/lib/utils';
+import type { HeatMapData } from '@/types';
+import { t, intlLocale } from '@/lib/i18n';
 
-// Reusable loading skeleton
-function LoadingSkeleton({ height = 'h-[300px]', rows }: { height?: string; rows?: number }) {
-  if (rows) {
-    return (
-      <div className="space-y-3 animate-pulse">
-        {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <div className="space-y-2 flex-1">
-              <div className="h-4 bg-muted rounded w-1/3" />
-              <div className="h-3 bg-muted rounded w-1/4" />
-            </div>
-            <div className="h-6 bg-muted rounded w-16" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return (
-    <div className={`${height} bg-muted/50 animate-pulse rounded-lg flex items-center justify-center`}>
-      <div className="flex flex-col items-center gap-2">
-        <FiRefreshCw className="h-6 w-6 text-muted-foreground animate-spin" />
-        <span className="text-sm text-muted-foreground">Loading...</span>
-      </div>
-    </div>
-  );
-}
+const DynamicMap = dynamic(() => import('@/components/maps/DynamicMap').then((m) => m.DynamicMap), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[460px] w-full rounded-xl" />,
+});
 
-// Dynamic import to avoid SSR issues with Leaflet
-const DynamicMap = dynamic(
-  () => import('@/components/maps/DynamicMap').then((mod) => mod.DynamicMap),
-  { ssr: false, loading: () => <div className="h-[600px] bg-muted animate-pulse rounded-lg" /> }
-);
+const fmtDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+const num = (n?: number) => (n ?? 0).toLocaleString(intlLocale());
 
-const RISK_LEVEL_COLORS: Record<number, string> = {
-  0: 'bg-emerald-100 text-primary border-emerald-200',
-  1: 'bg-amber-100 text-amber-800 border-amber-200',
-  2: 'bg-orange-100 text-orange-800 border-orange-200',
-  3: 'bg-rose-100 text-rose-800 border-rose-200',
-};
+function AdminDashboard() {
+  const qc = useQueryClient();
+  const [disease, setDisease] = useState('');
+  const [horizon, setHorizon] = useState(7);
+  const [selected, setSelected] = useState<HeatMapData | null>(null);
 
-function AdminDashboard(): React.JSX.Element {
-  const { t } = useLanguage();
-  const queryClient = useQueryClient();
-  const [selectedDisease, setSelectedDisease] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('');
-  const [mapZoom, setMapZoom] = useState(5);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([20.5937, 78.9629]);
-  const [pipelineDisease, setPipelineDisease] = useState('A90');
-  const [forecastHorizon, setForecastHorizon] = useState(7);
+  const overview = useQuery<any>({ queryKey: ['surv-overview'], queryFn: () => api.surveillance.getDashboard() });
+  const stats = useQuery<any[]>({ queryKey: ['surv-disease-stats'], queryFn: () => api.surveillance.getDiseaseStats() });
+  const heat = useQuery<HeatMapData[]>({ queryKey: ['surv-heat', disease], queryFn: () => api.surveillance.getHeatMap(disease ? { disease_code: disease } : undefined) });
+  const alerts = useQuery<any>({ queryKey: ['surv-alerts', 'active'], queryFn: () => api.surveillance.getAlerts({ status: 'active' }) });
+  const anomalies = useQuery<any>({ queryKey: ['surv-anomalies'], queryFn: () => api.surveillance.getAnomalies({ is_resolved: false }) });
+  const forecast = useQuery<any>({ queryKey: ['surv-forecast-chart', horizon, disease], queryFn: () => api.surveillance.getForecastChartData({ horizon, ...(disease ? { disease_code: disease } : {}) }) });
+  const pipeline = useQuery<any>({ queryKey: ['surv-pipeline'], queryFn: () => api.surveillance.getMLPipelineStatus() });
 
-  // Queries
-  const { data: dashboard, refetch: refetchDashboard, isLoading: isDashboardLoading } = useQuery<AdminDashboardData>({
-    queryKey: ['admin-dashboard'],
-    queryFn: () => api.surveillance.getDashboard(),
-  });
-
-  const { data: heatMapData, refetch: refetchHeatMap, isLoading: isHeatMapLoading } = useQuery<HeatMapData[]>({
-    queryKey: ['heat-map', selectedDisease, selectedRegion],
-    queryFn: () => api.surveillance.getHeatMap({
-      disease_code: selectedDisease || undefined,
-      region_id: selectedRegion || undefined,
-    }),
-  });
-
-  const { data: diseaseStats, isLoading: isDiseaseStatsLoading } = useQuery<DiseaseStats[]>({
-    queryKey: ['disease-stats'],
-    queryFn: () => api.surveillance.getDiseaseStats(),
-  });
-
-  const { data: alerts, isLoading: isAlertsLoading } = useQuery<PaginatedResponse<Alert>>({
-    queryKey: ['alerts'],
-    queryFn: () => api.surveillance.getAlerts({ status: 'active' }),
-  });
-
-  const { data: clusters, isLoading: isClustersLoading } = useQuery<PaginatedResponse<Cluster>>({
-    queryKey: ['clusters'],
-    queryFn: () => api.surveillance.getClusters({ is_active: true }),
-  });
-
-  const { data: forecasts, isLoading: isForecastsLoading } = useQuery<PaginatedResponse<Forecast>>({
-    queryKey: ['forecasts', forecastHorizon],
-    queryFn: () => api.surveillance.getForecasts({ horizon: forecastHorizon }),
-  });
-
-  const { data: forecastChartData, isLoading: isForecastChartLoading } = useQuery<any>({
-    queryKey: ['forecast-chart', forecastHorizon, selectedDisease],
-    queryFn: () => api.surveillance.getForecastChartData({
-      horizon: forecastHorizon,
-      disease_code: selectedDisease || undefined,
-    }),
-  });
-
-  const { data: anomalies, isLoading: isAnomaliesLoading } = useQuery<PaginatedResponse<Anomaly>>({
-    queryKey: ['anomalies'],
-    queryFn: () => api.surveillance.getAnomalies({ is_resolved: false }),
-  });
-
-  const { data: riskScores, isLoading: isRiskScoresLoading } = useQuery<PaginatedResponse<RiskScore>>({
-    queryKey: ['risk-scores'],
-    queryFn: () => api.surveillance.getRiskScores({ ordering: '-risk_level' }),
-  });
-
-  const { data: pipelineStatus, isLoading: isPipelineLoading } = useQuery<MLPipelineStatus>({
-    queryKey: ['ml-pipeline-status'],
-    queryFn: () => api.surveillance.getMLPipelineStatus(),
-    refetchInterval: 30000,
-  });
-
-  // Mutations
-  const runPipelineMutation = useMutation({
-    mutationFn: (diseaseCode: string) => api.surveillance.runMLPipeline(diseaseCode),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ml-pipeline-status'] });
-    },
-  });
-
-  const acknowledgeAlertMutation = useMutation({
+  const ack = useMutation({
     mutationFn: (id: string) => api.surveillance.acknowledgeAlert(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alerts'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] });
+      toast.success(t("Alert acknowledged"));
+      qc.invalidateQueries({ queryKey: ['surv-alerts'] });
+      qc.invalidateQueries({ queryKey: ['shell', 'surveillance-alerts'] });
+    },
+  });
+  const run = useMutation({
+    mutationFn: (code: string) => api.surveillance.runMLPipeline(code),
+    onSuccess: (r: any) => {
+      toast.success(r?.task_id === 'sync' ? t("Pipeline finished. Results refreshed.") : t("Pipeline started. Results appear when it finishes."));
+      ['surv-overview', 'surv-heat', 'surv-alerts', 'surv-anomalies', 'surv-forecast-chart', 'surv-pipeline'].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
     },
   });
 
-  const stats = [
-    {
-      title: t('cases_today'),
-      value: dashboard?.total_cases_today?.toLocaleString() || '0',
-      icon: FiUsers,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
-    },
-    {
-      title: t('active_alerts_count'),
-      value: dashboard?.active_alerts || 0,
-      icon: FiAlertTriangle,
-      color: 'text-rose-600',
-      bgColor: 'bg-rose-100',
-      extra: dashboard?.critical_alerts ? `${dashboard.critical_alerts} ${t('critical').toLowerCase()}` : undefined,
-    },
-    {
-      title: t('active_clusters'),
-      value: dashboard?.active_clusters || 0,
-      icon: FiMapPin,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100',
-    },
-    {
-      title: t('monitored_regions'),
-      value: dashboard?.monitored_regions || 0,
-      icon: FiActivity,
-      color: 'text-primary',
-      bgColor: 'bg-emerald-100',
-    },
-    {
-      title: t('high_risk_regions'),
-      value: dashboard?.high_risk_regions || 0,
-      icon: FiShield,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100',
-    },
-    {
-      title: t('unresolved_anomalies'),
-      value: anomalies?.count || 0,
-      icon: FiZap,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-100',
-    },
-  ];
-
-  const handleRegionClick = (region: HeatMapData) => {
-    setMapCenter([region.latitude, region.longitude]);
-    setMapZoom(10);
-    setSelectedRegion(region.region_id.toString());
-  };
-
-  const resetMap = () => {
-    setMapCenter([20.5937, 78.9629]);
-    setMapZoom(5);
-    setSelectedRegion('');
-  };
-
-  const getRiskLabel = (level: number) => {
-    switch (level) {
-      case 0: return t('low_risk');
-      case 1: return t('medium_risk');
-      case 2: return t('high_risk');
-      case 3: return t('critical');
-      default: return t('low_risk');
-    }
-  };
+  const o = overview.data;
+  const statList = stats.data ?? [];
+  const heatSorted = useMemo(() => [...(heat.data ?? [])].sort((a, b) => b.cases_per_100k - a.cases_per_100k), [heat.data]);
+  const diseaseName = statList.find((s) => s.disease_code === disease)?.disease_name;
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 pb-12">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">{t('admin_dashboard_title')}</h1>
-            <p className="text-muted-foreground mt-1">
-              {t('admin_dashboard_subtitle')}
-            </p>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+            <span className="live-dot" />{' '}{t("Data as of {fmtDate}", { fmtDate: fmtDate(o?.as_of) })}
           </div>
-          <Button
-            onClick={() => {
-              refetchDashboard();
-              refetchHeatMap();
-              queryClient.invalidateQueries({ queryKey: ['alerts'] });
-              queryClient.invalidateQueries({ queryKey: ['clusters'] });
-              queryClient.invalidateQueries({ queryKey: ['anomalies'] });
-              queryClient.invalidateQueries({ queryKey: ['risk-scores'] });
-            }}
-            variant="outline"
-            className="bg-card/80 backdrop-blur-sm border-border hover:bg-background shadow-sm"
+          <h1 className="mt-1 text-[28px] font-semibold tracking-[-0.035em] md:text-[32px]">{t("Surveillance command")}</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <select value={disease} onChange={(e) => setDisease(e.target.value)} className={`${fieldClass()} h-10 w-56`} aria-label={t("Disease filter")}>
+            <option value="">{t("All diseases")}</option>
+            {statList.map((s) => <option key={s.disease_code} value={s.disease_code}>{t(s.disease_name)}</option>)}
+          </select>
+          <button
+            onClick={() => disease ? run.mutate(disease) : toast.error(t("Choose a disease to run the pipeline for"))}
+            disabled={run.isPending}
+            className="inline-flex h-10 items-center gap-2 rounded-[10px] bg-primary px-4 text-[13.5px] font-medium text-primary-foreground shadow-button disabled:opacity-60"
+            title={t("Re-run clustering, forecasting, anomaly detection and risk scoring")}
           >
-            <FiRefreshCw className="mr-2 h-4 w-4" />
-            {t('refresh_data')}
-          </Button>
+            {run.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}{' '}{t("Run ML pipeline")}</button>
         </div>
-
-        {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {isDashboardLoading ? (
-            Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i} className="border-0 shadow-sm bg-card/60">
-                <CardContent className="p-4 animate-pulse">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-2 flex-1">
-                      <div className="h-3 bg-muted rounded w-20" />
-                      <div className="h-7 bg-muted rounded w-16" />
-                    </div>
-                    <div className="h-9 w-9 bg-muted rounded-lg" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            stats.map((stat, index) => (
-              <Card key={index} className="border-0 shadow-lg shadow-slate-100 bg-card/80 backdrop-blur-md hover:shadow-xl transition-shadow duration-300">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        {stat.title}
-                      </p>
-                      <p className="text-2xl font-bold mt-1 text-foreground">
-                        {stat.value}
-                      </p>
-                      {'extra' in stat && stat.extra && (
-                        <p className="text-xs text-rose-600 mt-1 font-medium bg-rose-50 inline-block px-1.5 py-0.5 rounded">{stat.extra}</p>
-                      )}
-                    </div>
-                    <div className={`${stat.bgColor} ${stat.color} p-2.5 rounded-xl shadow-inner`}>
-                      <stat.icon className="h-5 w-5" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-
-        {/* ML Pipeline Status */}
-        <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
-          <div className="h-1 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600" />
-          <CardHeader className="bg-background/50 border-b border-border">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <CardTitle className="flex items-center text-xl text-foreground">
-                  <FiCpu className="mr-2 text-indigo-600" />
-                  {t('ml_pipeline_control')}
-                </CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  {t('ml_pipeline_desc')}
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-3">
-                <select
-                  value={pipelineDisease}
-                  onChange={(e) => setPipelineDisease(e.target.value)}
-                  className="px-3 py-2 border border-border rounded-lg text-sm bg-card focus:ring-2 focus:ring-indigo-500 outline-none"
-                >
-                  <option value="A90">Dengue (A90)</option>
-                  <option value="U07.1">COVID-19 (U07.1)</option>
-                  <option value="B50.0">Malaria (B50.0)</option>
-                  <option value="J18.9">Pneumonia (J18.9)</option>
-                  <option value="J10.1">Influenza (J10.1)</option>
-                  <option value="A09">Gastroenteritis (A09)</option>
-                  <option value="B05">Measles (B05)</option>
-                  <option value="I10">Hypertension (I10)</option>
-                </select>
-                <Button
-                  onClick={() => runPipelineMutation.mutate(pipelineDisease)}
-                  disabled={runPipelineMutation.isPending}
-                  size="sm"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200"
-                >
-                  {runPipelineMutation.isPending ? (
-                    <FiRefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <FiZap className="mr-2 h-4 w-4" />
-                  )}
-                  {t('run_pipeline')}
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {isPipelineLoading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 bg-background/50 rounded-lg animate-pulse">
-                    <div className="w-3 h-3 rounded-full bg-muted-foreground/30" />
-                    <div className="space-y-1 flex-1">
-                      <div className="h-4 bg-muted rounded w-24" />
-                      <div className="h-3 bg-muted rounded w-16" />
-                    </div>
-                  </div>
-                ))
-              ) : pipelineStatus?.models ? (
-                Object.entries(pipelineStatus.models).map(([name, info]) => (
-                  <div key={name} className="flex items-center gap-3 p-3 bg-background rounded-xl border border-border">
-                    <div className={`w-3 h-3 rounded-full shadow-sm ${info.loaded ? 'bg-primary/80 shadow-emerald-200' : 'bg-rose-500 shadow-rose-200'}`} />
-                    <div>
-                      <p className="text-sm font-semibold text-foreground/80 capitalize">{name.replace(/_/g, ' ')}</p>
-                      <p className="text-xs text-muted-foreground">{info.loaded ? 'Active' : info.error || 'Inactive'}</p>
-                    </div>
-                  </div>
-                ))) : (
-                <div className="col-span-4 text-center py-4 text-muted-foreground text-sm">
-                  {t('pipeline_loading')}
-                </div>
-              )}
-            </div>
-            {pipelineStatus && (
-              <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
-                <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-xl text-center">
-                  <p className="font-bold text-lg text-blue-700">{pipelineStatus.surveillance_records_week ?? '—'}</p>
-                  <p className="text-blue-600 font-medium">{t('records_7d')}</p>
-                </div>
-                <div className="p-3 bg-primary/8 border border-primary/15 rounded-xl text-center">
-                  <p className="font-bold text-lg text-primary">{pipelineStatus.forecasts_generated_today ?? '—'}</p>
-                  <p className="text-primary font-medium">{t('forecasts_today')}</p>
-                </div>
-                <div className="p-3 bg-amber-50/50 border border-amber-100 rounded-xl text-center">
-                  <p className="font-bold text-lg text-amber-700">{pipelineStatus.recent_anomalies ?? '—'}</p>
-                  <p className="text-amber-600 font-medium">{t('anomalies_7d')}</p>
-                </div>
-                <div className="p-3 bg-purple-50/50 border border-purple-100 rounded-xl text-center">
-                  <p className="font-bold text-lg text-purple-700">{pipelineStatus.risk_scores_today ?? '—'}</p>
-                  <p className="text-purple-600 font-medium">{t('risk_scores_today')}</p>
-                </div>
-                <div className="p-3 bg-background/50 border border-border rounded-xl text-center">
-                  <p className="font-bold text-lg text-foreground/80">{pipelineStatus.regions_count ?? '—'}</p>
-                  <p className="text-muted-foreground font-medium">{t('regions')}</p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Day-Wise Case Comparison */}
-        <DayWiseComparison />
-
-        {/* Active Alerts */}
-        {alerts?.results && alerts.results.length > 0 && (
-          <Card className="border-0 shadow-lg bg-rose-50/30 backdrop-blur-md overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-rose-500 to-red-500" />
-            <CardHeader>
-              <CardTitle className="text-rose-900 flex items-center text-xl">
-                <FiAlertTriangle className="mr-2" />
-                {t('active_alerts_title')} ({alerts.count})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {alerts.results.slice(0, 5).map((alert) => (
-                  <div
-                    key={alert.id}
-                    className="flex flex-col sm:flex-row sm:items-start justify-between p-4 bg-card rounded-xl border border-rose-100 shadow-sm hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex-1 mb-3 sm:mb-0">
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <Badge variant="destructive" className="uppercase font-bold tracking-wider text-[10px]">{alert.severity.toUpperCase()}</Badge>
-                        <Badge variant="outline" className="border-rose-200 text-rose-700 bg-rose-50">{alert.alert_type}</Badge>
-                        {alert.confidence && (
-                          <span className="text-xs text-muted-foreground">
-                            {(alert.confidence * 100).toFixed(0)}% {t('confidence')}
-                          </span>
-                        )}
-                      </div>
-                      <p className="font-bold text-foreground">{alert.title}</p>
-                      <p className="text-sm text-muted-foreground mt-1">{alert.description}</p>
-                      <div className="flex items-center gap-2 mt-3 flex-wrap">
-                        {alert.affected_regions_data?.map((r) => (
-                          <span key={r.id} className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-md font-medium border border-border">{r.name}</span>
-                        ))}
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <FiActivity className="h-3 w-3" />
-                          {new Date(alert.generated_at).toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700"
-                      onClick={() => acknowledgeAlertMutation.mutate(alert.id)}
-                      disabled={acknowledgeAlertMutation.isPending}
-                    >
-                      {t('acknowledge')}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Disease Heat Map */}
-        <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
-          <CardHeader className="bg-background/50 border-b border-border">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <CardTitle className="flex items-center text-xl text-foreground">
-                  <FiMapPin className="mr-2 text-blue-600" />
-                  {t('disease_heat_map')}
-                </CardTitle>
-                <CardDescription>
-                  {t('disease_heat_map_desc')}
-                </CardDescription>
-              </div>
-              <div className="flex gap-2">
-                <select
-                  value={selectedDisease}
-                  onChange={(e) => setSelectedDisease(e.target.value)}
-                  className="px-3 py-2 border border-border rounded-lg text-sm bg-card focus:ring-2 focus:ring-blue-500 outline-none"
-                >
-                  <option value="">{t('all_diseases')}</option>
-                  <option value="A90">Dengue Fever</option>
-                  <option value="U07.1">COVID-19</option>
-                  <option value="B50.0">Malaria</option>
-                  <option value="J18.9">Pneumonia</option>
-                  <option value="J10.1">Influenza</option>
-                  <option value="A09">Gastroenteritis</option>
-                  <option value="B05">Measles</option>
-                  <option value="I10">Hypertension</option>
-                  <option value="E11">Type 2 Diabetes</option>
-                </select>
-                {(selectedRegion || selectedDisease) && (
-                  <Button size="sm" variant="outline" onClick={resetMap}>
-                    {t('reset_view')}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            {isHeatMapLoading ? (
-              <LoadingSkeleton height="h-[600px]" />
-            ) : heatMapData && heatMapData.length > 0 ? (
-              <div className="rounded-b-xl overflow-hidden">
-                <DynamicMap
-                  data={heatMapData}
-                  center={mapCenter}
-                  zoom={mapZoom}
-                />
-              </div>
-            ) : (
-              <div className="h-[600px] flex items-center justify-center bg-background">
-                <p className="text-muted-foreground flex flex-col items-center">
-                  <FiMapPin className="h-8 w-8 mb-2 opacity-50" />
-                  {t('no_heat_map_data')}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Charts + Risk Scores Grid */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Disease Trends */}
-          <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
-            <CardHeader className="bg-background/50 border-b border-border">
-              <CardTitle className="flex items-center text-lg text-foreground">
-                <FiTrendingUp className="mr-2 text-sky-500" />
-                {t('disease_statistics')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              {isDiseaseStatsLoading ? (
-                <LoadingSkeleton height="h-[300px]" />
-              ) : diseaseStats && diseaseStats.length > 0 ? (
-                <BarChartComponent
-                  data={diseaseStats.map((d) => ({
-                    name: d.disease_name?.substring(0, 15) || 'Unknown',
-                    cases: d.total_cases,
-                    severity: d.average_severity,
-                  }))}
-                  dataKey="cases"
-                  xAxisKey="name"
-                  color="#0ea5e9"
-                />
-              ) : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  {t('no_disease_data')}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Forecast */}
-          <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
-            <CardHeader className="bg-background/50 border-b border-border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center text-lg text-foreground">
-                    <FiBarChart2 className="mr-2 text-violet-500" />
-                    {t('case_forecasts')}
-                  </CardTitle>
-                  <CardDescription>
-                    {forecastHorizon}-{t('forecast_days')}
-                    {forecasts?.count ? ` (${forecasts.count} ${t('predictions')})` : ''}
-                  </CardDescription>
-                </div>
-                <select
-                  value={forecastHorizon}
-                  onChange={(e) => setForecastHorizon(Number(e.target.value))}
-                  className="px-3 py-2 border border-border rounded-lg text-sm bg-card focus:ring-2 focus:ring-violet-500 outline-none"
-                >
-                  <option value={7}>7 Days</option>
-                  <option value={14}>14 Days</option>
-                  <option value={30}>30 Days</option>
-                </select>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              {isForecastChartLoading ? (
-                <LoadingSkeleton height="h-[350px]" />
-              ) : forecastChartData?.data && forecastChartData.data.length > 0 ? (
-                <>
-                  <ForecastChart data={forecastChartData.data} />
-                  <div className="flex items-center justify-between mt-4 text-xs font-medium text-muted-foreground bg-background p-2 rounded-lg">
-                    <span>
-                      {forecastChartData.disease_name} &bull; {forecastChartData.data.length} days
-                    </span>
-                    <span>
-                      {t('avg_confidence')}: {(forecastChartData.data.reduce((s: number, d: any) => s + d.confidence, 0) / forecastChartData.data.length * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <div className="h-[350px] flex items-center justify-center text-muted-foreground">
-                  {t('no_forecast_data')}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Anomalies + Risk Scores */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Recent Anomalies */}
-          <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
-            <CardHeader className="bg-background/50 border-b border-border">
-              <CardTitle className="flex items-center text-lg text-foreground">
-                <FiZap className="mr-2 text-amber-500" />
-                {t('recent_anomalies')}
-              </CardTitle>
-              <CardDescription>{t('anomaly_detection_desc')}</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4">
-              {isAnomaliesLoading ? (
-                <LoadingSkeleton rows={4} />
-              ) : anomalies?.results && anomalies.results.length > 0 ? (
-                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                  {anomalies.results.slice(0, 8).map((anomaly) => (
-                    <div key={anomaly.id} className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:border-amber-200 transition-colors shadow-sm">
-                      <div>
-                        <p className="font-semibold text-sm text-foreground">{anomaly.disease_name}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {anomaly.region_details?.name || 'Unknown Region'} • {new Date(anomaly.detection_date).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <Badge variant="outline" className={`border-rose-200 text-rose-700 bg-rose-50 font-bold`}>
-                          +{anomaly.deviation_percentage.toFixed(1)}%
-                        </Badge>
-                        <p className="text-[10px] text-muted-foreground mt-1">
-                          {anomaly.actual_cases} {t('actual')} / {anomaly.expected_cases.toFixed(0)} {t('expected')}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="h-[200px] flex items-center justify-center text-muted-foreground flex-col">
-                  <FiZap className="h-8 w-8 mb-2 opacity-30" />
-                  {t('no_anomalies')}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Risk Scores */}
-          <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
-            <CardHeader className="bg-background/50 border-b border-border">
-              <CardTitle className="flex items-center text-lg text-foreground">
-                <FiShield className="mr-2 text-indigo-500" />
-                {t('regional_risk_scores')}
-              </CardTitle>
-              <CardDescription>{t('risk_score_desc')}</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4">
-              {isRiskScoresLoading ? (
-                <LoadingSkeleton rows={4} />
-              ) : riskScores?.results && riskScores.results.length > 0 ? (
-                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                  {riskScores.results.slice(0, 8).map((score) => (
-                    <div key={score.id} className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:border-indigo-200 transition-colors shadow-sm">
-                      <div>
-                        <p className="font-semibold text-sm text-foreground">{score.region_details?.name || 'Unknown'}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {score.disease_name} • {new Date(score.calculation_date).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-mono font-medium text-muted-foreground">
-                          {(score.risk_probability * 100).toFixed(1)}%
-                        </span>
-                        <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${RISK_LEVEL_COLORS[score.risk_level] || 'bg-muted border-border'}`}>
-                          {getRiskLabel(score.risk_level)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="h-[200px] flex items-center justify-center text-muted-foreground flex-col">
-                  <FiShield className="h-8 w-8 mb-2 opacity-30" />
-                  {t('no_risk_scores')}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Top Diseases + Regional Comparison */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Top Trending Diseases */}
-          <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-pink-500 to-rose-500" />
-            <CardHeader className="bg-background/50 border-b border-border">
-              <CardTitle className="text-foreground">{t('trending_diseases')}</CardTitle>
-              <CardDescription>{t('trending_growth_desc')}</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4">
-              {dashboard?.top_diseases && dashboard.top_diseases.length > 0 ? (
-                <div className="space-y-3">
-                  {dashboard.top_diseases.map((disease, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 rounded-xl border border-border bg-card hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted text-muted-foreground font-bold text-sm">
-                          #{idx + 1}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm text-foreground">{disease.disease_name}</p>
-                          <p className="text-xs text-muted-foreground font-mono">{disease.disease_code}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-foreground">{disease.total_cases.toLocaleString()}</p>
-                        <p className={`text-xs font-bold ${disease.growth_rate > 0 ? 'text-rose-600' : disease.growth_rate < 0 ? 'text-primary' : 'text-muted-foreground'}`}>
-                          {disease.growth_rate > 0 ? '↑' : ''}{disease.growth_rate}%
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center py-12 text-muted-foreground">{t('no_trending_data')}</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Regional Comparison */}
-          <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-primary to-emerald-500" />
-            <CardHeader className="bg-background/50 border-b border-border">
-              <CardTitle className="text-foreground">{t('regional_comparison')}</CardTitle>
-              <CardDescription>{t('regional_comparison_desc')}</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4">
-              {heatMapData && heatMapData.length > 0 ? (
-                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                  {heatMapData
-                    .sort((a, b) => b.cases_per_100k - a.cases_per_100k)
-                    .slice(0, 10)
-                    .map((region, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 rounded-xl border border-border bg-card hover:bg-background hover:border-border transition-all cursor-pointer"
-                        onClick={() => handleRegionClick(region)}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-background text-muted-foreground font-bold text-xs ring-1 ring-slate-200">
-                            {index + 1}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-sm text-foreground">{region.region_name}</p>
-                            <p className="text-xs text-muted-foreground">{region.case_count} cases</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <div className="text-right hidden sm:block">
-                            <p className="font-bold text-sm text-foreground">{region.cases_per_100k.toFixed(2)}</p>
-                            <p className="text-[10px] text-muted-foreground uppercase">{t('per_100k')}</p>
-                          </div>
-                          <Badge
-                            variant={
-                              region.risk_level.toLowerCase() === 'critical' ? 'destructive' :
-                                region.risk_level.toLowerCase() === 'high' ? 'warning' : 'secondary'
-                            }
-                            className={
-                              region.risk_level.toLowerCase() === 'critical' ? 'bg-rose-100 text-rose-800 hover:bg-rose-200' :
-                                region.risk_level.toLowerCase() === 'high' ? 'bg-orange-100 text-orange-800 hover:bg-orange-200' :
-                                  'bg-muted text-muted-foreground hover:bg-muted'
-                            }
-                          >
-                            {region.risk_level}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              ) : (
-                <p className="text-center py-12 text-muted-foreground">{t('no_regional_data')}</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Active Clusters */}
-        {clusters?.results && clusters.results.length > 0 && (
-          <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-orange-400 to-amber-400" />
-            <CardHeader className="bg-background/50 border-b border-border">
-              <CardTitle className="flex items-center text-foreground">
-                <FiMapPin className="mr-2 text-orange-500" />
-                {t('active_clusters_title')} ({clusters.count})
-              </CardTitle>
-              <CardDescription>{t('cluster_detection_desc')}</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {clusters.results.slice(0, 6).map((cluster) => (
-                  <div key={cluster.id} className="p-4 bg-orange-50/30 rounded-xl border border-orange-100 hover:border-orange-200 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="font-bold text-sm text-foreground">{cluster.disease_name}</p>
-                      <Badge className={
-                        cluster.severity === 'critical' ? 'bg-rose-500 hover:bg-rose-600' :
-                          cluster.severity === 'high' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-slate-500 hover:bg-slate-600'
-                      }>
-                        {cluster.severity}
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground space-y-1.5 mt-3">
-                      <div className="flex justify-between border-b border-orange-100 pb-1">
-                        <span>Cases</span>
-                        <span className="font-bold text-foreground">{cluster.total_cases}</span>
-                      </div>
-                      <div className="flex justify-between border-b border-orange-100 pb-1">
-                        <span>{t('radius')}</span>
-                        <span className="font-bold text-foreground">{cluster.radius_km.toFixed(1)} km</span>
-                      </div>
-                      <div className="flex justify-between border-b border-orange-100 pb-1">
-                        <span>{t('population')}</span>
-                        <span className="font-bold text-foreground">{cluster.total_population?.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between pt-1">
-                        <span>{t('detected')}</span>
-                        <span className="font-bold text-foreground">{new Date(cluster.detection_date).toLocaleDateString()}</span>
-                      </div>
-
-                      {cluster.affected_region_names && cluster.affected_region_names.length > 0 && (
-                        <div className="mt-2 pt-2 border-t border-orange-100">
-                          <div className="flex flex-wrap gap-1">
-                            {cluster.affected_region_names.slice(0, 3).map((r, i) => (
-                              <span key={i} className="bg-card/80 px-1.5 py-0.5 rounded text-[10px] border border-orange-100 text-orange-800 truncate max-w-full">
-                                {r}
-                              </span>
-                            ))}
-                            {cluster.affected_region_names.length > 3 && (
-                              <span className="bg-card/80 px-1.5 py-0.5 rounded text-[10px] border border-orange-100 text-orange-800">
-                                +{cluster.affected_region_names.length - 3}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
-    </DashboardLayout>
+
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <Stat label={t("Cases reported")} value={num(o?.total_cases_today)} hint={o ? t('on {date}', { date: fmtDate(o.as_of) }) : undefined} icon={Activity} loading={overview.isLoading} />
+        <Stat label={t("Active alerts")} value={o?.active_alerts ?? 0} hint={o?.critical_alerts ? t('{count} critical', { count: o.critical_alerts }) : t("none critical")} icon={Bell} tone="danger" loading={overview.isLoading} href="/admin/alerts" />
+        <Stat label={t("High-risk regions")} value={o?.high_risk_regions ?? 0} icon={AlertTriangle} tone="warning" loading={overview.isLoading} href="/admin/surveillance" />
+        <Stat label={t("Active clusters")} value={o?.active_clusters ?? 0} icon={Network} tone="info" loading={overview.isLoading} href="/admin/clusters" />
+        <Stat label={t("Open anomalies")} value={o?.unresolved_anomalies ?? 0} icon={Waypoints} tone="warning" loading={overview.isLoading} />
+        <Stat label={t("Regions monitored")} value={o?.monitored_regions ?? 0} icon={MapPin} tone="neutral" loading={overview.isLoading} />
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+        <Panel title={diseaseName ? t("Disease burden · {disease}", { disease: t(diseaseName) }) : t("Disease burden · all diseases")} description={t("Last 7 days of reported cases by district")} icon={Globe2} bodyClassName="p-3 md:p-3">
+          <DynamicMap data={heat.data ?? []} height={460} onSelect={setSelected} selectedId={selected?.region_id} center={selected ? [selected.latitude, selected.longitude] : undefined} zoom={selected ? 7 : undefined} />
+        </Panel>
+        <Panel
+          title={t("Highest incidence")}
+          description={t("Cases per 100,000 population")}
+          icon={TrendingUp}
+          actions={selected && <button onClick={() => setSelected(null)} className="text-[12.5px] font-medium text-primary">{t("Reset map")}</button>}
+          bodyClassName="px-3 pb-3 md:px-3"
+        >
+          {heat.isLoading ? (
+            <SkeletonRows rows={6} className="p-3" />
+          ) : heatSorted.length ? (
+            <ol className="max-h-[430px] overflow-y-auto">
+              {heatSorted.slice(0, 15).map((r, i) => {
+                const max = heatSorted[0].cases_per_100k || 1;
+                return (
+                  <li key={r.region_id}>
+                    <button onClick={() => setSelected(r)} className={cn('w-full rounded-lg px-3 py-2 text-left hover:bg-muted', selected?.region_id === r.region_id && 'bg-muted')}>
+                      <div className="flex items-center gap-3 text-[13.5px]">
+                        <span className="tabular w-5 text-xs text-muted-foreground">{i + 1}</span>
+                        <span className="min-w-0 flex-1 truncate font-medium">{r.region_name.replace(/_/g, ' ')}</span>
+                        <span className="tabular text-muted-foreground">{r.cases_per_100k.toFixed(1)}</span>
+                        <StatusPill tone={severityTone(r.risk_level)} className="w-[72px] justify-center">{t(r.risk_level)}</StatusPill>
+                      </div>
+                      <div className="ml-8 mt-1.5 h-1 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary/60" style={{ width: `${(r.cases_per_100k / max) * 100}%` }} /></div>
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          ) : (
+            <EmptyState compact icon={Globe2} title={t("No cases in this window")} />
+          )}
+        </Panel>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+        <Panel
+          title={t("Case forecast")}
+          description={forecast.data?.forecast_date ? t("Average per region, generated {fmtDate}", { fmtDate: fmtDate(forecast.data.forecast_date) }) : t("Average per region")}
+          icon={TrendingUp}
+          actions={
+            <div className="inline-flex rounded-lg border p-0.5">
+              {[7, 14, 30].map((h) => (
+                <button key={h} onClick={() => setHorizon(h)} className={cn('rounded-md px-2.5 py-1 text-[12.5px] font-medium', horizon === h ? 'bg-primary text-primary-foreground' : 'text-muted-foreground')}>{t("{h} d", { h })}</button>
+              ))}
+            </div>
+          }
+        >
+          {forecast.isLoading ? (
+            <Skeleton className="h-[260px] w-full" />
+          ) : forecast.data?.data?.length ? (
+            <>
+              <Legend items={[{ label: t("Forecast"), color: C.primary }, { label: t("95% interval"), color: 'hsl(var(--chart-1) / 0.25)' }]} />
+              <ResponsiveContainer width="100%" height={250}>
+                <ComposedChart data={forecast.data.data.map((d: any) => ({ ...d, band: [d.lower_bound, d.upper_bound] }))} margin={{ top: 10, right: 6, left: 0, bottom: 0 }}>
+                  <CartesianGrid {...gridProps} />
+                  <XAxis dataKey="date" {...axisProps} minTickGap={20} />
+                  <YAxis {...axisProps} width={40} tickFormatter={(v: number) => String(Math.round(v))} />
+                  <Tooltip content={<ChartTooltip formatter={(v) => (Array.isArray(v) ? `${Math.round(v[0])}–${Math.round(v[1])}` : String(Math.round(Number(v))))} />} />
+                  <Area dataKey="band" name={t("Interval")} stroke="none" fill={C.primary} fillOpacity={0.14} />
+                  <Line dataKey="forecast" name={t("Forecast")} stroke={C.primary} strokeWidth={2.2} dot={false} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </>
+          ) : (
+            <EmptyState compact icon={TrendingUp} title={t("No forecast for this selection")} description={t("Run the ML pipeline to generate one.")} />
+          )}
+        </Panel>
+
+        <Panel title={t("Leading diseases")} description={t("Change versus the previous 7 days")} icon={Activity} actions={<Link href="/admin/analytics" className="inline-flex items-center gap-1 text-[13px] font-medium text-primary">{t("Analytics")}{' '}<ArrowRight className="h-3.5 w-3.5" /></Link>}>
+          {stats.isLoading ? (
+            <SkeletonRows rows={5} />
+          ) : (
+            <ul className="divide-y text-[13.5px]">
+              {statList.slice(0, 7).map((s) => (
+                <li key={s.disease_code} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
+                  <button onClick={() => setDisease(s.disease_code)} className="min-w-0 flex-1 truncate text-left font-medium hover:text-primary">{t(s.disease_name)}</button>
+                  <span className="tabular text-muted-foreground">{num(s.total_cases)}</span>
+                  <span className={cn('tabular inline-flex w-20 items-center justify-end gap-1 font-medium', s.growth_rate > 5 ? 'text-destructive' : s.growth_rate < -5 ? 'text-success' : 'text-muted-foreground')}>
+                    {s.growth_rate > 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+                    {s.growth_rate > 0 ? '+' : ''}{s.growth_rate.toFixed(1)}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-3">
+        <Panel title={t("Active alerts")} icon={Bell} className="xl:col-span-2" actions={<Link href="/admin/alerts" className="inline-flex items-center gap-1 text-[13px] font-medium text-primary">{t("Manage")}{' '}<ArrowRight className="h-3.5 w-3.5" /></Link>}>
+          {alerts.isLoading ? (
+            <SkeletonRows rows={4} />
+          ) : alerts.data?.results?.length ? (
+            <ul className="space-y-2">
+              {alerts.data.results.slice(0, 5).map((a: any) => (
+                <li key={a.id} className="flex items-start gap-3 rounded-xl border p-3.5">
+                  <span className={cn('mt-1 h-2.5 w-2.5 shrink-0 rounded-full', a.severity === 'critical' || a.severity === 'high' ? 'bg-destructive' : 'bg-warning')} />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[14px] font-medium">{a.title}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">{t(a.disease_name)} · {(a.affected_regions_data || []).map((r: any) => r.name).join(', ')} · {fmtDate(a.generated_at)}</div>
+                  </div>
+                  <StatusPill tone={severityTone(a.severity)}>{t(a.severity_display)}</StatusPill>
+                  <button onClick={() => ack.mutate(a.id)} disabled={ack.isPending && ack.variables === a.id} className="inline-flex h-8 items-center gap-1 rounded-lg border px-2.5 text-[12.5px] font-medium hover:bg-muted disabled:opacity-60" title={t("Acknowledge")}>
+                    <Check className="h-3.5 w-3.5" />{' '}{t("Ack")}</button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState compact icon={Bell} title={t("No active alerts")} />
+          )}
+        </Panel>
+
+        <div className="space-y-4">
+          <Panel title={t("Open anomalies")} icon={Waypoints}>
+            {anomalies.isLoading ? (
+              <SkeletonRows rows={3} />
+            ) : anomalies.data?.results?.length ? (
+              <ul className="space-y-2 text-[13px]">
+                {anomalies.data.results.slice(0, 4).map((a: any) => (
+                  <li key={a.id} className="rounded-lg bg-muted/50 px-3 py-2">
+                    <div className="flex justify-between gap-2 font-medium"><span className="truncate">{t(a.disease_name)} · {a.region_details?.name}</span><span className="tabular text-destructive">+{Math.round(a.deviation_percentage)}%</span></div>
+                    <div className="text-xs text-muted-foreground">{t("{actual_cases} cases vs {round} expected", { actual_cases: a.actual_cases, round: Math.round(a.expected_cases) })}</div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-[13.5px] text-muted-foreground">{t("No unresolved anomalies.")}</p>
+            )}
+          </Panel>
+          <Panel title={t("ML models")} icon={Cpu}>
+            {pipeline.isLoading ? (
+              <SkeletonRows rows={2} />
+            ) : (
+              <ul className="space-y-1.5 text-[13px]">
+                {Object.entries(pipeline.data?.models ?? {}).map(([name, m]: [string, any]) => (
+                  <li key={name} className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 capitalize"><Brain className="h-3.5 w-3.5 text-muted-foreground" />{name.replace(/_/g, ' ')}</span>
+                    <StatusPill tone={m.loaded ? 'success' : 'danger'}>{m.loaded ? t("Loaded") : t("Missing")}</StatusPill>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+        </div>
+      </section>
+    </div>
   );
 }
 
