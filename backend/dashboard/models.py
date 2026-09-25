@@ -100,6 +100,8 @@ class DownloadLog(models.Model):
         PRESCRIPTION = "prescription", "Prescription"
         LAB_REPORT = "lab_report", "Lab Report"
         VISIT_ATTACHMENT = "visit_attachment", "Visit Attachment"
+        INVOICE = "invoice", "Invoice"
+        HEALTH_CARD = "health_card", "Health Card"
         BULK = "bulk", "Bulk Download"
 
     user = models.ForeignKey(
