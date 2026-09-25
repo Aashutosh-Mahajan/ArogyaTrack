@@ -1,339 +1,183 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Activity, BarChart3, Brain, Gauge, MapPin, Waypoints } from 'lucide-react';
 import { withAuth } from '@/components/auth/withAuth';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
-import { useLanguage } from '@/components/providers/LanguageProvider';
-import type { PaginatedResponse, DiseaseStats, RiskScore, Anomaly, AdminDashboardData } from '@/types';
-import { FiTrendingUp, FiShield, FiZap, FiActivity, FiCpu, FiLayers } from 'react-icons/fi';
-import { BarChartComponent } from '@/components/charts/Charts';
+import { PageHeader, Panel, Skeleton, SkeletonRows, StatusPill, severityTone } from '@/components/ui/page';
+import { C, ChartTooltip, axisProps, gridProps } from '@/components/charts/chartTheme';
+import { cn } from '@/lib/utils';
+import { t, intlLocale } from '@/lib/i18n';
 
-const RISK_LEVEL_COLORS: Record<number, string> = {
-  0: 'bg-emerald-100 text-primary border-emerald-200',
-  1: 'bg-amber-100 text-amber-800 border-amber-200',
-  2: 'bg-orange-100 text-orange-800 border-orange-200',
-  3: 'bg-rose-100 text-rose-800 border-rose-200',
-};
+const RISK_LABEL: Record<number, string> = { get 0() { return t("Low"); }, get 1() { return t("Medium"); }, get 2() { return t("High"); }, get 3() { return t("Critical"); } };
+const RISK_FILL: Record<number, string> = { 0: C.primary, 1: C.amber, get 2() { return t("hsl(24 90% 50%)"); }, 3: C.red };
+const WINDOWS = [7, 14, 30];
 
-function LoadingSkeleton({ height = 'h-[300px]', rows }: { height?: string; rows?: number }) {
-  if (rows) {
-    return (
-      <div className="space-y-3 animate-pulse">
-        {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <div className="space-y-2 flex-1">
-              <div className="h-4 bg-muted rounded w-1/3" />
-              <div className="h-3 bg-muted rounded w-1/4" />
-            </div>
-            <div className="h-6 bg-muted rounded w-16" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return (
-    <div className={`${height} bg-muted/50 animate-pulse rounded-lg flex items-center justify-center`}>
-      <div className="flex flex-col items-center gap-2">
-        <FiActivity className="h-6 w-6 text-muted-foreground animate-spin" />
-      </div>
-    </div>
-  );
-}
+function AnalyticsPage() {
+  const [days, setDays] = useState(7);
+  const stats = useQuery<any>({ queryKey: ['surv-disease-stats-raw', days], queryFn: () => api.client.get('/surveillance/disease-statistics/', { params: { days } }) });
+  const regional = useQuery<any>({ queryKey: ['surv-regional', days], queryFn: () => api.surveillance.getRegionalComparison({ days }) });
+  const risk = useQuery<any>({ queryKey: ['surv-risk-scores'], queryFn: () => api.surveillance.getRiskScores() });
+  const anomalies = useQuery<any>({ queryKey: ['surv-anomalies'], queryFn: () => api.surveillance.getAnomalies({ is_resolved: false }) });
+  const models = useQuery<any[]>({ queryKey: ['surv-models'], queryFn: () => api.surveillance.getMLModels() });
 
-function AnalyticsPage(): React.JSX.Element {
-  const { t } = useLanguage();
-  const [selectedDisease, setSelectedDisease] = useState('');
-
-  const { data: dashboard, isLoading: isDashboardLoading } = useQuery<AdminDashboardData>({
-    queryKey: ['admin-dashboard'],
-    queryFn: () => api.surveillance.getDashboard(),
-  });
-
-  const { data: diseaseStats, isLoading: isDiseaseStatsLoading } = useQuery<DiseaseStats[]>({
-    queryKey: ['disease-stats'],
-    queryFn: () => api.surveillance.getDiseaseStats(),
-  });
-
-  const { data: riskScores, isLoading: isRiskScoresLoading } = useQuery<PaginatedResponse<RiskScore>>({
-    queryKey: ['risk-scores', selectedDisease],
-    queryFn: () => api.surveillance.getRiskScores({
-      disease_code: selectedDisease || undefined,
-      ordering: '-risk_level',
-      page_size: 20,
-    }),
-  });
-
-  const { data: anomalies, isLoading: isAnomaliesLoading } = useQuery<PaginatedResponse<Anomaly>>({
-    queryKey: ['anomalies-analytics', selectedDisease],
-    queryFn: () => api.surveillance.getAnomalies({
-      disease_code: selectedDisease || undefined,
-      page_size: 20,
-    }),
-  });
-
-  const { data: mlModels, isLoading: isMlModelsLoading } = useQuery({
-    queryKey: ['ml-models'],
-    queryFn: () => api.surveillance.getMLModels(),
-  });
-
-  const getRiskLabel = (level: number) => {
-    switch (level) {
-      case 0: return t('low_risk');
-      case 1: return t('medium_risk');
-      case 2: return t('high_risk');
-      case 3: return t('critical');
-      default: return t('low_risk');
-    }
-  };
+  const statList = stats.data?.statistics ?? [];
+  const topRegions = (regional.data?.comparison ?? []).slice(0, 12);
+  const riskDist = useMemo(() => {
+    const latest = risk.data?.results ?? [];
+    const counts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0 };
+    latest.forEach((r: any) => { const l = Math.min(3, Math.max(0, Number(r.risk_level) || 0)); counts[l] += 1; });
+    return [0, 1, 2, 3].map((l) => ({ level: RISK_LABEL[l], n: counts[l], l }));
+  }, [risk.data]);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 pb-12">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">{t('analytics_title')}</h1>
-            <p className="text-muted-foreground mt-1">{t('analytics_subtitle')}</p>
+    <div className="space-y-6">
+      <PageHeader
+        title={t("Analytics")}
+        description={stats.data?.as_of ? t("Window ending {value}", { value: new Date(stats.data.as_of).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) }) : undefined}
+        actions={
+          <div className="inline-flex rounded-[10px] border bg-card p-1 shadow-sm">
+            {WINDOWS.map((w) => (
+              <button key={w} onClick={() => setDays(w)} className={cn('rounded-lg px-3 py-1.5 text-[13px] font-medium', days === w ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>{t("{w} days", { w })}</button>
+            ))}
           </div>
-          <select
-            value={selectedDisease}
-            onChange={(e) => setSelectedDisease(e.target.value)}
-            className="px-4 py-2 border border-border rounded-xl text-sm bg-card focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
-          >
-            <option value="">{t('all_diseases')}</option>
-            <option value="A90">Dengue Fever</option>
-            <option value="U07.1">COVID-19</option>
-            <option value="B50.0">Malaria</option>
-            <option value="J18.9">Pneumonia</option>
-            <option value="J10.1">Influenza</option>
-            <option value="A09">Gastroenteritis</option>
-            <option value="B05">Measles</option>
-            <option value="I10">Hypertension</option>
-            <option value="E11">Type 2 Diabetes</option>
-          </select>
-        </div>
+        }
+      />
 
-        {/* ML Models Info */}
-        <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
-          <div className="h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-          <CardHeader className="bg-background/50 border-b border-border">
-            <CardTitle className="flex items-center text-foreground">
-              <FiCpu className="mr-2 text-indigo-600" />
-              {t('deployed_ml_models')}
-            </CardTitle>
-            <CardDescription>{t('model_details_desc')}</CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            {isMlModelsLoading ? (
-              <LoadingSkeleton height="h-[200px]" />
-            ) : mlModels ? (
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {(Array.isArray(mlModels) ? mlModels : []).map((model: any, idx: number) => (
-                  <div key={idx} className="p-4 bg-background rounded-xl border border-border hover:border-indigo-100 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="font-bold text-sm text-foreground">{model.name}</p>
-                      <Badge variant={model.loaded ? 'secondary' : 'destructive'} className={model.loaded ? 'bg-emerald-100 text-primary hover:bg-emerald-200' : ''}>
-                        {model.loaded ? t('active') : t('inactive')}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-2 font-mono bg-muted inline-block px-1.5 py-0.5 rounded">{model.version}</p>
-                    {model.n_features && (
-                      <p className="text-xs text-indigo-600 mb-2 font-medium flex items-center">
-                        <FiLayers className="mr-1" />
-                        {model.n_features} {t('features')}
-                      </p>
-                    )}
-                    {model.corrector_available !== undefined && (
-                      <p className="text-xs mb-1 text-muted-foreground">
-                        {t('gb_corrector')}: <span className={model.corrector_available ? 'text-primary font-bold' : 'text-rose-500 font-bold'}>{model.corrector_available ? 'Yes' : 'No'}</span>
-                        {model.scoring_method && <span className="text-muted-foreground ml-1">({model.scoring_method})</span>}
-                      </p>
-                    )}
-                    {model.xgb_available !== undefined && (
-                      <p className="text-xs mb-1 text-muted-foreground">
-                        {t('xgboost_component')}: <span className={model.xgb_available ? 'text-primary font-bold' : 'text-rose-500 font-bold'}>{model.xgb_available ? 'Yes' : 'No'}</span>
-                      </p>
-                    )}
-                    {model.risk_tiers && (
-                      <div className="text-xs mb-2 space-y-1 mt-3 pt-2 border-t border-border">
-                        <p className="text-muted-foreground font-semibold uppercase text-[10px] tracking-wider mb-1">{t('risk_tiers')}</p>
-                        {Object.entries(model.risk_tiers).map(([tier, range]: [string, any]) => (
-                          <div key={tier} className="flex justify-between items-center">
-                            <span className="capitalize text-muted-foreground font-medium">{tier}:</span>
-                            <span className="font-mono text-muted-foreground bg-muted px-1 rounded text-[10px]">{Array.isArray(range) ? range.join(', ') : range}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+      <section className="grid gap-4 xl:grid-cols-[1.3fr_1fr]">
+        <Panel title={t("Cases by disease")} icon={BarChart3}>
+          {stats.isLoading ? (
+            <Skeleton className="h-[300px] w-full" />
+          ) : (
+            <ResponsiveContainer width="100%" height={Math.max(240, statList.length * 30)}>
+              <BarChart data={statList} layout="vertical" margin={{ top: 0, right: 16, left: 8, bottom: 0 }}>
+                <CartesianGrid {...gridProps} horizontal={false} vertical />
+                <XAxis type="number" {...axisProps} tickFormatter={(v: number) => v.toLocaleString(intlLocale())} />
+                <YAxis type="category" dataKey="disease_name" {...axisProps} width={150} />
+                <Tooltip content={<ChartTooltip formatter={(v) => Number(v).toLocaleString(intlLocale())} />} cursor={{ fill: 'hsl(var(--muted))' }} />
+                <Bar dataKey="total_cases" name={t("Cases")} fill={C.primary} radius={[0, 6, 6, 0]} maxBarSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </Panel>
+
+        <Panel title={t("Growth versus previous window")} icon={Activity}>
+          {stats.isLoading ? (
+            <SkeletonRows rows={6} />
+          ) : (
+            <table className="w-full text-[13.5px]">
+              <thead className="text-left text-xs text-muted-foreground"><tr><th className="pb-2 font-medium">{t("Disease")}</th><th className="pb-2 text-right font-medium">{t("Regions")}</th><th className="pb-2 text-right font-medium">{t("Severity")}</th><th className="pb-2 text-right font-medium">{t("Change")}</th></tr></thead>
+              <tbody className="divide-y">
+                {statList.map((s: any) => (
+                  <tr key={s.disease_code}>
+                    <td className="py-2 pr-2 font-medium">{t(s.disease_name)}</td>
+                    <td className="tabular py-2 text-right text-muted-foreground">{s.affected_regions}</td>
+                    <td className="tabular py-2 text-right text-muted-foreground">{s.average_severity.toFixed(1)}</td>
+                    <td className={cn('tabular py-2 text-right font-semibold', s.growth_rate > 5 ? 'text-destructive' : s.growth_rate < -5 ? 'text-success' : 'text-muted-foreground')}>{s.growth_rate > 0 ? '+' : ''}{s.growth_rate.toFixed(1)}%</td>
+                  </tr>
                 ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">No ML models found</div>
-            )}
-          </CardContent>
-        </Card>
+              </tbody>
+            </table>
+          )}
+        </Panel>
+      </section>
 
-        {/* Disease Statistics Chart */}
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
-            <CardHeader className="bg-background/50 border-b border-border">
-              <CardTitle className="flex items-center text-foreground">
-                <FiTrendingUp className="mr-2 text-indigo-500" /> {t('disease_case_distribution')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              {isDiseaseStatsLoading ? (
-                <LoadingSkeleton height="h-[300px]" />
-              ) : diseaseStats && diseaseStats.length > 0 ? (
-                <BarChartComponent
-                  data={diseaseStats.map((d) => ({
-                    name: d.disease_name?.substring(0, 15) || 'Unknown',
-                    cases: d.total_cases,
-                  }))}
-                  dataKey="cases"
-                  xAxisKey="name"
-                  color="#6366f1"
-                />
-              ) : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  {t('no_disease_data')}
+      <section className="grid gap-4 xl:grid-cols-[1.3fr_1fr]">
+        <Panel title={t("Highest incidence regions")} description={t("Cases per 100,000 population")} icon={MapPin}>
+          {regional.isLoading ? (
+            <SkeletonRows rows={6} />
+          ) : (
+            <table className="w-full text-[13.5px]">
+              <thead className="text-left text-xs text-muted-foreground"><tr><th className="pb-2 font-medium">{t("Region")}</th><th className="pb-2 text-right font-medium">{t("Cases")}</th><th className="pb-2 text-right font-medium">{t("Per 100k")}</th><th className="pb-2 text-right font-medium">{t("Diseases")}</th><th className="pb-2 text-right font-medium">{t("Risk")}</th></tr></thead>
+              <tbody className="divide-y">
+                {topRegions.map((r: any) => (
+                  <tr key={r.region_name}>
+                    <td className="py-2 font-medium">{r.region_name.replace(/_/g, ' ')}</td>
+                    <td className="tabular py-2 text-right">{r.total_cases.toLocaleString(intlLocale())}</td>
+                    <td className="tabular py-2 text-right font-semibold">{r.cases_per_100k.toFixed(1)}</td>
+                    <td className="tabular py-2 text-right text-muted-foreground">{r.active_diseases}</td>
+                    <td className="py-2 text-right"><StatusPill tone={severityTone(r.risk_level)}>{t(r.risk_level)}</StatusPill></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </Panel>
+
+        <Panel title={t("Risk score distribution")} description={risk.data ? t("Across the {value} most recent of {count} region–disease scores", { value: risk.data.results?.length ?? 0, count: risk.data.count }) : undefined} icon={Gauge}>
+          {risk.isLoading ? (
+            <Skeleton className="h-[240px] w-full" />
+          ) : (
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={riskDist} margin={{ top: 10, right: 6, left: 0, bottom: 0 }}>
+                <CartesianGrid {...gridProps} />
+                <XAxis dataKey="level" {...axisProps} />
+                <YAxis {...axisProps} allowDecimals={false} width={32} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
+                <Bar dataKey="n" name={t("Scores")} radius={[6, 6, 0, 0]} maxBarSize={56}>
+                  {riskDist.map((d) => <Cell key={d.l} fill={RISK_FILL[d.l]} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </Panel>
+      </section>
+
+      <Panel title={t("Unresolved anomalies")} description={t("Isolation Forest flags where cases far exceed the expected level")} icon={Waypoints}>
+        {anomalies.isLoading ? (
+          <SkeletonRows rows={5} />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-[13.5px]">
+              <thead className="text-left text-xs text-muted-foreground"><tr><th className="pb-2 font-medium">{t("Detected")}</th><th className="pb-2 font-medium">{t("Region")}</th><th className="pb-2 font-medium">{t("Disease")}</th><th className="pb-2 text-right font-medium">{t("Actual")}</th><th className="pb-2 text-right font-medium">{t("Expected")}</th><th className="pb-2 text-right font-medium">{t("Deviation")}</th><th className="pb-2 text-right font-medium">{t("Score")}</th></tr></thead>
+              <tbody className="divide-y">
+                {(anomalies.data?.results ?? []).map((a: any) => (
+                  <tr key={a.id}>
+                    <td className="py-2 text-muted-foreground">{new Date(a.detection_date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short' })}</td>
+                    <td className="py-2 font-medium">{a.region_details?.name}</td>
+                    <td className="py-2">{t(a.disease_name)}</td>
+                    <td className="tabular py-2 text-right">{a.actual_cases}</td>
+                    <td className="tabular py-2 text-right text-muted-foreground">{Math.round(a.expected_cases)}</td>
+                    <td className="tabular py-2 text-right font-semibold text-destructive">+{Math.round(a.deviation_percentage)}%</td>
+                    <td className="tabular py-2 text-right">{a.anomaly_score.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
+
+      <Panel title={t("Model registry")} icon={Brain}>
+        {models.isLoading ? (
+          <SkeletonRows rows={3} />
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2">
+            {(models.data ?? []).map((m: any) => (
+              <article key={m.name} className="rounded-xl border p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="text-[14.5px] font-semibold">{m.name}</div>
+                    <div className="text-xs text-muted-foreground">{m.version}{m.n_features ? t(" · {n_features} features", { n_features: m.n_features }) : ''}</div>
+                  </div>
+                  <StatusPill tone={m.loaded ? 'success' : 'danger'}>{m.loaded ? t("Loaded") : t("Missing")}</StatusPill>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
-            <CardHeader className="bg-background/50 border-b border-border">
-              <CardTitle className="flex items-center text-foreground">
-                <FiActivity className="mr-2 text-rose-500" /> {t('trending_diseases')}
-              </CardTitle>
-              <CardDescription>{t('trending_growth_desc')}</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              {isDashboardLoading ? (
-                <LoadingSkeleton height="h-[300px]" />
-              ) : dashboard?.top_diseases && dashboard.top_diseases.length > 0 ? (
-                <BarChartComponent
-                  data={dashboard.top_diseases.map((d) => ({
-                    name: d.disease_name?.substring(0, 12) || 'Unknown',
-                    growth: d.growth_rate,
-                  }))}
-                  dataKey="growth"
-                  xAxisKey="name"
-                  color="#ef4444"
-                />
-              ) : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  {t('no_trending_data')}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Risk Scores Table */}
-        <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
-          <CardHeader className="bg-background/50 border-b border-border">
-            <CardTitle className="flex items-center text-foreground">
-              <FiShield className="mr-2 text-primary" /> {t('regional_risk_assessment')}
-            </CardTitle>
-            <CardDescription>{t('risk_score_desc')} ({riskScores?.count || 0} records)</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            {isRiskScoresLoading ? (
-              <div className="p-6"><LoadingSkeleton rows={5} /></div>
-            ) : riskScores?.results && riskScores.results.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-background text-muted-foreground">
-                    <tr className="text-left border-b border-border">
-                      <th className="px-6 py-3 font-semibold">{t('regions')}</th>
-                      <th className="px-6 py-3 font-semibold">{t('diagnosis')}</th>
-                      <th className="px-6 py-3 font-semibold">{t('date')}</th>
-                      <th className="px-6 py-3 font-semibold text-right">{t('probability')}</th>
-                      <th className="px-6 py-3 font-semibold text-right">{t('risk')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {riskScores.results.map((s) => (
-                      <tr key={s.id} className="hover:bg-background/50 transition-colors">
-                        <td className="px-6 py-4 font-medium text-foreground">{s.region_details?.name || 'Unknown'}</td>
-                        <td className="px-6 py-4 text-muted-foreground">{s.disease_name}</td>
-                        <td className="px-6 py-4 text-muted-foreground font-mono text-xs">{s.calculation_date}</td>
-                        <td className="px-6 py-4 text-right font-mono text-foreground/80">{(s.risk_probability * 100).toFixed(1)}%</td>
-                        <td className="px-6 py-4 text-right">
-                          <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${RISK_LEVEL_COLORS[s.risk_level] || 'bg-muted border-border'}`}>
-                            {getRiskLabel(s.risk_level)}
-                          </span>
-                        </td>
-                      </tr>
+                {m.description && <p className="mt-2 text-[13px] text-muted-foreground">{m.description}</p>}
+                {m.metrics && Object.keys(m.metrics).length > 0 && (
+                  <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-[12.5px] sm:grid-cols-3">
+                    {Object.entries(m.metrics).slice(0, 6).map(([k, v]) => (
+                      <div key={k}><dt className="text-muted-foreground">{k.replace(/_/g, ' ')}</dt><dd className="tabular font-medium">{typeof v === 'number' ? Number(v.toFixed(3)) : String(v)}</dd></div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-center py-12 text-muted-foreground">{t('no_risk_scores')}</p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Anomalies Table */}
-        <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-md overflow-hidden">
-          <CardHeader className="bg-background/50 border-b border-border">
-            <CardTitle className="flex items-center text-foreground">
-              <FiZap className="mr-2 text-amber-500" /> {t('anomaly_detection_results')}
-            </CardTitle>
-            <CardDescription>{t('anomaly_detection_desc')} ({anomalies?.count || 0} records)</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            {isAnomaliesLoading ? (
-              <div className="p-6"><LoadingSkeleton rows={5} /></div>
-            ) : anomalies?.results && anomalies.results.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-background text-muted-foreground">
-                    <tr className="text-left border-b border-border">
-                      <th className="px-6 py-3 font-semibold">{t('regions')}</th>
-                      <th className="px-6 py-3 font-semibold">{t('diagnosis')}</th>
-                      <th className="px-6 py-3 font-semibold">{t('detected')}</th>
-                      <th className="px-6 py-3 font-semibold text-right">{t('actual')}</th>
-                      <th className="px-6 py-3 font-semibold text-right">{t('expected')}</th>
-                      <th className="px-6 py-3 font-semibold text-right">{t('deviation')}</th>
-                      <th className="px-6 py-3 font-semibold text-right">{t('score')}</th>
-                      <th className="px-6 py-3 font-semibold text-right">{t('status')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {anomalies.results.map((a) => (
-                      <tr key={a.id} className="hover:bg-background/50 transition-colors">
-                        <td className="px-6 py-4 font-medium text-foreground">{a.region_details?.name || 'Unknown'}</td>
-                        <td className="px-6 py-4 text-muted-foreground">{a.disease_name}</td>
-                        <td className="px-6 py-4 text-muted-foreground font-mono text-xs">{new Date(a.detection_date).toLocaleDateString()}</td>
-                        <td className="px-6 py-4 text-right font-bold text-foreground">{a.actual_cases}</td>
-                        <td className="px-6 py-4 text-right text-muted-foreground font-mono">{a.expected_cases.toFixed(0)}</td>
-                        <td className="px-6 py-4 text-right font-bold text-rose-600">+{a.deviation_percentage.toFixed(1)}%</td>
-                        <td className="px-6 py-4 text-right font-mono text-xs text-muted-foreground">{a.anomaly_score.toFixed(3)}</td>
-                        <td className="px-6 py-4 text-right">
-                          <Badge variant={a.is_resolved ? 'secondary' : 'destructive'} className={a.is_resolved ? 'bg-muted text-muted-foreground' : 'bg-rose-100 text-rose-800'}>
-                            {a.is_resolved ? t('resolved') : t('active')}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-center py-12 text-muted-foreground">{t('no_anomalies')}</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </DashboardLayout>
+                  </dl>
+                )}
+              </article>
+            ))}
+          </div>
+        )}
+      </Panel>
+    </div>
   );
 }
 
