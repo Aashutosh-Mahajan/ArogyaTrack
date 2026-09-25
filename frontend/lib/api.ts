@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import toast from 'react-hot-toast';
+import { t } from './i18n';
 import type {
   HeatMapData,
   PaginatedResponse,
@@ -41,8 +42,33 @@ import type {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
+/** First human-readable message in an API error body (detail, message or nested field errors). */
+function firstErrorText(data: unknown): string | null {
+  if (typeof data === 'string') return data.trim().startsWith('<') ? null : data;
+  if (Array.isArray(data)) {
+    for (const item of data) {
+      const t = firstErrorText(item);
+      if (t) return t;
+    }
+    return null;
+  }
+  if (data && typeof data === 'object') {
+    const d = data as Record<string, unknown>;
+    for (const key of ['detail', 'message', 'non_field_errors']) {
+      const t = firstErrorText(d[key]);
+      if (t) return t;
+    }
+    for (const value of Object.values(d)) {
+      const t = firstErrorText(value);
+      if (t) return t;
+    }
+  }
+  return null;
+}
+
 class ApiClient {
   public client: AxiosInstance; // Made public for direct access when needed
+  private refreshing: Promise<unknown> | null = null;
 
   constructor() {
     this.client = axios.create({
@@ -60,6 +86,10 @@ class ApiClient {
       withCredentials: true,
       xsrfCookieName: 'csrftoken',
       xsrfHeaderName: 'X-CSRFToken',
+      // The API is on another origin (port 8000), and axios >= 1.6.2 only
+      // attaches the XSRF header cross-origin when this is set — without it
+      // every cookie-authenticated write was rejected with 403.
+      withXSRFToken: true,
     });
 
     // Response interceptor
@@ -70,33 +100,37 @@ class ApiClient {
 
         // Handle token refresh — the refresh cookie is sent automatically;
         // a successful call re-sets the access cookie server-side.
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        const isRefreshable = !String(originalRequest?.url || '').includes('/auth/login/');
+        if (error.response?.status === 401 && originalRequest && !originalRequest._retry && isRefreshable) {
           originalRequest._retry = true;
 
           try {
-            await axios.post(`${API_URL}/auth/token/refresh/`, {}, { withCredentials: true });
+            // Pages fire several queries at once; share one refresh between them.
+            this.refreshing ??= axios
+              .post(`${API_URL}/auth/token/refresh/`, {}, { withCredentials: true })
+              .finally(() => { this.refreshing = null; });
+            await this.refreshing;
             return this.client(originalRequest);
           } catch (refreshError) {
             this.clearAuth();
-            window.location.href = '/login';
+            const path = window.location.pathname;
+            const isPublic = path === '/' || /^\/(login|signup|roles|forgot-password|verify-email|prescription\/verify|patient\/qr|(patient|doctor|pharmacist|admin)\/(signin|register))/.test(path);
+            if (!isPublic) window.location.href = '/login';
             return Promise.reject(refreshError);
           }
         }
 
-        // Handle other errors
-        const errorMessage = error.response?.data?.detail ||
-          error.response?.data?.message ||
-          error.message ||
-          'An error occurred';
+        // Handle other errors: prefer the server's own wording, including DRF
+        // field errors such as {"medicines": ["..."]}, over axios' generic text.
+        const errorMessage = firstErrorText(error.response?.data) || error.message || 'An error occurred';
 
-        // Don't show toast for registration/login/auth endpoints - they handle their own errors
+        // Reads render their own loading/error states, and auth screens show
+        // inline errors, so the global toast is only for failed writes.
         const requestUrl = error.config?.url || '';
-        const isAuthRequest = requestUrl.includes('/auth/register/') ||
-          requestUrl.includes('/auth/login/') ||
-          requestUrl.includes('/auth/verify-email/') ||
-          requestUrl.includes('/auth/logout/');
-        if (!isAuthRequest) {
-          toast.error(errorMessage);
+        const method = (error.config?.method || 'get').toLowerCase();
+        const isAuthRequest = requestUrl.includes('/auth/');
+        if (method !== 'get' && !isAuthRequest && !error.config?.silent) {
+          toast.error(typeof errorMessage === 'string' ? t(errorMessage) : t('Request failed'));
         }
         return Promise.reject(error);
       }
@@ -217,6 +251,11 @@ export const api = {
       apiClient.post('/auth/verify-email/', { email, otp }),
     login: (email: string, password: string) =>
       apiClient.post('/auth/login/', { email, password }),
+    /** Second step when the account has email-code 2FA turned on. */
+    verifyLogin2FA: (challenge: string, otp: string) =>
+      apiClient.post('/auth/login/2fa/', { challenge, otp }),
+    resendLogin2FA: (challenge: string) =>
+      apiClient.post('/auth/login/2fa/resend/', { challenge }),
     requestPasswordReset: (email: string) =>
       apiClient.post('/auth/password-reset/request/', { email }),
     confirmPasswordReset: (email: string, otp: string, new_password: string) =>
@@ -247,6 +286,8 @@ export const api = {
     },
     downloadPatientCardPDF: () =>
       apiClient.get('/patients/my-card/pdf/', { responseType: 'blob' as any }),
+    /** Invalidate the current QR (and doctors' access); a fresh card is issued on next fetch. */
+    revokeHealthCard: (profileId: string) => apiClient.post(`/patients/${profileId}/health-card/revoke/`),
     getQRImage: () =>
       apiClient.get('/patients/my-card/qr-image/', { responseType: 'blob' as any }),
     // Scan Patient QR Code or Enter Patient ID (for doctors/admins)
@@ -260,6 +301,9 @@ export const api = {
       apiClient.get('/doctors/visit-records/', { params }),
     getRecord: (id: number): Promise<MedicalRecord> =>
       apiClient.get(`/doctors/visit-records/${id}/`),
+    /** Diagnosis records (ICD-10) created by doctors for the active profile. */
+    getMyDiagnoses: (params?: { limit?: number; offset?: number }): Promise<{ count: number; results: any[] }> =>
+      apiClient.get('/doctors/my-records/', { params }),
     getAllergies: (): Promise<Allergy[]> =>
       apiClient.get('/doctors/my-allergies/'),
     getChronicConditions: (): Promise<ChronicCondition[]> =>
@@ -469,6 +513,19 @@ export const api = {
     // Inventory
     getInventory: (params?: any) => apiClient.get('/pharmacy/inventory/', { params }),
     addInventory: (data: any) => apiClient.post('/pharmacy/inventory/', data),
+    updateInventoryItem: (id: string, data: any) => apiClient.patch(`/pharmacy/inventory/${id}/`, data),
+    deleteInventoryItem: (id: string) => apiClient.delete(`/pharmacy/inventory/${id}/`),
+    receiveStock: (inventoryId: string, quantity: number) =>
+      apiClient.post('/pharmacy/update-stock/', { inventory_id: inventoryId, quantity_received: quantity }),
+    getMine: () => apiClient.get('/pharmacy/my-pharmacy/'),
+    // Billing
+    getBilling: (prescriptionId: string) => apiClient.get(`/pharmacy/billing/${prescriptionId}/`),
+    createInvoice: (data: { prescription_id: string; discount?: string; payment_method: string }) =>
+      apiClient.post('/pharmacy/invoices/', data),
+    listInvoices: (params?: { search?: string; limit?: number }) => apiClient.get('/pharmacy/invoices/', { params }),
+    getInvoice: (id: string) => apiClient.get(`/pharmacy/invoices/${id}/`),
+    createMine: (data: any) => apiClient.post('/pharmacy/my-pharmacy/', data),
+    updateMine: (data: any) => apiClient.patch('/pharmacy/my-pharmacy/', data),
     list: (params?: any) => apiClient.get('/pharmacy/list/', { params }),
   },
 
@@ -498,9 +555,13 @@ export const api = {
       apiClient.get('/dashboard/security/'),
     changePassword: (data: { old_password: string; new_password: string; confirm_password: string }): Promise<{ detail: string }> =>
       apiClient.post('/dashboard/change-password/', data),
-    toggle2FA: (): Promise<{ detail: string; is_2fa_enabled: boolean }> =>
-      apiClient.post('/dashboard/toggle-2fa/'),
+    toggle2FA: (password: string): Promise<{ detail: string; is_2fa_enabled: boolean }> =>
+      apiClient.post('/dashboard/toggle-2fa/', { password }),
+    revokeOtherSessions: (): Promise<{ detail: string; revoked: number }> =>
+      apiClient.post('/dashboard/sessions/revoke-others/'),
     // Downloads
+    /** Pharmacy invoices for the active profile. */
+    getInvoices: () => apiClient.get('/dashboard/invoices/'),
     getDownloads: (): Promise<DownloadItem[]> =>
       apiClient.get('/dashboard/downloads/'),
     downloadFile: (fileId: number, type: string): Promise<Blob> =>
@@ -511,8 +572,19 @@ export const api = {
       apiClient.post('/dashboard/log-download/', data),
   },
 
+  // Administration (admin role)
+  admin: {
+    pendingDoctors: (status: 'pending' | 'approved' | 'rejected' | 'all' = 'pending'): Promise<any[]> =>
+      apiClient.get('/auth/admin/doctors/pending/', { params: { status } }),
+    decideDoctor: (doctorProfileId: number, action: 'approve' | 'reject') =>
+      apiClient.post(`/auth/admin/doctors/${doctorProfileId}/approval/`, { action }),
+    users: (params?: { role?: string }): Promise<any[]> => apiClient.get('/auth/admin/users/', { params }),
+    auditLogs: (params?: Record<string, string | number>): Promise<any[]> => apiClient.get('/auth/admin/audit-logs/', { params }),
+  },
+
   // CDSS (Clinical Decision Support)
   cdss: {
+    status: (): Promise<{ available: boolean }> => apiClient.get('/cdss/status/'),
     analyze: (patientId: string, currentSymptoms: string): Promise<CDSSResult> =>
       apiClient.post('/cdss/analyze/', { patient_id: patientId, current_symptoms: currentSymptoms }),
   },
