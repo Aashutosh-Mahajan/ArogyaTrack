@@ -302,7 +302,16 @@ class HealthCardService:
 
     @staticmethod
     def revoke(profile: Profile) -> HealthCard:
+        """Invalidate the QR and end every doctor's current access to this profile.
+
+        A doctor has to scan the newly issued card to regain access, which is
+        what lets a patient withdraw access they granted by sharing the card.
+        """
+        from medical.models import DoctorPatientAccess
+
+        now = timezone.now()
         card = profile.health_card
-        card.revoked_at = timezone.now()
+        card.revoked_at = now
         card.save(update_fields=["revoked_at"])
+        DoctorPatientAccess.objects.filter(patient=profile, expires_at__gt=now).update(expires_at=now)
         return card
