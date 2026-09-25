@@ -1,339 +1,273 @@
 'use client';
 
-import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
-import { DoctorRegistrationData } from '@/types';
-import toast from 'react-hot-toast';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiArrowRight, FiArrowLeft, FiCheckCircle, FiAlertTriangle, FiActivity, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
-import MultiStepProgress from '@/components/auth/MultiStepProgress';
-import ChipSelect from '@/components/auth/ChipSelect';
-import UploadBox from '@/components/auth/UploadBox';
+import { useRouter } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
+import toast from 'react-hot-toast';
+import { AlertCircle, ArrowLeft, ArrowRight, Loader2, ShieldAlert } from 'lucide-react';
+import { api } from '@/lib/api';
+import SplitSignInLayout from '@/components/auth/SplitSignInLayout';
+import { AuthHeading } from '@/components/auth/SignInForm';
+import { CheckRow, Field, FileDrop, PasswordInput, Stepper, fieldClass, flattenErrors } from '@/components/auth/FormKit';
+import type { DoctorRegistrationData } from '@/types';
+import { t, m } from '@/lib/i18n';
+import { tRich } from '@/lib/i18n-rich';
 
-const STEPS = ['Personal Info', 'Professional Details', 'Documents & Account'];
-
-const DEGREES = ['MBBS', 'MD', 'MS', 'BDS', 'MDS', 'BAMS', 'BHMS', 'BPT', 'DNB', 'DM', 'MCh'];
+const STEPS = [m("About you"), m("Practice"), m("Documents")];
+/* Must match DoctorRegistrationSerializer.degree choices. */
+const DEGREES = ['MBBS', 'MD', 'MS', 'DNB', 'BDS', 'BAMS', 'BHMS', 'BUMS', 'Other'];
 const SPECIALIZATIONS = [
-  'General Medicine', 'Cardiology', 'Neurology', 'Orthopedics', 'Pediatrics',
-  'Dermatology', 'Ophthalmology', 'ENT', 'Psychiatry', 'Radiology',
-  'Anesthesiology', 'Surgery', 'Obstetrics & Gynecology', 'Pulmonology', 'Gastroenterology',
+  m("General Medicine"), m("Cardiology"), m("Neurology"), m("Orthopaedics"), m("Paediatrics"), m("Dermatology"), m("Ophthalmology"), m("ENT"),
+  m("Psychiatry"), m("Radiology"), m("Anaesthesiology"), m("General Surgery"), m("Obstetrics & Gynaecology"), m("Pulmonology"), m("Gastroenterology"),
 ];
+
+const FIELD_STEP: Record<string, number> = {
+  first_name: 0, last_name: 0, email: 0, phone: 0, date_of_birth: 0,
+  medical_license: 1, degree: 1, degree_other: 1, specialization: 1, experience_years: 1, clinic_name: 1, clinic_address: 1, consultation_fee: 1,
+  password: 2, license_certificate: 2, degree_certificate: 2, government_id: 2, terms_accepted: 2,
+};
+
+type Form = {
+  first_name: string; last_name: string; email: string; phone: string; date_of_birth: string;
+  medical_license: string; degree: string; degree_other: string; specialization: string; experience_years: string;
+  clinic_name: string; clinic_address: string; consultation_fee: string;
+  password: string; terms_accepted: boolean;
+};
+
+type Files = { license_certificate: File | null; degree_certificate: File | null; government_id: File | null };
+
+function maxDob() {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 23);
+  return d.toISOString().slice(0, 10);
+}
 
 export default function DoctorRegisterPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong'>('weak');
-
-  const [formData, setFormData] = useState<Record<string, any>>({
-    email: '',
-    password: '',
-    first_name: '',
-    last_name: '',
-    phone: '',
-    license_number: '',
-    degree: '',
-    specialization: '',
-    experience_years: '',
-    hospital_name: '',
-    hospital_address: '',
-    terms_accepted: false,
+  const [form, setForm] = useState<Form>({
+    first_name: '', last_name: '', email: '', phone: '', date_of_birth: '',
+    medical_license: '', degree: 'MBBS', degree_other: '', specialization: '', experience_years: '',
+    clinic_name: '', clinic_address: '', consultation_fee: '',
+    password: '', terms_accepted: false,
   });
-
-  const [specializations, setSpecializations] = useState<string[]>([]);
-  const [files, setFiles] = useState<{ license_doc: File | null; degree_cert: File | null; id_proof: File | null }>({
-    license_doc: null,
-    degree_cert: null,
-    id_proof: null,
-  });
-
+  const [files, setFiles] = useState<Files>({ license_certificate: null, degree_certificate: null, government_id: null });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const calcStrength = (p: string): 'weak' | 'medium' | 'strong' => {
-    let s = 0;
-    if (p.length >= 8) s++;
-    if (/[a-z]/.test(p) && /[A-Z]/.test(p)) s++;
-    if (/\d/.test(p)) s++;
-    if (/[^a-zA-Z0-9]/.test(p)) s++;
-    return s <= 2 ? 'weak' : s === 3 ? 'medium' : 'strong';
+  const set = <K extends keyof Form>(key: K, value: Form[K]) => {
+    setForm((f) => ({ ...f, [key]: value }));
+    if (errors[key]) setErrors((e) => ({ ...e, [key]: '' }));
+  };
+  const onText = (key: keyof Form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+    set(key, e.target.value as any);
+  const setFile = (key: keyof Files) => (f: File | null) => {
+    setFiles((p) => ({ ...p, [key]: f }));
+    if (errors[key]) setErrors((e) => ({ ...e, [key]: '' }));
   };
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-    setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-    if (name === 'password') setPasswordStrength(calcStrength(value));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
-  };
-
-  const validateStep = (): boolean => {
+  const validate = (s: number) => {
     const e: Record<string, string> = {};
-    if (step === 0) {
-      if (!formData.first_name) e.first_name = 'Required';
-      if (!formData.last_name) e.last_name = 'Required';
-      if (!formData.email) e.email = 'Required';
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) e.email = 'Invalid email';
-      if (!formData.phone) e.phone = 'Required';
-      else if (!/^[6-9]\d{9}$/.test(formData.phone)) e.phone = '10 digits starting 6-9';
-    } else if (step === 1) {
-      if (!formData.license_number) e.license_number = 'Required';
-      if (!formData.degree) e.degree = 'Required';
-      if (specializations.length === 0) e.specialization = 'Select at least one';
-      if (!formData.experience_years) e.experience_years = 'Required';
-      if (!formData.hospital_name) e.hospital_name = 'Required';
-    } else if (step === 2) {
-      if (!formData.password) e.password = 'Required';
-      else if (formData.password.length < 8) e.password = 'Min 8 characters';
-      if (!files.license_doc) e.license_doc = 'License document required';
-      if (!files.degree_cert) e.degree_cert = 'Degree certificate required';
-      if (!files.id_proof) e.id_proof = 'ID proof required';
-      if (!formData.terms_accepted) e.terms_accepted = 'Must accept terms';
+    if (s === 0) {
+      if (form.first_name.trim().length < 2) e.first_name = t("Enter your first name");
+      if (!form.last_name.trim()) e.last_name = t("Enter your last name");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = t("Enter a valid email address");
+      if (!/^[6-9]\d{9}$/.test(form.phone)) e.phone = t("10-digit mobile number starting with 6–9");
+      if (!form.date_of_birth) e.date_of_birth = t("Enter your date of birth");
+      else if (form.date_of_birth > maxDob()) e.date_of_birth = t("Doctors must be at least 23 years old");
+    }
+    if (s === 1) {
+      if (!/^[A-Za-z0-9\-/]{6,20}$/.test(form.medical_license.trim())) e.medical_license = t("6–20 letters, digits, - or /");
+      if (form.degree === 'Other' && !form.degree_other.trim()) e.degree_other = t("Name your degree");
+      if (!form.specialization) e.specialization = t("Choose a specialisation");
+      if (form.experience_years === '' || Number(form.experience_years) < 0) e.experience_years = t("Enter years of experience");
+    }
+    if (s === 2) {
+      if (form.password.length < 8) e.password = t("Use at least 8 characters");
+      if (!files.license_certificate) e.license_certificate = t("Upload your licence certificate");
+      if (!files.degree_certificate) e.degree_certificate = t("Upload your degree certificate");
+      if (!files.government_id) e.government_id = t("Upload a government ID");
+      if (!form.terms_accepted) e.terms_accepted = t("Required");
     }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
-  const nextStep = () => { if (validateStep()) setStep((s) => Math.min(s + 1, STEPS.length - 1)); };
-  const prevStep = () => setStep((s) => Math.max(s - 1, 0));
+  const next = () => validate(step) && setStep((s) => Math.min(s + 1, STEPS.length - 1));
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!validateStep()) { toast.error('Fix errors before submitting'); return; }
+  const submit = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    if (step < STEPS.length - 1) return next();
+    if (!validate(2)) return;
     setLoading(true);
+    setFormError(null);
     try {
-      const submitData = {
-        ...formData,
-        specialization: specializations.join(', '),
-        ...(files.license_doc && { license_document: files.license_doc }),
-        ...(files.degree_cert && { degree_certificate: files.degree_cert }),
-        ...(files.id_proof && { id_proof: files.id_proof }),
+      const payload: Record<string, unknown> = {
+        ...form,
+        email: form.email.trim().toLowerCase(),
+        medical_license: form.medical_license.trim().toUpperCase(),
+        experience_years: Number(form.experience_years),
+        license_certificate: files.license_certificate,
+        degree_certificate: files.degree_certificate,
+        government_id: files.government_id,
       };
-      await api.auth.registerDoctorWithDocuments(submitData as DoctorRegistrationData);
-      toast.success('Registration submitted! Awaiting admin verification.');
-      router.push(`/verify-email?email=${encodeURIComponent(formData.email || '')}&role=doctor`);
-    } catch (error: any) {
-      if (error.response?.data?.errors) {
-        const backendErrors: Record<string, string> = {};
-        Object.entries(error.response.data.errors).forEach(([key, value]) => {
-          backendErrors[key] = Array.isArray(value) ? value[0] : String(value);
-        });
-        setErrors(backendErrors);
+      if (form.degree !== 'Other') delete payload.degree_other;
+      if (!form.consultation_fee) delete payload.consultation_fee;
+      await api.auth.registerDoctorWithDocuments(payload as unknown as DoctorRegistrationData);
+      toast.success(t("Registration submitted. Verify your email to continue."));
+      router.push(`/verify-email?email=${encodeURIComponent(String(payload.email))}&role=doctor`);
+    } catch (err: any) {
+      const fieldErrors = flattenErrors(err?.response?.data);
+      if (Object.keys(fieldErrors).length) {
+        setErrors(fieldErrors);
+        setStep(Math.min(...Object.keys(fieldErrors).map((k) => FIELD_STEP[k] ?? 2)));
+        setFormError(fieldErrors.non_field_errors || t("Some details need attention."));
       } else {
-        toast.error(error.response?.data?.detail || 'Registration failed');
+        setFormError(err?.response?.data?.detail || t("Registration failed. Please try again."));
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const strengthColor = passwordStrength === 'weak' ? 'bg-red-500' : passwordStrength === 'medium' ? 'bg-yellow-500' : 'bg-green-500';
-  const strengthWidth = passwordStrength === 'weak' ? '33%' : passwordStrength === 'medium' ? '66%' : '100%';
-
-  const inputClass = (field: string) =>
-    `mt-1 block w-full h-11 rounded-xl border ${errors[field] ? 'border-red-400' : 'border-border'} bg-card px-4 text-sm focus:border-primary focus:ring-primary/20 transition-all`;
-
   return (
-    <div className="min-h-screen bg-background py-10 px-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center">
-              <FiActivity className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-syne font-bold text-lg text-foreground">ArogyaTrack</span>
-          </Link>
-          <h1 className="text-3xl font-bold text-foreground font-syne mb-1">Doctor Registration</h1>
-          <p className="text-sm text-muted-foreground font-dm">Join the ArogyaTrack practitioner network</p>
+    <SplitSignInLayout
+      wide
+      backHref="/signup"
+      backLabel={t("Account types")}
+      headline={<>{tRich("Join the network as a <em>verified</em> clinician.", (c) => <span className="font-serif-accent text-[#9be3cf]">{c}</span>)}</>}
+      points={[
+        t("An administrator reviews your licence before patient data opens up"),
+        t("Your documents are stored privately and used only for verification"),
+        t("Once approved, scan health cards and prescribe with safety checks"),
+      ]}
+    >
+      <AuthHeading eyebrow={t("Doctor registration")} title={t("Register as a doctor")} />
+      <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-warning/30 bg-warning/8 px-3.5 py-3 text-[13px] text-foreground/80">
+        <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" />{t("After you verify your email, an administrator checks your licence. You can sign in meanwhile, but patient data stays locked until approval.")}</div>
+      <Stepper steps={STEPS} current={step} />
+
+      {formError && (
+        <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-xl border border-destructive/25 bg-destructive/5 px-3.5 py-3 text-[13.5px] text-destructive">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {formError}
         </div>
+      )}
 
-        {/* Amber warning */}
-        <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200 mb-6">
-          <FiAlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-semibold text-amber-800">Admin Verification Required</p>
-            <p className="text-xs text-amber-600 mt-0.5">Your account will be reviewed by a medical board administrator before activation.</p>
-          </div>
-        </div>
+      <form onSubmit={submit} noValidate>
+        <AnimatePresence mode="wait">
+          <motion.div key={step} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.25 }} className="space-y-5">
+            {step === 0 && (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label={t("First name")} required error={errors.first_name}>
+                    {(id) => <input id={id} value={form.first_name} onChange={onText('first_name')} autoComplete="given-name" className={fieldClass(!!errors.first_name)} />}
+                  </Field>
+                  <Field label={t("Last name")} required error={errors.last_name}>
+                    {(id) => <input id={id} value={form.last_name} onChange={onText('last_name')} autoComplete="family-name" className={fieldClass(!!errors.last_name)} />}
+                  </Field>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label={t("Email")} required error={errors.email}>
+                    {(id) => <input id={id} type="email" value={form.email} onChange={onText('email')} autoComplete="email" placeholder="you@hospital.in" className={fieldClass(!!errors.email)} />}
+                  </Field>
+                  <Field label={t("Mobile number")} required error={errors.phone}>
+                    {(id) => <input id={id} type="tel" inputMode="numeric" maxLength={10} value={form.phone} onChange={(e) => set('phone', e.target.value.replace(/\D/g, ''))} className={fieldClass(!!errors.phone)} />}
+                  </Field>
+                </div>
+                <Field label={t("Date of birth")} required error={errors.date_of_birth} className="sm:max-w-[50%]">
+                  {(id) => <input id={id} type="date" value={form.date_of_birth} max={maxDob()} onChange={onText('date_of_birth')} className={fieldClass(!!errors.date_of_birth)} />}
+                </Field>
+              </>
+            )}
 
-        <MultiStepProgress steps={STEPS} current={step} />
-
-        <form onSubmit={handleSubmit}>
-          <div className="bg-card rounded-2xl border border-border shadow-sm p-8">
-            <AnimatePresence mode="wait">
-              {/* ── Step 1: Personal Info ── */}
-              {step === 0 && (
-                <motion.div key="d0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">First Name <span className="text-red-500">*</span></label>
-                      <input type="text" name="first_name" value={formData.first_name} onChange={handleChange} className={inputClass('first_name')} />
-                      {errors.first_name && <p className="text-xs text-red-500 mt-1">{errors.first_name}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">Last Name <span className="text-red-500">*</span></label>
-                      <input type="text" name="last_name" value={formData.last_name} onChange={handleChange} className={inputClass('last_name')} />
-                      {errors.last_name && <p className="text-xs text-red-500 mt-1">{errors.last_name}</p>}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80">Email <span className="text-red-500">*</span></label>
-                    <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="doctor@hospital.in" className={inputClass('email')} />
-                    {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80">Phone <span className="text-red-500">*</span></label>
-                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="9876543210" className={inputClass('phone')} />
-                    {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ── Step 2: Professional Details ── */}
-              {step === 1 && (
-                <motion.div key="d1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80">Medical License Number <span className="text-red-500">*</span></label>
-                    <input type="text" name="license_number" value={formData.license_number} onChange={handleChange} placeholder="e.g. MCI-12345" className={inputClass('license_number')} />
-                    {errors.license_number && <p className="text-xs text-red-500 mt-1">{errors.license_number}</p>}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">Degree <span className="text-red-500">*</span></label>
-                      <select name="degree" value={formData.degree} onChange={handleChange} className={inputClass('degree')}>
-                        <option value="">Select degree</option>
-                        {DEGREES.map((d) => <option key={d} value={d}>{d}</option>)}
+            {step === 1 && (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label={t("Medical registration number")} required error={errors.medical_license} hint={t("As issued by your state medical council")}>
+                    {(id) => <input id={id} value={form.medical_license} onChange={onText('medical_license')} placeholder={t("e.g. MH-2019-04821")} className={`${fieldClass(!!errors.medical_license)} uppercase`} />}
+                  </Field>
+                  <Field label={t("Years of experience")} required error={errors.experience_years}>
+                    {(id) => <input id={id} type="number" min={0} max={60} value={form.experience_years} onChange={onText('experience_years')} className={fieldClass(!!errors.experience_years)} />}
+                  </Field>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label={t("Degree")} required error={errors.degree}>
+                    {(id) => (
+                      <select id={id} value={form.degree} onChange={onText('degree')} className={fieldClass(!!errors.degree)}>
+                        {DEGREES.map((d) => <option key={d} value={d}>{t(d)}</option>)}
                       </select>
-                      {errors.degree && <p className="text-xs text-red-500 mt-1">{errors.degree}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground/80">Experience (years) <span className="text-red-500">*</span></label>
-                      <input type="number" name="experience_years" value={formData.experience_years} onChange={handleChange} min={0} max={60} className={inputClass('experience_years')} />
-                      {errors.experience_years && <p className="text-xs text-red-500 mt-1">{errors.experience_years}</p>}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80 mb-2">Specialization(s) <span className="text-red-500">*</span></label>
-                    <ChipSelect options={SPECIALIZATIONS} selected={specializations} onChange={setSpecializations} />
-                    {errors.specialization && <p className="text-xs text-red-500 mt-2">{errors.specialization}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80">Hospital / Clinic Name <span className="text-red-500">*</span></label>
-                    <input type="text" name="hospital_name" value={formData.hospital_name} onChange={handleChange} className={inputClass('hospital_name')} />
-                    {errors.hospital_name && <p className="text-xs text-red-500 mt-1">{errors.hospital_name}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80">Hospital Address</label>
-                    <textarea name="hospital_address" value={formData.hospital_address} onChange={handleChange} rows={2} className="mt-1 block w-full rounded-xl border border-border bg-card px-4 py-3 text-sm focus:border-primary focus:ring-primary/20" />
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ── Step 3: Documents & Account ── */}
-              {step === 2 && (
-                <motion.div key="d2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/80">Password <span className="text-red-500">*</span></label>
-                    <div className="relative">
-                      <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        className={`${inputClass('password')} pl-10 pr-10`}
-                      />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
-                        {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
-                    {formData.password && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className={`h-full ${strengthColor} transition-all`} style={{ width: strengthWidth }} />
-                        </div>
-                        <span className="text-[10px] font-medium capitalize text-muted-foreground">{passwordStrength}</span>
-                      </div>
                     )}
-                  </div>
+                  </Field>
+                  {form.degree === 'Other' ? (
+                    <Field label={t("Degree name")} required error={errors.degree_other}>
+                      {(id) => <input id={id} value={form.degree_other} onChange={onText('degree_other')} className={fieldClass(!!errors.degree_other)} />}
+                    </Field>
+                  ) : (
+                    <Field label={t("Specialisation")} required error={errors.specialization}>
+                      {(id) => (
+                        <select id={id} value={form.specialization} onChange={onText('specialization')} className={fieldClass(!!errors.specialization)}>
+                          <option value="">{t("Select")}</option>
+                          {SPECIALIZATIONS.map((s) => <option key={s} value={s}>{t(s)}</option>)}
+                        </select>
+                      )}
+                    </Field>
+                  )}
+                </div>
+                {form.degree === 'Other' && (
+                  <Field label={t("Specialisation")} required error={errors.specialization}>
+                    {(id) => (
+                      <select id={id} value={form.specialization} onChange={onText('specialization')} className={fieldClass(!!errors.specialization)}>
+                        <option value="">{t("Select")}</option>
+                        {SPECIALIZATIONS.map((s) => <option key={s} value={s}>{t(s)}</option>)}
+                      </select>
+                    )}
+                  </Field>
+                )}
+                <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
+                  <Field label={t("Hospital or clinic")} error={errors.clinic_name}>
+                    {(id) => <input id={id} value={form.clinic_name} onChange={onText('clinic_name')} className={fieldClass(!!errors.clinic_name)} />}
+                  </Field>
+                  <Field label={t("Consultation fee (₹)")} error={errors.consultation_fee}>
+                    {(id) => <input id={id} type="number" min={0} step="1" value={form.consultation_fee} onChange={onText('consultation_fee')} className={fieldClass(!!errors.consultation_fee)} />}
+                  </Field>
+                </div>
+                <Field label={t("Clinic address")} error={errors.clinic_address}>
+                  {(id) => <textarea id={id} rows={2} value={form.clinic_address} onChange={onText('clinic_address')} className={`${fieldClass(!!errors.clinic_address)} h-auto py-2.5`} />}
+                </Field>
+              </>
+            )}
 
-                  <div className="space-y-4">
-                    <UploadBox
-                      label="Medical License Document *"
-                      file={files.license_doc}
-                      onFileChange={(f) => setFiles((p) => ({ ...p, license_doc: f }))}
-                      error={errors.license_doc}
-                    />
-                    <UploadBox
-                      label="Degree Certificate *"
-                      file={files.degree_cert}
-                      onFileChange={(f) => setFiles((p) => ({ ...p, degree_cert: f }))}
-                      error={errors.degree_cert}
-                    />
-                    <UploadBox
-                      label="Government ID Proof *"
-                      file={files.id_proof}
-                      onFileChange={(f) => setFiles((p) => ({ ...p, id_proof: f }))}
-                      error={errors.id_proof}
-                    />
-                  </div>
+            {step === 2 && (
+              <>
+                <Field label={t("Password")} required error={errors.password}>
+                  {(id) => <PasswordInput id={id} value={form.password} onChange={onText('password') as any} invalid={!!errors.password} />}
+                </Field>
+                <FileDrop label={t("Medical licence certificate")} required file={files.license_certificate} onFile={setFile('license_certificate')} error={errors.license_certificate} />
+                <FileDrop label={t("Degree certificate")} required file={files.degree_certificate} onFile={setFile('degree_certificate')} error={errors.degree_certificate} />
+                <FileDrop label={t("Government ID")} required file={files.government_id} onFile={setFile('government_id')} error={errors.government_id} />
+                <div className="rounded-xl border bg-muted/30 p-3">
+                  <CheckRow checked={form.terms_accepted} onChange={(v) => set('terms_accepted', v)} invalid={!!errors.terms_accepted}>{t("I accept the terms of service and confirm these documents are genuine.")}</CheckRow>
+                </div>
+              </>
+            )}
+          </motion.div>
+        </AnimatePresence>
 
-                  <label className="flex items-start gap-3 cursor-pointer pt-2">
-                    <input
-                      type="checkbox"
-                      name="terms_accepted"
-                      checked={formData.terms_accepted || false}
-                      onChange={handleChange}
-                      className="mt-0.5 w-4 h-4 rounded border-border text-primary focus:ring-primary"
-                    />
-                    <span className={`text-sm ${errors.terms_accepted ? 'text-red-500' : 'text-muted-foreground'}`}>
-                      I accept the Terms of Service &amp; confirm the accuracy of submitted documents
-                    </span>
-                  </label>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Navigation */}
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
-              {step > 0 ? (
-                <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted transition-colors">
-                  <FiArrowLeft className="w-4 h-4" /> Back
-                </button>
-              ) : (
-                <Link href="/signup" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-muted-foreground">
-                  <FiArrowLeft className="w-4 h-4" /> Role selection
-                </Link>
-              )}
-
-              {step < STEPS.length - 1 ? (
-                <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 h-11 rounded-xl text-sm font-medium bg-primary text-white hover:opacity-90 shadow-lg shadow-teal-700/20 transition-all">
-                  Next <FiArrowRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 h-11 rounded-xl text-sm font-medium bg-primary text-white hover:opacity-90 shadow-lg shadow-teal-700/20 transition-all disabled:opacity-60">
-                  {loading ? 'Submitting…' : 'Submit for Verification'} <FiCheckCircle className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-        </form>
-
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          Already registered?{' '}
-          <Link href="/doctor/signin" className="text-primary font-semibold hover:underline">Sign in</Link>
-        </p>
-      </div>
-    </div>
+        <div className="mt-8 flex items-center justify-between border-t pt-6">
+          {step > 0 ? (
+            <button type="button" onClick={() => setStep((s) => s - 1)} className="inline-flex h-10 items-center gap-1.5 rounded-[10px] px-3 text-[14px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" />{' '}{t("Back")}</button>
+          ) : (
+            <Link href="/doctor/signin" className="text-[13.5px] text-muted-foreground hover:text-foreground">{t("Already registered?")}{' '}<span className="font-semibold text-primary">{t("Sign in")}</span>
+            </Link>
+          )}
+          <button type="submit" disabled={loading} className="inline-flex h-11 items-center gap-2 rounded-[10px] bg-primary px-5 text-[14.5px] font-medium text-primary-foreground shadow-button transition-transform active:scale-[0.98] disabled:opacity-70">
+            {loading ? <><Loader2 className="h-4 w-4 animate-spin" />{' '}{t("Submitting…")}</> : step < STEPS.length - 1 ? <>{t("Continue")}{' '}<ArrowRight className="h-4 w-4" /></> : <>{t("Submit for review")}{' '}<ArrowRight className="h-4 w-4" /></>}
+          </button>
+        </div>
+      </form>
+    </SplitSignInLayout>
   );
 }
