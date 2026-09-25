@@ -114,3 +114,12 @@ class IsDoctorVerified(BasePermission):
         if user.is_doctor:
             return user.is_approved_doctor
         return True
+
+
+class IsPharmacist(BasePermission):
+    """Allow only users with the Pharmacist role (admins pass for support work)."""
+    message = "Pharmacist role required."
+
+    def has_permission(self, request, view):
+        user = request.user
+        return bool(user and user.is_authenticated and (user.role == "pharmacist" or user.is_superuser))
