@@ -1,676 +1,407 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import { Area, AreaChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, ComposedChart } from 'recharts';
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  ArrowUpRight,
+  Bell,
+  ChevronRight,
+  ClipboardList,
+  CreditCard,
+  Download,
+  Droplets,
+  FileText,
+  FlaskConical,
+  HeartPulse,
+  Pill,
+  ShieldAlert,
+  TrendingDown,
+  TrendingUp,
+} from 'lucide-react';
 import { withAuth } from '@/components/auth/withAuth';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useLanguage } from '@/components/providers/LanguageProvider';
-import type { TranslationKey } from '@/lib/translations';
-import {
-  ComposedChart, AreaChart, Area, LineChart, Line, XAxis, YAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer,
-} from 'recharts';
-import type { RecentRecord, RecentRecordAttachment, HealthTrendsResponse, DashboardKPIs, DashboardSummary, ChronicCondition } from '@/types';
-import Link from 'next/link';
+import { EmptyState, Panel, Skeleton, SkeletonRows, Stat, StatusPill } from '@/components/ui/page';
+import { C, ChartTooltip, Legend, axisProps, gridProps } from '@/components/charts/chartTheme';
+import { RecordDetailModal, doctorLabel, recordStatus } from '@/components/dashboard/RecordDetailModal';
+import { cn } from '@/lib/utils';
+import type {
+  Allergy,
+  ChronicCondition,
+  DashboardKPIs,
+  DashboardSummary,
+  HealthTrendsResponse,
+  LabTest,
+  RecentRecord,
+} from '@/types';
+import { t as tr, intlLocale, tn } from '@/lib/i18n';
 
-/* ─── helpers ─── */
-function fmtDate(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+const fmtShort = (iso: string) => new Date(iso).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short' });
+const fmtLong = (iso: string) => new Date(iso).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? tr("Good morning") : h < 17 ? tr("Good afternoon") : tr("Good evening");
 }
 
-function buildStatCards(kpi?: DashboardKPIs) {
-  const bpTrend = kpi?.monthly_trends?.medical_records;
-  const rxTrend = kpi?.monthly_trends?.prescriptions;
-  const dlTrend = kpi?.monthly_trends?.downloads;
-
-  const fmtTrend = (t?: { change: number; direction: string }) => {
-    if (!t || t.change === 0) return { trend: '—', dir: 'neutral' };
-    const sign = t.direction === 'up' ? '+' : '-';
-    return { trend: `${sign}${Math.abs(t.change)}`, dir: t.direction };
-  };
-
-  const bpVal = kpi?.recent_bp?.value != null
-    ? `${Math.round(kpi.recent_bp.value)}/${Math.round(kpi.recent_bp.secondary_value ?? 0)}`
-    : '—/—';
-  const sugarVal = kpi?.recent_sugar?.value != null
-    ? `${Math.round(kpi.recent_sugar.value)}`
-    : '—';
-
-  const bpDate = kpi?.recent_bp?.recorded_at
-    ? new Date(kpi.recent_bp.recorded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-    : '';
-  const sugarDate = kpi?.recent_sugar?.recorded_at
-    ? new Date(kpi.recent_sugar.recorded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-    : '';
-
-  return [
-    { labelKey: 'kpi_medical_records' as TranslationKey, value: kpi?.total_medical_records ?? 0, ...fmtTrend(bpTrend), accent: '#1a5c52', customLabel: 'Medical Records' },
-    { labelKey: 'kpi_active_prescriptions' as TranslationKey, value: kpi?.active_prescriptions ?? 0, ...fmtTrend(rxTrend), accent: '#7c3aed', href: '/dashboard/prescriptions', customLabel: 'Active Prescriptions' },
-    { labelKey: 'kpi_medical_records' as TranslationKey, value: bpVal, trend: bpDate, dir: 'neutral' as string, accent: '#ef4444', customLabel: 'Recent BP (mmHg)' },
-    { labelKey: 'kpi_medical_records' as TranslationKey, value: <>{sugarVal} <sub style={{ fontSize: '0.55em', color: '#9CA3AF' }}>mg/dL</sub></>, trend: sugarDate, dir: 'neutral' as string, accent: '#f59e0b', customLabel: 'Blood Sugar' },
-    { labelKey: 'kpi_pending_labs' as TranslationKey, value: kpi?.total_medical_records ?? 0, ...fmtTrend(bpTrend), accent: '#d97706', href: '/dashboard/lab-reports', customLabel: 'Pending Lab Reports' },
-    { labelKey: 'kpi_downloads' as TranslationKey, value: kpi?.total_downloads ?? 0, ...fmtTrend(dlTrend), accent: '#1a5c52', href: '/dashboard/downloads', customLabel: 'Report Downloads' },
-  ];
+function scoreInfo(score: number) {
+  if (score >= 80) return { label: tr("Excellent"), tone: 'text-success', stroke: 'hsl(var(--success))' };
+  if (score >= 60) return { label: tr("Good"), tone: 'text-primary', stroke: 'hsl(var(--primary))' };
+  if (score >= 40) return { label: tr("Fair"), tone: 'text-warning', stroke: 'hsl(var(--warning))' };
+  return { label: tr("Needs attention"), tone: 'text-destructive', stroke: 'hsl(var(--destructive))' };
 }
 
-/* ─── Animated counter hook ─── */
-function useCounter(target: number, duration = 1400) {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    let start = 0;
-    const step = Math.ceil(target / (duration / 16));
-    const timer = setInterval(() => {
-      start += step;
-      if (start >= target) { setCount(target); clearInterval(timer); }
-      else setCount(start);
-    }, 16);
-    return () => clearInterval(timer);
-  }, [target, duration]);
-  return count;
-}
-
-/* ─── Health Score helpers ─── */
-function getScoreInfo(score: number) {
-  if (score >= 80) return { label: 'Excellent', color: '#4ade80', gradientFrom: '#1a5c52', gradientTo: '#4ade80' };
-  if (score >= 60) return { label: 'Good', color: '#a3e635', gradientFrom: '#4d7c0f', gradientTo: '#a3e635' };
-  if (score >= 40) return { label: 'Fair', color: '#f59e0b', gradientFrom: '#92400e', gradientTo: '#f59e0b' };
-  return { label: 'Needs Attention', color: '#ef4444', gradientFrom: '#991b1b', gradientTo: '#ef4444' };
-}
-
-/* ─── Health Score Ring ─── */
-function HealthScoreRing({ score: targetScore }: { score: number }) {
-  const score = useCounter(targetScore, 1400);
-  const r = 46;
-  const circ = 2 * Math.PI * r; // ≈289.03
-  const offset = circ - (score / 100) * circ;
-  const info = getScoreInfo(targetScore);
-
+function ScoreRing({ score }: { score: number }) {
+  const r = 52;
+  const circ = 2 * Math.PI * r;
+  const info = scoreInfo(score);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-      <div style={{ position: 'relative', width: 128, height: 128 }}>
-        <svg width={128} height={128} style={{ transform: 'rotate(-90deg)' }}>
-          <defs>
-            <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor={info.gradientFrom} />
-              <stop offset="100%" stopColor={info.gradientTo} />
-            </linearGradient>
-          </defs>
-          <circle cx={64} cy={64} r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={9} />
-          <circle
-            cx={64} cy={64} r={r} fill="none"
-            stroke="url(#ringGrad)" strokeWidth={9}
-            strokeDasharray={circ} strokeDashoffset={offset}
-            strokeLinecap="round"
-            style={{ transition: 'stroke-dashoffset 1.6s cubic-bezier(0.34,1.56,0.64,1)' }}
-          />
-        </svg>
-        <div style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-        }}>
-          <span style={{ fontSize: 30, fontWeight: 800, color: '#fff', lineHeight: 1, fontFamily: 'Syne, sans-serif' }}>
-            {score}
-          </span>
-          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em', marginTop: 3 }}>
-            HEALTH SCORE
-          </span>
-        </div>
+    <div className="relative h-[132px] w-[132px] shrink-0">
+      <svg viewBox="0 0 132 132" className="h-full w-full -rotate-90">
+        <circle cx="66" cy="66" r={r} fill="none" stroke="hsl(var(--border))" strokeWidth="10" />
+        <circle
+          cx="66"
+          cy="66"
+          r={r}
+          fill="none"
+          stroke={info.stroke}
+          strokeWidth="10"
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          strokeDashoffset={circ - (score / 100) * circ}
+          style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="tabular text-[34px] font-semibold leading-none tracking-[-0.04em]">{score}</span>
+        <span className={cn('mt-1 text-[11.5px] font-medium', info.tone)}>{info.label}</span>
       </div>
-      <span style={{ fontSize: 13, fontWeight: 700, color: info.color, letterSpacing: '0.04em' }}>
-        {info.label}
-      </span>
-      <span style={{ fontSize: 13, color: '#fff', textAlign: 'center', maxWidth: 160, lineHeight: 1.4 }}>
-        Based on vitals, labs &amp; medication adherence
-      </span>
     </div>
   );
 }
 
-/* ─── Detail Section Helper ─── */
-function DetailSection({ icon, title, children }: { icon: string; title: string; children: React.ReactNode }) {
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <span style={{ fontSize: 16 }}>{icon}</span>
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'hsl(var(--foreground))', letterSpacing: '-0.01em' }}>{title}</span>
-      </div>
-      <div style={{ paddingLeft: 28 }}>{children}</div>
-    </div>
-  );
+function trendOf(values: number[]) {
+  if (values.length < 2) return null;
+  const first = values[0];
+  const last = values[values.length - 1];
+  const pct = first ? ((last - first) / first) * 100 : 0;
+  if (Math.abs(pct) < 2) return { dir: 'flat' as const, pct };
+  return { dir: pct > 0 ? ('up' as const) : ('down' as const), pct };
 }
 
-/* ─── MAIN DASHBOARD ─── */
 function PatientDashboard(): React.JSX.Element {
   const { t } = useLanguage();
-  const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'bp' | 'sugar'>('bp');
-  const [selectedRecord, setSelectedRecord] = useState<RecentRecord | null>(null);
-  const [downloadingAttId, setDownloadingAttId] = useState<number | null>(null);
+  const user = useAuthStore((s) => s.user);
+  const [selected, setSelected] = useState<RecentRecord | null>(null);
 
-  const firstName = user?.first_name || 'User';
-
-  const handleViewReport = async (attId: number, fileName: string) => {
-    setDownloadingAttId(attId);
-    try {
-      const blob = await api.medical.downloadReport(attId, 'inline');
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      setTimeout(() => window.URL.revokeObjectURL(url), 60000);
-    } catch {
-      // silent fail
-    } finally {
-      setDownloadingAttId(null);
-    }
-  };
-
-  // Fetch dashboard summary (patient name, risk, adherence, health score)
-  const { data: summary } = useQuery<DashboardSummary>({
-    queryKey: ['dashboard-summary'],
-    queryFn: () => api.dashboard.getSummary(),
-    staleTime: 30_000,
-  });
-
-  const { data: kpiData } = useQuery<DashboardKPIs>({
-    queryKey: ['dashboard-kpis'],
-    queryFn: () => api.dashboard.getKPIs(),
-    staleTime: 30_000,
-  });
-
-  const statCards = buildStatCards(kpiData);
-
-  const { data: trendsData } = useQuery<HealthTrendsResponse>({
-    queryKey: ['dashboard-health-trends'],
+  const summary = useQuery<DashboardSummary>({ queryKey: ['dashboard-summary'], queryFn: () => api.dashboard.getSummary() });
+  const kpis = useQuery<DashboardKPIs>({ queryKey: ['dashboard-kpis'], queryFn: () => api.dashboard.getKPIs() });
+  const trends = useQuery<HealthTrendsResponse>({
+    queryKey: ['dashboard-health-trends', 24],
     queryFn: () => api.dashboard.getHealthTrends({ months: 24 }),
-    staleTime: 60_000,
   });
-
-  const { data: records } = useQuery<RecentRecord[]>({
+  const records = useQuery<RecentRecord[]>({
     queryKey: ['dashboard-recent-records'],
-    queryFn: () => api.dashboard.getRecentRecords({ limit: 12 }),
-    staleTime: 10_000,
+    queryFn: () => api.dashboard.getRecentRecords({ limit: 6 }),
   });
+  const labs = useQuery<LabTest[]>({ queryKey: ['dashboard-lab-monitoring'], queryFn: () => api.dashboard.getLabMonitoring() });
+  const conditions = useQuery<ChronicCondition[]>({ queryKey: ['patient-chronic-conditions'], queryFn: () => api.medical.getChronicConditions() });
+  const allergies = useQuery<Allergy[]>({ queryKey: ['patient-allergies'], queryFn: () => api.medical.getAllergies() });
+  const upcoming = useQuery<any[]>({ queryKey: ['adherence-upcoming'], queryFn: () => api.adherence.getUpcomingDoses() as any });
 
-  // Fetch chronic conditions
-  const { data: conditions } = useQuery<ChronicCondition[]>({
-    queryKey: ['patient-chronic-conditions'],
-    queryFn: () => api.medical.getChronicConditions(),
-    staleTime: 60_000,
-  });
+  const s = summary.data;
+  const k = kpis.data;
+  const score = s ? Math.max(0, Math.min(100, Math.round(100 - 10 * (s.calculated_risk_score ?? 0)))) : 0;
+  const activeConditions = (conditions.data ?? []).filter((c) => c.is_active);
+  const abnormalLabs = (labs.data ?? []).filter((l) => l.status !== 'normal');
+  const firstName = (s?.patient_name || user?.first_name || '').split(' ')[0];
 
-  // Derive values from API data
-  const healthScore = summary?.calculated_risk_score != null
-    ? Math.max(0, Math.min(100, 100 - 10 * summary.calculated_risk_score))
-    : 100;
-  const riskLevel = summary?.calculated_risk_level || 'Low';
-  const adherencePercentage = summary?.adherence_percentage ?? 0;
-  const activeConditions = conditions?.filter(c => c.is_active) || [];
-
-  const riskColor = riskLevel === 'High' ? '#ef4444' : riskLevel === 'Medium' ? '#f59e0b' : '#4ade80';
-
-  const bpSeries = trendsData?.trends.find(t => t.metric === 'blood_pressure');
-  const sugarSeries = trendsData?.trends.find(t => t.metric === 'sugar');
-
-  // Only show readings that fall on doctor visit dates (last 6 visits)
-  const visitDates = new Set(
-    (records ?? [])
-      .map(r => r.visit_date?.split('T')[0])
-      .filter(Boolean)
-      .sort()
-      .slice(-6)
+  const bp = useMemo(
+    () =>
+      (trends.data?.trends.find((x) => x.metric === 'blood_pressure')?.data ?? []).slice(-12).map((p) => ({
+        date: fmtShort(p.date),
+        Systolic: p.value,
+        Diastolic: p.secondary_value ?? undefined,
+      })),
+    [trends.data]
   );
+  const sugar = useMemo(
+    () => (trends.data?.trends.find((x) => x.metric === 'sugar')?.data ?? []).slice(-12).map((p) => ({ date: fmtShort(p.date), Glucose: p.value })),
+    [trends.data]
+  );
+  const sugarTrend = trendOf(sugar.map((d) => d.Glucose));
 
-  const bpData = (bpSeries?.data ?? [])
-    .filter(p => visitDates.has(p.date))
-    .map(p => ({ date: fmtDate(p.date), systolic: p.value, diastolic: p.secondary_value ?? 0 }));
-  const sugarData = (sugarSeries?.data ?? [])
-    .filter(p => visitDates.has(p.date))
-    .map(p => ({ date: fmtDate(p.date), value: p.value }));
+  const bpValue = k?.recent_bp?.value != null ? `${Math.round(k.recent_bp.value)}/${Math.round(k.recent_bp.secondary_value ?? 0)}` : '—';
+  const sugarValue = k?.recent_sugar?.value != null ? Math.round(k.recent_sugar.value) : '—';
+  const riskTone = s?.calculated_risk_level === 'High' ? 'danger' : s?.calculated_risk_level === 'Medium' ? 'warning' : 'success';
 
   return (
-    <>
-      {/* ═══ SECTION 1 — HERO BANNER ═══ */}
-      <section className="f1" style={{
-        background: 'linear-gradient(130deg, #151109 0%, #1a5c52 55%, #1a5c52 100%)',
-        borderRadius: 22, padding: '36px 40px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        position: 'relative', overflow: 'hidden', minHeight: 220,
-        gap: 40,
-      }}>
-        {/* Decorations */}
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }} />
-        <svg style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 80, opacity: 0.07, pointerEvents: 'none' }}
-          viewBox="0 0 800 80" preserveAspectRatio="none">
-          <path d="M0,50 L70,50 L85,15 L100,72 L115,15 L130,50 L280,50 L295,28 L310,68 L325,28 L340,50 L500,50 L515,18 L530,75 L545,18 L560,50 L800,50"
-            stroke="#4ade80" strokeWidth="2" fill="none" />
-        </svg>
-        <div style={{
-          position: 'absolute', right: 180, top: -100,
-          width: 350, height: 350, borderRadius: '50%', pointerEvents: 'none',
-          background: 'radial-gradient(circle, rgba(74,222,128,0.08) 0%, transparent 70%)',
-        }} />
-
-        {/* Left content */}
-        <div style={{ position: 'relative', flex: 1 }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 7,
-            background: 'rgba(74,222,128,0.14)', border: '1px solid rgba(74,222,128,0.25)',
-            borderRadius: 999, padding: '4px 14px',
-            fontSize: 11, color: '#4ade80', fontWeight: 600, letterSpacing: '0.03em',
-            marginBottom: 16,
-          }}>
-            <span style={{
-              width: 6, height: 6, borderRadius: '50%', background: '#4ade80',
-              animation: 'pulse-dot 2.2s infinite', display: 'inline-block',
-              boxShadow: '0 0 8px rgba(74,222,128,0.5)',
-            }} />
-            {summary?.health_id ? `National Health ID: ${summary.health_id}` : 'Health Surveillance Active'}
+    <div className="space-y-6">
+      {/* ── Greeting ── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="text-[13px] text-muted-foreground">
+            {new Date().toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}
           </div>
-          <h1 style={{
-            fontFamily: 'Syne, sans-serif', color: '#fff',
-            fontSize: 36, lineHeight: 1.15, marginBottom: 12, letterSpacing: '-0.02em',
-          }}>
-            {t('welcome_back')},<br />{summary?.patient_name || firstName}
+          <h1 className="mt-1 text-[28px] font-semibold tracking-[-0.035em] md:text-[32px]">
+            {summary.isLoading ? <Skeleton className="h-9 w-64" /> : <>{greeting()}{firstName ? `, ${firstName}` : ''}</>}
           </h1>
-          <p style={{
-            color: 'rgba(255,255,255,0.45)', fontSize: 13.5, lineHeight: 1.7,
-            maxWidth: 360,
-          }}>
-            Health surveillance active in{' '}
-            <strong style={{ color: '#4ade80' }}>real-time</strong>.
-            {' '}System status:{' '}
-            <strong style={{ color: '#4ade80' }}>Nominal</strong>
-          </p>
+        </div>
+        <div className="flex gap-2">
+          <Link href="/dashboard/patient-card" className="inline-flex h-10 items-center gap-2 rounded-[10px] border bg-card px-3.5 text-[13.5px] font-medium shadow-sm hover:bg-muted">
+            <CreditCard className="h-4 w-4 text-muted-foreground" />{' '}{tr("Health card")}</Link>
+          <Link href="/dashboard/medical-records" className="inline-flex h-10 items-center gap-2 rounded-[10px] bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground shadow-button">
+            <FileText className="h-4 w-4" />{' '}{tr("Records")}</Link>
+        </div>
+      </div>
+
+      {/* ── Health summary ── */}
+      <section className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
+        <div className="relative overflow-hidden rounded-2xl border bg-card p-6 shadow-sm">
+          <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl" aria-hidden="true" />
+          <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
+            {summary.isLoading ? <Skeleton className="h-[132px] w-[132px] rounded-full" /> : <ScoreRing score={score} />}
+            <div className="min-w-0 flex-1">
+              <div className="kicker">{tr("Health score")}</div>
+              <p className="mt-1.5 max-w-sm text-[14px] text-muted-foreground">{tr("Calculated from your recent vitals, lab results, conditions and medication adherence.")}</p>
+              <dl className="mt-5 grid grid-cols-3 gap-4 border-t pt-4">
+                <div>
+                  <dt className="text-xs text-muted-foreground">{tr("Risk level")}</dt>
+                  <dd className="mt-1">
+                    {s ? <StatusPill tone={riskTone}>{tr(s.calculated_risk_level)}</StatusPill> : <Skeleton className="h-5 w-14" />}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{tr("Adherence")}</dt>
+                  <dd className="tabular mt-1 text-[17px] font-semibold">{s ? `${Math.round(s.adherence_percentage)}%` : '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{tr("Conditions")}</dt>
+                  <dd className="tabular mt-1 text-[17px] font-semibold">{conditions.data ? activeConditions.length : '—'}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
         </div>
 
-        {/* Right content */}
-        <div style={{
-          position: 'relative', display: 'flex', alignItems: 'center',
-          gap: 44, flexShrink: 0,
-        }}>
-          {/* Stats column - left */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 22, alignItems: 'flex-end', textAlign: 'right' }}>
-            {/* Risk Level */}
-            <div>
-              <div style={{ fontSize: 10, color: '#fff', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 800, verticalAlign: 'super' }}>RISK LEVEL</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: riskColor, boxShadow: `0 0 8px ${riskColor}80` }} />
-                <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{riskLevel}</span>
-              </div>
-            </div>
-            {/* Adherence */}
-            <div>
-              <div style={{ fontSize: 10, color: '#fff', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 800, verticalAlign: 'super' }}>ADHERENCE</div>
-              <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{adherencePercentage}%</span>
-              <div style={{ width: 72, height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 99, marginTop: 6 }}>
-                <div style={{ width: `${Math.min(adherencePercentage, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #1a5c52, #4ade80)', borderRadius: 99, boxShadow: '0 0 6px rgba(74,222,128,0.3)' }} />
-              </div>
-            </div>
-            {/* Conditions */}
-            <div>
-              <div style={{ fontSize: 10, color: '#fff', letterSpacing: '0.14em', marginBottom: 5, fontWeight: 800, verticalAlign: 'super' }}>CONDITIONS</div>
-              <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{activeConditions.length} Active</span>
-            </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-2xl border bg-card p-5 shadow-sm">
+            <div className="text-xs text-muted-foreground">{tr("Patient ID")}</div>
+            <div className="mt-1.5 truncate font-mono text-[14px] font-semibold">{s?.health_id || "—"}</div>
+            <Link href="/dashboard/patient-card" className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-medium text-primary">{tr("Show QR card")}{' '}<ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
-
-          {/* Health Score Ring - center */}
-          <HealthScoreRing score={healthScore} />
+          <div className="rounded-2xl border bg-card p-5 shadow-sm">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Droplets className="h-3.5 w-3.5 text-destructive" />{' '}{tr("Blood group")}</div>
+            <div className="mt-1.5 text-[22px] font-semibold tracking-tight">{s?.blood_group || '—'}</div>
+          </div>
+          <Link href="/dashboard/alerts" className="group col-span-2 flex items-center gap-4 rounded-2xl border bg-card p-5 shadow-sm transition-colors hover:border-primary/30">
+            <span className={cn('flex h-10 w-10 items-center justify-center rounded-xl', (s?.total_alerts ?? 0) > 0 ? 'bg-destructive/10 text-destructive' : 'bg-success/12 text-success')}>
+              <Bell className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="text-[14px] font-semibold">
+                {s ? ((s.total_alerts ?? 0) > 0 ? tn(s.total_alerts ?? 0, '1 outbreak alert in your region', '{count} outbreak alerts in your region') : tr("No outbreak alerts in your region")) : tr("Checking alerts…")}
+              </div>
+              <div className="text-[12.5px] text-muted-foreground">{tr("Health alerts and risk notifications")}</div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </div>
       </section>
 
-      {/* ═══ SECTION 2 — STAT CARDS ═══ */}
-      <div className="f2 stat-grid">
-        {statCards.map((card, i) => {
-          const inner = (
-            <>
-              <div className="label" style={{ color: card.accent }}>{'customLabel' in card && card.customLabel ? card.customLabel : t(card.labelKey)}</div>
-              <div className="number">{card.value}</div>
-              {'href' in card && card.href && (
-                <span className="card-link-arrow">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M7 17l9.2-9.2M17 17V7H7" />
-                  </svg>
-                </span>
-              )}
-            </>
-          );
-          return ('href' in card && card.href) ? (
-            <Link key={i} href={card.href} className="stat-card" style={{ textDecoration: 'none', cursor: 'pointer' }}>
-              {inner}
-            </Link>
+      {/* ── KPIs ── */}
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <Stat label={t("Medical Records")} value={k?.total_medical_records ?? 0} icon={FileText} loading={kpis.isLoading} href="/dashboard/medical-records" />
+        <Stat label={t("Active Prescriptions")} value={k?.active_prescriptions ?? 0} icon={ClipboardList} tone="info" loading={kpis.isLoading} href="/dashboard/prescriptions" />
+        <Stat label={tr("Latest BP")} value={bpValue} hint={k?.recent_bp?.recorded_at ? tr("mmHg · {fmtShort}", { fmtShort: fmtShort(k.recent_bp.recorded_at) }) : 'mmHg'} icon={HeartPulse} tone="danger" loading={kpis.isLoading} />
+        <Stat label={tr("Blood sugar")} value={sugarValue} hint={k?.recent_sugar?.recorded_at ? tr("mg/dL · {fmtShort}", { fmtShort: fmtShort(k.recent_sugar.recorded_at) }) : 'mg/dL'} icon={Activity} tone="warning" loading={kpis.isLoading} />
+        <Stat label={tr("Abnormal lab values")} value={labs.data ? abnormalLabs.length : '—'} hint={labs.data ? tr("of {length} tracked tests", { length: labs.data.length }) : undefined} icon={FlaskConical} tone={abnormalLabs.length ? 'warning' : 'success'} loading={labs.isLoading} href="/dashboard/lab-reports" />
+        <Stat label={t("Report Downloads")} value={k?.total_downloads ?? 0} icon={Download} tone="neutral" loading={kpis.isLoading} href="/dashboard/downloads" />
+      </section>
+
+      {/* ── Trends ── */}
+      <section className="grid gap-4 xl:grid-cols-2">
+        <Panel title={tr("Blood pressure")} description={tr("Your 12 most recent readings")} icon={HeartPulse} actions={<Legend items={[{ label: tr("Systolic"), color: C.primary }, { label: tr("Diastolic"), color: C.blue }]} />}>
+          {trends.isLoading ? (
+            <Skeleton className="h-[220px] w-full" />
+          ) : bp.length ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <ComposedChart data={bp} margin={{ top: 6, right: 6, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="bpFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={C.primary} stopOpacity={0.2} />
+                    <stop offset="100%" stopColor={C.primary} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid {...gridProps} />
+                <XAxis dataKey="date" {...axisProps} minTickGap={16} />
+                <YAxis {...axisProps} domain={['dataMin - 10', 'dataMax + 10']} width={36} allowDecimals={false} tickFormatter={(v: number) => String(Math.round(v))} />
+                <Tooltip content={<ChartTooltip unit="mmHg" />} />
+                <Area type="monotone" dataKey="Systolic" stroke={C.primary} strokeWidth={2} fill="url(#bpFill)" dot={false} activeDot={{ r: 4 }} />
+                <Line type="monotone" dataKey="Diastolic" stroke={C.blue} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+              </ComposedChart>
+            </ResponsiveContainer>
           ) : (
-            <div key={i} className="stat-card">
-              {inner}
-            </div>
-          );
-        })}
-      </div>
+            <EmptyState compact icon={HeartPulse} title={tr("No blood pressure readings yet")} description={tr("Readings recorded by your doctor during visits will appear here.")} />
+          )}
+        </Panel>
 
-      {/* ═══ SECTION 3 — CHARTS ═══ */}
-      <div className="f3" style={{ display: 'flex', gap: 20 }}>
+        <Panel
+          title={tr("Blood sugar")}
+          description={tr("Your 12 most recent readings")}
+          icon={Activity}
+          actions={
+            sugarTrend && (
+              <StatusPill tone={sugarTrend.dir === 'up' ? 'warning' : sugarTrend.dir === 'down' ? 'success' : 'neutral'}>
+                {sugarTrend.dir === 'up' ? <TrendingUp className="h-3 w-3" /> : sugarTrend.dir === 'down' ? <TrendingDown className="h-3 w-3" /> : null}
+                {sugarTrend.dir === 'flat' ? tr("Stable") : `${Math.abs(sugarTrend.pct).toFixed(0)}% ${sugarTrend.dir === 'up' ? 'higher' : 'lower'}`}
+              </StatusPill>
+            )
+          }
+        >
+          {trends.isLoading ? (
+            <Skeleton className="h-[220px] w-full" />
+          ) : sugar.length ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={sugar} margin={{ top: 6, right: 6, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="sgFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={C.amber} stopOpacity={0.22} />
+                    <stop offset="100%" stopColor={C.amber} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid {...gridProps} />
+                <XAxis dataKey="date" {...axisProps} minTickGap={16} />
+                <YAxis {...axisProps} domain={['dataMin - 10', 'dataMax + 10']} width={36} allowDecimals={false} tickFormatter={(v: number) => String(Math.round(v))} />
+                <Tooltip content={<ChartTooltip unit="mg/dL" />} />
+                <Area type="monotone" dataKey="Glucose" stroke={C.amber} strokeWidth={2} fill="url(#sgFill)" dot={false} activeDot={{ r: 4 }} />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyState compact icon={Activity} title={tr("No glucose readings yet")} description={tr("Glucose values from visits and lab tests will appear here.")} />
+          )}
+        </Panel>
+      </section>
 
-        {/* Blood Pressure */}
-        <div style={{
-          background: 'hsl(var(--card))', borderRadius: 18, padding: '24px 28px',
-          boxShadow: '0 2px 10px rgba(47,58,58,0.06)',
-          flex: 1, minWidth: 0,
-        }}>
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontWeight: 800, color: 'hsl(var(--foreground))', fontSize: 20 }}>
-              Blood Pressure
-            </div>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', color: 'hsl(var(--muted-foreground))', fontSize: 12, marginTop: 3, fontWeight: 500 }}>
-              Last 6 months
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 13, fontWeight: 600, color: 'hsl(var(--muted-foreground))' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 12, height: 4, background: '#1a5c52', borderRadius: 2 }} /> Systolic
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 12, height: 4, background: '#4ade80', borderRadius: 2 }} /> Diastolic
-            </span>
-          </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <ComposedChart data={bpData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-              <defs>
-                <linearGradient id="bpGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#1a5c52" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#1a5c52" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f6f4ee" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} axisLine={false} tickLine={false} interval={0} />
-              <YAxis domain={[60, 170]} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} axisLine={false} tickLine={false} width={36} />
-              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))', color: 'hsl(var(--foreground))', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
-              <Area type="monotone" dataKey="systolic" stroke="#1a5c52" strokeWidth={2} fill="url(#bpGrad)" dot={{ fill: '#1a5c52', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
-              <Line type="monotone" dataKey="diastolic" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </div>
+      {/* ── Records + side column ── */}
+      <section className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+        <Panel
+          title={t("Recent Medical Records")}
+          description={tr("Your latest consultations")}
+          icon={FileText}
+          actions={
+            <Link href="/dashboard/medical-records" className="inline-flex items-center gap-1 text-[13px] font-medium text-primary">
+              {t("View All")} <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          }
+          bodyClassName="px-3 pb-3 md:px-3"
+        >
+          {records.isLoading ? (
+            <SkeletonRows rows={4} className="p-3" />
+          ) : records.data?.length ? (
+            <ul>
+              {records.data.map((r) => {
+                const st = recordStatus[r.status] ?? recordStatus.completed;
+                return (
+                  <li key={r.id}>
+                    <button onClick={() => setSelected(r)} className="record-item w-full text-left">
+                      <span className="record-icon">
+                        <FileText className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="record-title block truncate">{r.diagnosis_summary || tr("Consultation")}</span>
+                        <span className="record-meta">
+                          <span>{doctorLabel(r.doctor_name)}</span>
+                          <span aria-hidden="true">·</span>
+                          <span>{tr(r.department)}</span>
+                          <span aria-hidden="true">·</span>
+                          <span>{fmtLong(r.visit_date)}</span>
+                        </span>
+                      </span>
+                      <StatusPill tone={st.tone} className="hidden sm:inline-flex">{st.label}</StatusPill>
+                      <ChevronRight className="h-4 w-4 shrink-0 self-center text-muted-foreground" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <EmptyState icon={FileText} title={tr("No visit records yet")} description={tr("When a doctor scans your health card and records a consultation, it will show up here.")} action={<Link href="/dashboard/patient-card" className="text-[13.5px] font-semibold text-primary">{tr("Open your health card")}</Link>} />
+          )}
+        </Panel>
 
-        {/* Blood Sugar */}
-        <div style={{
-          background: 'hsl(var(--card))', borderRadius: 18, padding: '24px 28px',
-          boxShadow: '0 2px 10px rgba(47,58,58,0.06)',
-          flex: 1, minWidth: 0,
-        }}>
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontWeight: 800, color: 'hsl(var(--foreground))', fontSize: 20 }}>
-              Blood Sugar
-            </div>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', color: 'hsl(var(--muted-foreground))', fontSize: 12, marginTop: 3, fontWeight: 500 }}>
-              Last 6 months
-            </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{
-              background: 'rgba(31,111,106,0.08)', color: '#1a5c52',
-              fontSize: 12, fontWeight: 700,
-              padding: '4px 12px', borderRadius: 999,
-            }}>
-              ↓ Improving trend
-            </span>
-            <span style={{ color: 'hsl(var(--muted-foreground))', fontSize: 13, fontWeight: 600 }}>mg/dL</span>
-          </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={sugarData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-              <defs>
-                <linearGradient id="sgGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#1a5c52" stopOpacity={0.18} />
-                  <stop offset="95%" stopColor="#1a5c52" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f6f4ee" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} axisLine={false} tickLine={false} interval={0} />
-              <YAxis domain={['auto', 'auto']} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} axisLine={false} tickLine={false} width={36} />
-              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))', color: 'hsl(var(--foreground))', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }} />
-              <Area type="monotone" dataKey="value" stroke="#1a5c52" strokeWidth={2} fill="url(#sgGrad)" dot={{ fill: '#1a5c52', r: 2.5, strokeWidth: 0 }} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* ═══ SECTION 4 — RECENT MEDICAL RECORDS ═══ */}
-      <section className="f4">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M3 12h3l3-9 4 18 3-9h5" stroke="#1a5c52" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, color: 'hsl(var(--foreground))', fontSize: 18 }}>
-                {t('recent_records_title')}
-              </span>
-            </div>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', color: 'hsl(var(--muted-foreground))', fontSize: 13, marginTop: 3, marginLeft: 24 }}>
-              {t('empty_records_desc')}
-            </div>
-          </div>
-          <a href="/dashboard/medical-records" style={{
-            fontFamily: 'DM Sans, sans-serif', fontSize: 12, fontWeight: 600,
-            color: '#1a5c52', textDecoration: 'none',
-          }}>
-            {t('view_all')} →
-          </a>
-        </div>
-
-        <div className="content-card" style={{ padding: 0 }}>
-          {records && records.length > 0 ? (
-            records.slice(0, 5).map((record) => (
-              <div
-                key={record.id}
-                className="record-item"
-                style={{ cursor: 'pointer', transition: 'background 0.15s' }}
-                onClick={() => setSelectedRecord(record)}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(31,111,106,0.04)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-              >
-                <div className="record-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M3 12h3l3-9 4 18 3-9h5" stroke="#1a5c52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="record-title">{record.diagnosis_summary}</div>
-                  <div className="record-meta">
-                    <span>{record.doctor_name?.startsWith('Dr') ? record.doctor_name : `Dr. ${record.doctor_name}`}</span>
-                    <span style={{ color: 'hsl(var(--border))' }}>•</span>
-                    <span>{new Date(record.visit_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  </div>
-                  {record.tests_performed && (
-                    <div className="record-tags">
-                      <span className="tag">{record.tests_performed.split('\n')[0].slice(0, 30)}</span>
+        <div className="space-y-4">
+          <Panel title={tr("Upcoming doses")} description={tr("Next 24 hours")} icon={Pill} actions={<Link href="/dashboard/adherence" className="text-[13px] font-medium text-primary">{tr("Adherence")}</Link>}>
+            {upcoming.isLoading ? (
+              <SkeletonRows rows={2} />
+            ) : upcoming.data?.length ? (
+              <ul className="space-y-2">
+                {upcoming.data.slice(0, 4).map((d: any) => (
+                  <li key={d.id} className="flex items-center gap-3 rounded-xl border p-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Pill className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[13.5px] font-medium">{d.medicine_name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(d.scheduled_time).toLocaleString(intlLocale(), { weekday: 'short', hour: 'numeric', minute: '2-digit' })}
+                      </div>
                     </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-[13.5px] text-muted-foreground">{tr("No doses scheduled in the next 24 hours.")}</p>
+            )}
+          </Panel>
+
+          <Panel title={tr("Conditions & allergies")} icon={ShieldAlert} actions={<Link href="/dashboard/conditions" className="text-[13px] font-medium text-primary">{tr("Details")}</Link>}>
+            {conditions.isLoading || allergies.isLoading ? (
+              <SkeletonRows rows={2} />
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <div className="mb-2 text-xs font-medium text-muted-foreground">{tr("Active conditions")}</div>
+                  {activeConditions.length ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {activeConditions.map((c) => (
+                        <span key={c.id} className="tag" title={c.icd_10_code}>{c.disease_name || c.icd_10_code}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[13px] text-muted-foreground">{tr("None recorded")}</p>
                   )}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span className={`badge ${record.status === 'completed' ? 'badge-completed' : record.status === 'critical' ? 'badge-alert' : 'badge-followup'}`}>
-                    {record.status === 'completed' ? 'Completed' : record.status === 'critical' ? 'Critical' : 'Follow-up'}
-                  </span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="m9 18 6-6-6-6" />
-                  </svg>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div style={{ padding: '40px 20px', textAlign: 'center', color: 'hsl(var(--muted-foreground))', fontSize: 13 }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>📋</div>
-              No medical records found yet.
-            </div>
-          )}
-        </div>
-
-        {/* ── Record Detail Modal ── */}
-        {selectedRecord && (
-          <div
-            onClick={() => setSelectedRecord(null)}
-            style={{
-              position: 'fixed', inset: 0, zIndex: 9999,
-              background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              padding: 20,
-            }}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                background: 'hsl(var(--card))', borderRadius: 20, width: '100%', maxWidth: 640,
-                maxHeight: '85vh', overflowY: 'auto', position: 'relative',
-                boxShadow: '0 25px 60px rgba(0,0,0,0.2)',
-              }}
-            >
-              {/* Header */}
-              <div style={{
-                padding: '24px 28px 16px', borderBottom: '1px solid hsl(var(--border))',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-                position: 'sticky', top: 0, background: 'hsl(var(--card))', borderRadius: '20px 20px 0 0', zIndex: 1,
-              }}>
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#1a5c52', letterSpacing: '0.14em', marginBottom: 6 }}>MEDICAL RECORD</div>
-                  <h2 style={{ fontSize: 18, fontWeight: 700, color: 'hsl(var(--foreground))', margin: 0, lineHeight: 1.3 }}>
-                    {selectedRecord.diagnosis_summary}
-                  </h2>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, fontSize: 13, color: 'hsl(var(--muted-foreground))' }}>
-                    <span>{selectedRecord.doctor_name?.startsWith('Dr') ? selectedRecord.doctor_name : `Dr. ${selectedRecord.doctor_name}`}</span>
-                    <span>•</span>
-                    <span>{selectedRecord.department}</span>
-                    <span>•</span>
-                    <span>{new Date(selectedRecord.visit_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedRecord(null)}
-                  style={{
-                    width: 32, height: 32, borderRadius: 8, border: '1px solid hsl(var(--border))',
-                    background: 'hsl(var(--muted))', cursor: 'pointer', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: 12,
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
-                </button>
-              </div>
-
-              {/* Body */}
-              <div style={{ padding: '20px 28px 28px' }}>
-                {/* Status Badge */}
-                <div style={{ marginBottom: 20 }}>
-                  <span style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 999,
-                    fontSize: 11, fontWeight: 600,
-                    background: selectedRecord.status === 'completed' ? '#ecfdf5' : selectedRecord.status === 'critical' ? '#fef2f2' : '#fffbeb',
-                    color: selectedRecord.status === 'completed' ? '#059669' : selectedRecord.status === 'critical' ? '#dc2626' : '#d97706',
-                  }}>
-                    <span style={{
-                      width: 6, height: 6, borderRadius: '50%',
-                      background: selectedRecord.status === 'completed' ? '#059669' : selectedRecord.status === 'critical' ? '#dc2626' : '#d97706',
-                    }} />
-                    {selectedRecord.status === 'completed' ? 'Completed' : selectedRecord.status === 'critical' ? 'Critical' : 'Follow-up Required'}
-                  </span>
-                </div>
-
-                {/* Diagnosis */}
-                <DetailSection icon="🩺" title="Diagnosis">
-                  <p style={{ fontSize: 14, color: 'hsl(var(--foreground))', lineHeight: 1.6, margin: 0 }}>
-                    {selectedRecord.diagnosis_summary}
-                  </p>
-                </DetailSection>
-
-                {/* Doctor Notes */}
-                {selectedRecord.doctor_notes && (
-                  <DetailSection icon="📝" title="Doctor's Notes">
-                    <p style={{ fontSize: 13, color: '#4a5a5a', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>
-                      {selectedRecord.doctor_notes}
-                    </p>
-                  </DetailSection>
-                )}
-
-                {/* Tests Performed */}
-                {selectedRecord.tests_performed && (
-                  <DetailSection icon="🔬" title="Tests Performed">
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                      {selectedRecord.tests_performed.split('\n').filter(Boolean).map((test: string, i: number) => (
-                        <span key={i} style={{
-                          padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500,
-                          background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0',
-                        }}>
-                          {test.trim()}
+                  <div className="mb-2 text-xs font-medium text-muted-foreground">{tr("Allergies")}</div>
+                  {allergies.data?.length ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {allergies.data.map((a) => (
+                        <span key={a.id} className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+                          <AlertTriangle className="h-3 w-3" /> {a.allergen}
                         </span>
                       ))}
                     </div>
-                  </DetailSection>
-                )}
-
-                {/* Prescription */}
-                {selectedRecord.prescription_text && (
-                  <DetailSection icon="💊" title="Prescription">
-                    <p style={{ fontSize: 13, color: '#4a5a5a', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>
-                      {selectedRecord.prescription_text}
-                    </p>
-                    {selectedRecord.prescriptions_count > 0 && (
-                      <div style={{ marginTop: 10, fontSize: 12, color: '#1a5c52', fontWeight: 600 }}>
-                        {selectedRecord.prescriptions_count} prescription(s) linked
-                      </div>
-                    )}
-                  </DetailSection>
-                )}
-
-                {/* Attachments */}
-                {selectedRecord.attachments && selectedRecord.attachments.length > 0 && (
-                  <DetailSection icon="📎" title="Attachments">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {selectedRecord.attachments.map((att: RecentRecordAttachment) => (
-                        <button
-                          key={att.id}
-                          onClick={() => handleViewReport(att.id, att.file_name)}
-                          disabled={downloadingAttId === att.id}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
-                            borderRadius: 10, border: '1px solid hsl(var(--border))', textDecoration: 'none',
-                            color: 'hsl(var(--foreground))', transition: 'background 0.15s', background: 'transparent',
-                            cursor: downloadingAttId === att.id ? 'wait' : 'pointer', width: '100%', textAlign: 'left',
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafb'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                        >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a5c52" strokeWidth="1.5">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6" />
-                          </svg>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {att.file_name}
-                            </div>
-                            <div style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))', marginTop: 2 }}>
-                              {att.file_type} • {new Date(att.uploaded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            </div>
-                          </div>
-                          {downloadingAttId === att.id ? (
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a5c52" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}>
-                              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                            </svg>
-                          ) : (
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a5c52" strokeWidth="2">
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
-                            </svg>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </DetailSection>
-                )}
+                  ) : (
+                    <p className="text-[13px] text-muted-foreground">{tr("None recorded")}</p>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
+          </Panel>
+        </div>
       </section>
-    </>
+
+      {selected && <RecordDetailModal open={!!selected} onOpenChange={(o) => !o && setSelected(null)} record={selected} />}
+    </div>
   );
 }
 
