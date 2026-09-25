@@ -3,7 +3,7 @@ from django.db.models import Count, Avg, Sum, Q
 from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from .models import (
@@ -23,6 +23,29 @@ from .tasks import (
 )
 from .services import MLModelInfoService
 from accounts.models import User
+
+
+_RISK_LABELS = dict(RiskScore.RISK_LEVELS)
+
+
+def _risk_label(level):
+    """Display label for a risk level; out-of-range values clamp to Low/Critical."""
+    return _RISK_LABELS[min(max(int(level or 0), 0), 3)]
+
+
+def _reference_date():
+    """Latest day that has surveillance data (never later than today).
+
+    Surveillance feeds arrive in batches, so "the last N days from today" is
+    often empty. Every aggregate view anchors its window here instead and
+    reports it back as ``as_of`` so the UI can say what date the data is from.
+    """
+    today = timezone.now().date()
+    latest = (
+        SurveillanceData.objects.filter(date__lte=today)
+        .order_by('-date').values_list('date', flat=True).first()
+    )
+    return latest or today
 
 
 class IsAuthority(IsAuthenticated):
@@ -89,7 +112,7 @@ class SurveillanceDataViewSet(viewsets.ReadOnlyModelViewSet):
         if not disease_code:
             return Response({'error': 'disease_code is required'}, status=status.HTTP_400_BAD_REQUEST)
         
-        start_date = timezone.now().date() - timedelta(days=days)
+        start_date = _reference_date() - timedelta(days=days)
         
         queryset = SurveillanceData.objects.filter(
             disease_code=disease_code,
@@ -297,6 +320,19 @@ class ConsentViewSet(viewsets.ModelViewSet):
         })
 
 
+def _audit_alert(request, alert, verb):
+    from accounts.audit import AuditService
+    AuditService.log_event(
+        event_type="alert_acknowledged",
+        action=f"Outbreak alert {verb}",
+        user=request.user,
+        resource_type="Alert",
+        resource_id=str(alert.id),
+        details={"disease": alert.disease_name, "severity": alert.severity},
+        severity="warning" if verb == "escalated" else "info",
+    )
+
+
 class AlertViewSet(viewsets.ModelViewSet):
     """Alert management viewset"""
     queryset = Alert.objects.all()
@@ -324,6 +360,7 @@ class AlertViewSet(viewsets.ModelViewSet):
         """Acknowledge alert"""
         alert = self.get_object()
         alert.acknowledge(request.user)
+        _audit_alert(request, alert, "acknowledged")
         
         return Response({
             'message': 'Alert acknowledged',
@@ -335,6 +372,7 @@ class AlertViewSet(viewsets.ModelViewSet):
         """Resolve alert"""
         alert = self.get_object()
         alert.resolve(request.user)
+        _audit_alert(request, alert, "resolved")
         
         return Response({
             'message': 'Alert resolved',
@@ -346,6 +384,7 @@ class AlertViewSet(viewsets.ModelViewSet):
         """Escalate alert"""
         alert = self.get_object()
         alert.escalate()
+        _audit_alert(request, alert, "escalated")
         
         return Response({
             'message': 'Alert escalated',
@@ -393,7 +432,7 @@ def heat_map_data(request):
     """
     disease_code = request.query_params.get('disease_code')
     days = int(request.query_params.get('days', 7))
-    today = timezone.now().date()
+    today = _reference_date()
     start_date = today - timedelta(days=days)
 
     # Base queryset: last N days
@@ -423,7 +462,7 @@ def heat_map_data(request):
         risk_scores = {}
         for rs in RiskScore.objects.filter(disease_code=disease_code).order_by('-calculation_date'):
             if rs.region_id not in risk_scores:
-                risk_scores[rs.region_id] = rs.get_risk_level_display()
+                risk_scores[rs.region_id] = _risk_label(rs.risk_level)
 
         heat_map = []
         for row in region_agg:
@@ -461,7 +500,7 @@ def heat_map_data(request):
         risk_level_map = {}
         for rs in RiskScore.objects.order_by('-calculation_date', '-risk_level'):
             if rs.region_id not in risk_level_map:
-                risk_level_map[rs.region_id] = rs.get_risk_level_display()
+                risk_level_map[rs.region_id] = _risk_label(rs.risk_level)
 
         heat_map = []
         for row in region_agg:
@@ -559,27 +598,27 @@ def disease_statistics(request):
     Get disease-wise statistics
     """
     days = int(request.query_params.get('days', 7))
-    start_date = timezone.now().date() - timedelta(days=days)
+    as_of = _reference_date()
+    start_date = as_of - timedelta(days=days)
     
     # Get aggregated statistics per disease
     stats = SurveillanceData.objects.filter(
-        date__gte=start_date
+        date__gt=start_date, date__lte=as_of
     ).values('disease_code', 'disease_name').annotate(
         total_cases=Sum('case_count'),
         affected_regions=Count('region', distinct=True),
         average_severity=Avg('average_severity')
     ).order_by('-total_cases')
     
-    # Calculate growth rates
+    # Calculate growth rates against the previous window (one aggregate query)
+    prev_period_start = start_date - timedelta(days=days)
+    prev_totals = dict(
+        SurveillanceData.objects.filter(date__gt=prev_period_start, date__lte=start_date)
+        .values('disease_code').annotate(total=Sum('case_count')).values_list('disease_code', 'total')
+    )
+    stats = list(stats)
     for stat in stats:
-        # Get previous period data
-        prev_period_start = start_date - timedelta(days=days)
-        prev_cases = SurveillanceData.objects.filter(
-            disease_code=stat['disease_code'],
-            date__gte=prev_period_start,
-            date__lt=start_date
-        ).aggregate(total=Sum('case_count'))['total'] or 0
-        
+        prev_cases = prev_totals.get(stat['disease_code']) or 0
         current_cases = stat['total_cases']
         
         if prev_cases > 0:
@@ -592,6 +631,7 @@ def disease_statistics(request):
     return Response({
         'period_days': days,
         'start_date': start_date,
+        'as_of': as_of,
         'statistics': serializer.data
     })
 
@@ -604,37 +644,37 @@ def regional_comparison(request):
     """
     state = request.query_params.get('state')
     days = int(request.query_params.get('days', 7))
-    start_date = timezone.now().date() - timedelta(days=days)
+    as_of = _reference_date()
+    start_date = as_of - timedelta(days=days)
     
     regions = Region.objects.all()
     if state:
         regions = regions.filter(state__icontains=state)
-    
-    comparison = []
-    
-    for region in regions:
-        # Get total cases
-        surveillance_data = SurveillanceData.objects.filter(
-            region=region,
-            date__gte=start_date
+
+    # Three aggregate queries instead of three queries per region.
+    window = SurveillanceData.objects.filter(date__gt=start_date, date__lte=as_of, region__in=regions)
+    totals = {
+        row['region_id']: row
+        for row in window.values('region_id').annotate(
+            total=Sum('case_count'), diseases=Count('disease_code', distinct=True)
         )
-        
-        total_cases = surveillance_data.aggregate(total=Sum('case_count'))['total'] or 0
-        active_diseases = surveillance_data.values('disease_code').distinct().count()
-        
-        # Get latest risk score
-        latest_risk = RiskScore.objects.filter(
-            region=region
-        ).order_by('-calculation_date').first()
-        
-        risk_level = latest_risk.get_risk_level_display() if latest_risk else 'Low'
+    }
+    latest_risk = {}
+    for rs in RiskScore.objects.filter(region__in=regions).order_by('region_id', '-calculation_date').only(
+        'region_id', 'risk_level', 'calculation_date'
+    ):
+        latest_risk.setdefault(rs.region_id, _risk_label(rs.risk_level))
+
+    comparison = []
+    for region in regions:
+        agg = totals.get(region.id, {})
+        total_cases = agg.get('total') or 0
         cases_per_100k = (total_cases / region.population) * 100000 if region.population > 0 else 0
-        
         comparison.append({
             'region_name': region.name,
             'total_cases': total_cases,
-            'active_diseases': active_diseases,
-            'risk_level': risk_level,
+            'active_diseases': agg.get('diseases') or 0,
+            'risk_level': latest_risk.get(region.id, 'Low'),
             'population': region.population,
             'cases_per_100k': round(cases_per_100k, 2)
         })
@@ -646,6 +686,7 @@ def regional_comparison(request):
     
     return Response({
         'period_days': days,
+        'as_of': as_of,
         'regions_compared': len(comparison),
         'comparison': serializer.data
     })
@@ -658,24 +699,14 @@ def dashboard_overview(request):
     Get dashboard overview statistics.
     Uses date ranges for robustness — not just exact 'today'.
     """
-    today = timezone.now().date()
+    today = _reference_date()
     week_ago = today - timedelta(days=7)
     two_weeks_ago = today - timedelta(days=14)
 
-    # Total cases — try today first, fall back to last 3 days
+    # Cases reported on the latest day with data
     total_cases_today = SurveillanceData.objects.filter(
         date=today
     ).aggregate(total=Sum('case_count'))['total'] or 0
-
-    if total_cases_today == 0:
-        # Fall back to latest available date within last 7 days
-        latest_date = SurveillanceData.objects.filter(
-            date__gte=week_ago
-        ).order_by('-date').values_list('date', flat=True).first()
-        if latest_date:
-            total_cases_today = SurveillanceData.objects.filter(
-                date=latest_date
-            ).aggregate(total=Sum('case_count'))['total'] or 0
 
     # Active alerts
     active_alerts = Alert.objects.filter(status='active').count()
@@ -695,19 +726,22 @@ def dashboard_overview(request):
 
     # Top diseases (last 7 days)
     top_diseases = SurveillanceData.objects.filter(
-        date__gte=week_ago
+        date__gt=week_ago, date__lte=today
     ).values('disease_code', 'disease_name').annotate(
         total_cases=Sum('case_count')
     ).order_by('-total_cases')[:5]
 
     # Trending diseases (growth rate)
+    top_diseases = list(top_diseases)
+    prev_totals = dict(
+        SurveillanceData.objects.filter(
+            disease_code__in=[d['disease_code'] for d in top_diseases],
+            date__gt=two_weeks_ago, date__lte=week_ago,
+        ).values('disease_code').annotate(total=Sum('case_count')).values_list('disease_code', 'total')
+    )
     trending = []
     for disease in top_diseases:
-        prev_cases = SurveillanceData.objects.filter(
-            disease_code=disease['disease_code'],
-            date__gte=two_weeks_ago,
-            date__lt=week_ago
-        ).aggregate(total=Sum('case_count'))['total'] or 0
+        prev_cases = prev_totals.get(disease['disease_code']) or 0
 
         current_cases = disease['total_cases']
         growth_rate = ((current_cases - prev_cases) / prev_cases * 100) if prev_cases > 0 else 0
@@ -721,6 +755,7 @@ def dashboard_overview(request):
 
     return Response({
         'date': today,
+        'as_of': today,
         'total_cases_today': total_cases_today,
         'active_alerts': active_alerts,
         'critical_alerts': critical_alerts,
@@ -803,19 +838,9 @@ def daywise_comparison(request):
     district = request.query_params.get('district')
     region_id = request.query_params.get('region_id')
 
-    today = timezone.now().date()
-    # Build list of 7 days: today + past 6 days
+    today = _reference_date()
+    # Build list of 7 days: latest data day + the 6 before it
     dates = [today - timedelta(days=i) for i in range(7)]
-
-    # Find the latest date with data if today has none
-    latest_date = SurveillanceData.objects.filter(
-        date__gte=today - timedelta(days=7),
-        date__lte=today,
-    ).order_by('-date').values_list('date', flat=True).first()
-
-    if latest_date and latest_date != today:
-        dates = [latest_date - timedelta(days=i) for i in range(7)]
-        today = latest_date
 
     base_qs = SurveillanceData.objects.filter(
         date__in=dates
@@ -997,3 +1022,47 @@ class EnvironmentalDataViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(date__lte=date_to)
 
         return queryset.order_by('-date')
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def public_stats(request):
+    """Aggregate-only platform figures for the public landing page.
+
+    Contains counts and disease-level totals only — never anything that
+    identifies a patient, clinician or facility.
+    """
+    as_of = _reference_date()
+    week_start = as_of - timedelta(days=7)
+    top = (
+        SurveillanceData.objects.filter(date__gt=week_start, date__lte=as_of)
+        .values('disease_name')
+        .annotate(total_cases=Sum('case_count'))
+        .order_by('-total_cases')[:5]
+    )
+    models_info = MLModelInfoService.get_all_models_info() or {}
+    models_live = sum(
+        1 for m in models_info.values()
+        if isinstance(m, dict) and m.get('model_available')
+    )
+    return Response({
+        'as_of': as_of,
+        'monitored_regions': Region.objects.count(),
+        'states_covered': Region.objects.values('state').distinct().count(),
+        'surveillance_records': SurveillanceData.objects.count(),
+        'active_clusters': Cluster.objects.filter(is_active=True).count(),
+        'active_alerts': Alert.objects.filter(status='active').count(),
+        'forecasts_generated': Forecast.objects.count(),
+        'ml_models_total': len(models_info),
+        'ml_models_live': models_live,
+        'patients_registered': User.objects.filter(role=User.Role.PATIENT).count(),
+        'doctors_registered': User.objects.filter(role=User.Role.DOCTOR).count(),
+        'pharmacists_registered': User.objects.filter(role=User.Role.PHARMACIST).count(),
+        'cases_last_7_days': SurveillanceData.objects.filter(
+            date__gt=week_start, date__lte=as_of,
+        ).aggregate(total=Sum('case_count'))['total'] or 0,
+        'top_diseases': [
+            {'disease_name': t['disease_name'], 'total_cases': t['total_cases'] or 0}
+            for t in top
+        ],
+    })
