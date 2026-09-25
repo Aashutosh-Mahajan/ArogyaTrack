@@ -66,6 +66,10 @@ _ABNORMAL_KEYWORDS = [
 ]
 
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 def _extract_max_bp_systolic(text: str) -> int | None:
     """Return the highest systolic BP value found in free text, or None."""
     matches = _BP_RE.findall(text)
@@ -135,9 +139,7 @@ class DashboardSummaryView(APIView):
         user = request.user
 
         # ── Profile ──────────────────────────────────────────────
-        profile = Profile.objects.filter(
-            user=user, relationship="self"
-        ).first()
+        profile = user.get_active_profile()
 
         patient_name = profile.name if (profile and profile.name) else (user.get_first_name() or user.email)
 
@@ -148,7 +150,7 @@ class DashboardSummaryView(APIView):
                 profile=profile, revoked_at__isnull=True
             ).first()
             if hc:
-                health_id = str(profile.id)
+                health_id = profile.patient_id or str(profile.id)
 
         # ── Blood group ──────────────────────────────────────────
         blood_group = profile.blood_group if profile else None
@@ -255,9 +257,7 @@ class DashboardKPIView(APIView):
         thirty_days_ago = now - timedelta(days=30)
         sixty_days_ago = now - timedelta(days=60)
 
-        profile = Profile.objects.filter(
-            user=user, relationship="self"
-        ).first()
+        profile = user.get_active_profile()
 
         # ── Total medical records ────────────────────────────────
         all_records = PatientVisitRecord.objects.filter(profile=profile)
@@ -386,7 +386,7 @@ class RecentRecordsView(APIView):
     def get(self, request):
         user = request.user
         limit = int(request.query_params.get("limit", 10))
-        profile = Profile.objects.filter(user=user, relationship="self").first()
+        profile = user.get_active_profile()
 
         records = (
             PatientVisitRecord.objects.filter(profile=profile)
@@ -475,7 +475,7 @@ class LabMonitoringView(APIView):
 
     def get(self, request):
         user = request.user
-        profile = Profile.objects.filter(user=user, relationship="self").first()
+        profile = user.get_active_profile()
 
         # Grab *all* results for this patient, newest first.
         all_results = (
@@ -559,7 +559,7 @@ class HealthTrendsView(APIView):
         user = request.user
         months = min(int(request.query_params.get("months", 6)), 24)
         cutoff = timezone.now() - timedelta(days=months * 30)
-        profile = Profile.objects.filter(user=user, relationship="self").first()
+        profile = user.get_active_profile()
 
         metrics_qs = (
             HealthMetric.objects.filter(
@@ -785,9 +785,7 @@ class DashboardAlertsView(APIView):
 
     def get(self, request):
         user = request.user
-        profile = Profile.objects.filter(
-            user=user, relationship="self",
-        ).first()
+        profile = user.get_active_profile()
 
         # Auto-generate any newly applicable alerts
         _generate_alerts_for_patient(user, profile)
@@ -889,16 +887,22 @@ class SecuritySettingsView(APIView):
             expires_at__gt=timezone.now(),
         ).order_by("-created_at")[:10]
 
+        current_refresh = request.COOKIES.get(settings.AUTH_COOKIE_REFRESH)
+        current_hash = Session.hash_token(current_refresh) if current_refresh else None
+
         sessions_data = []
         for sess in active_sessions_qs:
             device_info = sess.device_info or {}
-            device = device_info.get("device") or _parse_user_agent(sess.user_agent or "")
-            ip = device_info.get("ip_address") or "Unknown"
+            nested = device_info.get("device_info") if isinstance(device_info.get("device_info"), dict) else {}
+            ua = device_info.get("user_agent") or sess.user_agent or ""
+            device = device_info.get("device") or nested.get("device") or (_parse_user_agent(ua) if ua else "Unknown device")
+            ip = device_info.get("ip_address") or nested.get("ip_address") or "Unknown"
             sessions_data.append({
                 "id": sess.id,
                 "device": device,
                 "ip_address": ip,
                 "last_active": sess.created_at.isoformat(),
+                "is_current": bool(current_hash and sess.refresh_token_hash == current_hash),
             })
 
         return Response({
@@ -960,20 +964,56 @@ class ChangePasswordView(APIView):
 
 class Toggle2FAView(APIView):
     """
-    POST /api/dashboard/toggle-2fa/
-    Placeholder endpoint — toggles the is_2fa_enabled flag.
+    POST /api/dashboard/toggle-2fa/  { "password": "..." }
+    Turns email-code two-factor sign-in on or off. Confirming the password
+    stops a stolen session from silently weakening the account.
     """
 
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         user = request.user
+        if not user.check_password(request.data.get("password") or ""):
+            return Response({"password": ["Password is incorrect."]}, status=400)
         user.is_2fa_enabled = not user.is_2fa_enabled
         user.save(update_fields=["is_2fa_enabled"])
         return Response({
             "detail": "2FA setting updated.",
             "is_2fa_enabled": user.is_2fa_enabled,
         })
+
+
+class RevokeOtherSessionsView(APIView):
+    """
+    POST /api/dashboard/sessions/revoke-others/
+    Signs out every other device by blacklisting their refresh tokens.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+        from rest_framework_simplejwt.tokens import RefreshToken as _Refresh
+
+        user = request.user
+        current = request.COOKIES.get(settings.AUTH_COOKIE_REFRESH) or request.data.get("refresh")
+        current_jti = None
+        if current:
+            try:
+                current_jti = _Refresh(current)["jti"]
+            except Exception:
+                current_jti = None
+
+        revoked = 0
+        for token in OutstandingToken.objects.filter(user=user, expires_at__gt=timezone.now()):
+            if token.jti == current_jti:
+                continue
+            _, created = BlacklistedToken.objects.get_or_create(token=token)
+            revoked += int(created)
+
+        keep = Session.hash_token(current) if current else None
+        Session.objects.filter(user=user).exclude(refresh_token_hash=keep).delete()
+        return Response({"detail": "Signed out of other sessions.", "revoked": revoked})
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -1026,7 +1066,7 @@ class DownloadListView(APIView):
 
     def get(self, request):
         user = request.user
-        profile = Profile.objects.filter(user=user, relationship="self").first()
+        profile = user.get_active_profile()
         items = []
 
         # 1) Visit Records (each can be downloaded as a PDF)
@@ -1043,7 +1083,8 @@ class DownloadListView(APIView):
                 "title": f"{vr.diagnosis or 'Visit Record'} – {visit_date}",
                 "visit_info": f"Dr. {vr.doctor_name} – {vr.department}",
                 "created_at": (vr.visit_date or vr.created_at).isoformat(),
-                "file_url": None,  # generated client-side
+                "file_url": None,
+                "pdf_url": f"/documents/visit-records/{vr.id}/",
                 "record_data": {
                     "id": vr.id,
                     "visit_date": vr.visit_date.isoformat() if vr.visit_date else "",
@@ -1090,8 +1131,66 @@ class DownloadListView(APIView):
                 "file_url": lab.report_file.url if lab.report_file else None,
             })
 
+        # 4) Prescriptions (PDF, any supported language)
+        from prescriptions.models import Prescription
+
+        for rx in Prescription.objects.filter(patient=profile).select_related("doctor").order_by("-created_at"):
+            doctor = f"{rx.doctor.get_first_name()} {rx.doctor.get_last_name()}".strip() or rx.doctor.email
+            items.append({
+                "id": str(rx.id),
+                "type": "prescription",
+                "type_label": "Prescription",
+                "title": f"Prescription RX-{str(rx.id)[:8].upper()} – {rx.created_at:%d %b %Y}",
+                "visit_info": f"Dr. {doctor} · {rx.medicines.count()} medicine(s)",
+                "created_at": rx.created_at.isoformat(),
+                "file_url": None,
+                "pdf_url": f"/documents/prescriptions/{rx.id}/",
+            })
+
+        # 5) Pharmacy invoices
+        from pharmacy.models import Invoice
+
+        for inv in Invoice.objects.filter(patient=profile).select_related("pharmacy"):
+            items.append({
+                "id": str(inv.id),
+                "type": "invoice",
+                "type_label": "Invoice",
+                "title": f"Invoice {inv.invoice_number}",
+                "visit_info": f"{inv.pharmacy.name} · ₹{inv.total}",
+                "created_at": inv.created_at.isoformat(),
+                "file_url": None,
+                "pdf_url": f"/documents/invoices/{inv.id}/",
+            })
+
+        # 6) All lab results as one report
+        latest_lab = LabTestResult.objects.filter(profile=profile).order_by("-tested_at").first()
+        if latest_lab:
+            items.append({
+                "id": "lab-summary",
+                "type": "lab_summary",
+                "type_label": "Lab results",
+                "title": "All lab results",
+                "visit_info": f"{LabTestResult.objects.filter(profile=profile).count()} results",
+                "created_at": latest_lab.tested_at.isoformat(),
+                "file_url": None,
+                "pdf_url": "/documents/lab-results/",
+            })
+
         # Sort by date descending
         items.sort(key=lambda x: x["created_at"], reverse=True)
+
+        # 7) Health card (always first)
+        if profile is not None:
+            items.insert(0, {
+                "id": "health-card",
+                "type": "health_card",
+                "type_label": "Health card",
+                "title": "Health card (printable, front and back)",
+                "visit_info": profile.patient_id or "",
+                "created_at": timezone.now().isoformat(),
+                "file_url": None,
+                "pdf_url": "/patients/my-card/pdf/",
+            })
 
         return Response(items)
 
@@ -1106,7 +1205,7 @@ class DownloadFileView(APIView):
 
     def get(self, request, file_id):
         user = request.user
-        profile = Profile.objects.filter(user=user, relationship="self").first()
+        profile = user.get_active_profile()
         file_type = request.query_params.get("type", "visit_attachment")
         ip = _get_client_ip(request)
 
@@ -1153,6 +1252,61 @@ class DownloadFileView(APIView):
         return response
 
 
+def _add_generated_pdfs(zf, user, profile):
+    """Write PDFs of the profile's documents into the zip; returns how many."""
+    from documents import pdfs
+    from pharmacy.models import Invoice
+    from prescriptions.models import Prescription
+
+    from patients.models import HealthCard
+
+    if profile is None:
+        return 0
+    count = 0
+
+    def add(path, build):
+        nonlocal count
+        try:
+            zf.writestr(path, build())
+            count += 1
+        except Exception:
+            logger.exception("Could not add %s to the records archive", path)
+
+    card = HealthCard.objects.filter(profile=profile, revoked_at__isnull=True).order_by("-created_at").first()
+    if card:
+        add(f"Health_card_{profile.patient_id}.pdf", lambda: pdfs.health_card_pdf(profile, card))
+    for vr in PatientVisitRecord.objects.filter(profile=profile).order_by("-visit_date"):
+        add(f"visit_records/Visit_{vr.visit_date:%Y-%m-%d}_{vr.id}.pdf", lambda vr=vr: pdfs.visit_record_pdf(vr))
+    for rx in Prescription.objects.filter(patient=profile).select_related("doctor", "patient"):
+        add(f"prescriptions/Prescription_RX-{str(rx.id)[:8].upper()}.pdf", lambda rx=rx: pdfs.prescription_pdf(rx, "en"))
+    for inv in Invoice.objects.filter(patient=profile).select_related("pharmacy", "patient", "pharmacist", "prescription__doctor"):
+        add(f"invoices/{inv.invoice_number}.pdf", lambda inv=inv: pdfs.invoice_pdf(inv))
+    labs = LabTestResult.objects.filter(profile=profile).order_by("-tested_at", "test_name")
+    if labs.exists():
+        add("lab_reports/All_lab_results.pdf", lambda: pdfs.lab_report_pdf(profile, labs, "Lab results"))
+    return count
+
+
+class PatientInvoicesView(APIView):
+    """GET /api/dashboard/invoices/ — pharmacy bills for the active profile."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from pharmacy.models import Invoice
+        from pharmacy.serializers import InvoiceSerializer
+
+        profile = request.user.get_active_profile()
+        if profile is None:
+            return Response([])
+        invoices = (
+            Invoice.objects.filter(patient=profile)
+            .select_related("pharmacy", "pharmacist", "patient", "prescription__doctor")
+            .prefetch_related("items__prescription_medicine__medicine")
+        )
+        return Response(InvoiceSerializer(invoices, many=True).data)
+
+
 class DownloadAllView(APIView):
     """
     GET /api/dashboard/download-all/
@@ -1163,13 +1317,15 @@ class DownloadAllView(APIView):
 
     def get(self, request):
         user = request.user
-        profile = Profile.objects.filter(user=user, relationship="self").first()
+        profile = user.get_active_profile()
         ip = _get_client_ip(request)
 
         buf = BytesIO()
         file_count = 0
 
         with ZipFile(buf, "w") as zf:
+            file_count += _add_generated_pdfs(zf, user, profile)
+
             # Visit attachments
             attachments = VisitReportAttachment.objects.filter(
                 visit_record__profile=profile,

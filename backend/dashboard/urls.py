@@ -7,12 +7,14 @@ from .views import (
     DashboardKPIView,
     DashboardSummaryView,
     DownloadAllView,
+    PatientInvoicesView,
     DownloadFileView,
     DownloadListView,
     HealthTrendsView,
     LabMonitoringView,
     LogDownloadView,
     RecentRecordsView,
+    RevokeOtherSessionsView,
     SecuritySettingsView,
     Toggle2FAView,
 )
@@ -29,9 +31,11 @@ urlpatterns = [
     path("security/", SecuritySettingsView.as_view(), name="dashboard-security"),
     path("change-password/", ChangePasswordView.as_view(), name="dashboard-change-password"),
     path("toggle-2fa/", Toggle2FAView.as_view(), name="dashboard-toggle-2fa"),
+    path("sessions/revoke-others/", RevokeOtherSessionsView.as_view(), name="dashboard-revoke-other-sessions"),
     # Downloads
     path("downloads/", DownloadListView.as_view(), name="dashboard-downloads"),
     path("log-download/", LogDownloadView.as_view(), name="dashboard-log-download"),
     path("download/<int:file_id>/", DownloadFileView.as_view(), name="dashboard-download-file"),
     path("download-all/", DownloadAllView.as_view(), name="dashboard-download-all"),
+    path("invoices/", PatientInvoicesView.as_view(), name="dashboard-invoices"),
 ]
