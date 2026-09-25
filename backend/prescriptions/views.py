@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status
@@ -5,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.permissions import IsApprovedDoctor, IsDoctorVerified
+from config.ai import ai_configured
 
 from .models import Medicine, Prescription, PrescriptionService
 from .serializers import (
@@ -72,12 +74,45 @@ class CreatePrescriptionView(APIView):
         drug_interactions = serializer.context.get("drug_interactions", [])
         allergy_alerts = serializer.context.get("allergy_alerts", [])
 
+        # Server-side safety gate: the same deterministic checks the doctor saw.
+        from .safety_rules import run_rule_checks
+
+        med_input = [
+            {
+                "medicine_id": str(m["medicine"].id),
+                "dosage": m.get("dosage", ""),
+                "frequency": m.get("frequency", ""),
+                "quantity": m.get("quantity"),
+            }
+            for m in serializer.validated_data["medicines"]
+        ]
+        safety = run_rule_checks(str(serializer.validated_data["patient_id"]), med_input)
+        override_reason = (request.data.get("override_reason") or "").strip()
+        if safety["overall_status"] == "blocked" and not override_reason:
+            return Response(
+                {"detail": "This prescription is blocked by a safety check. Record an override reason to proceed.", "safety": safety},
+                status=status.HTTP_409_CONFLICT,
+            )
+
         # Create prescription
         prescription = serializer.save()
+
+        if safety["overall_status"] == "blocked":
+            from accounts.audit import AuditService
+            AuditService.log_event(
+                event_type="security_event",
+                action="Prescription issued despite safety block",
+                user=request.user,
+                resource_type="Prescription",
+                resource_id=str(prescription.id),
+                details={"override_reason": override_reason[:500], "summary": safety["summary"]},
+                severity="warning",
+            )
 
         response_data = {
             "prescription": PrescriptionSerializer(prescription).data,
             "warnings": {"drug_interactions": drug_interactions, "allergy_alerts": allergy_alerts},
+            "safety": safety,
         }
 
         return Response(response_data, status=status.HTTP_201_CREATED)
@@ -103,6 +138,27 @@ class PrescriptionDetailView(APIView):
         return Response(PrescriptionSerializer(prescription).data)
 
 
+def _ensure_prescription_qr(prescription):
+    """Path to the prescription's QR image, regenerating it if the file is gone.
+
+    The QR only encodes ``id|security_hash`` (both stored on the row), so a
+    missing file — e.g. after moving media storage — can always be rebuilt.
+    """
+    import os
+
+    path = prescription.qr_code_path or ""
+    if path and not os.path.isabs(path):
+        path = os.path.join(str(settings.MEDIA_ROOT), path)
+    if not path or not os.path.exists(path):
+        if not prescription.security_hash:
+            prescription.security_hash = PrescriptionService.generate_security_hash(str(prescription.id))
+        path = os.path.join(str(settings.MEDIA_ROOT), "qr_codes", "prescriptions", f"{prescription.id}.png")
+        PrescriptionService.generate_qr_code(str(prescription.id), prescription.security_hash, path)
+        prescription.qr_code_path = path
+        prescription.save(update_fields=["qr_code_path", "security_hash"])
+    return path
+
+
 class PrescriptionQRImageView(APIView):
     """Download prescription QR code image."""
 
@@ -119,10 +175,7 @@ class PrescriptionQRImageView(APIView):
             if prescription.doctor_id != user.id:
                 return Response({"detail": "You do not have access to this prescription"}, status=status.HTTP_403_FORBIDDEN)
 
-        try:
-            return FileResponse(open(prescription.qr_code_path, "rb"), content_type="image/png")
-        except FileNotFoundError as exc:
-            raise Http404("QR code not found") from exc
+        return FileResponse(open(_ensure_prescription_qr(prescription), "rb"), content_type="image/png")
 
 
 class PatientPrescriptionsView(APIView):
@@ -137,7 +190,12 @@ class PatientPrescriptionsView(APIView):
             if not user.profiles.filter(id=patient_id).exists():
                 return Response({"detail": "You do not have access to these prescriptions"}, status=status.HTTP_403_FORBIDDEN)
 
-        prescriptions = Prescription.objects.filter(patient_id=patient_id).order_by("-created_at")
+        prescriptions = (
+            Prescription.objects.filter(patient_id=patient_id)
+            .select_related("doctor__doctor_profile", "patient")
+            .prefetch_related("medicines__medicine")
+            .order_by("-created_at")
+        )
         return Response(PrescriptionSerializer(prescriptions, many=True).data)
 
 
@@ -147,10 +205,15 @@ class MyPrescriptionsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        profiles = request.user.profiles.all()
-        if not profiles.exists():
+        profile = request.user.get_active_profile()
+        if not profile:
             return Response({"count": 0, "results": []})
-        prescriptions = Prescription.objects.filter(patient__in=profiles).order_by("-created_at")
+        prescriptions = (
+            Prescription.objects.filter(patient=profile)
+            .select_related("doctor__doctor_profile", "patient")
+            .prefetch_related("medicines__medicine")
+            .order_by("-created_at")
+        )
         limit = int(request.query_params.get("limit", 20))
         offset = int(request.query_params.get("offset", 0))
         total = prescriptions.count()
@@ -178,7 +241,7 @@ class GeneratePrescriptionPDFView(APIView):
                 return Response({"detail": "You do not have access to this prescription"}, status=status.HTTP_403_FORBIDDEN)
 
         # Get language from query params or patient profile
-        language = request.query_params.get("language", prescription.patient.preferred_language or "en")
+        language = request.query_params.get("language") or "en"
 
         # Translate prescription data
         translated_data = translate_prescription_data(prescription, language)
@@ -212,19 +275,30 @@ class ValidatePrescriptionView(APIView):
         import logging
         logger = logging.getLogger(__name__)
 
-        try:
-            context = gather_agent_context(patient_id, medicines_input, pharmacy_id=str(pharmacy_id) if pharmacy_id else None)
-            report = run_safety_agent(context)
-        except Exception as e:
-            logger.error("Prescription validation failed: %s", e)
-            report = {
-                "overall_status": "warning",
-                "medicines": [],
-                "drug_interactions": [],
-                "alternatives": [],
-                "summary": "Automated validation was unavailable. Please review the prescription manually.",
-                "agent_unavailable": True,
-            }
+        from .safety_rules import run_rule_checks
+
+        pharmacy = str(pharmacy_id) if pharmacy_id else None
+        rules_report = run_rule_checks(patient_id, medicines_input, pharmacy_id=pharmacy)
+        report = rules_report
+        if ai_configured():
+            try:
+                context = gather_agent_context(patient_id, medicines_input, pharmacy_id=pharmacy)
+                ai_report = run_safety_agent(context)
+                if not ai_report.get("agent_unavailable"):
+                    # The AI adds pharmacological reasoning, but never downgrades
+                    # a block that the recorded data already justifies.
+                    if rules_report["overall_status"] == "blocked":
+                        ai_report["overall_status"] = "blocked"
+                    # Stock is a fact from the pharmacy's inventory, not a judgement:
+                    # always report it from the recorded data (both lists follow
+                    # the order of the submitted medicines).
+                    for ai_med, rule_med in zip(ai_report.get("medicines") or [], rules_report["medicines"]):
+                        ai_med["stock_status"] = rule_med["stock_status"]
+                        ai_med["stock_detail"] = rule_med["stock_detail"]
+                    ai_report["engine"] = "ai"
+                    report = ai_report
+            except Exception as e:
+                logger.error("AI prescription validation failed, using rule checks: %s", e)
 
         # Audit log the validation
         from accounts.audit import AuditService
