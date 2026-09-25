@@ -1,553 +1,744 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
+import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { motion, useScroll, useTransform, useInView } from 'framer-motion';
-import MLModelStack from '@/components/landing/MLModelStack';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Activity,
+  ArrowRight,
+  ArrowUpRight,
+  BellRing,
+  Brain,
+  Check,
+  ClipboardList,
+  Fingerprint,
+  Globe2,
+  History,
+  KeyRound,
+  Lock,
+  Menu,
+  Network,
+  Pill,
+  QrCode,
+  ScanLine,
+  ShieldCheck,
+  Stethoscope,
+  TrendingUp,
+  User,
+  Waypoints,
+  X,
+} from 'lucide-react';
+import { Logo } from '@/components/brand/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
+import { useAuthStore } from '@/store/authStore';
+import { roleHome } from '@/lib/roles';
+import { formatAsOf, formatCompact, usePublicStats } from '@/lib/publicStats';
+import { cn } from '@/lib/utils';
+import { t as tr, intlLocale } from '@/lib/i18n';
+import { tRich } from '@/lib/i18n-rich';
 
-/* ───────────────────────── helpers ───────────────────────── */
+const ease = [0.22, 1, 0.36, 1] as const;
 
-function useCountUp(end: number, duration = 2000, trigger = false) {
-  const [val, setVal] = useState(0);
-  useEffect(() => {
-    if (!trigger) return;
-    let start = 0;
-    const step = end / (duration / 16);
-    const id = setInterval(() => {
-      start += step;
-      if (start >= end) { setVal(end); clearInterval(id); }
-      else setVal(Math.floor(start));
-    }, 16);
-    return () => clearInterval(id);
-  }, [end, duration, trigger]);
-  return val;
-}
-
-function SectionReveal({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-80px' });
+function Reveal({ children, delay = 0, className }: { children: React.ReactNode; delay?: number; className?: string }) {
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 40 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay, ease: [.22, 1, .36, 1] }} className={className}>
+    <motion.div
+      initial={{ opacity: 0, y: 22 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ duration: 0.7, delay, ease }}
+      className={className}
+    >
       {children}
     </motion.div>
   );
 }
 
-/* ───── inline SVGs ───── */
-const EcgLine = ({ className = '' }: { className?: string }) => (
-  <svg viewBox="0 0 1200 60" fill="none" className={className} preserveAspectRatio="none">
-    <path d="M0 30 L200 30 L230 10 L260 50 L290 5 L320 55 L350 30 L1200 30" stroke="currentColor" strokeWidth="2" fill="none" />
-  </svg>
-);
+/* ═══ Navigation ═══════════════════════════════════════════════════ */
+const NAV_LINKS = [
+  { href: '#platform', get label() { return tr("Platform"); } },
+  { href: '#roles', get label() { return tr("Who it serves"); } },
+  { href: '#intelligence', get label() { return tr("Surveillance"); } },
+  { href: '#security', get label() { return tr("Security"); } },
+];
 
-const LogoIcon = () => (
-  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#6fae87] to-[#4a8a6f] flex items-center justify-center flex-shrink-0">
-    <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 12h4l3-9 4 18 3-9h4" />
-    </svg>
-  </div>
-);
-
-/* ───────────────────────── MAIN ───────────────────────── */
-
-export default function Home() {
-  const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
+function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+  const { isAuthenticated, user } = useAuthStore();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    setMounted(true);
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  /* ─── animation variants ─── */
-  const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.12, duration: 0.6, ease: [.22, 1, .36, 1] } }) };
+  const signedIn = mounted && isAuthenticated && user;
 
-  const marqueeItems = [
-    '🏥 Active Hospitals: 2,847',
-    '👨\u200D⚕️ Verified Doctors: 12,500+',
-    '💊 Prescriptions Issued: 8.2M',
-    '🦠 Diseases Tracked: 847',
-    '📊 Daily Reports: 45,000+',
-    '⚡ Avg Response Time: 2.3 hrs',
+  return (
+    <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4">
+      <nav
+        className={cn(
+          'mx-auto flex h-14 max-w-6xl items-center justify-between rounded-2xl px-3 pl-4 transition-all duration-500 ease-spring',
+          scrolled ? 'fluid-nav' : 'border border-transparent'
+        )}
+        aria-label={tr("Main")}
+      >
+        <Logo subtitle={false} />
+        <div className="hidden items-center gap-1 md:flex">
+          {NAV_LINKS.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              className="rounded-lg px-3 py-2 text-[13.5px] font-medium text-foreground/70 transition-colors hover:bg-foreground/5 hover:text-foreground"
+            >
+              {l.label}
+            </a>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <LanguageSwitcher className="text-foreground/70 hover:bg-foreground/5" />
+          <ThemeToggle className="h-9 w-9 rounded-lg text-foreground/70 hover:bg-foreground/5" />
+          {signedIn ? (
+            <Link
+              href={roleHome(user!.role)}
+              className="inline-flex h-9 items-center gap-1.5 rounded-[10px] bg-primary px-4 text-[13.5px] font-medium text-primary-foreground shadow-button transition-transform active:scale-[0.98]"
+            >{tr("Open dashboard")}{' '}<ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="hidden h-9 items-center rounded-[10px] px-3.5 text-[13.5px] font-medium text-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground sm:inline-flex"
+              >{tr("Sign in")}</Link>
+              <Link
+                href="/signup"
+                className="inline-flex h-9 items-center gap-1.5 rounded-[10px] bg-primary px-4 text-[13.5px] font-medium text-primary-foreground shadow-button transition-transform active:scale-[0.98]"
+              >{tr("Get started")}</Link>
+            </>
+          )}
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="rounded-lg p-2 text-foreground/70 hover:bg-foreground/5 md:hidden"
+            aria-label={open ? tr("Close menu") : tr("Open menu")}
+            aria-expanded={open}
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+      </nav>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="fluid-nav mx-auto mt-2 max-w-6xl rounded-2xl p-2 md:hidden"
+          >
+            {NAV_LINKS.map((l) => (
+              <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-foreground/5">
+                {l.label}
+              </a>
+            ))}
+            {!signedIn && (
+              <Link href="/login" className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-foreground/5">{tr("Sign in")}</Link>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
+  );
+}
+
+/* ═══ Hero ═════════════════════════════════════════════════════════ */
+function Hero() {
+  const { data: stats, isLoading } = usePublicStats();
+  const top = stats?.top_diseases?.[0];
+
+  const figures = [
+    { label: tr("Districts monitored"), value: stats?.monitored_regions },
+    { label: tr("Active clusters"), value: stats?.active_clusters },
+    { label: tr("Forecasts generated"), value: stats?.forecasts_generated },
   ];
 
   return (
-    <div className="min-h-screen bg-background font-dm selection:bg-primary/20 overflow-x-hidden">
+    <section id="platform" className="relative overflow-hidden pb-20 pt-32 md:pb-28 md:pt-40">
+      <div className="pointer-events-none absolute inset-0 bg-grid mask-fade-b opacity-60" aria-hidden="true" />
+      <div
+        className="pointer-events-none absolute -top-40 right-[-10%] h-[620px] w-[620px] rounded-full bg-primary/15 blur-[120px]"
+        aria-hidden="true"
+      />
 
-      {/* ═══════════════════ NAVBAR (fluid island) ═══════════════════ */}
-      <nav className={`fixed top-4 sm:top-5 left-0 right-0 z-[100] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] px-4 ${scrolled ? '' : ''}`}>
-        <div className={`max-w-5xl mx-auto h-14 flex items-center justify-between rounded-full pl-4 pr-2 sm:pl-5 sm:pr-2.5 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${scrolled ? 'fluid-nav shadow-glass' : 'bg-card/40 backdrop-blur-md border border-foreground/10'}`}>
-          <Link href="/" className="flex items-center gap-2.5">
-            <LogoIcon />
-            <div className="leading-none hidden sm:block">
-              <span className="font-syne font-extrabold text-base text-foreground block">ArogyaTrack</span>
-              <span className="text-[8px] font-semibold tracking-[0.2em] text-emerald-600 uppercase block mt-0.5">Govt. of India</span>
+      <div className="container relative grid items-center gap-14 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
+        <div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease }}
+            className="inline-flex items-center gap-2.5 rounded-full border bg-card/70 py-1 pl-2 pr-3.5 text-[12.5px] font-medium text-muted-foreground shadow-sm backdrop-blur"
+          >
+            <span className="flex items-center gap-1.5 rounded-full bg-success/12 px-2 py-0.5 text-success">
+              <span className="live-dot" />{' '}{tr("Live")}</span>
+            {stats ? tr("Surveillance data as of {formatAsOf}", { formatAsOf: formatAsOf(stats.as_of) }) : tr("National disease surveillance")}
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.05, ease }}
+            className="mt-6 text-[44px] font-semibold leading-[1.02] tracking-[-0.045em] text-foreground sm:text-6xl lg:text-[70px]"
+          >{tRich("See outbreaks <em>before</em> they spread.", (c) => <span className="font-serif-accent text-primary">{c}</span>)}</motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.12, ease }}
+            className="mt-6 max-w-xl text-[17px] leading-relaxed text-muted-foreground"
+          >{tr("ArogyaTrack links patient records, e-prescriptions and pharmacy dispensing to a surveillance layer that forecasts cases and flags disease clusters district by district — so care teams and health authorities act on the same picture.")}</motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease }}
+            className="mt-9 flex flex-wrap items-center gap-3"
+          >
+            <Link
+              href="/signup"
+              className="group inline-flex h-12 items-center gap-3 rounded-xl bg-primary pl-5 pr-2 text-[15px] font-medium text-primary-foreground shadow-button transition-transform active:scale-[0.98]"
+            >{tr("Create your health ID")}<span className="btn-icon-wrap h-8 w-8 rounded-lg">
+                <ArrowRight className="h-4 w-4" />
+              </span>
+            </Link>
+            <Link
+              href="/roles"
+              className="inline-flex h-12 items-center gap-2 rounded-xl border bg-card px-5 text-[15px] font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
+            >{tr("Sign in by role")}</Link>
+          </motion.div>
+
+          <motion.dl
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.35 }}
+            className="mt-12 grid max-w-lg grid-cols-3 divide-x border-t pt-6"
+          >
+            {figures.map((f) => (
+              <div key={f.label} className="px-4 first:pl-0">
+                <dt className="text-xs text-muted-foreground">{f.label}</dt>
+                <dd className="tabular mt-1 text-2xl font-semibold tracking-tight text-foreground">
+                  {isLoading ? <span className="skeleton inline-block h-6 w-12 align-middle" /> : formatCompact(f.value)}
+                </dd>
+              </div>
+            ))}
+          </motion.dl>
+        </div>
+
+        {/* Visual */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.1, ease }}
+          className="relative mx-auto w-full max-w-[560px]"
+        >
+          <div className="bezel-shell rounded-[2rem]">
+            <div className="relative aspect-[4/3.4] overflow-hidden rounded-[calc(2rem-0.3125rem)]">
+              <Image
+                src="/image.png"
+                alt={tr("A team of doctors and nurses in a hospital corridor")}
+                fill
+                priority
+                sizes="(min-width: 1024px) 560px, 100vw"
+                className="object-cover object-[50%_30%]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#06201c]/70 via-transparent to-transparent" />
+              <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between text-white">
+                <div>
+                  <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/70">{tr("Care network")}</div>
+                  <div className="mt-1 text-lg font-semibold tracking-tight">
+                    {stats ? tr("{formatCompact} doctors · {formatCompact2} pharmacists", { formatCompact: formatCompact(stats.doctors_registered), formatCompact2: formatCompact(stats.pharmacists_registered) }) : tr("Doctors · Pharmacists · Patients")}
+                  </div>
+                </div>
+              </div>
             </div>
-          </Link>
-          <div className="hidden md:flex items-center gap-7 text-sm font-medium text-muted-foreground">
-            {['Home', 'Features', 'Surveillance', 'About', 'Contact'].map(l => (
-              <Link key={l} href={`#${l.toLowerCase()}`} className="hover:text-foreground transition-colors">{l}</Link>
+          </div>
+
+          {/* Floating: alerts */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.55, ease }}
+            className="glass absolute -left-4 top-8 w-[220px] rounded-2xl p-4 sm:-left-10"
+          >
+            <div className="flex items-center gap-2 text-[12px] font-medium text-muted-foreground">
+              <BellRing className="h-3.5 w-3.5 text-destructive" />{' '}{tr("Outbreak alerts")}</div>
+            <div className="tabular mt-2 text-3xl font-semibold tracking-tight text-foreground">
+              {stats ? stats.active_alerts : '—'}
+            </div>
+            <div className="mt-1 text-[12px] text-muted-foreground">{tr("active across monitored districts")}</div>
+          </motion.div>
+
+          {/* Floating: top disease */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.7, ease }}
+            className="glass absolute -right-3 top-[46%] w-[230px] animate-float rounded-2xl p-4 sm:-right-8"
+          >
+            <div className="flex items-center justify-between text-[12px] font-medium text-muted-foreground">
+              <span className="flex items-center gap-2">
+                <TrendingUp className="h-3.5 w-3.5 text-warning" />{' '}{tr("Leading this week")}</span>
+            </div>
+            <div className="mt-2 truncate text-[15px] font-semibold text-foreground">{top?.disease_name ?? '—'}</div>
+            <div className="tabular text-[12.5px] text-muted-foreground">
+              {top ? tr("{formatCompact} reported cases", { formatCompact: formatCompact(top.total_cases) }) : tr("Awaiting data")}
+            </div>
+            <div className="mt-3 flex h-8 items-end gap-1">
+              {(stats?.top_diseases ?? []).map((d, i) => {
+                const max = stats!.top_diseases[0].total_cases || 1;
+                return (
+                  <div
+                    key={tr(d.disease_name)}
+                    title={`${tr(d.disease_name)}: ${d.total_cases}`}
+                    className={cn('flex-1 rounded-sm', i === 0 ? 'bg-primary' : 'bg-primary/25')}
+                    style={{ height: `${Math.max(12, (d.total_cases / max) * 100)}%` }}
+                  />
+                );
+              })}
+            </div>
+          </motion.div>
+
+          {/* Floating: health card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.85, ease }}
+            className="glass absolute -bottom-6 right-6 flex items-center gap-3 rounded-2xl py-3 pl-3 pr-4"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+              <QrCode className="h-5 w-5" />
+            </span>
+            <div>
+              <div className="text-[13px] font-semibold text-foreground">{tr("QR health card")}</div>
+              <div className="text-[12px] text-muted-foreground">{tr("Time-limited doctor access")}</div>
+            </div>
+          </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══ Live ticker ══════════════════════════════════════════════════ */
+function Ticker() {
+  const { data: stats } = usePublicStats();
+  const items = stats?.top_diseases ?? [];
+  if (!items.length) return null;
+  const row = [...items, ...items, ...items];
+  return (
+    <div className="border-y bg-card/60 py-4">
+      <div className="container flex items-center gap-6">
+        <div className="hidden shrink-0 items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-muted-foreground sm:flex">
+          <Activity className="h-4 w-4 text-primary" />{' '}{tr("7-day cases")}
+        </div>
+        <div className="relative flex-1 overflow-hidden mask-fade-x">
+          <div className="marquee-track flex w-max gap-10">
+            {[...row, ...row].map((d, i) => (
+              <span key={i} className="flex items-center gap-2.5 whitespace-nowrap text-[14px]">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary/60" />
+                <span className="font-medium text-foreground">{tr(d.disease_name)}</span>
+                <span className="tabular text-muted-foreground">{d.total_cases.toLocaleString(intlLocale())}</span>
+              </span>
             ))}
           </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle className="text-foreground" />
-            <Link href="/login">
-              <button className="hidden sm:inline-flex px-4 py-2 rounded-full text-sm font-semibold text-foreground hover:bg-foreground/8 transition-colors">Login</button>
-            </Link>
-            <Link href="/signup">
-              <button className="group magnetic-btn pl-4 pr-1.5 py-1.5 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-[#6fae87] to-[#4a8a6f] shadow-button flex items-center gap-2 active:scale-[0.98]">
-                Get Started
-                <span className="btn-icon-wrap">
-                  <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 8h8M9 4l4 4-4 4" /></svg>
-                </span>
-              </button>
-            </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══ Roles ════════════════════════════════════════════════════════ */
+const ROLES = [
+  {
+    key: 'patient',
+    get label() { return tr("Patients"); },
+    icon: User,
+    get title() { return tr("Your records, prescriptions and reminders in one health ID."); },
+    get points() { return [tr("A QR health card you control — revoke doctor access at any time"), tr("Every consultation, lab report and prescription in one timeline"), tr("Dose reminders and adherence tracking for active prescriptions"), tr("Family profiles: manage records for parents and children")]; },
+    cta: { href: '/signup/patient', get label() { return tr("Create a patient ID"); } },
+    preview: [
+      { icon: ClipboardList, get title() { return tr("Consultation · General medicine"); }, get meta() { return tr("Visit notes and vitals"); } },
+      { icon: Pill, get title() { return tr("Amlodipine 10 mg"); }, get meta() { return tr("Once daily · 21 days left"); } },
+      { icon: Activity, get title() { return tr("HbA1c"); }, get meta() { return tr("Lab result trend"); } },
+    ],
+  },
+  {
+    key: 'doctor',
+    get label() { return tr("Doctors"); },
+    icon: Stethoscope,
+    get title() { return tr("Scan a card, see the full history, prescribe safely."); },
+    get points() { return [tr("Scan a patient QR to open their history with audited access"), tr("Drug-interaction and allergy checks before a prescription is issued"), tr("Clinical decision support suggests differentials from symptoms"), tr("High-risk patient watchlist ranked by computed risk score")]; },
+    cta: { href: '/signup/doctor', get label() { return tr("Register as a doctor"); } },
+    preview: [
+      { icon: ScanLine, get title() { return tr("Health card scanned"); }, get meta() { return tr("Access granted for 24 hours"); } },
+      { icon: ShieldCheck, get title() { return tr("No interactions found"); }, get meta() { return tr("3 medicines checked"); } },
+      { icon: Brain, get title() { return tr("Decision support"); }, get meta() { return tr("Ranked differential diagnoses"); } },
+    ],
+  },
+  {
+    key: 'pharmacist',
+    get label() { return tr("Pharmacists"); },
+    icon: Pill,
+    get title() { return tr("Verify, dispense and track stock from one counter."); },
+    get points() { return [tr("Scan a prescription QR — signatures are verified server-side"), tr("Partial and full dispensing recorded against each line item"), tr("Inventory with low-stock and expiry visibility"), tr("Complete dispensing history for audit")]; },
+    cta: { href: '/signup/pharmacist', get label() { return tr("Register a pharmacy"); } },
+    preview: [
+      { icon: QrCode, get title() { return tr("Prescription verified"); }, get meta() { return tr("Signature valid"); } },
+      { icon: Pill, get title() { return tr("2 of 3 items dispensed"); }, get meta() { return tr("Remaining held for refill"); } },
+      { icon: History, get title() { return tr("Dispensing log"); }, get meta() { return tr("Timestamped per pharmacist"); } },
+    ],
+  },
+  {
+    key: 'authority',
+    get label() { return tr("Health authorities"); },
+    icon: Globe2,
+    get title() { return tr("A live map of disease burden, with forecasts and alerts."); },
+    get points() { return [tr("Heat map of cases per 100k across monitored districts"), tr("Spatial clustering surfaces emerging hotspots"), tr("7, 14 and 30-day case forecasts with confidence bands"), tr("Alert workflow: acknowledge, escalate, resolve")]; },
+    cta: { href: '/admin/signin', get label() { return tr("Authority sign-in"); } },
+    preview: [
+      { icon: Network, get title() { return tr("Cluster detected"); }, get meta() { return tr("Spatial density flag"); } },
+      { icon: TrendingUp, get title() { return tr("14-day forecast"); }, get meta() { return tr("Upper bound above threshold"); } },
+      { icon: BellRing, get title() { return tr("Alert escalated"); }, get meta() { return tr("Routed to district officer"); } },
+    ],
+  },
+] as const;
+
+function Roles() {
+  const [active, setActive] = useState(0);
+  const role = ROLES[active];
+
+  return (
+    <section id="roles" className="py-24 md:py-32">
+      <div className="container">
+        <Reveal className="max-w-2xl">
+          <div className="kicker">{tr("One record · four roles")}</div>
+          <h2 className="mt-3 text-4xl font-semibold leading-[1.05] tracking-[-0.04em] md:text-5xl">{tRich("Built around the people who <em>actually</em> deliver care.", (c) => <span className="font-serif-accent text-primary">{c}</span>)}</h2>
+        </Reveal>
+
+        <Reveal delay={0.1} className="mt-10">
+          <div role="tablist" aria-label={tr("Roles")} className="inline-flex flex-wrap gap-1 rounded-xl border bg-card p-1 shadow-sm">
+            {ROLES.map((r, i) => {
+              const Icon = r.icon;
+              return (
+                <button
+                  key={r.key}
+                  role="tab"
+                  aria-selected={i === active}
+                  onClick={() => setActive(i)}
+                  className={cn(
+                    'relative flex items-center gap-2 rounded-lg px-4 py-2 text-[13.5px] font-medium transition-colors',
+                    i === active ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {i === active && (
+                    <motion.span layoutId="role-pill" className="absolute inset-0 rounded-lg bg-primary" transition={{ type: 'spring', bounce: 0.18, duration: 0.5 }} />
+                  )}
+                  <Icon className="relative h-4 w-4" />
+                  <span className="relative">{r.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </Reveal>
+
+        <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={role.key}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.35, ease }}
+              className="rounded-3xl border bg-card p-7 shadow-sm md:p-10"
+            >
+              <h3 className="max-w-md text-2xl font-semibold leading-tight tracking-[-0.03em] md:text-[28px]">{role.title}</h3>
+              <ul className="mt-7 space-y-3.5">
+                {role.points.map((p) => (
+                  <li key={p} className="flex gap-3 text-[15px] text-foreground/80">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary">
+                      <Check className="h-3 w-3" strokeWidth={3} />
+                    </span>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+              <Link href={role.cta.href} className="group mt-9 inline-flex items-center gap-1.5 text-[14.5px] font-semibold text-primary">
+                {role.cta.label}
+                <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </Link>
+            </motion.div>
+          </AnimatePresence>
+
+          <div className="relative overflow-hidden rounded-3xl border bg-sunken p-6 md:p-8">
+            <div className="pointer-events-none absolute inset-0 bg-dots opacity-70" aria-hidden="true" />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={role.key}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="relative space-y-3"
+              >
+                <div className="mb-5 flex items-center justify-between">
+                  <span className="text-[12px] font-medium uppercase tracking-[0.1em] text-muted-foreground">{tr("{label} workspace", { label: role.label })}</span>
+                  <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                    <span className="live-dot" />{' '}{tr("Synced")}</span>
+                </div>
+                {role.preview.map((p, i) => {
+                  const Icon = p.icon;
+                  return (
+                    <motion.div
+                      key={p.title}
+                      initial={{ opacity: 0, x: 16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.08 * i, duration: 0.45, ease }}
+                      className="flex items-center gap-3.5 rounded-2xl border bg-card p-4 shadow-sm"
+                      style={{ marginLeft: `${i * 18}px` }}
+                    >
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <Icon className="h-[18px] w-[18px]" />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="truncate text-[14px] font-semibold text-foreground">{p.title}</div>
+                        <div className="truncate text-[12.5px] text-muted-foreground">{p.meta}</div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
-      </nav>
+      </div>
+    </section>
+  );
+}
 
-      {/* ═══════════════════ HERO ═══════════════════ */}
-      <section id="home" className="relative min-h-screen flex items-center pt-24 bg-[#151109] overflow-hidden">
-        {/* dot grid overlay */}
-        <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
-        {/* radial glow */}
-        <div className="absolute top-1/2 right-0 w-[700px] h-[700px] -translate-y-1/2 translate-x-1/4 rounded-full bg-emerald-400/15 blur-[120px] pointer-events-none" />
-        {/* ecg line at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 text-emerald-500/10 h-16">
-          <EcgLine className="w-full h-full" />
-        </div>
+/* ═══ Intelligence ═════════════════════════════════════════════════ */
+const MODELS = [
+  { icon: TrendingUp, get name() { return tr("Prophet forecasting"); }, get desc() { return tr("7, 14 and 30-day case forecasts per district with upper and lower bounds."); } },
+  { icon: Network, get name() { return tr("DBSCAN clustering"); }, get desc() { return tr("Density-based spatial clustering that surfaces emerging hotspots."); } },
+  { icon: Waypoints, get name() { return tr("Isolation Forest"); }, get desc() { return tr("Unsupervised anomaly detection on case patterns threshold rules miss."); } },
+  { icon: Brain, get name() { return tr("XGBoost risk scoring"); }, get desc() { return tr("Environmental and demographic features fused into a per-region risk tier."); } },
+];
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid lg:grid-cols-[55%_45%] gap-12 items-center py-20 lg:py-0">
-          {/* LEFT */}
-          <motion.div initial="hidden" animate="visible" className="relative z-10 space-y-8">
-            <motion.div custom={0} variants={fadeUp} className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-emerald-500/15 border border-emerald-400/20">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-300 text-sm font-medium">Live Disease Surveillance Active</span>
-            </motion.div>
+function Intelligence() {
+  const { data: stats } = usePublicStats();
 
-            <motion.h1 custom={1} variants={fadeUp} className="font-syne font-extrabold text-5xl sm:text-6xl lg:text-[4.25rem] leading-[1.08] text-white">
-              Protecting{' '}
-              <span className="bg-gradient-to-r from-[#6fae87] to-[#8fc4a8] bg-clip-text text-transparent">India&apos;s</span>
-              <br />Public Health
-              <br />Intelligence
-            </motion.h1>
+  const tiles = [
+    { label: tr("Surveillance records"), value: stats?.surveillance_records, span: 'md:col-span-2' },
+    { label: tr("Cases in the last 7 days"), value: stats?.cases_last_7_days, span: '' },
+    { label: tr("States covered"), value: stats?.states_covered, span: '' },
+  ];
 
-            <motion.p custom={2} variants={fadeUp} className="text-white/60 text-lg sm:text-xl max-w-xl leading-relaxed">
-              An enterprise-grade disease surveillance platform combining AI-powered outbreak detection, digital health records, and real-time public health intelligence — protecting 1.4 billion people.
-            </motion.p>
+  return (
+    <section id="intelligence" className="relative overflow-hidden border-y bg-sunken py-24 md:py-32">
+      <div className="pointer-events-none absolute inset-0 bg-grid opacity-40 mask-fade-b" aria-hidden="true" />
+      <div className="container relative grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+        <Reveal>
+          <div className="kicker">{tr("Surveillance intelligence")}</div>
+          <h2 className="mt-3 text-4xl font-semibold leading-[1.05] tracking-[-0.04em] md:text-5xl">{tRich("Four models watching the data, <em>every day.</em>", (c) => <span className="font-serif-accent text-primary">{c}</span>)}
+          </h2>
+          <p className="mt-5 max-w-md text-[16px] leading-relaxed text-muted-foreground">{tr("Clinical activity flows into k-anonymised district aggregates. The pipeline forecasts, clusters, scores risk and raises alerts that authorities can act on.")}</p>
+          <div className="mt-8 inline-flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm">
+            <span className="live-dot" />
+            <span className="text-[14px] font-medium">
+              {stats ? tr("{ml_models_live} of {ml_models_total} models loaded", { ml_models_live: stats.ml_models_live, ml_models_total: stats.ml_models_total }) : tr("Checking model status…")}
+            </span>
+          </div>
+        </Reveal>
 
-            <motion.div custom={3} variants={fadeUp} className="flex flex-wrap gap-4 pt-2">
-              <Link href="/signup">
-                <button className="group magnetic-btn pl-7 pr-2 py-2 rounded-full text-base font-bold text-white bg-gradient-to-r from-[#6fae87] to-[#4a8a6f] shadow-xl shadow-emerald-600/30 flex items-center gap-3 active:scale-[0.98]">
-                  Get Started
-                  <span className="btn-icon-wrap w-10 h-10">
-                    <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 8h8M9 4l4 4-4 4" /></svg>
-                  </span>
-                </button>
-              </Link>
-              <Link href="#features">
-                <button className="magnetic-btn px-7 py-3.5 rounded-full text-base font-bold text-white border border-white/25 hover:bg-white/10 active:scale-[0.98]">
-                  View Live Dashboard
-                </button>
-              </Link>
-            </motion.div>
-
-            <motion.div custom={4} variants={fadeUp} className="flex flex-wrap gap-8 pt-6">
-              {[{ n: '1.4B+', l: 'Citizens Protected' }, { n: '500+', l: 'Districts Monitored' }, { n: '99.9%', l: 'Uptime' }].map(s => (
-                <div key={s.l}>
-                  <p className="font-syne font-extrabold text-2xl text-emerald-400">{s.n}</p>
-                  <p className="text-white/50 text-sm mt-0.5">{s.l}</p>
+        <div className="space-y-4">
+          <Reveal delay={0.05}>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              {tiles.map((t) => (
+                <div key={t.label} className={cn('col-span-2 rounded-2xl border bg-card p-5 shadow-sm md:col-span-1', t.span)}>
+                  <div className="text-[12.5px] text-muted-foreground">{t.label}</div>
+                  <div className="tabular mt-2 text-3xl font-semibold tracking-[-0.03em]">
+                    {stats ? (t.value ?? 0).toLocaleString(intlLocale()) : '—'}
+                  </div>
                 </div>
               ))}
-            </motion.div>
-          </motion.div>
-
-          {/* RIGHT — dashboard mockup */}
-          <motion.div initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1, delay: 0.4, ease: [.22, 1, .36, 1] }} className="relative hidden lg:block">
-            {/* glow behind card */}
-            <div className="absolute inset-0 bg-emerald-500/10 rounded-[30px] blur-[60px] scale-90" />
-
-            {/* main card — double-bezel: outer shell + inner core */}
-            <div className="relative bezel-shell-dark shadow-2xl">
-            <div className="bezel-core-dark p-6">
-              {/* topbar dots */}
-              <div className="flex gap-2 mb-5">
-                <span className="w-3 h-3 rounded-full bg-red-400/70" /><span className="w-3 h-3 rounded-full bg-yellow-400/70" /><span className="w-3 h-3 rounded-full bg-green-400/70" />
-              </div>
-              {/* health score ring */}
-              <div className="flex items-center gap-6 mb-6">
-                <div className="relative w-24 h-24 flex-shrink-0">
-                  <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="#2a8a7e" strokeWidth="8" />
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="url(#ring-grad)" strokeWidth="8" strokeDasharray={`${94 * 2.64} ${(100 - 94) * 2.64}`} strokeLinecap="round" />
-                    <defs><linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#6fae87" /><stop offset="100%" stopColor="#8fc4a8" /></linearGradient></defs>
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center font-syne font-extrabold text-2xl text-white">94</span>
-                </div>
-                <div>
-                  <p className="text-emerald-300 text-xs font-semibold uppercase tracking-wider">Health Score</p>
-                  <p className="text-white/50 text-xs mt-1">National composite index</p>
-                </div>
-              </div>
-              {/* sparklines */}
-              <div className="grid grid-cols-2 gap-4 mb-5">
-                {[{ label: 'Cases Trend', color: '#6fae87' }, { label: 'Recovery Rate', color: '#8fc4a8' }].map((c, i) => (
-                  <div key={i} className="bg-[#2b241c] rounded-xl p-3">
-                    <p className="text-white/40 text-[11px] mb-2">{c.label}</p>
-                    <svg viewBox="0 0 120 30" className="w-full h-8">
-                      <polyline fill="none" stroke={c.color} strokeWidth="2" strokeLinecap="round" points={i === 0 ? '0,25 15,20 30,22 45,12 60,18 75,8 90,15 105,5 120,10' : '0,20 15,18 30,12 45,15 60,8 75,10 90,5 105,8 120,3'} />
-                    </svg>
-                  </div>
-                ))}
-              </div>
-              {/* stat pills */}
-              <div className="flex gap-3 mb-4">
-                {[{ v: '12.5K', l: 'Active' }, { v: '847', l: 'Tracked' }, { v: '99.2%', l: 'Accuracy' }].map(p => (
-                  <div key={p.l} className="flex-1 bg-[#2b241c] rounded-xl px-3 py-2.5 text-center">
-                    <p className="text-white font-bold text-sm">{p.v}</p>
-                    <p className="text-white/40 text-[10px]">{p.l}</p>
-                  </div>
-                ))}
-              </div>
-              {/* nominal badge */}
-              <div className="flex justify-center">
-                <span className="px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold tracking-wider">● SYSTEM NOMINAL</span>
-              </div>
             </div>
-            </div>
-
-            {/* floating alert top-right */}
-            <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} className="absolute -top-5 -right-5 bg-red-500/90 backdrop-blur-sm text-white px-4 py-2.5 rounded-2xl shadow-xl border border-red-400/40 z-20">
-              <p className="text-xs font-bold">🚨 Outbreak Alert</p>
-              <p className="text-[10px] text-white/80">Delhi NCR — Dengue spike</p>
-            </motion.div>
-
-            {/* floating update bottom-left */}
-            <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }} className="absolute -bottom-4 -left-4 bg-emerald-500/90 backdrop-blur-sm text-white px-4 py-2.5 rounded-2xl shadow-xl border border-emerald-400/40 z-20">
-              <p className="text-xs font-bold">✅ 2,847 Records Updated</p>
-              <p className="text-[10px] text-white/80">Last sync 3 min ago</p>
-            </motion.div>
-          </motion.div>
+          </Reveal>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {MODELS.map((m, i) => {
+              const Icon = m.icon;
+              return (
+                <Reveal key={m.name} delay={0.08 + i * 0.05}>
+                  <div className="group h-full rounded-2xl border bg-card p-5 shadow-sm transition-[transform,box-shadow] duration-300 ease-spring hover:-translate-y-0.5 hover:shadow-ambient">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <div className="mt-4 text-[15px] font-semibold">{m.name}</div>
+                    <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">{m.desc}</p>
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      {/* ═══════════════════ MARQUEE STATS BAR ═══════════════════ */}
-      <div className="bg-[#211c16] py-4 overflow-hidden">
-        <div className="marquee-track flex gap-12 whitespace-nowrap text-white/90 text-sm font-medium">
-          {[...marqueeItems, ...marqueeItems].map((item, i) => (
-            <span key={i} className="flex-shrink-0">{item}</span>
+/* ═══ Flow ═════════════════════════════════════════════════════════ */
+const STEPS = [
+  { get title() { return tr("Patient registers"); }, get desc() { return tr("A health ID and QR card are issued on sign-up, with family profiles."); } },
+  { get title() { return tr("Doctor consults"); }, get desc() { return tr("Card scan grants time-limited access; visits and prescriptions are recorded."); } },
+  { get title() { return tr("Pharmacy dispenses"); }, get desc() { return tr("Prescription QR is verified before any medicine leaves the counter."); } },
+  { get title() { return tr("Surveillance learns"); }, get desc() { return tr("Anonymised aggregates feed forecasts, clusters and outbreak alerts."); } },
+];
+
+function Flow() {
+  return (
+    <section className="py-24 md:py-32">
+      <div className="container">
+        <Reveal className="mx-auto max-w-2xl text-center">
+          <div className="kicker">{tr("How it fits together")}</div>
+          <h2 className="mt-3 text-4xl font-semibold leading-[1.05] tracking-[-0.04em] md:text-5xl">{tr("From a clinic visit to a district alert")}</h2>
+        </Reveal>
+        <div className="relative mt-16 grid gap-8 md:grid-cols-4 md:gap-6">
+          <div className="absolute left-0 right-0 top-5 hidden h-px bg-gradient-to-r from-transparent via-border to-transparent md:block" aria-hidden="true" />
+          {STEPS.map((s, i) => (
+            <Reveal key={s.title} delay={i * 0.08} className="relative">
+              <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border bg-card text-sm font-semibold text-primary shadow-sm">
+                {String(i + 1).padStart(2, '0')}
+              </div>
+              <h3 className="mt-5 text-[17px] font-semibold tracking-tight">{s.title}</h3>
+              <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">{s.desc}</p>
+            </Reveal>
           ))}
         </div>
       </div>
+    </section>
+  );
+}
 
-      {/* ═══════════════════ ABOUT PLATFORM ═══════════════════ */}
-      <section id="about" className="py-28 px-4 bg-background">
-        <div className="max-w-6xl mx-auto text-center">
-          <SectionReveal>
-            <span className="eyebrow bg-emerald-500/10 text-emerald-700 mb-5">About the Platform</span>
-            <h2 className="font-syne font-extrabold text-4xl sm:text-5xl text-foreground mb-5">One Platform. Complete Health Intelligence.</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-16">A Government of India initiative to unify disease surveillance, health record management, and outbreak prevention under a single intelligent platform.</p>
-          </SectionReveal>
+/* ═══ Security ═════════════════════════════════════════════════════ */
+const SECURITY = [
+  { icon: Lock, get title() { return tr("httpOnly session cookies"); }, get desc() { return tr("Tokens never touch JavaScript, closing off the usual XSS theft route."); } },
+  { icon: Fingerprint, get title() { return tr("K-anonymised surveillance"); }, get desc() { return tr("No individual can be re-identified from the aggregates authorities see."); } },
+  { icon: KeyRound, get title() { return tr("Role-based access"); }, get desc() { return tr("Patients, doctors, pharmacists and authorities see only what their role allows."); } },
+  { icon: History, get title() { return tr("Full audit trail"); }, get desc() { return tr("Record access, prescription checks and approvals are logged with actor and time."); } },
+  { icon: QrCode, get title() { return tr("Signed QR tokens"); }, get desc() { return tr("Health cards and prescriptions carry signatures verified server-side."); } },
+  { icon: ShieldCheck, get title() { return tr("Verified clinicians"); }, get desc() { return tr("Doctor accounts stay locked until an administrator approves the licence."); } },
+];
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { icon: '🔍', title: 'Early Outbreak Detection', desc: 'AI detects disease spikes before they become epidemics using real-time data from 500+ districts.' },
-              { icon: '🔐', title: 'Privacy-First Architecture', desc: 'K-anonymity ensures no individual patient can ever be identified in surveillance datasets.' },
-              { icon: '⚡', title: 'Real-Time Intelligence', desc: 'Live data from 500+ districts processed and updated every hour for instant situational awareness.' },
-            ].map((c, i) => (
-              <SectionReveal key={i} delay={i * 0.15}>
-                <div className="bezel-shell h-full transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1.5">
-                  <div className="bezel-core p-8 text-center shadow-ambient">
-                    <span className="text-4xl block mb-4">{c.icon}</span>
-                    <h3 className="font-syne font-bold text-xl text-foreground mb-3">{c.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">{c.desc}</p>
+function Security() {
+  return (
+    <section id="security" className="border-t py-24 md:py-32">
+      <div className="container grid gap-14 lg:grid-cols-[0.8fr_1.2fr]">
+        <Reveal>
+          <div className="kicker">{tr("Security & privacy")}</div>
+          <h2 className="mt-3 text-4xl font-semibold leading-[1.05] tracking-[-0.04em] md:text-5xl">{tRich("Health data deserves <em>restraint.</em>", (c) => <span className="font-serif-accent text-primary">{c}</span>)}
+          </h2>
+          <p className="mt-5 max-w-sm text-[16px] leading-relaxed text-muted-foreground">{tr("Access is narrow by default and every sensitive action leaves a record.")}</p>
+        </Reveal>
+        <div className="grid gap-x-10 gap-y-9 sm:grid-cols-2">
+          {SECURITY.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <Reveal key={s.title} delay={i * 0.04}>
+                <div className="flex gap-4">
+                  <Icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" strokeWidth={1.8} />
+                  <div>
+                    <div className="text-[15px] font-semibold">{s.title}</div>
+                    <p className="mt-1 text-[14px] leading-relaxed text-muted-foreground">{s.desc}</p>
                   </div>
                 </div>
-              </SectionReveal>
-            ))}
-          </div>
+              </Reveal>
+            );
+          })}
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      {/* ═══════════════════ KEY FEATURES (dark bento) ═══════════════════ */}
-      <section id="features" className="py-28 px-4 bg-[#151109]">
-        <div className="max-w-6xl mx-auto">
-          <SectionReveal>
-            <div className="text-center mb-16">
-              <span className="eyebrow bg-emerald-500/15 text-emerald-300 mb-4">Features</span>
-              <h2 className="font-syne font-extrabold text-4xl sm:text-5xl text-white">Everything the healthcare system needs</h2>
-            </div>
-          </SectionReveal>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 grid-flow-dense">
-            {/* LARGE — AI Surveillance (spans 2 rows) */}
-            <SectionReveal delay={0} className="lg:row-span-2">
-              <div className="h-full bezel-shell-dark transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1.5">
-              <div className="bezel-core-dark p-7 flex flex-col h-full">
-                <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold w-fit mb-5">4 ML Models</span>
-                <h3 className="font-syne font-bold text-2xl text-white mb-3">AI-Powered Disease Surveillance</h3>
-                <p className="text-white/50 mb-6 leading-relaxed">Prophet forecasting, DBSCAN geographic clustering, Isolation Forest anomaly detection, and XGBoost risk scoring — fused into a single decision engine.</p>
-                {/* mini chart visual */}
-                <div className="mt-auto bg-[#134744] rounded-xl p-4">
-                  <div className="flex justify-between text-[10px] text-white/40 mb-2"><span>JAN</span><span>FEB</span><span>MAR</span><span>APR</span><span>MAY</span><span>JUN</span></div>
-                  <svg viewBox="0 0 200 60" className="w-full h-16">
-                    <defs><linearGradient id="cg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6fae87" stopOpacity="0.4" /><stop offset="100%" stopColor="#6fae87" stopOpacity="0" /></linearGradient></defs>
-                    <path d="M0,50 L33,40 L66,45 L100,25 L133,30 L166,15 L200,20 L200,60 L0,60Z" fill="url(#cg1)" />
-                    <polyline fill="none" stroke="#6fae87" strokeWidth="2.5" strokeLinecap="round" points="0,50 33,40 66,45 100,25 133,30 166,15 200,20" />
-                  </svg>
-                </div>
+/* ═══ CTA + footer ═════════════════════════════════════════════════ */
+function Cta() {
+  return (
+    <section className="pb-24">
+      <div className="container">
+        <Reveal>
+          <div className="relative overflow-hidden rounded-[2rem] bg-primary px-8 py-16 text-primary-foreground md:px-16 md:py-20">
+            <div className="pointer-events-none absolute inset-0 opacity-20 [background-image:radial-gradient(rgba(255,255,255,0.5)_1px,transparent_1px)] [background-size:22px_22px] mask-fade-b" aria-hidden="true" />
+            <div className="pointer-events-none absolute -right-20 -top-24 h-80 w-80 rounded-full bg-white/10 blur-3xl" aria-hidden="true" />
+            <div className="relative flex flex-col items-start justify-between gap-10 md:flex-row md:items-end">
+              <div className="max-w-xl">
+                <h2 className="text-4xl font-semibold leading-[1.05] tracking-[-0.04em] md:text-5xl">{tRich("Start with your own <em>health ID.</em>", (c) => <span className="font-serif-accent">{c}</span>)}
+                </h2>
+                <p className="mt-4 text-[16px] text-primary-foreground/75">{tr("Register in a few minutes. Your records follow you to any doctor or pharmacy on the network.")}</p>
               </div>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/signup"
+                  className="inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-[15px] font-semibold text-[#0b3b33] shadow-lg transition-transform active:scale-[0.98]"
+                >{tr("Get started")}{' '}<ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/login"
+                  className="inline-flex h-12 items-center rounded-xl border border-white/25 px-6 text-[15px] font-medium text-white transition-colors hover:bg-white/10"
+                >{tr("Sign in")}</Link>
               </div>
-            </SectionReveal>
-
-            {/* Smart QR */}
-            <SectionReveal delay={0.1}>
-              <div className="bezel-shell-dark h-full transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1.5">
-              <div className="bezel-core-dark p-7">
-                <h3 className="font-syne font-bold text-xl text-white mb-2">Smart QR Health Cards</h3>
-                <p className="text-white/50 text-sm mb-5">JWT-encoded, cryptographically signed QR codes for instant secure patient identification.</p>
-                <div className="bg-[#134744] rounded-xl p-5 flex items-center justify-center">
-                  <div className="w-20 h-20 bg-white rounded-lg p-1.5">
-                    <div className="w-full h-full grid grid-cols-5 grid-rows-5 gap-0.5">
-                      {Array.from({ length: 25 }).map((_, i) => <div key={i} className={`rounded-[1px] ${[0,1,2,4,5,6,8,10,12,14,16,18,20,22,23,24].includes(i) ? 'bg-[#151109]' : 'bg-gray-200'}`} />)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              </div>
-            </SectionReveal>
-
-            {/* E-Prescription */}
-            <SectionReveal delay={0.15}>
-              <div className="bezel-shell-dark h-full transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1.5">
-              <div className="bezel-core-dark p-7">
-                <h3 className="font-syne font-bold text-xl text-white mb-2">E-Prescription System</h3>
-                <p className="text-white/50 text-sm mb-5">HMAC-SHA256 secured prescriptions with automated drug interaction checking.</p>
-                <div className="bg-[#134744] rounded-xl p-4 space-y-2">
-                  {['Tab Paracetamol 500mg', 'Syp Amoxicillin 250mg', 'Cap Omeprazole 20mg'].map((rx, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs text-white/60">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />{rx}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              </div>
-            </SectionReveal>
-
-            {/* Multi-Role */}
-            <SectionReveal delay={0.2}>
-              <div className="bezel-shell-dark h-full transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1.5">
-              <div className="bezel-core-dark p-7">
-                <h3 className="font-syne font-bold text-xl text-white mb-4">Multi-Role Access</h3>
-                <div className="flex gap-3 flex-wrap">
-                  {[{ emoji: '🧑‍⚕️', label: 'Patient' }, { emoji: '👨‍⚕️', label: 'Doctor' }, { emoji: '💊', label: 'Pharmacist' }, { emoji: '🛡️', label: 'Admin' }].map(r => (
-                    <span key={r.label} className="px-3 py-2 bg-[#134744] rounded-xl text-xs text-white/70 flex items-center gap-1.5">
-                      <span className="text-base">{r.emoji}</span>{r.label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              </div>
-            </SectionReveal>
-
-            {/* Audit Trail — completes the 2x2 block next to the tall card (no dead grid cell) */}
-            <SectionReveal delay={0.22}>
-              <div className="bezel-shell-dark h-full transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1.5">
-              <div className="bezel-core-dark p-7">
-                <h3 className="font-syne font-bold text-xl text-white mb-2">Full Audit Trail</h3>
-                <p className="text-white/50 text-sm mb-5">Every record access, prescription, and dispense event logged for security and compliance review.</p>
-                <div className="bg-[#134744] rounded-xl p-3 space-y-1.5">
-                  {['Record accessed · Dr. Rao', 'Prescription dispensed', 'Health card scanned'].map((ev, i) => (
-                    <div key={i} className="flex items-center gap-2 text-[11px] text-white/50">
-                      <span className="w-1 h-1 rounded-full bg-emerald-400 flex-shrink-0" />{ev}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              </div>
-            </SectionReveal>
-
-            {/* Environmental Correlation — full width */}
-            <SectionReveal delay={0.25} className="lg:col-span-3">
-              <div className="bezel-shell-dark transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1">
-              <div className="bezel-core-dark p-7">
-                <div className="flex flex-col md:flex-row md:items-center gap-6">
-                  <div className="flex-1">
-                    <h3 className="font-syne font-bold text-xl text-white mb-2">Real-time Environmental Correlation</h3>
-                    <p className="text-white/50 text-sm">Temperature, Humidity, Rainfall, and AQI correlated with disease outbreaks for predictive intelligence.</p>
-                  </div>
-                  <div className="flex gap-3">
-                    {[{ label: 'Temp', v: 34, color: '#ef4444' }, { label: 'Humidity', v: 72, color: '#3b82f6' }, { label: 'Rainfall', v: 45, color: '#8b5cf6' }, { label: 'AQI', v: 88, color: '#f59e0b' }].map(b => (
-                      <div key={b.label} className="text-center">
-                        <div className="w-10 bg-[#134744] rounded-full overflow-hidden h-24 flex flex-col justify-end mx-auto mb-1.5">
-                          <div className="rounded-full transition-all duration-700" style={{ height: `${b.v}%`, backgroundColor: b.color }} />
-                        </div>
-                        <p className="text-[10px] text-white/40">{b.label}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              </div>
-            </SectionReveal>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════ HOW IT WORKS ═══════════════════ */}
-      <section className="py-28 px-4 bg-secondary">
-        <div className="max-w-6xl mx-auto">
-          <SectionReveal>
-            <h2 className="font-syne font-extrabold text-4xl sm:text-5xl text-foreground text-center mb-20">From Registration to Outbreak Prevention</h2>
-          </SectionReveal>
-          <div className="grid md:grid-cols-4 gap-0 relative">
-            {/* connecting line */}
-            <div className="hidden md:block absolute top-10 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-400" />
-            {[
-              { step: '1', title: 'Patient Registers', desc: 'Secure registration with QR health card generation for instant identification.' },
-              { step: '2', title: 'Doctor Consults', desc: 'Time-limited QR access, e-prescriptions with drug safety checks.' },
-              { step: '3', title: 'Data Aggregates', desc: 'K-anonymous data flows into the surveillance pipeline automatically.' },
-              { step: '4', title: 'AI Detects Outbreaks', desc: 'ML models forecast, cluster, and alert health authorities in real-time.' },
-            ].map((s, i) => (
-              <SectionReveal key={i} delay={i * 0.15}>
-                <div className="flex flex-col items-center text-center px-4 relative">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#6fae87] to-[#4a8a6f] flex items-center justify-center text-white font-syne font-extrabold text-lg shadow-lg shadow-emerald-500/30 relative z-10 mb-5">
-                    {s.step}
-                  </div>
-                  <h3 className="font-syne font-bold text-lg text-foreground mb-2">{s.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{s.desc}</p>
-                </div>
-              </SectionReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════ ML INTELLIGENCE (GSAP scroll-stack) ═══════════════════ */}
-      <section id="surveillance" className="py-28 md:py-40 px-4 bg-[#151109] overflow-hidden">
-        <div className="max-w-6xl mx-auto">
-          <MLModelStack />
-        </div>
-      </section>
-
-      {/* ═══════════════════ ROLE BASED ACCESS ═══════════════════ */}
-      <section className="py-28 px-4 bg-background">
-        <div className="max-w-6xl mx-auto">
-          <SectionReveal>
-            <h2 className="font-syne font-extrabold text-4xl sm:text-5xl text-foreground text-center mb-16">Built for Every Healthcare Stakeholder</h2>
-          </SectionReveal>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { role: 'Patient', color: '#5FB3AC', features: ['View health records', 'Family profiles', 'Medication reminders'], link: '/login' },
-              { role: 'Doctor', color: '#4DA6A0', features: ['QR patient lookup', 'E-prescriptions', 'Drug interaction alerts'], link: '/login' },
-              { role: 'Pharmacist', color: '#3D9A95', features: ['Prescription validation', 'Inventory management', 'Dispensing workflow'], link: '/login' },
-              { role: 'Admin', color: '#79C2BD', features: ['Surveillance dashboard', 'ML alerts', 'Regional analytics'], link: '/login' },
-            ].map((r, i) => (
-              <SectionReveal key={i} delay={i * 0.1}>
-                <div className="bezel-shell h-full transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1.5">
-                  <div className="bezel-core overflow-hidden shadow-ambient flex flex-col h-full">
-                    <div className="h-1.5" style={{ backgroundColor: r.color }} />
-                    <div className="p-6 flex-1 flex flex-col">
-                      <h3 className="font-syne font-bold text-xl text-foreground mb-4">{r.role}</h3>
-                      <ul className="space-y-2.5 flex-1 mb-6">
-                        {r.features.map(f => (
-                          <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: r.color }} />{f}
-                          </li>
-                        ))}
-                      </ul>
-                      <Link href={r.link}>
-                        <button className="magnetic-btn active:scale-[0.98] w-full py-2.5 rounded-full text-sm font-semibold border-2 hover:text-white transition-colors" style={{ borderColor: r.color, color: r.color }} onMouseEnter={e => { e.currentTarget.style.backgroundColor = r.color; e.currentTarget.style.color = '#fff'; }} onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = r.color; }}>
-                          Login as {r.role}
-                        </button>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </SectionReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════ SECURITY ═══════════════════ */}
-      <section className="py-28 px-4 bg-gradient-to-b from-[#211c16] to-[#151109]">
-        <div className="max-w-5xl mx-auto text-center">
-          <SectionReveal>
-            <h2 className="font-syne font-extrabold text-4xl sm:text-5xl text-white mb-16">Enterprise-Grade Security</h2>
-          </SectionReveal>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {[
-              { icon: '🔒', label: 'HIPAA Ready' },
-              { icon: '📋', label: 'ICD-10 Coded' },
-              { icon: '🛡️', label: 'K-Anonymity (k≥5)' },
-              { icon: '🔐', label: 'JWT + HMAC-SHA256' },
-              { icon: '📱', label: '2FA Support' },
-              { icon: '✅', label: 'Full Audit Trail' },
-            ].map((s, i) => (
-              <SectionReveal key={i} delay={i * 0.08}>
-                <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl px-5 py-6 hover:bg-white/15 transition-all">
-                  <span className="text-3xl block mb-3">{s.icon}</span>
-                  <p className="text-white font-semibold text-sm">{s.label}</p>
-                </div>
-              </SectionReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════ FOOTER ═══════════════════ */}
-      <footer id="contact" className="bg-[#151109] border-t border-emerald-500/10 pt-16 pb-8 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-5 gap-12 mb-12">
-            {/* logo col */}
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-2.5 mb-4">
-                <LogoIcon />
-                <div className="leading-none">
-                  <span className="font-syne font-extrabold text-lg text-white block">ArogyaTrack</span>
-                  <span className="text-[9px] font-semibold tracking-[0.2em] text-emerald-400 uppercase block mt-0.5">Govt. of India</span>
-                </div>
-              </div>
-              <p className="text-white/40 text-sm leading-relaxed max-w-xs">Enterprise-grade public health surveillance and healthcare management platform for the nation.</p>
-            </div>
-            {/* link cols */}
-            {[
-              { heading: 'Platform', links: ['Features', 'Surveillance', 'Security', 'API Docs'] },
-              { heading: 'For Doctors', links: ['E-Prescriptions', 'Patient Lookup', 'Drug Alerts', 'CDSS'] },
-              { heading: 'Legal', links: ['Privacy Policy', 'Terms of Use', 'Data Policy', 'Grievance'] },
-            ].map(col => (
-              <div key={col.heading}>
-                <p className="text-white font-semibold text-sm mb-4">{col.heading}</p>
-                <ul className="space-y-2.5">
-                  {col.links.map(l => (
-                    <li key={l}><Link href="#" className="text-white/40 text-sm hover:text-emerald-400 transition-colors">{l}</Link></li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          {/* bottom bar */}
-          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-white/30 text-sm text-center md:text-left">© 2026 ArogyaTrack — Government of India · Ministry of Health &amp; Family Welfare</p>
-            <div className="flex gap-4">
-              {['M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.416 22 12c0-5.523-4.477-10-10-10z',
-                'M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z',
-                'M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z M4 2a2 2 0 100 4 2 2 0 000-4z',
-              ].map((d, i) => (
-                <a key={i} href="#" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-emerald-500/30 transition-colors">
-                  <svg className="w-4 h-4 text-white/50" fill="currentColor" viewBox="0 0 24 24"><path d={d} /></svg>
-                </a>
-              ))}
             </div>
           </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="border-t py-10">
+      <div className="container flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+        <div className="flex items-center gap-4">
+          <Logo subtitle={false} />
+          <span className="text-[13px] text-muted-foreground">{tr("© {getFullYear} ArogyaTrack", { getFullYear: new Date().getFullYear() })}</span>
         </div>
-      </footer>
+        <nav className="flex flex-wrap gap-x-6 gap-y-2 text-[13.5px] text-muted-foreground" aria-label={tr("Footer")}>
+          <Link href="/roles" className="hover:text-foreground">{tr("Sign in")}</Link>
+          <Link href="/signup" className="hover:text-foreground">{tr("Register")}</Link>
+          <Link href="/prescription/verify" className="hover:text-foreground">{tr("Verify a prescription")}</Link>
+          <a href="#security" className="hover:text-foreground">{tr("Security")}</a>
+        </nav>
+      </div>
+    </footer>
+  );
+}
+
+export default function LandingPage() {
+  return (
+    <div className="min-h-dvh bg-background">
+      <Nav />
+      <main id="main">
+        <Hero />
+        <Ticker />
+        <Roles />
+        <Intelligence />
+        <Flow />
+        <Security />
+        <Cta />
+      </main>
+      <Footer />
     </div>
   );
 }
