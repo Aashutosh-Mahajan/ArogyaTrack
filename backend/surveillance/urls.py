@@ -26,5 +26,6 @@ urlpatterns = [
     path('ml-models/', views.ml_model_info, name='ml-models'),
     path('ml-pipeline-status/', views.ml_pipeline_status, name='ml-pipeline-status'),
     path('run-ml-pipeline/', views.run_ml_pipeline, name='run-ml-pipeline'),
+    path('public-stats/', views.public_stats, name='public-stats'),
     path('daywise-comparison/', views.daywise_comparison, name='daywise-comparison'),
 ]
