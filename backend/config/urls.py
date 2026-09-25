@@ -14,6 +14,7 @@ urlpatterns = [
     path("api/surveillance/", include("surveillance.urls")),
     path("api/dashboard/", include("dashboard.urls")),
     path("api/cdss/", include("cdss.urls")),
+    path("api/documents/", include("documents.urls")),
     # Web interface for medical records
     path("medical/", include("medical.web_urls")),
 ]
