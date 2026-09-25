@@ -19,10 +19,10 @@ from patients.models import Profile
 @permission_classes([IsAuthenticated])
 def my_trackers(request):
     """Get all adherence trackers for the authenticated patient."""
-    profiles = request.user.profiles.all()
-    if not profiles.exists():
+    profile = request.user.get_active_profile()
+    if not profile:
         return Response({'count': 0, 'results': []})
-    trackers = AdherenceTracker.objects.filter(patient__in=profiles).order_by('-created_at')
+    trackers = AdherenceTracker.objects.filter(patient=profile).order_by('-created_at')
     limit = int(request.query_params.get('limit', 20))
     offset = int(request.query_params.get('offset', 0))
     total = trackers.count()
@@ -70,7 +70,7 @@ def get_upcoming_doses(request):
         return Response({'error': 'Only patients can view upcoming doses'}, status=status.HTTP_403_FORBIDDEN)
     
     # Get active profile
-    active_profile = Profile.objects.filter(user=request.user).first()
+    active_profile = request.user.get_active_profile()
     if not active_profile:
         return Response({'error': 'No active profile found'}, status=status.HTTP_404_NOT_FOUND)
     
@@ -89,7 +89,7 @@ def get_missed_doses(request):
         return Response({'error': 'Only patients can view missed doses'}, status=status.HTTP_403_FORBIDDEN)
     
     # Get active profile
-    active_profile = Profile.objects.filter(user=request.user).first()
+    active_profile = request.user.get_active_profile()
     if not active_profile:
         return Response({'error': 'No active profile found'}, status=status.HTTP_404_NOT_FOUND)
     
