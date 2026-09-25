@@ -12,6 +12,7 @@ qrcode[pil]>=7.4
 PyJWT>=2.8
 django-ratelimit>=4.1
 reportlab>=4.0
+uharfbuzz>=0.39  # text shaping for Indian scripts in generated PDFs
 # ML dependencies
 numpy>=1.24
 pandas>=2.0
