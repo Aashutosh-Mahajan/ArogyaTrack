@@ -1,114 +1,128 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { api } from '@/lib/api';
+import React, { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Download, History, Search } from 'lucide-react';
 import { withAuth } from '@/components/auth/withAuth';
-import { FiClock, FiCheck, FiX, FiFileText } from 'react-icons/fi';
-import toast from 'react-hot-toast';
+import { api } from '@/lib/api';
+import { EmptyState, ErrorState, PageHeader, SkeletonRows, StatusPill } from '@/components/ui/page';
+import { fieldClass } from '@/components/auth/FormKit';
+import { cn } from '@/lib/utils';
+import { money } from '@/lib/billing';
+import { t, intlLocale } from '@/lib/i18n';
 
-interface DispensingRecord {
-    id: string;
-    prescription: string;
-    prescription_number?: string; // Ideally backend should provide this
-    medicine_name: string;
-    pharmacy_name: string;
-    pharmacist: string;
-    status: 'dispensed' | 'unavailable' | 'patient_has';
-    quantity_dispensed: number;
-    notes: string;
-    dispensed_at: string;
+interface Row {
+  id: string;
+  medicine_name: string;
+  dosage: string;
+  patient_name: string;
+  patient_uid: string;
+  prescription_number: string;
+  status: 'dispensed' | 'unavailable' | 'patient_has';
+  quantity_dispensed: number;
+  notes: string;
+  dispensed_at: string;
+  amount: string | null;
+  invoice_number: string | null;
+}
+
+const STATUS = { dispensed: { get l() { return t("Dispensed"); }, t: 'success' as const }, unavailable: { get l() { return t("Unavailable"); }, t: 'danger' as const }, patient_has: { get l() { return t("Patient had it"); }, t: 'info' as const } };
+const FILTERS = ['all', 'dispensed', 'unavailable', 'patient_has'] as const;
+
+function csvCell(v: unknown) {
+  const s = String(v ?? '');
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
 function HistoryPage() {
-    const [records, setRecords] = useState<DispensingRecord[]>([]);
-    const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]>('all');
+  const [search, setSearch] = useState('');
+  const q = useQuery<Row[]>({ queryKey: ['pharmacy-history'], queryFn: () => api.pharmacy.getDispensingRecords() as Promise<Row[]> });
 
-    useEffect(() => {
-        const fetchHistory = async () => {
-            try {
-                const response = await api.pharmacy.getDispensingRecords() as any;
-                setRecords(response.data ? response.data : response as unknown as DispensingRecord[]);
-            } catch (error) {
-                console.error('Failed to fetch history:', error);
-                toast.error('Failed to load history');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchHistory();
-    }, []);
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'dispensed': return 'text-green-600 bg-green-50 border-green-200';
-            case 'unavailable': return 'text-red-600 bg-red-50 border-red-200';
-            case 'patient_has': return 'text-blue-600 bg-blue-50 border-blue-200';
-            default: return 'text-muted-foreground bg-background border-border';
-        }
-    };
-
-    return (
-        <div className="min-h-screen bg-background p-6">
-            <div className="max-w-7xl mx-auto">
-                <h1 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-                    <FiClock className="text-purple-600" />
-                    Dispensing History
-                </h1>
-
-                <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-muted-foreground">
-                            <thead className="bg-background text-foreground font-semibold border-b border-border">
-                                <tr>
-                                    <th className="px-6 py-4">Date & Time</th>
-                                    <th className="px-6 py-4">Medicine</th>
-                                    <th className="px-6 py-4">Quantity</th>
-                                    <th className="px-6 py-4">Status</th>
-                                    <th className="px-6 py-4">Notes</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {loading ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-6 py-8 text-center">
-                                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
-                                        </td>
-                                    </tr>
-                                ) : records.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
-                                            No history records found.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    records.map((record) => (
-                                        <tr key={record.id} className="hover:bg-background transition">
-                                            <td className="px-6 py-4 text-foreground">
-                                                {new Date(record.dispensed_at).toLocaleString()}
-                                            </td>
-                                            <td className="px-6 py-4 font-medium text-foreground">
-                                                {record.medicine_name}
-                                            </td>
-                                            <td className="px-6 py-4 text-foreground">{record.quantity_dispensed}</td>
-                                            <td className="px-6 py-4">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(record.status)}`}>
-                                                    {record.status.replace('_', ' ').toUpperCase()}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 max-w-xs truncate" title={record.notes}>
-                                                {record.notes || '-'}
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+  const list = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    return (q.data ?? []).filter(
+      (r) =>
+        (filter === 'all' || r.status === filter) &&
+        (!s || r.medicine_name.toLowerCase().includes(s) || (r.patient_name || '').toLowerCase().includes(s) || r.prescription_number.toLowerCase().includes(s))
     );
+  }, [q.data, filter, search]);
+
+  const exportCsv = () => {
+    const head = ['Date', 'Prescription', 'Patient', 'Patient ID', 'Medicine', 'Dose', 'Status', 'Quantity', 'Amount (INR)', 'Invoice', 'Notes'];
+    const rows = list.map((r) => [new Date(r.dispensed_at).toISOString(), r.prescription_number, r.patient_name, r.patient_uid, r.medicine_name, r.dosage, STATUS[r.status]?.l ?? r.status, r.quantity_dispensed, r.amount ?? '', r.invoice_number ?? '', r.notes]);
+    const blob = new Blob([[head, ...rows].map((r) => r.map(csvCell).join(',')).join('\n')], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = t("dispensing_{value}.csv", { value: new Date().toISOString().slice(0, 10) });
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  return (
+    <div>
+      <PageHeader
+        title={t("Dispensing history")}
+        description={t("Every item handed over, marked unavailable, or already with the patient, at your pharmacy.")}
+        actions={
+          <button onClick={exportCsv} disabled={!list.length} className="inline-flex h-10 items-center gap-2 rounded-[10px] border bg-card px-3.5 text-[13.5px] font-medium shadow-sm hover:bg-muted disabled:opacity-50">
+            <Download className="h-4 w-4" />{' '}{t("Export CSV")}</button>
+        }
+      />
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="inline-flex flex-wrap rounded-[10px] border bg-card p-1 shadow-sm">
+          {FILTERS.map((f) => (
+            <button key={f} onClick={() => setFilter(f)} className={cn('rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors', filter === f ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>
+              {f === 'all' ? t("All") : STATUS[f].l}
+            </button>
+          ))}
+        </div>
+        <div className="relative sm:w-72">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("Medicine, patient or Rx number")} className={`${fieldClass()} h-10 pl-10`} aria-label={t("Search history")} />
+        </div>
+      </div>
+      {q.isLoading ? (
+        <div className="rounded-2xl border bg-card p-5"><SkeletonRows rows={6} /></div>
+      ) : q.isError ? (
+        <ErrorState onRetry={() => q.refetch()} />
+      ) : !list.length ? (
+        <EmptyState icon={History} title={q.data?.length ? t("Nothing matches") : t("No dispensing yet")} />
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border bg-card shadow-sm">
+          <table className="w-full min-w-[760px] text-[13.5px]">
+            <thead className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
+              <tr>
+                <th className="px-5 py-3 font-medium">{t("When")}</th>
+                <th className="px-5 py-3 font-medium">{t("Medicine")}</th>
+                <th className="px-5 py-3 font-medium">{t("Patient")}</th>
+                <th className="px-5 py-3 font-medium">{t("Prescription")}</th>
+                <th className="px-5 py-3 text-right font-medium">{t("Qty")}</th>
+                <th className="px-5 py-3 text-right font-medium">{t("Amount")}</th>
+                <th className="px-5 py-3 text-right font-medium">{t("Status")}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {list.map((r) => (
+                <tr key={r.id} className="hover:bg-muted/30">
+                  <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">{new Date(r.dispensed_at).toLocaleString(intlLocale(), { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</td>
+                  <td className="px-5 py-3"><div className="font-medium">{r.medicine_name}</div><div className="text-xs text-muted-foreground">{r.dosage}</div></td>
+                  <td className="px-5 py-3"><div>{r.patient_name}</div><div className="font-mono text-xs text-muted-foreground">{r.patient_uid}</div></td>
+                  <td className="px-5 py-3 font-mono text-[13px]">{r.prescription_number}</td>
+                  <td className="tabular px-5 py-3 text-right">{r.status === 'dispensed' ? r.quantity_dispensed : '—'}</td>
+                  <td className="tabular px-5 py-3 text-right">
+                    {r.status === 'dispensed' ? money(r.amount) : '—'}
+                    {r.status === 'dispensed' && <div className="font-mono text-[11px] text-muted-foreground">{r.invoice_number ?? t("Not billed")}</div>}
+                  </td>
+                  <td className="px-5 py-3 text-right"><StatusPill tone={STATUS[r.status]?.t ?? 'neutral'}>{STATUS[r.status]?.l ?? r.status}</StatusPill></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default withAuth(HistoryPage, ['pharmacist']);
