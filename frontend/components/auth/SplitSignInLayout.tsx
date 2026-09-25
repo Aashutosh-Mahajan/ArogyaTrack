@@ -1,100 +1,138 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { FiActivity, FiShield, FiCheckCircle, FiClock, FiLock } from 'react-icons/fi';
 import { motion } from 'framer-motion';
+import { ArrowLeft, Check } from 'lucide-react';
+import { Logo } from '@/components/brand/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
-
-/* ── ECG SVG line ───────────────────────────── */
-const ecgPath = 'M0,12 L40,12 L45,12 L50,2 L55,22 L60,0 L65,20 L70,12 L110,12 L150,12 L155,12 L160,2 L165,22 L170,0 L175,20 L180,12 L220,12 L260,12';
-
-interface Feature {
-  icon: React.ReactNode;
-  label: string;
-}
+import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
+import { formatAsOf, formatCompact, usePublicStats } from '@/lib/publicStats';
+import { t, m } from '@/lib/i18n';
+import { tRich } from '@/lib/i18n-rich';
 
 interface Props {
-  /** Decorative element shown above the feature list on the left panel */
+  /** Headline on the image panel. */
+  headline?: React.ReactNode;
+  /** Bullet points on the image panel. */
+  points?: string[];
+  /** Optional extra element on the image panel (e.g. a notice). */
   decoration?: React.ReactNode;
-  /** Feature bullets rendered on the left panel */
-  features?: Feature[];
-  /** Right-side content (the sign-in form) */
+  /** Where the top-left back link goes. */
+  backHref?: string;
+  backLabel?: string;
   children: React.ReactNode;
+  /** Wider form column for multi-step registration. */
+  wide?: boolean;
+  /** Legacy prop kept for older callers; ignored. */
+  features?: unknown;
 }
 
-const defaultFeatures: Feature[] = [
-  { icon: <FiCheckCircle className="w-4 h-4 text-[#8fc4a8]" />, label: 'Instant access to health records' },
-  { icon: <FiClock className="w-4 h-4 text-[#8fc4a8]" />, label: '24/7 prescription tracking' },
-  { icon: <FiLock className="w-4 h-4 text-[#8fc4a8]" />, label: 'End-to-end encrypted data' },
+const DEFAULT_POINTS = [
+  m("Records, prescriptions and dispensing in one place"),
+  m("Signed QR health cards and prescriptions"),
+  m("Access is role-based and every action is audited"),
 ];
 
-export default function SplitSignInLayout({ decoration, features = defaultFeatures, children }: Props) {
+export default function SplitSignInLayout({
+  headline,
+  points = DEFAULT_POINTS,
+  decoration,
+  backHref = '/',
+  backLabel = 'Home',
+  children,
+  wide = false,
+}: Props) {
+  const { data: stats } = usePublicStats();
+
   return (
-    <div className="min-h-screen grid lg:grid-cols-[42%_58%]">
-      {/* ── Left Dark Panel (42%, fixed ink — matches the login page pattern) ── */}
-      <div className="relative hidden lg:flex flex-col justify-between p-12 bg-[#151109] overflow-hidden">
-        {/* Background effects */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#4a8a6f]/20 rounded-full blur-[128px] -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-[#4a8a6f]/15 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
+    <div className="grid min-h-dvh bg-background lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+      {/* Image panel */}
+      <aside className="relative hidden overflow-hidden lg:block">
+        <Image
+          src="/image.png"
+          alt={t("Doctors and nurses standing together in a hospital")}
+          fill
+          priority
+          sizes="45vw"
+          className="object-cover object-[50%_25%]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#04201b]/50 via-[#04201b]/45 to-[#04201b]/95" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#04201b]/70 via-[#04201b]/25 to-transparent" />
+        <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(rgba(255,255,255,0.25)_1px,transparent_1px)] [background-size:22px_22px] mask-fade-b" />
 
-        {/* Logo */}
-        <div className="relative z-10">
-          <Link href="/" className="flex items-center gap-3 w-fit group">
-            <div className="bg-white/10 p-2 rounded-xl backdrop-blur-md border border-white/20 group-hover:bg-white/20 transition-all">
-              <FiActivity className="w-5 h-5 text-[#8fc4a8]" />
-            </div>
-            <span className="text-xl font-syne font-bold text-white tracking-tight">ArogyaTrack</span>
-          </Link>
-        </div>
+        <div className="relative flex h-full flex-col justify-between p-10 xl:p-12">
+          <Logo inverted />
 
-        {/* Middle: Decoration + Features */}
-        <div className="relative z-10 flex flex-col items-start gap-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="w-full"
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="max-w-md text-white"
           >
-            {decoration}
+            <h2 className="text-[34px] font-semibold leading-[1.08] tracking-[-0.035em] xl:text-[40px]">
+              {headline ?? (
+                <>{tRich("Care that connects, <em>surveillance</em> that sees ahead.", (c) => <span className="font-serif-accent text-[#9be3cf]">{c}</span>)}</>
+              )}
+            </h2>
+            {decoration && <div className="mt-6">{decoration}</div>}
+            <ul className="mt-7 space-y-3">
+              {points.map((p) => (
+                <li key={p} className="flex items-start gap-3 text-[14.5px] text-white/80">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/15 backdrop-blur">
+                    <Check className="h-3 w-3" strokeWidth={3} />
+                  </span>
+                  {t(p)}
+                </li>
+              ))}
+            </ul>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="space-y-4"
-          >
-            {features.map((f, i) => (
-              <div key={i} className="flex items-center gap-3 text-white/60 text-sm font-dm">
-                {f.icon}
-                <span>{f.label}</span>
+          <div className="flex items-end justify-between gap-6 border-t border-white/15 pt-6 text-white">
+            {[
+              { k: t("Districts"), v: stats?.monitored_regions },
+              { k: t("Active alerts"), v: stats?.active_alerts },
+              { k: t("Forecasts"), v: stats?.forecasts_generated },
+            ].map((s) => (
+              <div key={s.k}>
+                <div className="tabular text-2xl font-semibold tracking-tight">{stats ? formatCompact(s.v) : '—'}</div>
+                <div className="text-xs text-white/60">{s.k}</div>
               </div>
             ))}
+            <div className="ml-auto text-right text-[11px] text-white/50">
+              {stats ? <>{t("Live data")}<br />{t("as of {formatAsOf}", { formatAsOf: formatAsOf(stats.as_of) })}</> : null}
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Form column */}
+      <main id="main" className="relative flex min-h-dvh min-w-0 flex-col">
+        <div className="flex items-center justify-between px-5 py-5 md:px-10">
+          <Link
+            href={backHref}
+            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[13.5px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" /> {backLabel}
+          </Link>
+          <div className="flex items-center gap-2">
+            <Logo subtitle={false} className="lg:hidden" />
+            <LanguageSwitcher />
+          <ThemeToggle className="h-9 w-9 rounded-lg text-muted-foreground hover:bg-muted" />
+          </div>
+        </div>
+        <div className="flex flex-1 items-center justify-center px-5 pb-12 md:px-10">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            className={wide ? 'w-full max-w-[640px]' : 'w-full max-w-[400px]'}
+          >
+            {children}
           </motion.div>
         </div>
-
-        {/* Footer: ECG + security */}
-        <div className="relative z-10 space-y-3">
-          <div className="flex justify-start opacity-20">
-            <svg viewBox="0 0 260 24" className="w-40 h-5" preserveAspectRatio="none">
-              <path d={ecgPath} fill="none" stroke="#5ca88c" strokeWidth="1.5" />
-            </svg>
-          </div>
-          <div className="flex items-center gap-4 text-white/40 text-xs font-mono">
-            <span>© 2026 Ministry of Health</span>
-            <span className="flex items-center gap-1"><FiShield className="w-3.5 h-3.5" /> 256-bit Encryption</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Right Panel (58%) ───────────────────────────── */}
-      <div className="flex items-center justify-center p-8 lg:p-16 bg-background relative overflow-y-auto">
-        <ThemeToggle className="absolute top-8 right-8 text-foreground" />
-        <div className="w-full max-w-[420px]">
-          {children}
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
