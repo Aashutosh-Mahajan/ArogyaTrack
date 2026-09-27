@@ -51,3 +51,15 @@ Desktop.ini
 next-env.d.ts
 coverage/
 .claude/scheduled_tasks.lock
+
+# ─── PRISM Local AI Context & Integrations (Must Not Be Committed) ───
+.aicontext/
+.mcp.json
+CLAUDE.md
+.claude/settings.json
+.claude/skills/prism-*
+graph_export.html
+graph_export.json
+docs/benchmark_artifacts/
+*PRISM*.pdf
+
