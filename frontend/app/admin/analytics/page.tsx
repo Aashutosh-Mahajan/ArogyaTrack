@@ -28,7 +28,7 @@ function AnalyticsPage() {
   const riskDist = useMemo(() => {
     const latest = risk.data?.results ?? [];
     const counts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0 };
-    latest.forEach((r: any) => { const l = Math.min(3, Math.max(0, Number(r.risk_level) || 0)); counts[l] += 1; });
+    latest.filter((r: any) => r.inference_status === 'ok' && r.risk_level >= 0).forEach((r: any) => { counts[r.risk_level] += 1; });
     return [0, 1, 2, 3].map((l) => ({ level: RISK_LABEL[l], n: counts[l], l }));
   }, [risk.data]);
 
@@ -165,6 +165,8 @@ function AnalyticsPage() {
                   <StatusPill tone={m.loaded ? 'success' : 'danger'}>{m.loaded ? t("Loaded") : t("Missing")}</StatusPill>
                 </div>
                 {m.description && <p className="mt-2 text-[13px] text-muted-foreground">{m.description}</p>}
+                {m.metadata?.data_kind === 'synthetic' && <p className="mt-2 text-xs text-muted-foreground">{t("Trained on simulated data. Real-world accuracy has not been validated.")}</p>}
+                {m.metadata?.error && <p className="mt-2 text-xs text-destructive">{m.metadata.error}</p>}
                 {m.metrics && Object.keys(m.metrics).length > 0 && (
                   <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-[12.5px] sm:grid-cols-3">
                     {Object.entries(m.metrics).slice(0, 6).map(([k, v]) => (

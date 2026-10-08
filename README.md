@@ -71,11 +71,13 @@ Once medicines are dispensed, dose schedules are created for the patient. The sy
 Patients see an aggregated health snapshot on their dashboard — recent diagnoses, upcoming doses, lab result trends, and active prescriptions. The system computes a risk score based on vitals (e.g., BP > 140, sugar > 150), abnormal lab results, and missed doses. Alerts are generated at four severity levels (Low, Medium, High, Critical) and displayed prominently. Patients can download their complete medical records as PDFs or request a bulk ZIP export.
 
 ### 8. Disease Surveillance & ML Analytics (Admin)
-In the background, anonymized and K-anonymized disease data flows into the surveillance module. Four machine learning models operate on this data:
-- **DBSCAN** performs geospatial clustering to identify disease outbreak hotspots across districts
-- **Isolation Forest** (v5.0 ensemble with Gradient Boosting corrector) detects anomalous disease patterns and sudden case spikes across 59 engineered features
-- **Prophet** generates time-series forecasts predicting case counts for the coming weeks with confidence intervals
-- **XGBoost** computes risk scores per region factoring in case density, population, sanitation index, and environmental data (temperature, humidity, rainfall)
+In the background, anonymized and K-anonymized disease data flows into the surveillance module. Four surveillance components share a causal feature pipeline and a versioned model bundle:
+- **Geographic DBSCAN** groups nearby regions using haversine distance and correct population denominators
+- **Anomaly detection** selects Isolation Forest or causal statistical/seasonal deviation using chronological validation
+- **Daily count forecasting** selects a trailing baseline, Poisson histogram boosting, or Poisson XGBoost and predicts each region/disease with calibrated pointwise intervals
+- **Calibrated outbreak classification** selects logistic regression, histogram boosting, or XGBoost using validation PR-AUC. The current bundle uses 63 shared features.
+
+The v6 bundle uses synthetic training data. Scores are simulation results; automatic public-health notifications are disabled by default. See [ML architecture and deployment](docs/ml-system.md) and [measured validation results and retraining time](docs/ml-validation-results.md).
 
 Administrators access an interactive surveillance dashboard with heat maps, regional comparisons (cases per 100,000 population), anomaly alerts, and forecast trend lines. When thresholds are breached, the system generates outbreak alerts automatically.
 
@@ -97,9 +99,9 @@ Every action across the platform — login attempts, record access, prescription
 ### Disease Surveillance & Outbreak Detection
 - Real-time disease tracking across geographic regions
 - DBSCAN-based geospatial clustering for outbreak identification
-- Isolation Forest ensemble anomaly detection for sudden case spikes
-- Prophet time-series forecasting with seasonality detection
-- XGBoost risk scoring per region
+- Validation-selected anomaly detection with causal seasonal baselines
+- Region/disease daily count forecasting for 7, 14, 30, 60 and 90 days
+- Calibrated, validation-selected outbreak scoring per region
 - Interactive heat maps with severity-based color coding
 
 ### Digital Prescription Management
@@ -266,12 +268,12 @@ The system follows a layered architecture with clear separation of concerns:
 ### Machine Learning
 | Technology | Version | Purpose |
 |---|---|---|
-| scikit-learn (Isolation Forest) | 1.3+ | Ensemble anomaly detection |
-| scikit-learn (DBSCAN) | 1.3+ | Geospatial clustering |
-| Prophet | 1.1+ | Time-series forecasting |
-| XGBoost | 2.0+ | Gradient-boosted risk scoring |
-| pandas | 2.0+ | Data manipulation |
-| NumPy | 1.24+ | Numerical computation |
+| scikit-learn | 1.7.2 | Anomaly candidates, calibration, and count forecasting |
+| scikit-learn (DBSCAN) | 1.7.2 | Haversine geospatial clustering |
+| Prophet | Legacy scripts only | Historical forecasting experiments |
+| XGBoost | 3.2.0 | Classification and forecasting candidates |
+| pandas | 2.3.3 | Shared causal feature engineering |
+| NumPy | 2.2.6 | Numerical computation |
 
 ---
 
@@ -489,16 +491,16 @@ python -m venv .venv
 # Linux / macOS
 source .venv/bin/activate
 
-pip install numpy pandas scikit-learn prophet xgboost
+pip install -r requirements.lock.txt
 ```
 
 #### Train All Models
 
 ```bash
-python train_all_refined.py
+python train_all_refined.py --data-dir training_data_v6 --threads 4 --activate
 ```
 
-Trained models are saved to the `saved_models/` directory and are loaded by the surveillance module at runtime.
+Generate or provide data first using [docs/ml-system.md](docs/ml-system.md). Training writes immutable versions under `saved_models/validated/`; the active manifest is verified by the surveillance module at runtime.
 
 ---
 
@@ -622,7 +624,7 @@ All endpoints are prefixed with `/api/`. Authentication is required for most end
 | `GET` | `/surveillance/regions/` | List geographic regions |
 | `GET` | `/surveillance/surveillance-data/` | Retrieve surveillance case data |
 | `GET` | `/surveillance/clusters/` | Get DBSCAN-detected clusters |
-| `GET` | `/surveillance/forecasts/` | Get Prophet forecasts |
+| `GET` | `/surveillance/forecasts/` | Get validated daily count forecasts |
 | `GET` | `/surveillance/anomalies/` | List detected anomalies |
 | `GET` | `/surveillance/risk-scores/` | Get XGBoost risk scores |
 | `GET` | `/surveillance/alerts/` | List active alerts |

@@ -11,7 +11,7 @@ class RegionSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'district', 'state', 'country',
             'latitude', 'longitude', 'population',
-            'hospital_count', 'sanitation_index', 'created_at'
+            'hospital_count', 'sanitation_index', 'area_sq_km', 'created_at'
         ]
 
 
@@ -24,7 +24,7 @@ class SurveillanceDataSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'date', 'region', 'region_name', 'region_details',
             'disease_code', 'disease_name', 'case_count', 'average_severity',
-            'cases_per_100k', 'created_at'
+            'cases_per_100k', 'observation_status', 'provenance', 'created_at'
         ]
 
 
@@ -46,7 +46,7 @@ class ClusterSerializer(serializers.ModelSerializer):
             'id', 'disease_code', 'disease_name', 'detection_date',
             'centroid_lat', 'centroid_lon', 'radius_km',
             'total_cases', 'total_population', 'severity', 'growth_rate',
-            'is_active', 'regions_data', 'affected_region_names', 'created_at'
+            'is_active', 'model_version', 'provenance', 'regions_data', 'affected_region_names', 'created_at'
         ]
     
     def get_affected_region_names(self, obj):
@@ -62,7 +62,7 @@ class ForecastSerializer(serializers.ModelSerializer):
             'id', 'region', 'region_details', 'disease_code', 'disease_name',
             'forecast_date', 'prediction_date', 'horizon_days',
             'predicted_cases', 'lower_bound', 'upper_bound', 'confidence',
-            'created_at'
+            'model_version', 'provenance', 'data_cutoff', 'created_at'
         ]
 
 
@@ -74,20 +74,31 @@ class AnomalySerializer(serializers.ModelSerializer):
         fields = [
             'id', 'region', 'region_details', 'disease_code', 'disease_name',
             'detection_date', 'anomaly_score', 'actual_cases', 'expected_cases',
-            'deviation_percentage', 'description', 'is_resolved', 'created_at'
+            'deviation_percentage', 'description', 'is_resolved', 'model_version', 'provenance', 'data_cutoff', 'created_at'
         ]
 
 
 class RiskScoreSerializer(serializers.ModelSerializer):
     region_details = RegionSerializer(source='region', read_only=True)
-    risk_level_display = serializers.CharField(source='get_risk_level_display', read_only=True)
+    risk_level = serializers.SerializerMethodField()
+    risk_probability = serializers.SerializerMethodField()
+    risk_level_display = serializers.SerializerMethodField()
+
+    def get_risk_level(self,obj):
+        return obj.risk_level if obj.inference_status=='ok' else -1
+
+    def get_risk_probability(self,obj):
+        return obj.risk_probability if obj.inference_status=='ok' else None
+
+    def get_risk_level_display(self,obj):
+        return obj.get_risk_level_display() if obj.inference_status=='ok' else 'Unavailable'
     
     class Meta:
         model = RiskScore
         fields = [
             'id', 'region', 'region_details', 'disease_code', 'disease_name',
             'calculation_date', 'risk_level', 'risk_level_display',
-            'risk_probability', 'contributing_factors', 'created_at'
+            'risk_probability', 'inference_status', 'model_version', 'provenance', 'data_cutoff', 'contributing_factors', 'created_at'
         ]
 
 
@@ -123,6 +134,10 @@ class ConsentActionSerializer(serializers.Serializer):
 
 
 class AlertSerializer(serializers.ModelSerializer):
+    confidence = serializers.SerializerMethodField()
+
+    def get_confidence(self,obj):
+        return obj.confidence if obj.contributing_factors.get('confidence_method')=='empirically_validated' else None
     severity_display = serializers.CharField(source='get_severity_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     affected_regions_data = RegionSerializer(source='affected_regions', many=True, read_only=True)

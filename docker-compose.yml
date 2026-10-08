@@ -21,10 +21,12 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       USE_REDIS_CACHE: "true"
+      ML_MODELS_ROOT: /models
     ports:
       - "8000:8000"
     volumes:
       - backend_media:/app/media
+      - ./ml_models/saved_models/validated:/models:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -39,8 +41,10 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       USE_REDIS_CACHE: "true"
+      ML_MODELS_ROOT: /models
     volumes:
       - backend_media:/app/media
+      - ./ml_models/saved_models/validated:/models:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -55,6 +59,9 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       USE_REDIS_CACHE: "true"
+      ML_MODELS_ROOT: /models
+    volumes:
+      - ./ml_models/saved_models/validated:/models:ro
     depends_on:
       redis:
         condition: service_healthy

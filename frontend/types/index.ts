@@ -487,7 +487,10 @@ export interface RiskScore {
   calculation_date: string;
   risk_level: number; // 0=Low, 1=Medium, 2=High, 3=Critical
   risk_level_display: string;
-  risk_probability: number;
+  risk_probability: number | null;
+  inference_status?: 'ok' | 'unavailable' | 'legacy' | 'demo';
+  model_version?: string;
+  provenance?: string;
   contributing_factors: Record<string, any>;
   created_at: string;
 }

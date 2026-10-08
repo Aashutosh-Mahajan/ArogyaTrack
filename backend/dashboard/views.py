@@ -1301,7 +1301,7 @@ class PatientInvoicesView(APIView):
             return Response([])
         invoices = (
             Invoice.objects.filter(patient=profile)
-            .select_related("pharmacy", "pharmacist", "patient", "prescription__doctor")
+            .select_related("pharmacy", "pharmacist__pharmacist_profile", "patient", "prescription__doctor__doctor_profile")
             .prefetch_related("items__prescription_medicine__medicine")
         )
         return Response(InvoiceSerializer(invoices, many=True).data)

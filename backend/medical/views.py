@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.utils import timezone
-from django.db.models import Q, F
+from django.db.models import Q, F, Count, OuterRef, Subquery
 from datetime import timedelta
 import re
 
@@ -532,35 +532,44 @@ class HighRiskPatientsView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        active_accesses = DoctorPatientAccess.objects.filter(
-            doctor=request.user,
-            expires_at__gt=timezone.now(),
-        ).select_related('patient')
+        patient_ids = DoctorPatientAccess.objects.filter(
+            doctor=request.user, expires_at__gt=timezone.now()).values('patient_id')
+        latest_bp = HealthMetric.objects.filter(profile_id=OuterRef('pk'),
+            metric_type='blood_pressure').order_by('-recorded_at', '-pk')
+        latest_sugar = HealthMetric.objects.filter(profile_id=OuterRef('pk'),
+            metric_type='sugar').order_by('-recorded_at', '-pk')
+        latest_visit = PatientVisitRecord.objects.filter(profile_id=OuterRef('pk')).order_by('-visit_date', '-pk')
+        abnormal = LabTestResult.objects.filter(profile_id=OuterRef('pk'),
+            tested_at__gte=timezone.now() - timedelta(days=90)).filter(
+                Q(value__gt=F('normal_max')) | Q(value__lt=F('normal_min'))
+            ).order_by().values('profile_id').annotate(n=Count('pk'))
+        profiles = Profile.objects.filter(pk__in=patient_ids).prefetch_related('chronic_conditions').annotate(
+            _bp=Subquery(latest_bp.values('value')[:1]),
+            _diastolic=Subquery(latest_bp.values('secondary_value')[:1]),
+            _sugar=Subquery(latest_sugar.values('value')[:1]),
+            _last_visit=Subquery(latest_visit.values('visit_date')[:1]),
+            _abnormal_count=Subquery(abnormal.values('n')[:1]))
 
         high_risk_patients = []
-        for access in active_accesses:
-            profile = access.patient
+        for profile in profiles:
 
             risk_factors = []
             risk_level = 'low'
             primary_condition = None
 
             # 1. Chronic conditions (FK is profile, field is disease_name)
-            conditions = ChronicCondition.objects.filter(profile=profile)
-            if conditions.exists():
+            conditions = list(profile.chronic_conditions.all())
+            if conditions:
                 risk_factors.extend([c.disease_name for c in conditions if c.disease_name])
-                primary_condition = conditions.first().disease_name if conditions.first() else None
+                primary_condition = conditions[0].disease_name
                 risk_level = 'medium'
 
             # 2. Latest BP from HealthMetric
-            latest_bp_metric = HealthMetric.objects.filter(
-                profile=profile, metric_type='blood_pressure'
-            ).order_by('-recorded_at').first()
             latest_bp = None
             latest_bp_value = None
-            if latest_bp_metric:
-                systolic = latest_bp_metric.value
-                diastolic = latest_bp_metric.secondary_value or 0
+            if profile._bp is not None:
+                systolic = profile._bp
+                diastolic = profile._diastolic or 0
                 latest_bp = f"{int(systolic)}/{int(diastolic)}"
                 latest_bp_value = int(systolic)
                 if systolic >= 140:
@@ -568,32 +577,15 @@ class HighRiskPatientsView(APIView):
                     risk_level = 'high'
 
             # 3. Latest blood sugar from HealthMetric
-            latest_sugar_metric = HealthMetric.objects.filter(
-                profile=profile, metric_type='sugar'
-            ).order_by('-recorded_at').first()
             latest_sugar = None
-            if latest_sugar_metric:
-                latest_sugar = int(latest_sugar_metric.value)
+            if profile._sugar is not None:
+                latest_sugar = int(profile._sugar)
                 if latest_sugar > 200:
                     risk_factors.append(f'High Sugar ({latest_sugar} mg/dL)')
                     risk_level = 'high'
 
-            # 4. Most recent visit
-            latest_visit = PatientVisitRecord.objects.filter(
-                profile=profile
-            ).order_by('-visit_date').first()
-
             # 5. Check abnormal lab results (last 90 days)
-            recent_labs = LabTestResult.objects.filter(
-                profile=profile,
-                tested_at__gte=timezone.now() - timedelta(days=90),
-            )
-            abnormal_count = 0
-            for lab in recent_labs:
-                if lab.value is not None and lab.normal_max is not None and lab.value > lab.normal_max:
-                    abnormal_count += 1
-                elif lab.value is not None and lab.normal_min is not None and lab.value < lab.normal_min:
-                    abnormal_count += 1
+            abnormal_count = profile._abnormal_count or 0
             if abnormal_count >= 3:
                 risk_factors.append(f'{abnormal_count} abnormal labs (90 d)')
                 risk_level = 'high'
@@ -627,11 +619,11 @@ class HighRiskPatientsView(APIView):
                 "risk_level": risk_level,
                 "risk_score": risk_score_num,
                 "risk_factors": risk_factors,
-                "last_visit_date": latest_visit.visit_date.isoformat() if latest_visit else None,
+                "last_visit_date": profile._last_visit.isoformat() if profile._last_visit else None,
                 "latest_bp": latest_bp,
                 "latest_bp_value": latest_bp_value,
                 "latest_sugar": latest_sugar,
-                "conditions_count": conditions.count(),
+                "conditions_count": len(conditions),
                 "abnormal_labs": abnormal_count,
             })
 
@@ -661,41 +653,26 @@ class DoctorDashboardSummaryView(APIView):
         active_accesses = DoctorPatientAccess.objects.filter(
             doctor=request.user,
             expires_at__gt=now,
-        ).select_related('patient')
-        total_patients = active_accesses.count()
+        )
+        patient_profiles = list(active_accesses.order_by().values_list('patient_id', flat=True).distinct())
+        total_patients = len(patient_profiles)
 
         # High-risk count (patients with chronic conditions or abnormal labs)
         high_risk_count = 0
         pending_labs = 0
         recent_updates = 0
-        patient_profiles = []
-
-        for acc in active_accesses:
-            profile = acc.patient
-            patient_profiles.append(profile)
-
-            has_risk = False
-            conditions = ChronicCondition.objects.filter(profile=profile)
-            if conditions.exists():
-                has_risk = True
-
-            # Check abnormal labs in last 90 days
-            abnormal = LabTestResult.objects.filter(
-                profile=profile,
-                tested_at__gte=now - timedelta(days=90),
-            ).filter(
+        condition_profiles = set(ChronicCondition.objects.filter(profile_id__in=patient_profiles)
+            .values_list('profile_id', flat=True))
+        abnormal_profiles = set(LabTestResult.objects.filter(profile_id__in=patient_profiles,
+            tested_at__gte=now - timedelta(days=90)).filter(
                 Q(value__gt=F('normal_max')) | Q(value__lt=F('normal_min'))
-            ).count()
-            if abnormal > 0:
-                has_risk = True
-
-            if has_risk:
-                high_risk_count += 1
+            ).values_list('profile_id', flat=True))
+        high_risk_count = len(condition_profiles | abnormal_profiles)
 
         # Pending lab reviews — abnormal labs in last 30 days across all doctor's patients
         if patient_profiles:
             pending_labs = LabTestResult.objects.filter(
-                profile__in=patient_profiles,
+                profile_id__in=patient_profiles,
                 tested_at__gte=now - timedelta(days=30),
             ).filter(
                 Q(value__gt=F('normal_max')) | Q(value__lt=F('normal_min'))
@@ -704,11 +681,11 @@ class DoctorDashboardSummaryView(APIView):
         # Recent updates — visit records + lab results created in last 7 days
         if patient_profiles:
             recent_visits = PatientVisitRecord.objects.filter(
-                profile__in=patient_profiles,
+                profile_id__in=patient_profiles,
                 created_at__gte=now - timedelta(days=7),
             ).count()
             recent_labs_count = LabTestResult.objects.filter(
-                profile__in=patient_profiles,
+                profile_id__in=patient_profiles,
                 created_at__gte=now - timedelta(days=7),
             ).count()
             recent_updates = recent_visits + recent_labs_count

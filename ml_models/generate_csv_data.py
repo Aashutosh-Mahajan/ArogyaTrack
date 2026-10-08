@@ -327,10 +327,14 @@ def main():
     parser = argparse.ArgumentParser(description="Generate surveillance CSV data")
     parser.add_argument("--days", type=int, default=730, help="Number of days of data (default: 730)")
     parser.add_argument("--output", type=str, default=None, help="Output directory")
+    parser.add_argument("--start-date", default="2024-01-01", help="First simulated observation, YYYY-MM-DD")
+    parser.add_argument("--seed", type=int, default=42, help="Independent simulation seed")
     args = parser.parse_args()
+    np.random.seed(args.seed)
+    random.seed(args.seed)
 
     n_days = args.days
-    start_date = datetime(2024, 1, 1)
+    start_date = datetime.strptime(args.start_date, "%Y-%m-%d")
 
     # Output directory
     if args.output:
@@ -400,7 +404,7 @@ def main():
     # 4. Metadata
     outbreak_count = sum(1 for r in surv_rows if r["outbreak_occurred"] == 1)
     metadata = {
-        "data_type": "production_surveillance_data",
+        "data_type": "synthetic_surveillance_data",
         "created_date": datetime.now().isoformat(),
         "parameters": {
             "n_regions": len(REGIONS),
@@ -408,7 +412,7 @@ def main():
             "n_days": n_days,
             "start_date": start_date.strftime("%Y-%m-%d"),
             "end_date": (start_date + timedelta(days=n_days - 1)).strftime("%Y-%m-%d"),
-            "seed": 42,
+            "seed": args.seed,
         },
         "files": {
             "regions": "regions.csv",

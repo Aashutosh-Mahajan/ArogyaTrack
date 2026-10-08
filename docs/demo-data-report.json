@@ -1,0 +1,126 @@
+{
+  "period": {
+    "start": "2025-10-09",
+    "end": "2026-10-08",
+    "days": 365
+  },
+  "clinical": {
+    "profiles": 36,
+    "visits": 1110,
+    "labs": 6660,
+    "metrics": 27288,
+    "prescriptions": 1110,
+    "dose_records": 27944,
+    "invoices": 943
+  },
+  "patients": [
+    {
+      "email": "patient1@demo.com",
+      "relationship": "self",
+      "visits": 59,
+      "metric_days": 365,
+      "prescriptions": 59,
+      "has_year": true
+    },
+    {
+      "email": "patient2@demo.com",
+      "relationship": "self",
+      "visits": 59,
+      "metric_days": 365,
+      "prescriptions": 59,
+      "has_year": true
+    },
+    {
+      "email": "patient3@demo.com",
+      "relationship": "self",
+      "visits": 59,
+      "metric_days": 365,
+      "prescriptions": 59,
+      "has_year": true
+    },
+    {
+      "email": "patient4@demo.com",
+      "relationship": "self",
+      "visits": 59,
+      "metric_days": 365,
+      "prescriptions": 59,
+      "has_year": true
+    },
+    {
+      "email": "patient5@demo.com",
+      "relationship": "self",
+      "visits": 59,
+      "metric_days": 365,
+      "prescriptions": 59,
+      "has_year": true
+    },
+    {
+      "email": "patient6@demo.com",
+      "relationship": "self",
+      "visits": 59,
+      "metric_days": 365,
+      "prescriptions": 59,
+      "has_year": true
+    },
+    {
+      "email": "patient7@demo.com",
+      "relationship": "self",
+      "visits": 59,
+      "metric_days": 365,
+      "prescriptions": 59,
+      "has_year": true
+    },
+    {
+      "email": "patient8@demo.com",
+      "relationship": "self",
+      "visits": 59,
+      "metric_days": 365,
+      "prescriptions": 59,
+      "has_year": true
+    },
+    {
+      "email": "patient9@demo.com",
+      "relationship": "self",
+      "visits": 59,
+      "metric_days": 365,
+      "prescriptions": 59,
+      "has_year": true
+    },
+    {
+      "email": "patient10@demo.com",
+      "relationship": "self",
+      "visits": 59,
+      "metric_days": 365,
+      "prescriptions": 59,
+      "has_year": true
+    }
+  ],
+  "storage": {
+    "database_bytes": 231088128,
+    "media_bytes": 607602,
+    "combined_bytes": 231695730,
+    "cap_bytes": 500000000,
+    "within_cap": true
+  },
+  "ml": {
+    "version": "v6-20261008T123853Z",
+    "risk_snapshots": 22050,
+    "anomalies": 861,
+    "forecast_rows": 105525,
+    "active_clusters": 90
+  },
+  "integrity": {
+    "prescriptions_linked_to_correct_patient": true,
+    "invoices_balance": true,
+    "all_main_profiles_populated": true,
+    "adherence_counters_match": true,
+    "all_regional_series_have_full_year": true
+  },
+  "surveillance": {
+    "regions": 35,
+    "diseases": 15,
+    "complete_series": 525,
+    "days_per_series": 365,
+    "observations": 191625
+  }
+}

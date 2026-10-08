@@ -16,6 +16,7 @@ class Region(models.Model):
     population = models.IntegerField()
     hospital_count = models.IntegerField(default=0)
     sanitation_index = models.FloatField(default=50.0)  # 0-100
+    area_sq_km = models.FloatField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -39,6 +40,8 @@ class SurveillanceData(models.Model):
     case_count = models.IntegerField()
     average_severity = models.FloatField()
     cases_per_100k = models.FloatField()
+    observation_status = models.CharField(max_length=20, default="observed")
+    provenance = models.CharField(max_length=30, default="legacy")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -75,6 +78,8 @@ class Cluster(models.Model):
     severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES)
     growth_rate = models.FloatField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    model_version = models.CharField(max_length=100, blank=True)
+    provenance = models.CharField(max_length=30, default="legacy")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -119,6 +124,10 @@ class Forecast(models.Model):
     lower_bound = models.FloatField()
     upper_bound = models.FloatField()
     confidence = models.FloatField()  # 0-1
+    model_version = models.CharField(max_length=100, blank=True)
+    provenance = models.CharField(max_length=30, default="legacy")
+    data_cutoff = models.DateField(null=True, blank=True)
+    inference_key = models.CharField(max_length=64, unique=True, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -145,6 +154,10 @@ class Anomaly(models.Model):
     deviation_percentage = models.FloatField()
     description = models.TextField(blank=True)
     is_resolved = models.BooleanField(default=False)
+    model_version = models.CharField(max_length=100, blank=True)
+    provenance = models.CharField(max_length=30, default="legacy")
+    data_cutoff = models.DateField(null=True, blank=True)
+    inference_key = models.CharField(max_length=64, unique=True, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -168,6 +181,7 @@ class RiskScore(models.Model):
       critical: [0.85, 1.0]
     """
     RISK_LEVELS = [
+        (-1, 'Unavailable'),
         (0, 'Low'),
         (1, 'Medium'),
         (2, 'High'),
@@ -180,7 +194,11 @@ class RiskScore(models.Model):
     disease_name = models.CharField(max_length=255)
     calculation_date = models.DateField()
     risk_level = models.IntegerField(choices=RISK_LEVELS)
-    risk_probability = models.FloatField()  # 0-1
+    risk_probability = models.FloatField(null=True, blank=True)  # 0-1; null when unavailable
+    inference_status = models.CharField(max_length=20, default="legacy")
+    model_version = models.CharField(max_length=100, blank=True)
+    provenance = models.CharField(max_length=30, default="legacy")
+    data_cutoff = models.DateField(null=True, blank=True)
     contributing_factors = models.JSONField(default=dict)  # SHAP values
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -287,7 +305,7 @@ class Alert(models.Model):
     disease_name = models.CharField(max_length=255)
     severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
-    confidence = models.FloatField()  # 0-1
+    confidence = models.FloatField(null=True, blank=True)  # empirical probability only, never rule constants
     
     # Related regions
     affected_regions = models.ManyToManyField(Region, related_name='alerts')
@@ -395,6 +413,10 @@ class PendingInferenceQueue(models.Model):
     disease_code = models.CharField(max_length=10)
     severity = models.PositiveSmallIntegerField(default=1)
     recorded_at = models.DateTimeField(auto_now_add=True)
+    diagnosis = models.OneToOneField('medical.Diagnosis', on_delete=models.CASCADE,
+                                    null=True, blank=True, related_name='pending_inference')
+    occurrence_date = models.DateField(null=True, blank=True)
+    claimed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         indexes = [

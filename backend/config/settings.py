@@ -348,5 +348,9 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
+ML_MODELS_ROOT = Path(os.getenv("ML_MODELS_ROOT", str(BASE_DIR.parent / "ml_models" / "saved_models" / "validated")))
+ML_ALLOW_SYNTHETIC_ALERTS = os.getenv("ML_ALLOW_SYNTHETIC_ALERTS", "false").lower() == "true"
+ML_ENABLE_OPERATIONAL_ALERTS = os.getenv("ML_ENABLE_OPERATIONAL_ALERTS", "false").lower() == "true"
+ENVIRONMENTAL_DATA_URL = os.getenv("ENVIRONMENTAL_DATA_URL", "").strip()
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

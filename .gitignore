@@ -50,6 +50,8 @@ Desktop.ini
 *.tsbuildinfo
 next-env.d.ts
 coverage/
+/ml_models/training_data_v6/
+/ml_models/independent_validation_data/
 .claude/scheduled_tasks.lock
 
 # ─── PRISM Local AI Context & Integrations (Must Not Be Committed) ───
@@ -62,4 +64,3 @@ graph_export.html
 graph_export.json
 docs/benchmark_artifacts/
 *PRISM*.pdf
-

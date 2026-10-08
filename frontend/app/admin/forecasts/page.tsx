@@ -37,7 +37,7 @@ function ForecastsPage() {
     <div className="space-y-6">
       <PageHeader
         title={t("Forecasts")}
-        description={chart.data?.forecast_date ? t("Ensemble forecasts generated {value}", { value: new Date(chart.data.forecast_date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) }) : t("Ensemble case forecasts per district")}
+        description={chart.data?.forecast_date ? t("Daily case forecasts generated {value}", { value: new Date(chart.data.forecast_date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) }) : t("Daily case forecasts per district")}
         actions={
           <>
             <select value={disease} onChange={(e) => setDisease(e.target.value)} className={`${fieldClass()} h-10 w-56`} aria-label={t("Disease")}>
@@ -45,7 +45,7 @@ function ForecastsPage() {
               {(stats.data ?? []).map((s) => <option key={s.disease_code} value={s.disease_code}>{t(s.disease_name)}</option>)}
             </select>
             <div className="inline-flex rounded-[10px] border bg-card p-1 shadow-sm">
-              {[7, 14, 30].map((h) => (
+              {[7, 14, 30, 60, 90].map((h) => (
                 <button key={h} onClick={() => setHorizon(h)} className={cn('rounded-lg px-3 py-1.5 text-[13px] font-medium', horizon === h ? 'bg-primary text-primary-foreground' : 'text-muted-foreground')}>{t("{h} days", { h })}</button>
               ))}
             </div>
@@ -83,7 +83,7 @@ function ForecastsPage() {
         ) : peaks.length ? (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-[13.5px]">
-              <thead className="text-left text-xs text-muted-foreground"><tr><th className="pb-2 font-medium">{t("District")}</th><th className="pb-2 font-medium">{t("Disease")}</th><th className="pb-2 font-medium">{t("Peak day")}</th><th className="pb-2 text-right font-medium">{t("Predicted")}</th><th className="pb-2 text-right font-medium">{t("Range")}</th><th className="pb-2 text-right font-medium">{t("Confidence")}</th></tr></thead>
+              <thead className="text-left text-xs text-muted-foreground"><tr><th className="pb-2 font-medium">{t("District")}</th><th className="pb-2 font-medium">{t("Disease")}</th><th className="pb-2 font-medium">{t("Peak day")}</th><th className="pb-2 text-right font-medium">{t("Predicted")}</th><th className="pb-2 text-right font-medium">{t("Range")}</th><th className="pb-2 text-right font-medium">{t("Interval level")}</th></tr></thead>
               <tbody className="divide-y">
                 {peaks.map((f) => (
                   <tr key={f.id}>

@@ -117,7 +117,7 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             '--days', type=int, default=90,
-            help='Number of recent days to load (default: 90). CSV data is remapped to recent dates.',
+            help='Number of days ending at the source CSV latest date (default: 90).' ,
         )
         parser.add_argument(
             '--run-ml', action='store_true',
@@ -132,11 +132,17 @@ class Command(BaseCommand):
             help='Generate CSV files first using generate_csv_data.py before loading',
         )
 
+        parser.add_argument('--shift-dates', action='store_true', help='Explicit demo-only shift preserving calendar spacing')
+        parser.add_argument('--seed-demo', action='store_true', help='Explicitly seed synthetic dashboard outputs without inference')
+        parser.add_argument('--data-kind', choices=['synthetic','observational'], default='synthetic')
+
     def handle(self, *args, **options):
         clear_data = options['clear']
         days = options['days']
         run_ml = options['run_ml']
-        self.today = timezone.now().date()
+        self.today = timezone.localtime(timezone.now(), timezone.get_fixed_timezone(330)).date()
+        self.shift_dates = options['shift_dates']
+        self.data_kind = options['data_kind']
 
         # Locate CSV directory
         if options['csv_dir']:
@@ -184,8 +190,7 @@ class Command(BaseCommand):
 
         if run_ml:
             self._run_ml_pipeline(regions)
-        else:
-            # Seed synthetic ML results so dashboard has data to show
+        elif options['seed_demo']:
             self._seed_ml_results(regions)
 
         self.stdout.write(self.style.SUCCESS(
@@ -237,7 +242,7 @@ class Command(BaseCommand):
         with open(csv_dir / 'regions.csv', encoding='utf-8') as f:
             for row in csv.DictReader(f):
                 _fresh_connection()
-                r, _ = Region.objects.get_or_create(
+                r, _ = Region.objects.update_or_create(
                     name=row['region_name'],
                     defaults={
                         'district': row['city'],
@@ -247,7 +252,8 @@ class Command(BaseCommand):
                         'longitude': float(row['longitude']),
                         'population': int(row['population']),
                         'hospital_count': int(row['hospital_count']),
-                        'sanitation_index': float(row['sanitation_index']),
+                        'sanitation_index': float(row['sanitation_index']) * (10 if self.data_kind=='synthetic' and float(row['sanitation_index']) <= 10 else 1),
+                        'area_sq_km': float(row['area_sq_km']) if row.get('area_sq_km') else None,
                     },
                 )
                 regions.append(r)
@@ -256,172 +262,69 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'  {len(regions)} regions loaded.'))
         return regions
 
-    def _load_surveillance(self, csv_dir, regions, days):
-        """Load surveillance data from CSV, remapping dates to recent period."""
-        self.stdout.write(f'Loading surveillance data ({days} days)...')
-
-        start_date = self.today - timedelta(days=days)
-
-        # Read CSV rows for mapped regions — cap at 5000 for Neon safety
-        MAX_RECORDS = 5000
-        pool = []
-        with open(csv_dir / 'disease_surveillance_historical.csv', encoding='utf-8') as f:
-            for row in csv.DictReader(f):
-                rid = int(row['region_id'])
-                if rid in self.region_map:
-                    pool.append(row)
-                if len(pool) >= MAX_RECORDS:
-                    break
-
-        if not pool:
-            self.stdout.write(self.style.WARNING('  No matching surveillance data found in CSV.'))
-            return
-
-        # Remap dates: spread pool rows across [start_date → today]
-        batch, count = [], 0
-        for idx, row in enumerate(pool):
-            day_offset = idx % (days + 1)
-            date = start_date + timedelta(days=day_offset)
-            region = self.region_map[int(row['region_id'])]
-            cases = int(row['case_count'])
-            pop = region.population or 1
-
-            batch.append(SurveillanceData(
-                date=date,
-                region=region,
-                disease_code=row['disease_code'],
-                disease_name=row['disease_name'],
-                case_count=cases,
-                average_severity=float(row['severity_avg']),
-                cases_per_100k=round((cases / pop) * 100_000, 2),
-            ))
-            count += 1
-
-            if len(batch) >= BATCH_SIZE:
-                _bulk_create_safe(SurveillanceData, batch, self.stdout)
-                batch = []
-                if count % 500 == 0:
-                    self.stdout.write(f'    … {count} / {len(pool)} surveillance records')
-                time.sleep(BATCH_SLEEP)
-
+    def _load_surveillance(self,csv_dir,regions,days):
+        """Import complete chronological daily observations; shifting is explicit."""
+        from datetime import date
+        with open(csv_dir/'disease_surveillance_historical.csv',encoding='utf-8') as f:
+            rows=list(csv.DictReader(f))
+        latest=max(date.fromisoformat(row['date']) for row in rows)
+        self.date_shift=(self.today-latest) if self.shift_dates else timedelta(0)
+        if self.shift_dates and self.data_kind!='synthetic':
+            raise ValueError('Date shifting is allowed only for synthetic demo data')
+        cutoff=latest-timedelta(days=days-1)
+        batch=[];count=0
+        for row in rows:
+            original=date.fromisoformat(row['date'])
+            if original<cutoff or int(row['region_id']) not in self.region_map:
+                continue
+            region=self.region_map[int(row['region_id'])]
+            cases=int(row['case_count'])
+            batch.append(SurveillanceData(date=original+self.date_shift,region=region,disease_code=row['disease_code'],
+                disease_name=row['disease_name'],case_count=cases,average_severity=float(row['severity_avg']),
+                cases_per_100k=cases/max(region.population,1)*100000,provenance=self.data_kind))
+            if len(batch)>=500:
+                SurveillanceData.objects.bulk_create(batch,update_conflicts=True,
+                    unique_fields=['date','region','disease_code'],update_fields=['disease_name','case_count','average_severity','cases_per_100k','provenance'])
+                count+=len(batch);batch=[]
         if batch:
-            _bulk_create_safe(SurveillanceData, batch, self.stdout)
+            SurveillanceData.objects.bulk_create(batch,update_conflicts=True,
+                unique_fields=['date','region','disease_code'],update_fields=['disease_name','case_count','average_severity','cases_per_100k','provenance'])
+            count+=len(batch)
+        self.stdout.write(f'Imported {count} observations; source latest={latest}; shift={self.date_shift.days} days')
 
-        self.stdout.write(self.style.SUCCESS(f'  {count} surveillance records loaded.'))
 
-    def _load_environmental(self, csv_dir, regions, days):
-        """Load environmental data from CSV, remapping dates to recent period."""
-        self.stdout.write('Loading environmental data...')
+    def _load_environmental(self,csv_dir,regions,days):
+        from datetime import date
+        with open(csv_dir/'environmental_data.csv',encoding='utf-8') as f:
+            rows=list(csv.DictReader(f))
+        latest=max(date.fromisoformat(row['date']) for row in rows)
+        cutoff=latest-timedelta(days=days-1)
+        values=[]
+        scale=10 if self.data_kind=='synthetic' and max(float(row['water_quality_index']) for row in rows)<=10 else 1
+        for row in rows:
+            original=date.fromisoformat(row['date'])
+            if original<cutoff or int(row['region_id']) not in self.region_map:
+                continue
+            fields={key:float(row[source]) if row.get(source) else None for key,source in {
+                'temperature':'temperature_celsius','humidity':'humidity_percent','rainfall':'rainfall_mm',
+                'aqi':'aqi','pm25':'pm25','pm10':'pm10','water_quality_index':'water_quality_index'}.items()}
+            if fields['water_quality_index'] is not None:
+                fields['water_quality_index']*=scale
+            values.append(EnvironmentalData(region=self.region_map[int(row['region_id'])],date=original+self.date_shift,**fields))
+        for i in range(0,len(values),500):
+            EnvironmentalData.objects.bulk_create(values[i:i+500],update_conflicts=True,
+                unique_fields=['region','date'],update_fields=['temperature','humidity','rainfall','aqi','pm25','pm10','water_quality_index'])
+        self.stdout.write(f'Imported {len(values)} environmental readings')
 
-        env_days = min(days, 60)  # Environmental data for last 60 days max
-        start_date = self.today - timedelta(days=env_days)
 
-        MAX_ENV = 2000
-        pool = []
-        with open(csv_dir / 'environmental_data.csv', encoding='utf-8') as f:
-            for row in csv.DictReader(f):
-                rid = int(row['region_id'])
-                if rid in self.region_map:
-                    pool.append(row)
-                if len(pool) >= MAX_ENV:
-                    break
+    def _run_ml_pipeline(self,regions):
+        from surveillance.tasks import run_complete_ml_pipeline
+        import json
+        codes=SurveillanceData.objects.values_list('disease_code',flat=True).distinct()
+        for code in codes:
+            result=run_complete_ml_pipeline(code)
+            self.stdout.write(json.dumps(result,default=str))
 
-        batch, count = [], 0
-        for idx, row in enumerate(pool):
-            day_offset = idx % (env_days + 1)
-            date = start_date + timedelta(days=day_offset)
-            region = self.region_map[int(row['region_id'])]
-
-            batch.append(EnvironmentalData(
-                region=region,
-                date=date,
-                temperature=float(row['temperature_celsius']),
-                humidity=float(row['humidity_percent']),
-                rainfall=float(row['rainfall_mm']),
-                aqi=int(float(row['aqi'])),
-                pm25=float(row['pm25']),
-                pm10=float(row['pm10']),
-                water_quality_index=float(row['water_quality_index']),
-            ))
-            count += 1
-
-            if len(batch) >= BATCH_SIZE:
-                _bulk_create_safe(EnvironmentalData, batch, self.stdout)
-                batch = []
-                time.sleep(BATCH_SLEEP)
-
-        if batch:
-            _bulk_create_safe(EnvironmentalData, batch, self.stdout)
-
-        self.stdout.write(self.style.SUCCESS(f'  {count} environmental records loaded.'))
-
-    def _run_ml_pipeline(self, regions):
-        """Run the actual ML models on loaded data to populate results."""
-        self.stdout.write(self.style.WARNING('\n--- Running ML Pipeline ---'))
-
-        from surveillance.services import (
-            ClusteringService, ForecastingService,
-            AnomalyDetectionService, RiskScoringService, AlertService,
-        )
-
-        today = self.today
-        diseases_to_run = [code for code, _ in DISEASES[:10]]
-
-        for disease_code in diseases_to_run:
-            disease_name = dict(DISEASES).get(disease_code, disease_code)
-            self.stdout.write(f'\n  Processing {disease_name} ({disease_code})...')
-
-            # 1. DBSCAN Clustering
-            try:
-                clusters = ClusteringService.detect_clusters(disease_code)
-                self.stdout.write(f'    DBSCAN: {len(clusters)} clusters detected')
-            except Exception as e:
-                self.stdout.write(self.style.WARNING(f'    DBSCAN: {e}'))
-
-            # 2. Per-region: Forecasting, Anomaly Detection, Risk Scoring
-            active_regions = Region.objects.filter(
-                surveillance_data__disease_code=disease_code,
-                surveillance_data__date__gte=today - timedelta(days=14),
-            ).distinct()[:15]
-
-            fc_count, anom_count, risk_count = 0, 0, 0
-            for region in active_regions:
-                _fresh_connection()
-                # Forecasts
-                for horizon in [7, 14, 30]:
-                    try:
-                        forecasts = ForecastingService.generate_forecast(region, disease_code, horizon)
-                        fc_count += len(forecasts)
-                    except Exception:
-                        pass
-
-                # Anomaly Detection
-                try:
-                    anomaly = AnomalyDetectionService.detect_anomalies(region, disease_code)
-                    if anomaly:
-                        anom_count += 1
-                except Exception:
-                    pass
-
-                # Risk Scoring
-                try:
-                    RiskScoringService.calculate_risk_score(region, disease_code)
-                    risk_count += 1
-                except Exception:
-                    pass
-
-            self.stdout.write(
-                f'    Forecasts: {fc_count} | Anomalies: {anom_count} | Risk scores: {risk_count}'
-            )
-
-            # 3. Alert Evaluation
-            try:
-                alerts = AlertService.evaluate_alerts(disease_code)
-                self.stdout.write(f'    Alerts: {len(alerts)}')
-            except Exception as e:
-                self.stdout.write(self.style.WARNING(f'    Alerts: {e}'))
-
-        self.stdout.write(self.style.SUCCESS('\n--- ML Pipeline complete ---'))
 
     def _seed_ml_results(self, regions):
         """
@@ -453,7 +356,7 @@ class Command(BaseCommand):
                     2: round(random.uniform(0.60, 0.83), 3),
                     3: round(random.uniform(0.85, 0.98), 3),
                 }[level]
-                batch.append(RiskScore(
+                batch.append(RiskScore(provenance='synthetic_demo', inference_status='demo',
                     region=region, disease_code=code, disease_name=name,
                     calculation_date=today,
                     risk_level=level,
@@ -484,7 +387,7 @@ class Command(BaseCommand):
             actual = random.randint(60, 500)
             expected = random.randint(15, 120)
             deviation = round(((actual - expected) / max(expected, 1)) * 100, 1)
-            batch.append(Anomaly(
+            batch.append(Anomaly(provenance='synthetic_demo',
                 region=region, disease_code=code, disease_name=name,
                 detection_date=today - timedelta(days=random.randint(0, 7)),
                 anomaly_score=round(random.uniform(0.45, 0.98), 3),
@@ -558,7 +461,7 @@ class Command(BaseCommand):
                         trend = random.uniform(-0.02, 0.04) * d
                         predicted = max(1, int(base * (1 + trend) + random.gauss(0, base * 0.15)))
                         margin = max(5, int(predicted * random.uniform(0.10, 0.25)))
-                        batch.append(Forecast(
+                        batch.append(Forecast(provenance='synthetic_demo',
                             region=region, disease_code=code, disease_name=name,
                             forecast_date=today,
                             prediction_date=today + timedelta(days=d),

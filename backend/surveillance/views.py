@@ -29,8 +29,10 @@ _RISK_LABELS = dict(RiskScore.RISK_LEVELS)
 
 
 def _risk_label(level):
-    """Display label for a risk level; out-of-range values clamp to Low/Critical."""
-    return _RISK_LABELS[min(max(int(level or 0), 0), 3)]
+    """Unavailable inference must never be displayed as low risk."""
+    if level is None or int(level) < 0:
+        return 'Unavailable'
+    return _RISK_LABELS[min(int(level), 3)]
 
 
 def _reference_date():
@@ -140,6 +142,8 @@ class ClusterViewSet(viewsets.ReadOnlyModelViewSet):
     
     def get_queryset(self):
         queryset = Cluster.objects.prefetch_related('regions__region')
+        if self.request.query_params.get('include_legacy') != 'true':
+            queryset = queryset.exclude(model_version='')
         
         disease_code = self.request.query_params.get('disease_code')
         date = self.request.query_params.get('date')
@@ -183,6 +187,8 @@ class ForecastViewSet(viewsets.ReadOnlyModelViewSet):
     
     def get_queryset(self):
         queryset = Forecast.objects.select_related('region')
+        if self.request.query_params.get('include_legacy') != 'true':
+            queryset = queryset.exclude(model_version='')
         
         disease_code = self.request.query_params.get('disease_code')
         region_id = self.request.query_params.get('region_id')
@@ -232,6 +238,8 @@ class AnomalyViewSet(viewsets.ReadOnlyModelViewSet):
     
     def get_queryset(self):
         queryset = Anomaly.objects.select_related('region')
+        if self.request.query_params.get('include_legacy') != 'true':
+            queryset = queryset.exclude(model_version='')
         
         disease_code = self.request.query_params.get('disease_code')
         region_id = self.request.query_params.get('region_id')
@@ -462,7 +470,7 @@ def heat_map_data(request):
         risk_scores = {}
         for rs in RiskScore.objects.filter(disease_code=disease_code).order_by('-calculation_date'):
             if rs.region_id not in risk_scores:
-                risk_scores[rs.region_id] = _risk_label(rs.risk_level)
+                risk_scores[rs.region_id] = _risk_label(rs.risk_level if rs.inference_status == "ok" else -1)
 
         heat_map = []
         for row in region_agg:
@@ -476,7 +484,7 @@ def heat_map_data(request):
                 'case_count': cases,
                 'cases_per_100k': round((cases / pop) * 100_000, 2),
                 'average_severity': round(row['avg_severity'] or 0, 2),
-                'risk_level': risk_scores.get(row['region__id'], 'Low'),
+                'risk_level': risk_scores.get(row['region__id'], 'Unavailable'),
             })
 
         serializer = HeatMapDataSerializer(heat_map, many=True)
@@ -500,7 +508,7 @@ def heat_map_data(request):
         risk_level_map = {}
         for rs in RiskScore.objects.order_by('-calculation_date', '-risk_level'):
             if rs.region_id not in risk_level_map:
-                risk_level_map[rs.region_id] = _risk_label(rs.risk_level)
+                risk_level_map[rs.region_id] = _risk_label(rs.risk_level if rs.inference_status == "ok" else -1)
 
         heat_map = []
         for row in region_agg:
@@ -514,7 +522,7 @@ def heat_map_data(request):
                 'case_count': cases,
                 'cases_per_100k': round((cases / pop) * 100_000, 2),
                 'average_severity': round(row['avg_severity'] or 0, 2),
-                'risk_level': risk_level_map.get(row['region__id'], 'Low'),
+                'risk_level': risk_level_map.get(row['region__id'], 'Unavailable'),
             })
 
         serializer = HeatMapDataSerializer(heat_map, many=True)
@@ -541,15 +549,14 @@ def forecast_chart_data(request):
     disease_code = request.query_params.get('disease_code', '')
     today = timezone.now().date()
 
-    qs = Forecast.objects.filter(horizon_days=horizon)
+    qs = Forecast.objects.filter(horizon_days=horizon).exclude(model_version='')
+    if disease_code:
+        qs = qs.filter(disease_code=disease_code)
 
     # Use the latest forecast_date available
     latest_fc_date = qs.order_by('-forecast_date').values_list('forecast_date', flat=True).first()
     if latest_fc_date:
         qs = qs.filter(forecast_date=latest_fc_date)
-
-    if disease_code:
-        qs = qs.filter(disease_code=disease_code)
 
     # Aggregate by prediction_date across all regions
     agg = (
@@ -663,7 +670,7 @@ def regional_comparison(request):
     for rs in RiskScore.objects.filter(region__in=regions).order_by('region_id', '-calculation_date').only(
         'region_id', 'risk_level', 'calculation_date'
     ):
-        latest_risk.setdefault(rs.region_id, _risk_label(rs.risk_level))
+        latest_risk.setdefault(rs.region_id, _risk_label(rs.risk_level if rs.inference_status == "ok" else -1))
 
     comparison = []
     for region in regions:
@@ -674,7 +681,7 @@ def regional_comparison(request):
             'region_name': region.name,
             'total_cases': total_cases,
             'active_diseases': agg.get('diseases') or 0,
-            'risk_level': latest_risk.get(region.id, 'Low'),
+            'risk_level': latest_risk.get(region.id, 'Unavailable'),
             'population': region.population,
             'cases_per_100k': round(cases_per_100k, 2)
         })
@@ -718,11 +725,12 @@ def dashboard_overview(request):
     ).first() or today
     high_risk_regions = RiskScore.objects.filter(
         calculation_date=latest_risk_date,
-        risk_level__gte=2
+        risk_level__gte=2,
+        inference_status='ok'
     ).values('region__name').distinct().count()
 
     # Active clusters
-    active_clusters = Cluster.objects.filter(is_active=True).count()
+    active_clusters = Cluster.objects.filter(is_active=True).exclude(model_version='').count()
 
     # Top diseases (last 7 days)
     top_diseases = SurveillanceData.objects.filter(
