@@ -39,7 +39,21 @@ PDF downloads. Batched doctor reads reduced the observed high-risk list from
 
 Full measured counts and integrity results: [demo-data-report.json](demo-data-report.json).
 
-## Repeat the seed
+## One-click demo sign-in
+
+Set `NEXT_PUBLIC_ENABLE_DEMO_LOGIN=true` in `frontend/.env.local` and restart
+the frontend (rebuild if running a production build). Open `/login` to see
+Patient, Doctor, Pharmacist and Admin / Authority demo buttons. Each
+role-specific sign-in page displays only its matching demo button.
+
+The buttons use `patient1@demo.com`, `doctor1@demo.com`,
+`pharmacist1@demo.com` and `admin@demo.com` with the seeded password `demo123`.
+They call the normal password-login endpoint, retain role and two-factor
+checks, and clear cached dashboard queries when entering another session.
+The accounts must already exist in the configured database. The flag defaults
+to false; enable it only for a demonstration deployment.
+
+## Repeat the seed command
 
 From the repository root in PowerShell:
 
