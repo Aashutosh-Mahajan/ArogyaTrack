@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
-import { AlertCircle, ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { AlertCircle, ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, Stethoscope, Pill, UserRound } from 'lucide-react';
 import { OtpInput } from '@/components/auth/OtpInput';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
@@ -22,6 +23,14 @@ const schema = z.object({
 });
 
 type FormData = z.infer<typeof schema>;
+
+// Only opt-in demo deployments display these seeded demonstration accounts.
+const DEMO_ACCOUNTS = [
+  { role: 'patient', email: 'patient1@demo.com', label: 'Patient', description: 'Records and health card', icon: UserRound },
+  { role: 'doctor', email: 'doctor1@demo.com', label: 'Doctor', description: 'Patients and prescriptions', icon: Stethoscope },
+  { role: 'pharmacist', email: 'pharmacist1@demo.com', label: 'Pharmacist', description: 'Dispensing and inventory', icon: Pill },
+  { role: 'admin', email: 'admin@demo.com', label: 'Admin / Authority', description: 'Surveillance and alerts', icon: ShieldCheck },
+] satisfies { role: UserRole; email: string; label: string; description: string; icon: typeof UserRound }[];
 
 interface SignInFormProps {
   /** Restrict sign-in to these roles; omit to accept any role. */
@@ -55,7 +64,10 @@ export function SignInForm({
   notice,
 }: SignInFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const setAuth = useAuthStore((s) => s.setAuth);
+  const loginPending = useRef(false);
+  const [demoRole, setDemoRole] = useState<UserRole | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [challenge, setChallenge] = useState<{ token: string; email: string } | null>(null);
@@ -64,6 +76,10 @@ export function SignInForm({
 
   const form = useForm<FormData>({ resolver: zodResolver(schema) });
   const { errors, isSubmitting } = form.formState;
+  const busy = isSubmitting || demoRole !== null;
+  const demoAccounts = process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === 'true'
+    ? DEMO_ACCOUNTS.filter((account) => !roles || roles.includes(account.role))
+    : [];
 
   const finish = async (user: any) => {
     if (roles && !roles.includes(user.role)) {
@@ -75,12 +91,17 @@ export function SignInForm({
       );
       return;
     }
+    // A new session must not reuse dashboard data cached for the previous role.
+    await queryClient.cancelQueries();
+    queryClient.clear();
     setAuth(user);
     toast.success(t("Signed in as {value}", { value: user.first_name || user.email }));
     router.push(roleHome(user.role));
   };
 
   const onSubmit = async (data: FormData) => {
+    if (loginPending.current) return;
+    loginPending.current = true;
     setFormError(null);
     try {
       const response: any = await api.auth.login(data.email.trim(), data.password);
@@ -91,6 +112,18 @@ export function SignInForm({
       await finish(response.user);
     } catch (error: any) {
       setFormError(extractError(error, t("Email or password is incorrect.")));
+    } finally {
+      loginPending.current = false;
+    }
+  };
+
+  const signInDemo = async (account: typeof DEMO_ACCOUNTS[number]) => {
+    if (loginPending.current) return;
+    setDemoRole(account.role);
+    try {
+      await onSubmit({ email: account.email, password: 'demo123' });
+    } finally {
+      setDemoRole(null);
     }
   };
 
@@ -163,6 +196,38 @@ export function SignInForm({
         </div>
       )}
 
+      {demoAccounts.length > 0 && (
+        <section aria-label={t('Demo sign-in')} className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+          <div className="mb-3">
+            <h2 className="text-sm font-semibold text-foreground">{t('Explore the demo')}</h2>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{t('Open a demo dashboard with one click.')}</p>
+          </div>
+          <div className={demoAccounts.length > 1 ? 'grid grid-cols-1 gap-2 min-[360px]:grid-cols-2' : 'grid gap-2'}>
+            {demoAccounts.map((account) => {
+              const Icon = account.icon;
+              const opening = demoRole === account.role;
+              return (
+                <button
+                  key={account.role}
+                  type="button"
+                  onClick={() => signInDemo(account)}
+                  disabled={busy}
+                  aria-label={t('Demo sign in as {role}', { role: account.label })}
+                  aria-busy={opening}
+                  className="flex min-h-[76px] items-start gap-2.5 rounded-xl border bg-background p-3 text-left transition-colors hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
+                >
+                  {opening ? <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" /> : <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />}
+                  <span>
+                    <span className="block text-[12.5px] font-semibold text-foreground">{opening ? t('Opening…') : t(account.label)}</span>
+                    <span className="mt-1 block text-[11px] leading-relaxed text-muted-foreground">{t(account.description)}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       <div className="space-y-1.5">
         <label htmlFor="email" className="text-[13px] font-medium text-foreground">{t("Email")}</label>
         <div className="relative">
@@ -210,7 +275,7 @@ export function SignInForm({
 
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={busy}
         className="group mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-primary text-[14.5px] font-medium text-primary-foreground shadow-button transition-[transform,opacity] active:scale-[0.99] disabled:opacity-70"
       >
         {isSubmitting ? (
