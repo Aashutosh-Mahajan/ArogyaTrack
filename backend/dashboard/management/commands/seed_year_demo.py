@@ -16,7 +16,7 @@ import pandas as pd
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection, transaction
-from django.db.models import F, Value
+from django.db.models import F, Max, Value
 from django.db.models.functions import Round
 from django.utils import timezone
 
@@ -231,24 +231,31 @@ class Command(BaseCommand):
                     accesses.append(DoctorPatientAccess(doctor=doctor, patient=profile,
                         expires_at=timezone.now() + timedelta(days=365), access_method='demo_seed'))
         insert(DoctorPatientAccess, accesses)
-        seeded = set(PatientVisitRecord.objects.filter(profile__in=profiles,
-            doctor_notes__startswith=MARK).values_list('profile_id', flat=True))
-        profiles = [p for p in profiles if p.pk not in seeded]
-        if not profiles:
-            self.stdout.write('Clinical year already seeded; preserving existing demo history.')
-            return
+        latest_visits = dict(PatientVisitRecord.objects.filter(profile__in=profiles,
+            doctor_notes__startswith=MARK).order_by().values('profile_id').annotate(
+                latest=Max('visit_date')).values_list('profile_id', 'latest'))
         records, visits, diagnoses, labs, metrics, prescriptions, lines = [], [], [], [], [], [], []
         trackers, doses, invoices, dispensings, alerts, downloads, conditions, allergies = [], [], [], [], [], [], [], []
         for pi, profile in enumerate(profiles):
+            # Append only dates after this demo profile's last seeded encounter.
+            # Previously any seeded visit skipped the profile forever, leaving
+            # today's dashboard empty when the command ran on a later date.
+            latest = latest_visits.get(profile.pk)
+            profile_days = min(self.days, (self.today - latest.date()).days) if latest else self.days
+            if profile_days <= 0:
+                continue
+            refresh_start = self.today - timedelta(days=profile_days - 1)
             doctor = doctors[pi % 5]
-            offsets = sorted(set(range(0, self.days, 7 if profile.relationship == 'self' else 28)) | set(range(7)), reverse=True)
+            offsets = sorted(set(range(0, profile_days, 7 if profile.relationship == 'self' else 28)) |
+                set(range(min(7, profile_days))), reverse=True)
             condition = ('E11', 'Type 2 Diabetes') if pi % 2 else ('I10', 'Hypertension')
-            conditions.append(ChronicCondition(profile=profile, icd_10_code=condition[0],
-                disease_name=condition[1], added_by=doctor, created_at=stamp(self.start)))
-            if pi % 4 == 0:
+            if not ChronicCondition.objects.filter(profile=profile, icd_10_code=condition[0]).exists():
+                conditions.append(ChronicCondition(profile=profile, icd_10_code=condition[0],
+                    disease_name=condition[1], added_by=doctor, created_at=stamp(refresh_start)))
+            if pi % 4 == 0 and not Allergy.objects.filter(profile=profile, allergen='Pollen').exists():
                 allergies.append(Allergy(profile=profile, allergen='Pollen', reaction_type='Seasonal rhinitis',
                     severity=1, added_by=doctor, created_at=stamp(self.start)))
-            for offset in range(0, self.days, 1 if profile.relationship == 'self' else 3):
+            for offset in range(0, profile_days, 1 if profile.relationship == 'self' else 3):
                 when = stamp(self.today - timedelta(days=offset), 7)
                 wave = math.sin(offset / 18 + pi)
                 for kind, value, secondary, unit in [
@@ -347,13 +354,17 @@ class Command(BaseCommand):
                         tax_amount=(Decimal(line.quantity * (2 + n)) - (Decimal(line.quantity * (2 + n)) / Decimal('1.05')).quantize(Decimal('.01'))) if dispensed and invoice else None))
             for ai in range(12):
                 when = stamp(self.today - timedelta(days=ai * 28))
-                alerts.append(DashboardAlert(id=ident(f'alert:{profile.pk}:{ai}'), patient=profile.user,
+                if when.date() < refresh_start:
+                    continue
+                alerts.append(DashboardAlert(id=ident(f'alert:{profile.pk}:{when.date()}'), patient=profile.user,
                     profile=profile, alert_type='abnormal_labs' if ai % 2 else 'low_adherence',
                     severity=['low', 'medium', 'high'][ai % 3], title=f'Demo: follow-up review {ai + 1}',
                     message=f'{MARK}: simulated reminder to review laboratory trends and medication history.',
                     is_read=ai > 2, is_dismissed=ai > 5, created_at=when))
             if profile.relationship == 'self':
                 for di in range(24):
+                    if self.today - timedelta(days=di * 14) < refresh_start:
+                        continue
                     downloads.append(DownloadLog(user=profile.user, file_type='medical_record',
                         file_name=f'Demo visit summary {di + 1}', downloaded_at=stamp(self.today - timedelta(days=di * 14))))
         insert(MedicalRecord, records)
